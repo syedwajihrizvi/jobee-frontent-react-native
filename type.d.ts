@@ -36,3 +36,12 @@ export type AuthState = {
     fetchAuthenticatedUser: () => Promise<void>;
     removeUser: () => void
 }
+
+export type Job = {
+    title: string,
+    company: string,
+    location: string,
+    salary: number,
+    postedDate: string,
+    tags?: string[]
+}

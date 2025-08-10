@@ -10,7 +10,7 @@ import { Alert, View } from 'react-native'
 const SignIn = () => {
   const [form, setForm] = useState<SignInParams>({ email: '', password: '' })
   const [isLoading, setIsLoading] = useState(false)
-  const { fetchAuthenticatedUser, setIsAuthenticated, isAuthenticated } = useAuthStore()
+  const { fetchAuthenticatedUser, setIsAuthenticated } = useAuthStore()
 
   const handleSignIn = async () => {
     const { email, password } = form
