@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .label {
+        @apply text-base text-start w-full pl-2
+    }
+    .input {
+        @apply rounded-lg p-3 w-full text-base text-black border-b leading-5;
+    }
+    .auth-button {
+        @apply w-full bg-blue-500 p-4 rounded-lg;
+    }
+}
