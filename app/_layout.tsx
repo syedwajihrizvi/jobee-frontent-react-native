@@ -1,7 +1,10 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
 import './global.css';
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
@@ -18,8 +21,10 @@ export default function RootLayout() {
   }, [fontsLoaded, error]);
 
   return (
-    <Stack screenOptions={{headerShown: false}}>
-      <Stack.Screen name="(tabs)"/>
-    </Stack>
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{headerShown: false}}>
+        <Stack.Screen name="(tabs)"/>
+      </Stack>
+    </QueryClientProvider>
   );
 }

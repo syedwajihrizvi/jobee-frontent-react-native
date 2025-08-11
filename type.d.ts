@@ -37,11 +37,21 @@ export type AuthState = {
     removeUser: () => void
 }
 
+export type Tag = {
+    id: number;
+    name: string;
+    description: string;
+}
+
 export type Job = {
+    id: number,
     title: string,
-    company: string,
+    description: string,
+    businessName: string,
+    businessAccountId: number,
     location: string,
-    salary: number,
-    postedDate: string,
-    tags?: string[]
+    employmentType: string,
+    minSalary: number,
+    maxSalary: number,
+    tags: Tag[]
 }

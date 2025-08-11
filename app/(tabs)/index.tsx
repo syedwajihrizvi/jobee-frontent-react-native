@@ -4,25 +4,17 @@ import CustomSlider from '@/components/CustomSlider';
 import JobListing from '@/components/JobListing';
 import LocationSearch from '@/components/LocationSearch';
 import SearchBar from '@/components/SearchBar';
-import { Job } from '@/type';
+import { useJobs } from '@/lib/services/useJobs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, FlatList, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, FlatList, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const screenWidth = Dimensions.get('window').width;
 
 const Index = () => {
-  const jobs:Job[] = [
-    {
-      title: "Software Engineer",
-      company: "Tech Corp",
-      location: "New York, NY",
-      salary: 120000,
-      postedDate: "2023-10-01",
-      tags: ["Full-Time", "Remote", "Benefits", "Health Insurance", "401k", "Flexible Hours", "Career Growth"]
-    }
-  ];
+  const { data: jobs, isLoading } = useJobs()
+
   const [isOpen, setIsOpen] = useState(false)
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
 
@@ -52,12 +44,14 @@ const Index = () => {
                   <Ionicons name="filter-circle-outline" size={30} color="black" />
                 </TouchableOpacity>
             </View>
+      {isLoading ? 
+      <ActivityIndicator size="large" color="#0000ff" className='flex-1 justify-center items-center'/> :
       <FlatList
         className='w-full p-2'
-        data={Array(14).fill(jobs[0])} // Simulating multiple job listings
+        data={jobs} // Simulating multiple job listings
         renderItem={({item, index}) => <JobListing key={index} {...item} />}
         ItemSeparatorComponent={() => <View className='divider'/>}
-      />
+      />}
       {isOpen && (
         <>
         <TouchableWithoutFeedback onPress={closeFilters}>

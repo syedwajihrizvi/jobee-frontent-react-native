@@ -20,7 +20,6 @@ export const signIn = async (request: SignInParams) => {
 }
 
 export const signUp = async (request: SignUpParams) => {
-    console.log("Signing Up...", request)
     const { email, password, firstName, lastName, age } = request
     // Simulate an API call
     await fetch(`${ACCOUNTS_API_URL}/register`, {
@@ -39,9 +38,7 @@ export const signOut = async () => {
 }
 
 export const getCurrentUser = async () => {
-    console.log("Fetching current user...")
     const token = await Asyncstorage.getItem('x-auth-token')
-    console.log("Token:", token)
     if (!token) return null
 
     const response = await fetch(`${PROFILES_API_URL}/me`, {
