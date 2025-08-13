@@ -5,6 +5,7 @@ import JobListing from '@/components/JobListing';
 import LocationSearch from '@/components/LocationSearch';
 import SearchBar from '@/components/SearchBar';
 import { useJobs } from '@/lib/services/useJobs';
+import { JobFilters } from '@/type';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Dimensions, FlatList, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
@@ -13,10 +14,44 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const screenWidth = Dimensions.get('window').width;
 
 const Index = () => {
-  const { data: jobs, isLoading } = useJobs()
+  const [filters, setFilters] = useState<JobFilters>({
+    search: '',
+    location: '',
+    company: '',
+    distance: undefined,
+    salary: undefined,
+    experience: undefined
+  });
+  const [tempFilters, setTempFilters] = useState<JobFilters>({...filters});
 
+  const { data: jobs, isLoading } = useJobs(filters)
   const [isOpen, setIsOpen] = useState(false)
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+
+  const handleApplyFilters = () => {
+    setFilters({...tempFilters});
+    closeFilters()
+  }
+
+  const handleResetFilters = () => {
+    setTempFilters({
+      search: '',
+      location: '',
+      company: '',
+      distance: undefined,
+      salary: undefined,
+      experience: undefined
+    });
+    setFilters({
+      search: '',
+      location: '',
+      company: '',
+      distance: undefined,
+      salary: undefined,
+      experience: undefined
+    });
+    closeFilters();
+  }
 
   const openFilters = () => {
     setIsOpen(true);
@@ -36,10 +71,17 @@ const Index = () => {
       setIsOpen(false);
     });
   }
+
+  const handleSearchSubmit = (text: string) => {
+    setFilters(prev => ({ ...prev, search: text }));
+  }
+
   return (
     <SafeAreaView className='flex-1 bg-white'>
             <View className='w-full flex-row items-center justify-center px-8 gap-4'>
-              <SearchBar placeholder="Search for Jobs..." onChange={(text) => console.log(text)} />
+              <SearchBar 
+                placeholder="Search for Jobs..." 
+                onSubmit={handleSearchSubmit}/>
                 <TouchableOpacity onPress={openFilters}>
                   <Ionicons name="filter-circle-outline" size={30} color="black" />
                 </TouchableOpacity>
@@ -72,14 +114,19 @@ const Index = () => {
             transform: [{translateX: slideAnim}],
             zIndex: 10,
           }}>
-          <LocationSearch />
-          <CustomInput placeholder="Company" label="Company" value="" onChangeText={() => {}}/>
-          <CustomSlider label="Distance" minValue={0} maxValue={300}/>
-          <CustomSlider label="Salary" minValue={20000} maxValue={300000}/>
-          <CustomSlider label="Experience" minValue={0} maxValue={20}/>
+          <LocationSearch 
+            value={tempFilters.location ? tempFilters.location : ''} 
+            onChange={(text) => setTempFilters({...tempFilters, location: text})}/>
+          <CustomInput 
+            placeholder="Company" label="Company" 
+            value={tempFilters.company ? tempFilters.company : ''} 
+            onChangeText={(text) => setTempFilters({...tempFilters, company: text})}/>
+          <CustomSlider label="Distance" minValue={0} maxValue={300} value={tempFilters.distance} onValueChange={(value) => setTempFilters({...tempFilters, distance: value})}/>
+          <CustomSlider label="Salary" minValue={20000} maxValue={300000} value={tempFilters.salary} onValueChange={(value) => setTempFilters({...tempFilters, salary: value})}/>
+          <CustomSlider label="Experience" minValue={0} maxValue={20} value={tempFilters.experience} onValueChange={(value) => setTempFilters({...tempFilters, experience: value})}/>
           <View className='flex-row items-center justify-between gap-2'>
-            <CustomButton customClass="filter-button" text="Apply" onClick={() => {}} />
-            <CustomButton customClass="filter-button" text="Reset" onClick={() => {}} />
+            <CustomButton customClass="filter-button" text="Apply" onClick={handleApplyFilters} />
+            <CustomButton customClass="filter-button" text="Reset" onClick={handleResetFilters} />
           </View>
         </Animated.View>
         </>

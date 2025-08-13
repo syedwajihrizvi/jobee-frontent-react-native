@@ -49,9 +49,19 @@ export type Job = {
     description: string,
     businessName: string,
     businessAccountId: number,
+    experience: number,
     location: string,
     employmentType: string,
     minSalary: number,
     maxSalary: number,
     tags: Tag[]
+}
+
+export type JobFilters = {
+    search?: string;
+    location?: string;
+    company?: string;
+    distance?: number;
+    salary?: number;
+    experience?: number;
 }

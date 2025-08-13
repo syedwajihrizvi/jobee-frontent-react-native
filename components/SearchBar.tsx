@@ -1,8 +1,11 @@
 import AntDesign from '@expo/vector-icons/AntDesign'
-import React from 'react'
-import { TextInput, View } from 'react-native'
+import React, { useRef, useState } from 'react'
+import { TextInput, TouchableOpacity, View } from 'react-native'
 
-const SearchBar = ({ placeholder, onChange }: {placeholder: string, onChange: (text: string) => void}) => {
+const SearchBar = (
+  { placeholder, onSubmit }: {placeholder: string, onSubmit: (text: string) => void}) => {
+  const [value, setValue] = useState('')
+  const inputRef = useRef<TextInput>(null)
   return (
     <View 
         className='search-bar-container'
@@ -14,9 +17,22 @@ const SearchBar = ({ placeholder, onChange }: {placeholder: string, onChange: (t
             elevation: 3,
         }}>
         <AntDesign name="search1" size={18} color="black" className='left-4 z-10' />
-        <TextInput className='search-bar' placeholder={placeholder} onChangeText={onChange} returnKeyType='search'/>
+        <TextInput 
+          className='search-bar' placeholder={placeholder} value={value}
+          onChangeText={(text) => setValue(text)}
+          ref={inputRef}
+          returnKeyType='search' onSubmitEditing={() => onSubmit(value)}/>
+        {
+          value.length > 0 && 
+          <TouchableOpacity className='absolute right-4' onPress={() => {
+            setValue('');
+            inputRef.current?.blur();
+            onSubmit('');
+          }}>
+            <AntDesign name="close" size={18} color="red"/>
+          </TouchableOpacity>
+        }
     </View>
   )
 }
-
 export default SearchBar

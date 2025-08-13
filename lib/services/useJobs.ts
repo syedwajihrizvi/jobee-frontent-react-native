@@ -1,15 +1,26 @@
-import { Job } from '@/type';
+import { Job, JobFilters } from '@/type';
 import { useQuery } from '@tanstack/react-query';
 
-const JOBS_API_URL = "http://192.168.2.29:8080/jobs";
-export const useJobs = () => {
+const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
+export const useJobs = (jobFilters: JobFilters) => {
+    console.log('Fetching jobs with filters:', jobFilters);
+    const { search, location, company, distance, salary, experience } = jobFilters
+    const queryParams = new URLSearchParams()
+    if (search) queryParams.append('search', search)
+    if (location) queryParams.append('location', location)
+    if (company) queryParams.append('company', company)
+    if (distance !== undefined) queryParams.append('distance', Math.round(distance).toString())
+    if (salary !== undefined) queryParams.append('salary', Math.round(salary).toString())
+    if (experience !== undefined) queryParams.append('experience', Math.round(experience).toString())
+    
+    const params = queryParams.toString()
     const fetchJobs = async () => {
-        const response = await fetch(JOBS_API_URL)
+        const response = await fetch(`${JOBS_API_URL}?${params}`)
         const data = await response.json()
         return data
     }
     return useQuery<Job[], Error>({
-        queryKey: ['jobs'],
+        queryKey: ['jobs', params],
         queryFn: fetchJobs,
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
