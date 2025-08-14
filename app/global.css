@@ -12,6 +12,12 @@
     .auth-button {
         @apply w-full bg-blue-500 p-4 rounded-lg;
     }
+    .apply-button {
+        @apply bg-green-500 font-semibold text-white rounded-lg
+    }
+    .favorite-button {
+        @apply bg-blue-300 rounded-lg
+    }
     .filter-button {
         @apply w-full bg-blue-500 p-4 rounded-lg
     }

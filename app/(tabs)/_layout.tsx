@@ -1,11 +1,13 @@
+// import useAuthStore from '@/store/auth.store';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { Redirect, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
 
 const TabsLayout = () => {
-  // const {isAuthenticated, removeUser} = useAuthStore();
-  const isAuthenticated = true;
-  if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
+  // const { isAuthenticated } = useAuthStore();
+  
+  // Temporary bypass for authentication - uncomment when auth is working
+  // if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
   return (
     <Tabs screenOptions={{
@@ -23,28 +25,28 @@ const TabsLayout = () => {
       shadowRadius: 3.84, elevation: 5, paddingHorizontal: 20, paddingVertical: 10
       }}}>
       <Tabs.Screen 
-        name="index"
+        name="jobs/index"
         options={{
           tabBarIcon: ({color, size}) => (
             <AntDesign name="home" size={size} color={color} />
           )
         }}/>
       <Tabs.Screen 
-        name="messages"
+        name="messages/index"
         options={{
           tabBarIcon: ({color, size}) => (
             <AntDesign name="message1" size={size} color={color} />
           )
         }}/>
       <Tabs.Screen 
-        name="calendar"
+        name="calendar/index"
         options={{
           tabBarIcon: ({color, size}) => (
             <AntDesign name="calendar" size={size} color={color} />
           )
         }}/>
       <Tabs.Screen 
-        name="profile"
+        name="profile/index"
         options={{
           tabBarIcon: ({color, size}) => (
             <AntDesign name="user" size={size} color={color} />

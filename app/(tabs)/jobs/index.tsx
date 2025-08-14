@@ -7,6 +7,7 @@ import SearchBar from '@/components/SearchBar';
 import { useJobs } from '@/lib/services/useJobs';
 import { JobFilters } from '@/type';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Dimensions, FlatList, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -91,7 +92,11 @@ const Index = () => {
       <FlatList
         className='w-full p-2'
         data={jobs} // Simulating multiple job listings
-        renderItem={({item, index}) => <JobListing key={index} {...item} />}
+        renderItem={({item, index}) => (
+        <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.id}`)}>
+          <JobListing key={index} {...item} />
+        </TouchableOpacity>
+      )}
         ItemSeparatorComponent={() => <View className='divider'/>}
       />}
       {isOpen && (

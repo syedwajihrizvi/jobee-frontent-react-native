@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 
 const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
 export const useJobs = (jobFilters: JobFilters) => {
-    console.log('Fetching jobs with filters:', jobFilters);
     const { search, location, company, distance, salary, experience } = jobFilters
     const queryParams = new URLSearchParams()
     if (search) queryParams.append('search', search)
@@ -23,5 +22,19 @@ export const useJobs = (jobFilters: JobFilters) => {
         queryKey: ['jobs', params],
         queryFn: fetchJobs,
         staleTime: 1000 * 60 * 5, // 5 minutes
+    })
+}
+
+export const useJob = (id: number) => {
+    const fetchJob = async () => {
+        const response = await fetch(`${JOBS_API_URL}/${id}`)
+        const data = await response.json()
+        return data
+    }
+    return useQuery<Job, Error>({
+        queryKey: ['job', id],
+        queryFn: fetchJob,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        enabled: !!id, // Only fetch if id is defined
     })
 }

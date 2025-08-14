@@ -1,19 +1,15 @@
 import { Job } from '@/type';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import React, { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import CompanyInformation from './CompanyInformation';
+import FavoriteJob from './FavoriteJob';
 
-const JobListing = (job: Job) => {
-  const [favorite, setFavorite] = useState(false);
-  
+const JobListing = (job: Job) => {  
   return (
     <View className='w-full p-4 rounded-full'>
       <View className='flex-row items-center justify-between'>
         <CompanyInformation company={job.businessName} />
-        <TouchableOpacity onPress={() => setFavorite(!favorite)}>
-          <FontAwesome5 name="star" size={24} color={favorite ? "gold" : "black"} />
-        </TouchableOpacity>
+        <FavoriteJob/>
       </View>
       <Text className='font-quicksand-bold text-2xl'>{job.title}</Text>
       <Text className='font-quicksand-medium text-lg'>{job.businessName} {'\u00B7'} {job.location}</Text>
