@@ -4,14 +4,27 @@ import FavoriteJob from '@/components/FavoriteJob'
 import ViewMore from '@/components/ViewMore'
 import { useJob } from '@/lib/services/useJobs'
 import AntDesign from '@expo/vector-icons/AntDesign'
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { router, useLocalSearchParams } from 'expo-router'
-import React from 'react'
+import React, { useRef } from 'react'
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const JobDetails = () => {
   const { id } = useLocalSearchParams()
   const {data:job, isLoading} = useJob(Number(id))
+  const jobBottomRef = useRef<BottomSheet>(null)
+  const compantBottomRef = useRef<BottomSheet>(null)
+
+  const handleJobBottomOpen = () => {
+    compantBottomRef.current?.close();
+    jobBottomRef.current?.expand();
+  }
+
+  const handleCompanyBottomOpen = () => {
+    jobBottomRef.current?.close();
+    compantBottomRef.current?.expand();
+  }
 
   return (
     <SafeAreaView className='flex-1 bg-white relative'>
@@ -42,7 +55,7 @@ const JobDetails = () => {
           <BoldLabeledText label="Posted On" value="August 1st 2025"/>
           <BoldLabeledText label="Apply By" value="August 31st 2025"/>
         </View>
-        <ViewMore label="View More About Job" onClick={() => {}} />
+        <ViewMore label="View More About Job" onClick={handleJobBottomOpen} />
         <View className='divider'/>
         <View className='flex-col gap-2'>
           <Text className='font-quicksand-bold text-2xl'>Company Overview</Text>
@@ -52,7 +65,7 @@ const JobDetails = () => {
           <BoldLabeledText label="Industry" value={"Information Technology and Services"}/>
           <BoldLabeledText label="Website" value={"www.example.com"}/>
         </View>
-        <ViewMore label="View More About Company" onClick={() => {}} />
+        <ViewMore label="View More About Company" onClick={handleCompanyBottomOpen} />
         <View className='divider'/>
         
       </View>
@@ -65,6 +78,21 @@ const JobDetails = () => {
           <FavoriteJob/>
         </TouchableOpacity>
       </View>
+
+      <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["40%", "50%"]} enablePanDownToClose>
+        <BottomSheetView className='flex-1 bg-white'>
+          <View className='p-4 bg-white flex-1'>
+            <Text className='font-quicksand-bold text-2xl'>Job Tags</Text>
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
+      <BottomSheet ref={compantBottomRef} index={-1} snapPoints={["40%", "50%"]} enablePanDownToClose>
+        <BottomSheetView className='flex-1 bg-white'>
+          <View className='p-4 bg-white flex-1'>
+            <Text className='font-quicksand-bold text-2xl'>Company Info</Text>
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
     </SafeAreaView>
   )
 }

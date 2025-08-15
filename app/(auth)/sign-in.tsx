@@ -23,7 +23,7 @@ const SignIn = () => {
         await signIn(form)
         await fetchAuthenticatedUser()
         setIsAuthenticated(true)
-        router.replace("/(tabs)")
+        router.replace("/(tabs)/jobs")
       } catch (error) {
         Alert.alert('Error', 'Failed to sign in. Please try again.')
       } finally {

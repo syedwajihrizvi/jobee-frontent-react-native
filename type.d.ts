@@ -1,3 +1,5 @@
+import React from "react";
+
 interface SignInParams {
     email: string;
     password: string;
@@ -64,4 +66,10 @@ export type JobFilters = {
     distance?: number;
     salary?: number;
     experience?: number;
+}
+
+export type ProfileLinks = {
+    icon: React.ReactNode;
+    label: string;
+    onPress: () => void;
 }
