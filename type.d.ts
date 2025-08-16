@@ -16,7 +16,7 @@ interface SignUpParams {
 
 export type CustomInputProps = {
     placeholder: string;
-    label: string;
+    label: string?;
     value: string;
     onChangeText: (text: string) => void;
 }
@@ -72,4 +72,11 @@ export type ProfileLinks = {
     icon: React.ReactNode;
     label: string;
     onPress: () => void;
+}
+
+export type UserDocument = {
+    id: number,
+    name: string,
+    type: string,
+    dateUploaded: Date,
 }

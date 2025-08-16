@@ -1,0 +1,236 @@
+import BackBar from '@/components/BackBar';
+import DocumentItem from '@/components/DocumentItem';
+import LinkInput from '@/components/LinkInput';
+import { uploadUserDocument } from '@/lib/manageUserDocs';
+import { UserDocument } from '@/type';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useRef, useState } from 'react';
+import { Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const UploadDocuments = () => {
+  const [resumeLink, setResumeLink] = useState('');
+  const [coverLetterLink, setCoverLetterLink] = useState('');
+  const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
+  const [open, setOpen] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const addDocumentRef = useRef<BottomSheet>(null)
+   
+  // TODO: Replace with actual user documents fetched from server
+  const resumeDocuments : UserDocument[] = [
+    { id: 1, name: 'Resume 1', type: 'RESUME', dateUploaded: new Date("2023-01-01") },
+    { id: 2, name: 'Resume 2', type: 'RESUME', dateUploaded: new Date("2023-01-02") },
+    { id: 3, name: 'Resume 3', type: 'RESUME', dateUploaded: new Date("2023-01-03") },
+    { id: 4, name: 'Resume 4', type: 'RESUME', dateUploaded: new Date("2023-01-04") },
+    { id: 5, name: 'Resume 5', type: 'RESUME', dateUploaded: new Date("2023-01-05") }
+  ];
+
+  const coverLetterDocuments : UserDocument[] = [
+    { id: 1, name: 'Cover Letter 1', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-01") },
+    { id: 2, name: 'Cover Letter 2', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-02") },
+    { id: 3, name: 'Cover Letter 3', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-03") },
+    { id: 4, name: 'Cover Letter 4', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-04") },
+    { id: 5, name: 'Cover Letter 5', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-05") }
+  ];
+  
+  const certificateDocuments : UserDocument[] = [
+    { id: 1, name: 'Certificate 1', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-01") },
+    { id: 2, name: 'Certificate 2', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-02") },
+    { id: 3, name: 'Certificate 3', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-03") },
+    { id: 4, name: 'Certificate 4', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-04") },
+    { id: 5, name: 'Certificate 5', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-05") }
+  ];
+
+  const transcriptDocuments : UserDocument[] = [
+    { id: 1, name: 'Transcript 1', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-01") },
+    { id: 2, name: 'Transcript 2', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-02") },
+    { id: 3, name: 'Transcript 3', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-03") },
+    { id: 4, name: 'Transcript 4', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-04") },
+    { id: 5, name: 'Transcript 5', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-05") }
+  ];
+
+  const recommendationDocuments : UserDocument[] = [
+    { id: 1, name: 'Recommendation 1', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-01") },
+    { id: 2, name: 'Recommendation 2', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-02") },
+    { id: 3, name: 'Recommendation 3', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-03") },
+    { id: 4, name: 'Recommendation 4', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-04") },
+    { id: 5, name: 'Recommendation 5', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-05") }
+  ];
+
+
+  const handleUpload = async (documentType: string) => {
+    try {
+        const result = await DocumentPicker.getDocumentAsync({
+            type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        })
+        console.log(result);
+        sendDocumentsToServer(result, documentType)
+    } catch (error) {
+        console.error('Error picking document: ', error);
+    }
+  }
+
+  const sendDocumentsToServer = async (document: DocumentPicker.DocumentPickerResult, documenType: string) => {
+    setUploadingDocument(true);
+    try {
+        const result = await uploadUserDocument(document, documenType);
+        console.log('Upload result: ', result);
+    } catch (error) {
+        console.error('Error uploading documents: ', error);
+    } finally {
+        setUploadingDocument(false);
+        Alert.alert('Success', 'Documents uploaded successfully!');
+    }
+
+  }
+
+  const renderDocumentFlatList = ({title, documents}: {title: string, documents: UserDocument[]}) => (
+    <View className='p-4 bg-white'>
+      <Text className='font-quicksand-bold text-xl'>{title}</Text>
+      <FlatList
+        data={documents}
+        renderItem={({ item }) => (
+          <DocumentItem document={item}/>
+        )}
+        horizontal
+        keyExtractor={(item) => item.id.toString()}
+        showsHorizontalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View className='w-5'/>}
+        contentContainerStyle={{ paddingHorizontal: 2 }}
+      />
+    </View>
+  )
+  const handleDocImagePicker = async (
+    noAccessMsg:string, accessMsg: string, uploadByPhotoMsg: string, uploadByGalleryMsg: string) => {
+    const result = await ImagePicker.requestCameraPermissionsAsync();
+    if (result.granted === false) {
+      Alert.alert(noAccessMsg);
+      return;
+    }
+    Alert.alert(
+        'Add new Resume', 
+        'Choose an option', 
+        [
+            {
+                text: uploadByPhotoMsg,
+                onPress: async () => {
+                    const image = await ImagePicker.launchCameraAsync({
+                        mediaTypes: 'images',
+                        allowsEditing: true,
+                        aspect: [4, 3],
+                        quality: 1,
+                    });
+                    if (!image.canceled) {
+                        console.log('Image selected:', image);
+                        // Here you can convert the image to PDF or handle it as needed
+                    }
+                }
+            },
+            {
+                text: uploadByGalleryMsg,
+                onPress: async () => {
+                    const image = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: 'images',
+                        allowsEditing: true,
+                        aspect: [4, 3],
+                        quality: 1,
+                    });
+                    if (!image.canceled) {
+                        console.log('Image selected:', image);
+                        // Here you can convert the image to PDF or handle it as needed
+                    }
+                }
+            },
+            {
+                text: 'Cancel',
+                style: 'cancel'
+            }
+        ]);
+  }
+
+  const sendDocumentUriToServer = async () => {
+    console.log('Sending document URI to server...');
+  }
+
+  /*
+  User can upload documents the following ways
+  1) Upload File
+  2) Pase Google Drive / Dropbox Link
+  3) Take a Photo which we will convert to PDF
+  */
+  // TODO: Replace RESUME and COVER_LETTER with actual DocumentType enum values
+  return (
+    <SafeAreaView className='flex-1 bg-white h-full'>
+      <BackBar label="Manage Documents" optionalThirdItem={
+        <TouchableOpacity onPress={() => addDocumentRef.current?.expand()}>
+            <AntDesign name="plus" size={24} color="black"/>
+        </TouchableOpacity>
+      }/>     
+      <ScrollView>
+        {renderDocumentFlatList({title: 'My Resumes', documents: resumeDocuments})}
+        <View className='divider'/>
+        {renderDocumentFlatList({title: 'My Cover Letters', documents: coverLetterDocuments})}
+        <View className='divider'/>
+        {renderDocumentFlatList({title: 'My Certificates', documents: certificateDocuments})}
+        <View className='divider'/>
+        {renderDocumentFlatList({title: 'My Transcripts', documents: transcriptDocuments})}
+        <View className='divider'/>
+        {renderDocumentFlatList({title: 'My Recommendations', documents: recommendationDocuments})}
+      </ScrollView>
+      <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["40%", '50%']} enablePanDownToClose>
+        <BottomSheetView className='flex-1 bg-white p-4 gap-4 w-full justify-center items-center'>
+            <View>
+            <Text className='font-quicksand-bold text-md mb-1'>Document Type</Text>
+            <DropDownPicker
+                open={open}
+                value={selectedDocumentType}
+                items={[
+                    {label: 'Resume', value: 'RESUME'},
+                    {label: 'Cover Letter', value: 'COVER_LETTER'},
+                    {label: 'Certificate', value: 'CERTIFICATE'},
+                    {label: 'Transcript', value: 'TRANSCRIPT'},
+                    {label: 'Recommendation', value: 'RECOMMENDATION'}
+                ]}
+                setOpen={setOpen}
+                setValue={setSelectedDocumentType}
+                setItems={() => {}}
+                containerStyle={{width: '100%'}}
+                placeholder="Select Document Type"
+            />
+            </View>
+            <TouchableOpacity className="action-button w-full" onPress={() => handleUpload('RESUME')}>
+                <Text className='action-button__text'>Upload a Document</Text>
+                <AntDesign name="upload" size={20} color="black"/>
+            </TouchableOpacity>
+            <Text className='font-quicksand-bold text-md'>OR</Text>
+            <TouchableOpacity className="action-button w-full"onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
+                <Text className='action-button__text'>Take a Photo</Text>
+                <AntDesign name="camera" size={20} color="black"/>
+            </TouchableOpacity>
+            <Text className='font-quicksand-bold text-md'>OR</Text>
+            <LinkInput
+                value={resumeLink}
+                onChangeText={setResumeLink}
+                onIconPress={sendDocumentUriToServer}
+            />
+            <View className="w-full p-4 flex-row gap-2 items-center justify-center">
+                <TouchableOpacity className='apply-button w-3/6 items-center justify-center h-14'>
+                <Text className='font-quicksand-semibold text-md'>Done</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    className='favorite-button h-14 w-3/6 items-center justify-center'
+                    onPress={() => addDocumentRef.current?.close()}>
+                <Text className='font-quicksand-semibold text-md'>Close</Text>
+                </TouchableOpacity>
+            </View>
+        </BottomSheetView>
+      </BottomSheet>
+    </SafeAreaView>
+  )
+}
+
+export default UploadDocuments

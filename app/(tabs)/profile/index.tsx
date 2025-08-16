@@ -28,8 +28,8 @@ const links: ProfileLinks[] = [
   },
   {
     icon: <Entypo name="documents" size={28} color="black" />,
-    label: 'Upload Documents',
-    onPress: () => router.push('/profile/uploadDocuments')
+    label: 'Manage Documents',
+    onPress: () => router.push('/profile/manageDocs')
   },
   {
     icon: <AntDesign name="calendar" size={28} color="black"/>,
