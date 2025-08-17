@@ -19,11 +19,10 @@ export default function Index() {
   }
   
   // Temporary bypass for authentication
-  if (1 === 1) {
-    console.log('Bypassing authentication check');
+  if (isAuthenticated) {
+
     return <Redirect href="/(tabs)/jobs" />;
   } else {
-    console.log('Redirecting to sign-in');
     return <Redirect href="/(auth)/sign-in" />;
   }
 }

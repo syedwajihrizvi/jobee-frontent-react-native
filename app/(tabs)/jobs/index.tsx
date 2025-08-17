@@ -1,3 +1,4 @@
+import CompleteProfileReminder from '@/components/CompleteProfileReminder';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInput';
 import CustomSlider from '@/components/CustomSlider';
@@ -5,10 +6,12 @@ import JobListing from '@/components/JobListing';
 import LocationSearch from '@/components/LocationSearch';
 import SearchBar from '@/components/SearchBar';
 import { useJobs } from '@/lib/services/useJobs';
+import useAuthStore from '@/store/auth.store';
 import { JobFilters } from '@/type';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Dimensions, FlatList, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,6 +31,17 @@ const Index = () => {
   const { data: jobs, isLoading } = useJobs(filters)
   const [isOpen, setIsOpen] = useState(false)
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+  const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(false);
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+
+  useEffect(() => {
+    const checkProfileCompletion = async () => {
+      const profileReminderShown = await AsyncStorage.getItem('profileReminderShown');
+      setShowProfileCompleteReminder(profileReminderShown !== 'false');
+    };
+    checkProfileCompletion();
+  }, [user]);
+
 
   const handleApplyFilters = () => {
     setFilters({...tempFilters});
@@ -77,16 +91,32 @@ const Index = () => {
     setFilters(prev => ({ ...prev, search: text }));
   }
 
+  const handleProfileComplete = () => {
+    setShowProfileCompleteReminder(false);
+    AsyncStorage.setItem('profileReminderShown', 'true');
+    router.push('/(tabs)/profile');
+  }
+    
+  const handleProfileLater = () => {
+    setShowProfileCompleteReminder(false);
+    AsyncStorage.setItem('profileReminderShown', 'true');
+  }
+
   return (
-    <SafeAreaView className='flex-1 bg-white'>
-            <View className='w-full flex-row items-center justify-center px-8 gap-4'>
-              <SearchBar 
-                placeholder="Search for Jobs..." 
-                onSubmit={handleSearchSubmit}/>
-                <TouchableOpacity onPress={openFilters}>
-                  <Ionicons name="filter-circle-outline" size={30} color="black" />
-                </TouchableOpacity>
-            </View>
+    <SafeAreaView className='relative flex-1 bg-white'>
+        <View className='w-full flex-row items-center justify-center px-8 gap-4'>
+          <SearchBar 
+            placeholder="Search for Jobs..." 
+            onSubmit={handleSearchSubmit}/>
+            <TouchableOpacity onPress={openFilters}>
+              <Ionicons name="filter-circle-outline" size={30} color="black" />
+            </TouchableOpacity>
+        </View>
+      {
+        !isAuthLoading && 
+        showProfileCompleteReminder && 
+        <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater}/>
+      }
       {isLoading ? 
       <ActivityIndicator size="large" color="#0000ff" className='flex-1 justify-center items-center'/> :
       <FlatList

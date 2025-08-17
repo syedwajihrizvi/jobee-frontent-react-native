@@ -80,3 +80,11 @@ export type UserDocument = {
     type: string,
     dateUploaded: Date,
 }
+
+export type User = {
+    id: number;
+    firstName: string;
+    lastName: string;
+    summary: string;
+    profileComplete: boolean;
+}

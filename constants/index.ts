@@ -4,3 +4,11 @@ export const images = {
     placeholder,
     companyLogo
 }
+
+export enum UserDocumentType {
+    RESUME = 'RESUME',
+    TRANSCRIPT = 'TRANSCRIPT',
+    RECOMMENDATION = 'RECOMMENDATION',
+    COVER_LETTER = 'COVER_LETTER',
+    CERTIFICATE = 'CERTIFICATE'
+}

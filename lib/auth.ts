@@ -15,8 +15,9 @@ export const signIn = async (request: SignInParams) => {
     const data = await response.json()
     if (response.status === 200) {
         await Asyncstorage.setItem('x-auth-token', data.token)
+        return true
     }
-    return true
+    return false
 }
 
 export const signUp = async (request: SignUpParams) => {

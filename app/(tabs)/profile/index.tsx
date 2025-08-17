@@ -1,12 +1,13 @@
 import ProfileLink from '@/components/ProfileLink';
 import { images } from '@/constants';
+import useAuthStore from '@/store/auth.store';
 import { ProfileLinks } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -54,28 +55,34 @@ const links: ProfileLinks[] = [
 ]
 
 const Profile = () => {
+  const { isLoading, user} = useAuthStore()
   return (
     <SafeAreaView className="flex-1 bg-white h-full p-4">
-      <View className='flex-row w-full justify-between items-center'>
-        <TouchableOpacity onPress={() => router.back()} >
-          <AntDesign name="arrowleft" size={24} color="black"/>
-        </TouchableOpacity>
-        <Text className='text-lg font-semibold '>Profile</Text>
-        <View style={{width:24}}/>
-      </View>
-      <View className='flex flex-row items-start'>
-        <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain'/>
-        <View>
-          <Text className='font-quicksand-bold text-xl ml-2'>John Doe</Text>
-          <Text className='font-quicksand-semibold text-md ml-2'>Software Engineer at Company</Text>
-        </View>
-      </View>
-      <View className='divider'/>
-      <View className='flex-col gap-2 mt-4'>
-        {links.map((link, index) => (
-          <ProfileLink key={index} icon={link.icon} label={link.label} onPress={link.onPress} />
-        ))}
-      </View>
+      {
+        isLoading ? 
+        <ActivityIndicator size="large" color="#0000ff" className='mt-20'/> :
+        <>
+          <View className='flex-row w-full justify-between items-center'>
+            <TouchableOpacity onPress={() => router.back()} >
+              <AntDesign name="arrowleft" size={24} color="black"/>
+            </TouchableOpacity>
+            <Text className='text-lg font-semibold '>Profile</Text>
+            <View style={{width:24}}/>
+          </View>
+          <View className='flex flex-row items-start'>
+            <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain'/>
+            <View>
+              <Text className='font-quicksand-bold text-xl ml-2'>{user?.firstName} {user?.lastName}</Text>
+              <Text className='font-quicksand-semibold text-md ml-2'>{user?.summary}</Text>
+            </View>
+          </View>
+          <View className='divider'/>
+          <View className='flex-col gap-2 mt-4'>
+            {links.map((link, index) => (
+              <ProfileLink key={index} icon={link.icon} label={link.label} onPress={link.onPress} />
+            ))}
+          </View>
+        </>}
     </SafeAreaView>
   )
 }

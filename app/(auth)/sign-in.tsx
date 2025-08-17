@@ -3,6 +3,7 @@ import CustomInput from '@/components/CustomInput'
 import { signIn } from '@/lib/auth'
 import useAuthStore from '@/store/auth.store'
 import { SignInParams } from '@/type'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import { Alert, View } from 'react-native'
@@ -20,9 +21,14 @@ const SignIn = () => {
     else {
       setIsLoading(true)
       try {
-        await signIn(form)
+        const result = await signIn(form)
+        if (!result) {
+          Alert.alert('Error', 'Invalid email or password')
+          return
+        }
         await fetchAuthenticatedUser()
         setIsAuthenticated(true)
+        AsyncStorage.setItem('profileReminderShown', "false");
         router.replace("/(tabs)/jobs")
       } catch (error) {
         Alert.alert('Error', 'Failed to sign in. Please try again.')

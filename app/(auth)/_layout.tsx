@@ -7,7 +7,7 @@ import { images } from '../../constants'
 const AuthLayout = () => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <ScrollView className='bg-white h-full' keyboardShouldPersistTaps='handled'>
+        <View className='bg-white h-full'>
             <View className='w-full relative' style={{height: Dimensions.get('window').height/2.25}}>
                 <ImageBackground 
                   source ={{ uri: images.placeholder }} 
@@ -24,8 +24,10 @@ const AuthLayout = () => {
                 <CustomButton text="Log In" customClass="bg-blue-500 p-4 rounded-lg m-2"  onClick={() => router.push("/sign-in")}/>
                 <CustomButton text="Sign Up" customClass="bg-blue-500 p-4 rounded-lg m-2" onClick={() => router.push("/sign-up")}/>
             </View>
-            <Slot/>
-        </ScrollView>
+            <ScrollView>
+              <Slot/>
+            </ScrollView>
+        </View>
     </KeyboardAvoidingView>
   )
 }

@@ -1,6 +1,7 @@
 import BackBar from '@/components/BackBar';
 import DocumentItem from '@/components/DocumentItem';
 import LinkInput from '@/components/LinkInput';
+import { UserDocumentType } from '@/constants';
 import { uploadUserDocument } from '@/lib/manageUserDocs';
 import { UserDocument } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -18,6 +19,7 @@ const UploadDocuments = () => {
   const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
   const [open, setOpen] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
   const addDocumentRef = useRef<BottomSheet>(null)
    
   // TODO: Replace with actual user documents fetched from server
@@ -63,29 +65,43 @@ const UploadDocuments = () => {
 
 
   const handleUpload = async (documentType: string) => {
+    setUploadingDocument(true)
     try {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        const document = await DocumentPicker.getDocumentAsync({
+            type: [
+                'application/pdf', 
+                'application/msword', 
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ]
         })
-        console.log(result);
-        sendDocumentsToServer(result, documentType)
+        if (!document.canceled) {
+            setUploadedDocument(document);
+            console.log('Selected document:', document);
+        }
     } catch (error) {
         console.error('Error picking document: ', error);
+        Alert.alert('Error', 'Failed to upload document. Please try again.')
+    } finally {
+        setUploadingDocument(false)
     }
   }
 
-  const sendDocumentsToServer = async (document: DocumentPicker.DocumentPickerResult, documenType: string) => {
+  const handleDocumentUploadSubmit = async () => {
+    if (!uploadedDocument) {
+        Alert.alert('Error', 'Please select a document to upload');
+        return;
+    }
     setUploadingDocument(true);
     try {
-        const result = await uploadUserDocument(document, documenType);
-        console.log('Upload result: ', result);
+        await uploadUserDocument(uploadedDocument, selectedDocumentType);
+        Alert.alert('Success', 'Document uploaded successfully');
+        addDocumentRef.current?.close();
     } catch (error) {
-        console.error('Error uploading documents: ', error);
+        console.error('Error uploading document:', error);
+        Alert.alert('Error', 'Failed to upload document. Please try again.');
     } finally {
-        setUploadingDocument(false);
-        Alert.alert('Success', 'Documents uploaded successfully!');
+        setUploadingDocument(false)
     }
-
   }
 
   const renderDocumentFlatList = ({title, documents}: {title: string, documents: UserDocument[]}) => (
@@ -189,25 +205,34 @@ const UploadDocuments = () => {
                 open={open}
                 value={selectedDocumentType}
                 items={[
-                    {label: 'Resume', value: 'RESUME'},
-                    {label: 'Cover Letter', value: 'COVER_LETTER'},
-                    {label: 'Certificate', value: 'CERTIFICATE'},
-                    {label: 'Transcript', value: 'TRANSCRIPT'},
-                    {label: 'Recommendation', value: 'RECOMMENDATION'}
+                    {label: 'Resume', value: UserDocumentType.RESUME},
+                    {label: 'Cover Letter', value: UserDocumentType.COVER_LETTER},
+                    {label: 'Certificate', value: UserDocumentType.CERTIFICATE},
+                    {label: 'Transcript', value: UserDocumentType.TRANSCRIPT},
+                    {label: 'Recommendation', value: UserDocumentType.RECOMMENDATION}
                 ]}
                 setOpen={setOpen}
-                setValue={setSelectedDocumentType}
+                setValue={(value) => setSelectedDocumentType(value)}
                 setItems={() => {}}
                 containerStyle={{width: '100%'}}
                 placeholder="Select Document Type"
             />
             </View>
-            <TouchableOpacity className="action-button w-full" onPress={() => handleUpload('RESUME')}>
+            {
+            !uploadedDocument ? 
+            <TouchableOpacity className="action-button bg-blue-500 w-full" onPress={() => handleUpload(selectedDocumentType)}>
                 <Text className='action-button__text'>Upload a Document</Text>
                 <AntDesign name="upload" size={20} color="black"/>
-            </TouchableOpacity>
+            </TouchableOpacity> :
+            <View className='w-full flex-col gap-2'>
+                <Text className='font-quicksand-bold color-blue-500'>{uploadedDocument.assets && uploadedDocument.assets[0]?.name ? uploadedDocument.assets[0].name : 'No document name available'}</Text>
+                <TouchableOpacity className='action-button bg-red-500 w-full' onPress={() => setUploadedDocument(null)}>
+                    <Text className='action-button__text'>Remove Document</Text>
+                    <AntDesign name="file1" size={20} color="black"/>
+                </TouchableOpacity>
+            </View>}
             <Text className='font-quicksand-bold text-md'>OR</Text>
-            <TouchableOpacity className="action-button w-full"onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
+            <TouchableOpacity className="action-button bg-blue-500 w-full"onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
                 <Text className='action-button__text'>Take a Photo</Text>
                 <AntDesign name="camera" size={20} color="black"/>
             </TouchableOpacity>
@@ -218,7 +243,9 @@ const UploadDocuments = () => {
                 onIconPress={sendDocumentUriToServer}
             />
             <View className="w-full p-4 flex-row gap-2 items-center justify-center">
-                <TouchableOpacity className='apply-button w-3/6 items-center justify-center h-14'>
+                <TouchableOpacity 
+                    className='apply-button w-3/6 items-center justify-center h-14'
+                    onPress={handleDocumentUploadSubmit}>
                 <Text className='font-quicksand-semibold text-md'>Done</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
