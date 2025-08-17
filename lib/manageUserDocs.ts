@@ -13,7 +13,6 @@ export const uploadUserDocument = async (
         type: document.assets![0].mimeType,
     } as any)
     formData.append('documentType', documentType);
-    console.log('Uploading document:', formData);
     const response = await fetch(
         USER_DOCS_API_URL, {
         method: 'POST',

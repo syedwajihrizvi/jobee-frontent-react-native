@@ -85,6 +85,25 @@ export type User = {
     id: number;
     firstName: string;
     lastName: string;
+    title: string;
     summary: string;
     profileComplete: boolean;
+    profileImageUrl: string
 }
+
+export type EditUserProfileForm = {
+    firstName: string;
+    lastName: string;
+    summary: string;
+    title: string;
+    location: string;
+}
+
+export type Skill = {
+    id: number;
+    name: string;
+    experience: number;
+}
+
+export type ProfileImageUpdate = {
+    profileImageUrl: string;}

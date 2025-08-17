@@ -37,7 +37,7 @@ const Index = () => {
   useEffect(() => {
     const checkProfileCompletion = async () => {
       const profileReminderShown = await AsyncStorage.getItem('profileReminderShown');
-      setShowProfileCompleteReminder(profileReminderShown !== 'false');
+      setShowProfileCompleteReminder(profileReminderShown === 'false');
     };
     checkProfileCompletion();
   }, [user]);

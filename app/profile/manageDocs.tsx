@@ -13,7 +13,7 @@ import { Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react
 import DropDownPicker from 'react-native-dropdown-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const UploadDocuments = () => {
+const ManageDocuments = () => {
   const [resumeLink, setResumeLink] = useState('');
   const [coverLetterLink, setCoverLetterLink] = useState('');
   const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
@@ -260,4 +260,4 @@ const UploadDocuments = () => {
   )
 }
 
-export default UploadDocuments
+export default ManageDocuments

@@ -35,6 +35,7 @@ export const signUp = async (request: SignUpParams) => {
 
 export const signOut = async () => {
     await Asyncstorage.removeItem('x-auth-token')
+    Asyncstorage.setItem('profileReminderShown', "false");
     return true
 }
 
