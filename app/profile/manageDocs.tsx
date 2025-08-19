@@ -3,64 +3,87 @@ import DocumentItem from '@/components/DocumentItem';
 import LinkInput from '@/components/LinkInput';
 import { UserDocumentType } from '@/constants';
 import { uploadUserDocument } from '@/lib/manageUserDocs';
-import { UserDocument } from '@/type';
+import useAuthStore from '@/store/auth.store';
+import { AllUserDocuments, UserDocument } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useRef, useState } from 'react';
-import { Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ManageDocuments = () => {
+  const {isLoading, user} = useAuthStore()
   const [resumeLink, setResumeLink] = useState('');
   const [coverLetterLink, setCoverLetterLink] = useState('');
   const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
   const [open, setOpen] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
-  const addDocumentRef = useRef<BottomSheet>(null)
-   
+  const addDocumentRef = useRef<BottomSheet>(null);
+  const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(null);
+
+  useEffect(() => {
+    if (user && user.documents) {
+      console.log('User documents:', user.documents);
+      // Fetch user documents from the server or local storage
+      // This is a placeholder, replace with actual API call
+      const resumeDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
+      const coverLetterDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.COVER_LETTER);
+      const certificateDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.CERTIFICATE);
+      const transcriptDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.TRANSCRIPT);
+      const recommendationDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.RECOMMENDATION);
+      setUserDocuments({
+        resumeDocuments,
+        coverLetterDocuments: [],
+        certificateDocuments: [],
+        transcriptDocuments: [],
+        recommendationDocuments: []
+      });
+    }
+  }, [isLoading, user])
+  console.log('User Documents:', userDocuments);
   // TODO: Replace with actual user documents fetched from server
   const resumeDocuments : UserDocument[] = [
-    { id: 1, name: 'Resume 1', type: 'RESUME', dateUploaded: new Date("2023-01-01") },
-    { id: 2, name: 'Resume 2', type: 'RESUME', dateUploaded: new Date("2023-01-02") },
-    { id: 3, name: 'Resume 3', type: 'RESUME', dateUploaded: new Date("2023-01-03") },
-    { id: 4, name: 'Resume 4', type: 'RESUME', dateUploaded: new Date("2023-01-04") },
-    { id: 5, name: 'Resume 5', type: 'RESUME', dateUploaded: new Date("2023-01-05") }
+    { id: 1, documentUrl: 'Resume 1', documentType: 'RESUME', createdAt: new Date("2023-01-01") },
+    { id: 2, documentUrl: 'Resume 2', documentType: 'RESUME', createdAt: new Date("2023-01-02") },
+    { id: 3, documentUrl: 'Resume 3', documentType: 'RESUME', createdAt: new Date("2023-01-03") },
+    { id: 4, documentUrl: 'Resume 4', documentType: 'RESUME', createdAt: new Date("2023-01-04") },
+    { id: 5, documentUrl: 'Resume 5', documentType: 'RESUME', createdAt: new Date("2023-01-05") }
   ];
 
   const coverLetterDocuments : UserDocument[] = [
-    { id: 1, name: 'Cover Letter 1', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-01") },
-    { id: 2, name: 'Cover Letter 2', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-02") },
-    { id: 3, name: 'Cover Letter 3', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-03") },
-    { id: 4, name: 'Cover Letter 4', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-04") },
-    { id: 5, name: 'Cover Letter 5', type: 'COVER_LETTER', dateUploaded: new Date("2023-01-05") }
+    { id: 1, documentUrl: 'Cover Letter 1', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-01") },
+    { id: 2, documentUrl: 'Cover Letter 2', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-02") },
+    { id: 3, documentUrl: 'Cover Letter 3', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-03") },
+    { id: 4, documentUrl: 'Cover Letter 4', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-04") },
+    { id: 5, documentUrl: 'Cover Letter 5', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-05") }
   ];
   
   const certificateDocuments : UserDocument[] = [
-    { id: 1, name: 'Certificate 1', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-01") },
-    { id: 2, name: 'Certificate 2', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-02") },
-    { id: 3, name: 'Certificate 3', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-03") },
-    { id: 4, name: 'Certificate 4', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-04") },
-    { id: 5, name: 'Certificate 5', type: 'CERTIFICATE', dateUploaded: new Date("2023-01-05") }
+    { id: 1, documentUrl: 'Certificate 1', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-01") },
+    { id: 2, documentUrl: 'Certificate 2', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-02") },
+    { id: 3, documentUrl: 'Certificate 3', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-03") },
+    { id: 4, documentUrl: 'Certificate 4', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-04") },
+    { id: 5, documentUrl: 'Certificate 5', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-05") }
   ];
 
   const transcriptDocuments : UserDocument[] = [
-    { id: 1, name: 'Transcript 1', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-01") },
-    { id: 2, name: 'Transcript 2', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-02") },
-    { id: 3, name: 'Transcript 3', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-03") },
-    { id: 4, name: 'Transcript 4', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-04") },
-    { id: 5, name: 'Transcript 5', type: 'TRANSCRIPT', dateUploaded: new Date("2023-01-05") }
+    { id: 1, documentUrl: 'Transcript 1', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-01") },
+    { id: 2, documentUrl: 'Transcript 2', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-02") },
+    { id: 3, documentUrl: 'Transcript 3', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-03") },
+    { id: 4, documentUrl: 'Transcript 4', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-04") },
+    { id: 5, documentUrl: 'Transcript 5', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-05") }
   ];
 
   const recommendationDocuments : UserDocument[] = [
-    { id: 1, name: 'Recommendation 1', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-01") },
-    { id: 2, name: 'Recommendation 2', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-02") },
-    { id: 3, name: 'Recommendation 3', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-03") },
-    { id: 4, name: 'Recommendation 4', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-04") },
-    { id: 5, name: 'Recommendation 5', type: 'RECOMMENDATION', dateUploaded: new Date("2023-01-05") }
+    { id: 1, documentUrl: 'Recommendation 1', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-01") },
+    { id: 2, documentUrl: 'Recommendation 2', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-02") },
+    { id: 3, documentUrl: 'Recommendation 3', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-03") },
+    { id: 4, documentUrl: 'Recommendation 4', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-04") },
+    { id: 5, documentUrl: 'Recommendation 5', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-05") }
   ];
 
 
@@ -116,7 +139,7 @@ const ManageDocuments = () => {
         keyExtractor={(item) => item.id.toString()}
         showsHorizontalScrollIndicator={false}
         ItemSeparatorComponent={() => <View className='w-5'/>}
-        contentContainerStyle={{ paddingHorizontal: 2 }}
+        contentContainerStyle={{ paddingHorizontal: 2, paddingVertical: 4 }}
       />
     </View>
   )
@@ -186,17 +209,18 @@ const ManageDocuments = () => {
             <AntDesign name="plus" size={24} color="black"/>
         </TouchableOpacity>
       }/>     
-      <ScrollView>
-        {renderDocumentFlatList({title: 'My Resumes', documents: resumeDocuments})}
-        <View className='divider'/>
-        {renderDocumentFlatList({title: 'My Cover Letters', documents: coverLetterDocuments})}
-        <View className='divider'/>
-        {renderDocumentFlatList({title: 'My Certificates', documents: certificateDocuments})}
+      {isLoading ? <ActivityIndicator size='large' className='flex-1 justify-center items-center'/> :
+        <ScrollView>
+          {renderDocumentFlatList({title: 'My Resumes', documents: userDocuments?.resumeDocuments || []})}
+          <View className='divider'/>
+          {renderDocumentFlatList({title: 'My Cover Letters', documents: coverLetterDocuments})}
+          <View className='divider'/>
+          {renderDocumentFlatList({title: 'My Certificates', documents: certificateDocuments})}
         <View className='divider'/>
         {renderDocumentFlatList({title: 'My Transcripts', documents: transcriptDocuments})}
         <View className='divider'/>
         {renderDocumentFlatList({title: 'My Recommendations', documents: recommendationDocuments})}
-      </ScrollView>
+      </ScrollView>}
       <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["40%", '50%']} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white p-4 gap-4 w-full justify-center items-center'>
             <View>

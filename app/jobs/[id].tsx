@@ -3,6 +3,7 @@ import CompanyInformation from '@/components/CompanyInformation'
 import FavoriteJob from '@/components/FavoriteJob'
 import ViewMore from '@/components/ViewMore'
 import { useJob } from '@/lib/services/useJobs'
+import useAuthStore from '@/store/auth.store'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -14,16 +15,17 @@ const JobDetails = () => {
   const { id } = useLocalSearchParams()
   const {data:job, isLoading} = useJob(Number(id))
   const jobBottomRef = useRef<BottomSheet>(null)
-  const compantBottomRef = useRef<BottomSheet>(null)
+  const companyBottomRef = useRef<BottomSheet>(null)
+  const { user } = useAuthStore()
 
   const handleJobBottomOpen = () => {
-    compantBottomRef.current?.close();
+    companyBottomRef.current?.close();
     jobBottomRef.current?.expand();
   }
 
   const handleCompanyBottomOpen = () => {
     jobBottomRef.current?.close();
-    compantBottomRef.current?.expand();
+    companyBottomRef.current?.expand();
   }
 
   return (
@@ -38,7 +40,7 @@ const JobDetails = () => {
       <View>
         <View className='w-full flex-row items-center justify-between'>
           <CompanyInformation company={job?.businessName!} />
-          <FavoriteJob/> 
+          <FavoriteJob jobId={job?.id!} />
         </View>
         <Text className='font-quicksand-bold text-2xl'>{job?.title}</Text>
         <Text className='font-quicksand-semibold text-sm'>{job?.location}</Text>
@@ -70,12 +72,12 @@ const JobDetails = () => {
         
       </View>
       </View>}
-      <View className="w-full absolute bottom-0 bg-slate-100 p-4 flex-row gap-2 items-center justify-center">
+      <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
         <TouchableOpacity className='apply-button w-4/6 items-center justify-center h-14'>
           <Text className='font-quicksand-semibold text-md'>Apply Now</Text>
         </TouchableOpacity>
         <TouchableOpacity className='favorite-button h-14 w-1/6 items-center justify-center'>
-          <FavoriteJob/>
+          <FavoriteJob jobId={job?.id!} />
         </TouchableOpacity>
       </View>
 
@@ -86,7 +88,7 @@ const JobDetails = () => {
           </View>
         </BottomSheetView>
       </BottomSheet>
-      <BottomSheet ref={compantBottomRef} index={-1} snapPoints={["40%", "50%"]} enablePanDownToClose>
+      <BottomSheet ref={companyBottomRef} index={-1} snapPoints={["40%", "50%"]} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
           <View className='p-4 bg-white flex-1'>
             <Text className='font-quicksand-bold text-2xl'>Company Info</Text>

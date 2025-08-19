@@ -38,3 +38,21 @@ export const useJob = (id: number) => {
         enabled: !!id, // Only fetch if id is defined
     })
 }
+
+export const useJobsByUserFavorites = (
+  userId?: number,
+  options?: { enabled?: boolean }
+) => {
+  const fetchFavoriteJobs = async () => {
+    const response = await fetch(`${JOBS_API_URL}/favorites?userId=${userId}`)
+    return response.json()
+  }
+
+  return useQuery<Job[], Error>({
+    queryKey: ['jobs', 'favorites', userId],  // ✅ userId in key means query refreshes when userId changes
+    queryFn: fetchFavoriteJobs,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!userId && (options?.enabled ?? true), // ✅ only run if userId is set
+  })
+}
+

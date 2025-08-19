@@ -1,6 +1,6 @@
 import ProfileLink from '@/components/ProfileLink';
 import { images } from '@/constants';
-import { getS3ProfileImage } from '@/lib/s3ImageUrls';
+import { getS3ProfileImage } from '@/lib/s3Urls';
 import { updateUserProfileImage } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
 import { ProfileLinks } from '@/type';
@@ -28,7 +28,7 @@ const links: ProfileLinks[] = [
   {
     icon: <AntDesign name="staro" size={28} color="black"/>,
     label: 'Favorite Jobs',
-    onPress: () => console.log('Favorite Jobs Pressed')
+    onPress: () => router.push('/profile/favoriteJobs')
   },
   {
     icon: <Entypo name="documents" size={28} color="black" />,
@@ -139,13 +139,10 @@ const Profile = () => {
       console.warn('User profile image URL is not available');
       return <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain' />;
     } else if (uploadedProfileImage) {
-      console.log('Using uploaded profile image:', uploadedProfileImage);
       return <Image source={{uri: getS3ProfileImage(uploadedProfileImage)}} className='size-14 rounded-full' resizeMode='contain' />;
     }
-    console.log('Using user profile image:', user.profileImageUrl);
-    const url = getS3ProfileImage(user.profileImageUrl);
-    console.log('Profile image URL:', url);
-    return <Image source={{uri: getS3ProfileImage(user.profileImageUrl)}} className='size-14 rounded-full' resizeMode='contain' />;
+    const uri = getS3ProfileImage(user.profileImageUrl);
+    return <Image source={{uri}} className='size-14 rounded-full' resizeMode='contain' />;
   } 
 
   return (

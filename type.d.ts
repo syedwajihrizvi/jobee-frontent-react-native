@@ -76,9 +76,17 @@ export type ProfileLinks = {
 
 export type UserDocument = {
     id: number,
-    name: string,
-    type: string,
-    dateUploaded: Date,
+    documentUrl: string,
+    documentType: string,
+    createdAt: Date,
+}
+
+export type AllUserDocuments = {
+    resumeDocuments: UserDocument[];
+    coverLetterDocuments: UserDocument[];
+    certificateDocuments: UserDocument[];
+    transcriptDocuments: UserDocument[];
+    recommendationDocuments: UserDocument[];
 }
 
 export type User = {
@@ -88,7 +96,9 @@ export type User = {
     title: string;
     summary: string;
     profileComplete: boolean;
-    profileImageUrl: string
+    profileImageUrl: string;
+    favoriteJobs: {id:number}[];
+    documents: UserDocument[]
 }
 
 export type EditUserProfileForm = {

@@ -1,15 +1,17 @@
+import useAuthStore from '@/store/auth.store';
 import { Job } from '@/type';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import CompanyInformation from './CompanyInformation';
 import FavoriteJob from './FavoriteJob';
 
-const JobListing = (job: Job) => {  
+const JobListing = (job: Job) => {
+  const { user } = useAuthStore();
   return (
     <View className='w-full p-4 rounded-full'>
       <View className='flex-row items-center justify-between'>
         <CompanyInformation company={job.businessName} />
-        <FavoriteJob/>
+        <FavoriteJob jobId={job.id} />
       </View>
       <Text className='font-quicksand-bold text-2xl'>{job.title}</Text>
       <Text className='font-quicksand-medium text-lg'>{job.businessName} {'\u00B7'} {job.location}</Text>

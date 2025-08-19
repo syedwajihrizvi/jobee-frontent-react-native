@@ -1,11 +1,13 @@
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 const USER_DOCS_API_URL = "http://10.0.0.135:8080/user-documents";
 
 export const uploadUserDocument = async (
     document: DocumentPicker.DocumentPickerResult,
     documentType: string) => {
-    // Simulate an API call
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
     const formData = new FormData();
     formData.append('document', {
         uri: document.assets![0].uri,
@@ -18,6 +20,7 @@ export const uploadUserDocument = async (
         method: 'POST',
         headers: {
             'Content-Type': 'multipart/form-data',
+            'x-auth-token': `Bearer ${token}`,
         },
         body: formData
     })
