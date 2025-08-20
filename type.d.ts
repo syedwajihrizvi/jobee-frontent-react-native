@@ -93,8 +93,15 @@ export type User = {
     id: number;
     firstName: string;
     lastName: string;
+    age: number;
+    email: string;
+    location: string;
+    company: string;
+    phoneNumber: string;
     title: string;
     summary: string;
+    skills: UserSkill[];
+    education: Education[];
     profileComplete: boolean;
     profileImageUrl: string;
     favoriteJobs: {id:number}[];
@@ -109,10 +116,24 @@ export type EditUserProfileForm = {
     location: string;
 }
 
+export type UserSkill = {
+    id: number;
+    experience: number;
+    skill: Skill
+}
+
 export type Skill = {
     id: number;
     name: string;
-    experience: number;
+    description: string;
+}
+
+export type Education = {
+    id: number;
+    institution: string;
+    degree: string;
+    fromYear: string;
+    toYear: string | null
 }
 
 export type ProfileImageUpdate = {
