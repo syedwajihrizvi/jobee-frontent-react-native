@@ -18,6 +18,8 @@ export type CustomInputProps = {
     placeholder: string;
     label: string?;
     value: string;
+    returnKeyType?: string;
+    autoCapitalize?: string;
     onChangeText: (text: string) => void;
 }
 
@@ -138,3 +140,15 @@ export type Education = {
 
 export type ProfileImageUpdate = {
     profileImageUrl: string;}
+
+export type AddUserSkillForm = {
+    skill: string;
+    experience: string;
+}
+
+export type AddUserEducationForm = {
+    institution: string;
+    degree: string;
+    fromYear: string;
+    toYear: string | null;
+}

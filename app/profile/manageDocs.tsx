@@ -37,54 +37,15 @@ const ManageDocuments = () => {
       const recommendationDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.RECOMMENDATION);
       setUserDocuments({
         resumeDocuments,
-        coverLetterDocuments: [],
-        certificateDocuments: [],
-        transcriptDocuments: [],
-        recommendationDocuments: []
+        coverLetterDocuments,
+        certificateDocuments,
+        transcriptDocuments,
+        recommendationDocuments
       });
     }
   }, [isLoading, user])
   console.log('User Documents:', userDocuments);
   // TODO: Replace with actual user documents fetched from server
-  const resumeDocuments : UserDocument[] = [
-    { id: 1, documentUrl: 'Resume 1', documentType: 'RESUME', createdAt: new Date("2023-01-01") },
-    { id: 2, documentUrl: 'Resume 2', documentType: 'RESUME', createdAt: new Date("2023-01-02") },
-    { id: 3, documentUrl: 'Resume 3', documentType: 'RESUME', createdAt: new Date("2023-01-03") },
-    { id: 4, documentUrl: 'Resume 4', documentType: 'RESUME', createdAt: new Date("2023-01-04") },
-    { id: 5, documentUrl: 'Resume 5', documentType: 'RESUME', createdAt: new Date("2023-01-05") }
-  ];
-
-  const coverLetterDocuments : UserDocument[] = [
-    { id: 1, documentUrl: 'Cover Letter 1', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-01") },
-    { id: 2, documentUrl: 'Cover Letter 2', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-02") },
-    { id: 3, documentUrl: 'Cover Letter 3', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-03") },
-    { id: 4, documentUrl: 'Cover Letter 4', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-04") },
-    { id: 5, documentUrl: 'Cover Letter 5', documentType: 'COVER_LETTER', createdAt: new Date("2023-01-05") }
-  ];
-  
-  const certificateDocuments : UserDocument[] = [
-    { id: 1, documentUrl: 'Certificate 1', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-01") },
-    { id: 2, documentUrl: 'Certificate 2', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-02") },
-    { id: 3, documentUrl: 'Certificate 3', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-03") },
-    { id: 4, documentUrl: 'Certificate 4', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-04") },
-    { id: 5, documentUrl: 'Certificate 5', documentType: 'CERTIFICATE', createdAt: new Date("2023-01-05") }
-  ];
-
-  const transcriptDocuments : UserDocument[] = [
-    { id: 1, documentUrl: 'Transcript 1', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-01") },
-    { id: 2, documentUrl: 'Transcript 2', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-02") },
-    { id: 3, documentUrl: 'Transcript 3', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-03") },
-    { id: 4, documentUrl: 'Transcript 4', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-04") },
-    { id: 5, documentUrl: 'Transcript 5', documentType: 'TRANSCRIPT', createdAt: new Date("2023-01-05") }
-  ];
-
-  const recommendationDocuments : UserDocument[] = [
-    { id: 1, documentUrl: 'Recommendation 1', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-01") },
-    { id: 2, documentUrl: 'Recommendation 2', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-02") },
-    { id: 3, documentUrl: 'Recommendation 3', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-03") },
-    { id: 4, documentUrl: 'Recommendation 4', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-04") },
-    { id: 5, documentUrl: 'Recommendation 5', documentType: 'RECOMMENDATION', createdAt: new Date("2023-01-05") }
-  ];
 
 
   const handleUpload = async (documentType: string) => {
@@ -213,13 +174,13 @@ const ManageDocuments = () => {
         <ScrollView>
           {renderDocumentFlatList({title: 'My Resumes', documents: userDocuments?.resumeDocuments || []})}
           <View className='divider'/>
-          {renderDocumentFlatList({title: 'My Cover Letters', documents: coverLetterDocuments})}
+          {renderDocumentFlatList({title: 'My Cover Letters', documents: userDocuments?.coverLetterDocuments || []})}
           <View className='divider'/>
-          {renderDocumentFlatList({title: 'My Certificates', documents: certificateDocuments})}
+          {renderDocumentFlatList({title: 'My Certificates', documents: userDocuments?.certificateDocuments || []})}
         <View className='divider'/>
-        {renderDocumentFlatList({title: 'My Transcripts', documents: transcriptDocuments})}
+        {renderDocumentFlatList({title: 'My Transcripts', documents: userDocuments?.transcriptDocuments || []})}
         <View className='divider'/>
-        {renderDocumentFlatList({title: 'My Recommendations', documents: recommendationDocuments})}
+        {renderDocumentFlatList({title: 'My Recommendations', documents: userDocuments?.recommendationDocuments || []})}
       </ScrollView>}
       <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["40%", '50%']} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white p-4 gap-4 w-full justify-center items-center'>

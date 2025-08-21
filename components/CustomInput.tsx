@@ -1,17 +1,18 @@
 import { CustomInputProps } from '@/type'
 import React from 'react'
-import { Text, TextInput, View } from 'react-native'
+import { ReturnKeyTypeOptions, Text, TextInput, View } from 'react-native'
 
-const CustomInput = ({placeholder, label, value, onChangeText}: CustomInputProps) => {
+const CustomInput = ({placeholder, label, value, returnKeyType='default', autoCapitalize='none',onChangeText}: CustomInputProps) => {
   return (
     <View className='w-full'>
       {label &&<Text className='label'>{label}</Text>}
       <TextInput 
         placeholder={placeholder} 
-        autoCapitalize='none'
+        autoCapitalize={autoCapitalize as 'none' | 'sentences' | 'words' | 'characters'}
         value={value}
         onChangeText={onChangeText}
         className='input'
+        returnKeyType={returnKeyType as ReturnKeyTypeOptions}
       />
     </View>
   )
