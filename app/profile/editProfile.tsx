@@ -4,6 +4,7 @@ import CustomInput from "@/components/CustomInput";
 import EditProfileCard from "@/components/EditProfileCard";
 import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileSkillCard from "@/components/ProfileSkillCard";
+import { addSkill } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
 import { AddUserSkillForm, UserSkill } from "@/type";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -13,7 +14,7 @@ import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, SafeAreaView, S
 
 export default function EditProfile() {
   // TODO: Combine common states into one state object
-  const { isLoading, user } = useAuthStore()
+  const { isLoading, user, setUser } = useAuthStore()
   const [openGeneral, setOpenGeneral] = useState(false);
   const [openSkills, setOpenSkills] = useState(false);
   const [openSummary, setOpenSummary] = useState(false);
@@ -28,7 +29,8 @@ export default function EditProfile() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const bottomSheetRef = useRef<BottomSheet>(null)
   const [addSkillForm, setAddSkillForm] = useState<AddUserSkillForm>({skill: '', experience: ''})
-  
+  const [isLoadingNewSkill, setIsLoadingNewSkill] = useState(false);
+
   function chunkArray(array: UserSkill[], size: number): UserSkill[][] {
     const result: UserSkill[][] = [];
     for (let i = 0; i < array.length; i += size) {
@@ -37,8 +39,7 @@ export default function EditProfile() {
     return result;
   }
 
-  console.log(addSkillForm)
-  const handleAddSkill = () => {
+  const handleAddSkill = async () => {
     const { skill, experience } = addSkillForm;
     if (!skill || !experience) {
         Alert.alert("Please fill in all fields before adding a skill.");
@@ -47,6 +48,34 @@ export default function EditProfile() {
     else if (isNaN(Number(experience)) || Number(experience) < 0) {
         Alert.alert("Experience must be a valid number greater than or equal to 0.");
         return;
+    }
+    setIsLoadingNewSkill(true);
+    try {
+        const result = await addSkill({skill, experience});
+        if (!result) {
+            Alert.alert("Failed to add skill. Please try again.");
+            return;
+        }
+        const newSkill : UserSkill = {
+            id: result.id,
+            skill: result.skill,
+            experience: result.experience
+        };
+        let newSkills = []
+        const userContainsSkill = user?.skills && user?.skills.some(s => s.id === newSkill.id);
+        if (userContainsSkill) {
+            newSkills = [...user.skills.filter(s => s.id !== newSkill.id), newSkill];
+        } else {
+            newSkills = [...(user?.skills ?? []), newSkill];
+        }
+        if (user) {
+            setUser({ ...user, skills: newSkills });
+        }
+        Alert.alert("Skill added successfully!");
+    } catch (error) {
+        Alert.alert("Failed to add skill. Please try again.");
+    } finally {
+        setIsLoadingNewSkill(false);
     }
     console.log("Adding skill:", addSkillForm);
   }
@@ -173,11 +202,12 @@ export default function EditProfile() {
                                 renderItem={({ item }) => (
                                     <View style={{ flexDirection: "column", gap: 12 }}>
                                     {item.map((s, idx) => (
-                                        <ProfileSkillCard key={idx} skill={s.skill.name} experience={s.experience}/>
+                                        <ProfileSkillCard 
+                                            key={idx} skill={s.skill.name} experience={s.experience}/>
                                     ))}
                                     </View>
                                 )}
-                                keyExtractor={(item) => item[0].id.toString()}
+                                keyExtractor={(_, index) => `chunk-${index}`}
                             />
                             <TouchableOpacity className="w-2/5" onPress={() => openBottomSheet('skill')}>
                                 <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-center items-center">
@@ -268,6 +298,7 @@ export default function EditProfile() {
             <View className="w-full flex flex-col gap-4">
                 {isAddingSkill &&
                 <>
+                    {/* TODO: User should not be able to enter any skill. Create autocomplete feature for skills */}
                     <CustomInput 
                         label="Skill Name" 
                         placeholder="e.g. JavaScript" 
@@ -282,7 +313,8 @@ export default function EditProfile() {
                         returnKeyType="done" 
                         onChangeText={(experience) => setAddSkillForm({...addSkillForm, experience})}/>
                     <View className="flex flex-row gap-2">
-                        <CustomButton 
+                        <CustomButton
+                            isLoading={isLoadingNewSkill}
                             text='Add Skill'
                             customClass="bg-green-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
                             onClick={handleAddSkill}/>

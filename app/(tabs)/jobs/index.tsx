@@ -123,9 +123,7 @@ const Index = () => {
         className='w-full p-2'
         data={jobs} // Simulating multiple job listings
         renderItem={({item, index}) => (
-        <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.id}`)}>
           <JobListing key={index} {...item} />
-        </TouchableOpacity>
       )}
         ItemSeparatorComponent={() => <View className='divider'/>}
       />}

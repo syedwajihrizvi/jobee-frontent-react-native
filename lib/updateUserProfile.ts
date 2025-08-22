@@ -1,4 +1,4 @@
-import { ProfileImageUpdate } from "@/type";
+import { AddUserSkillForm, ProfileImageUpdate, UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ImagePickerResult } from "expo-image-picker";
 
@@ -24,9 +24,7 @@ export const updateUserProfileImage = async (image: ImagePickerResult)=> {
         body: formData,
     });
     const data = await response.json();
-    if (response.status === 200) {
-        return data as ProfileImageUpdate;
-    }
+    if (response.status === 200) return data as ProfileImageUpdate;
     return null;
 };
 
@@ -45,3 +43,23 @@ export const favoriteJob = async (jobId: number) => {
     }
     return false;
 };
+
+export const addSkill = async (newSkill: AddUserSkillForm) => {
+    return new Promise<UserSkill | null>(async (resolve) => {
+        setTimeout(async () => {
+            const token = await AsyncStorage.getItem('x-auth-token');
+            if (token == null) return null;
+            const result = await fetch(`${PROFILES_API_URL}/skills`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-auth-token': `Bearer ${token}`
+            },
+            body: JSON.stringify(newSkill)
+        })
+        const response = await result.json();
+        console.log("Response from addSkill:", response);
+        if (result.status === 201) return resolve(response as UserSkill)
+        return resolve(null);
+    }, 3000)})
+}
