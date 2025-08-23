@@ -104,6 +104,7 @@ export type User = {
     summary: string;
     skills: UserSkill[];
     education: Education[];
+    experiences: Experience[];
     profileComplete: boolean;
     profileImageUrl: string;
     favoriteJobs: {id:number}[];
@@ -116,6 +117,17 @@ export type EditUserProfileForm = {
     summary: string;
     title: string;
     location: string;
+}
+
+export type Experience = {
+    id: number;
+    title: string;
+    description: string;
+    company: string;
+    location: string;
+    from: string;
+    to: string;
+    currentlyWorking: boolean;
 }
 
 export type UserSkill = {
@@ -150,5 +162,5 @@ export type AddUserEducationForm = {
     institution: string;
     degree: string;
     fromYear: string;
-    toYear: string | null;
+    toYear: string;
 }

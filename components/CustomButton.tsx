@@ -7,7 +7,8 @@ const CustomButton = ({text, customClass, onClick, isLoading}: CustomButtonProps
     <TouchableOpacity 
         className={`${customClass}`}
         style={{flex:1, alignItems: 'center'}}
-        onPress={onClick}>
+        onPress={onClick}
+        disabled={isLoading}>
         {isLoading ? <ActivityIndicator color='white'/> : <Text>{text}</Text>}
     </TouchableOpacity>
   )

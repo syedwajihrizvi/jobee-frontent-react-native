@@ -124,6 +124,7 @@ const Index = () => {
         data={jobs} // Simulating multiple job listings
         renderItem={({item, index}) => (
           <JobListing key={index} {...item} />
+        
       )}
         ItemSeparatorComponent={() => <View className='divider'/>}
       />}
