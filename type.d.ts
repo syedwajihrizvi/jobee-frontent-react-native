@@ -18,6 +18,8 @@ export type CustomInputProps = {
     placeholder: string;
     label: string?;
     value: string;
+    multiline?: boolean;
+    customClass?: string;
     returnKeyType?: string;
     autoCapitalize?: string;
     onChangeText: (text: string) => void;
@@ -124,7 +126,8 @@ export type Experience = {
     title: string;
     description: string;
     company: string;
-    location: string;
+    city: string;
+    country: string;
     from: string;
     to: string;
     currentlyWorking: boolean;
@@ -163,4 +166,14 @@ export type AddUserEducationForm = {
     degree: string;
     fromYear: string;
     toYear: string;
+}
+
+export type AddExperienceForm = {
+    title: string;
+    company: string;
+    description: string;
+    city: string;
+    country: string;
+    from: string;
+    to: string;
 }

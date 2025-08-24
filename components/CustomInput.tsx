@@ -2,7 +2,9 @@ import { CustomInputProps } from '@/type'
 import React from 'react'
 import { ReturnKeyTypeOptions, Text, TextInput, View } from 'react-native'
 
-const CustomInput = ({placeholder, label, value, returnKeyType='default', autoCapitalize='none',onChangeText}: CustomInputProps) => {
+const CustomInput = ({
+  placeholder, label, value, returnKeyType='default', autoCapitalize='none', multiline=false, customClass, onChangeText
+}: CustomInputProps) => {
   return (
     <View className='w-full'>
       {label &&<Text className='label'>{label}</Text>}
@@ -10,8 +12,10 @@ const CustomInput = ({placeholder, label, value, returnKeyType='default', autoCa
         placeholder={placeholder} 
         autoCapitalize={autoCapitalize as 'none' | 'sentences' | 'words' | 'characters'}
         value={value}
+        multiline={multiline}
         onChangeText={onChangeText}
-        className='input'
+        className={customClass ? customClass : 'input'}
+        blurOnSubmit={true}
         returnKeyType={returnKeyType as ReturnKeyTypeOptions}
       />
     </View>

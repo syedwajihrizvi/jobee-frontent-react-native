@@ -5,9 +5,9 @@ import EditProfileCard from "@/components/EditProfileCard";
 import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
 import ProfileSkillCard from "@/components/ProfileSkillCard";
-import { addEducation, addSkill, editEducation } from "@/lib/updateUserProfile";
+import { addEducation, addExperience, addSkill, editEducation, editExperience } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
-import { AddUserEducationForm, AddUserSkillForm, Education, UserSkill } from "@/type";
+import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, UserSkill } from "@/type";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useEffect, useRef, useState } from "react";
@@ -27,14 +27,18 @@ export default function EditProfile() {
   const [isEditingSummary, setIsEditingSummary] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [isAddingEducation, setIsAddingEducation] = useState(false);
+  const [isAddingExperience, setIsAddingExperience] = useState(false)
   const [isEditingSkill, setIsEditingSkill] = useState<UserSkill | null>(null)
   const [isEditingEducation, setIsEditingEducation] = useState<Education | null>(null)
+  const [isEditingExperience, setIsEditingExperience] = useState<Experience | null>(null)
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const bottomSheetRef = useRef<BottomSheet>(null)
   const [addSkillForm, setAddSkillForm] = useState<AddUserSkillForm>({skill: '', experience: ''})
   const [addEducationForm, setAddEducationForm] = useState<AddUserEducationForm>({institution: '', degree: '', fromYear: '', toYear: ''})
+  const [addExperienceForm, setAddExperienceForm] = useState<AddExperienceForm>({title: '', city: '', country: '', company: '', description: '', from: '', to: ''})
   const [isLoadingNewSkill, setIsLoadingNewSkill] = useState(false);
   const [isLoadingNewEducation, setIsLoadingNewEducation] = useState(false);
+  const [isLoadingNewExperience, setIsLoadingNewExperience] = useState(false);
 
   function chunkArray(array: UserSkill[], size: number): UserSkill[][] {
     const result: UserSkill[][] = [];
@@ -205,13 +209,112 @@ export default function EditProfile() {
     }
   }
 
-  const openBottomSheet = (type: 'skill' | 'education') => {
+  const handleAddExperience = async () => {
+    const { title, company, description, from, to } = addExperienceForm;
+    if (!title || !company || !from || !description) {
+        Alert.alert('Please fill in all required fields before adding experience')
+        return
+    }
+    else if (isNaN(Number(from)) || Number(from) < 1900 || Number(from) > new Date().getFullYear()) {
+        Alert.alert("From Year must be a valid year.");
+        return;
+    }
+    else if (to && (isNaN(Number(to)) || Number(to) < 1900 || Number(to) > new Date().getFullYear()+10)) {
+        Alert.alert("To Year must be a valid year or left empty if ongoing.");
+        return;
+    }
+    else if (to && Number(to) && from && Number(from) && Number(to) < Number(from)) {
+        Alert.alert("To Year must be greater than or equal to From Year.");
+        return;
+    }
+    setIsLoadingNewExperience(true);
+    try {
+        const result = await addExperience(addExperienceForm)
+        if (!result) {
+            Alert.alert("Failed to add experience. Please try again.");
+            return;
+        }
+        const newExperience: Experience = {
+            id: result.id,
+            title: result.title,
+            description: result.description,
+            company: result.company,
+            city: result.city,
+            country: result.country,
+            from: result.from,
+            to: result.to,
+            currentlyWorking: result.currentlyWorking
+        }
+        const newExperiences = [...(user?.experiences ?? []), newExperience]
+        if (user) {
+            setUser({...user, experiences: newExperiences})
+        }
+        Alert.alert("Experience added successfully!")
+        setAddExperienceForm({title: '', company: '', description: '', city: '', country: '', from: '', to: ''})
+        bottomSheetRef.current?.close();
+    } catch (error) {
+        console.log(error)
+        Alert.alert("Failed to add experience. Please try again.");
+        return
+    } finally {
+        setIsLoadingNewExperience(false);
+    }
+  }
+
+  const handleEditExperience = async () => {
+    const { title, company, from, to } = addExperienceForm;
+    if (!title || !company || !from) {
+        Alert.alert('Please fill in all required fields before adding experience')
+        return
+    }
+    else if (isNaN(Number(from)) || Number(from) < 1900 || Number(from) > new Date().getFullYear()) {
+        Alert.alert("From Year must be a valid year.");
+        return;
+    }
+    else if (to && (isNaN(Number(to)) || Number(to) < 1900 || Number(to) > new Date().getFullYear()+10)) {
+        Alert.alert("To Year must be a valid year or left empty if ongoing.");
+        return;
+    }
+    else if (to && Number(to) && from && Number(from) && Number(to) < Number(from)) {
+        Alert.alert("To Year must be greater than or equal to From Year.");
+        return;
+    }
+    setIsLoadingNewExperience(true);
+    try {
+        const newExperience = await editExperience(isEditingExperience!.id, addExperienceForm);
+        if (!newExperience) {
+            Alert.alert("Failed to edit experience. Please try again.");
+            return;
+        }
+        let newExperiences = [newExperience, ...(user?.experiences.filter(e => e.id !== newExperience.id) ?? [])]
+        if (user) {
+            setUser({...user, experiences: newExperiences})
+        }
+        Alert.alert("Experience updated successfully!");
+        setAddExperienceForm({title: '', company: '', description: '', city: '', country: '', from: '', to: ''})
+        bottomSheetRef.current?.close();
+    } catch (error) {
+        console.log(error)
+        Alert.alert("Failed to edit experience. Please try again.");
+        return
+    } finally {
+        setIsLoadingNewExperience(false);
+    }
+   }
+    
+  const openBottomSheet = (type: 'skill' | 'education' | 'experience') => {
     if (type === 'skill') {
         setIsAddingSkill(true);
         setIsAddingEducation(false);
+        setIsAddingExperience(false);
     } else if (type === 'education') {
         setIsAddingEducation(true);
         setIsAddingSkill(false);
+        setIsAddingExperience(false);
+    } else if (type === 'experience') {
+        setIsAddingExperience(true);
+        setIsAddingSkill(false);
+        setIsAddingEducation(false);
     }
     bottomSheetRef.current?.expand();
   }
@@ -236,11 +339,33 @@ export default function EditProfile() {
         fromYear: education?.fromYear.toString() || '', toYear: education?.toYear?.toString() || ''});
     bottomSheetRef.current?.expand();
   }
+
   const handleCloseEducationForm = () => {
     setIsAddingEducation(false);
     setIsEditingEducation(null);
     setAddEducationForm({ institution: '', degree: '', fromYear: '', toYear: '' });
     bottomSheetRef.current?.close();
+  }
+
+  const handleCloseExperienceForm = () => {
+    setIsAddingExperience(false);
+    setIsEditingExperience(null);
+    setAddExperienceForm({ title: '', company: '', description: '', city: '', country: '', from: '', to: '' });
+    bottomSheetRef.current?.close();
+  }
+
+  const handleIsEditingExperience = (experience: Experience | null) => {
+    setIsEditingExperience(experience);
+    setAddExperienceForm({
+        title: experience?.title || '',
+        company: experience?.company || '',
+        description: experience?.description || '',
+        city: experience?.city || '',
+        country: experience?.country || '',
+        from: experience?.from.toString() || '',
+        to: experience?.to.toString() || ''
+    });
+    bottomSheetRef.current?.expand();
   }
 
   return (
@@ -391,12 +516,19 @@ export default function EditProfile() {
                             </TouchableOpacity>
                         </View>
                         {openExperience &&
-                        <View className="flex flex-col flex-wrap gap-2">
+                        <View className="flex flex-row flex-wrap gap-4">
                             {user?.experiences?.map((exp) => (
                                 <ProfileExperienceCard
-                                    key={exp.id} experience={exp} onEditExperience={() => {}}/>
+                                    key={exp.id} experience={exp} onEditExperience={() => handleIsEditingExperience(exp)}/>
                             ))}
-                        </View>}
+                            <TouchableOpacity onPress={() => openBottomSheet('experience')}>
+                                <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-start items-center">
+                                    <Text className="text-white">Add new experience</Text>
+                                    <AntDesign name="plus" size={20} color="white" className="ml-2" />
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                        }
                     </View>
                     <View className="divider"/>
                    <View className="px-4 py-2">
@@ -502,24 +634,106 @@ export default function EditProfile() {
                                 onChangeText={(toYear) => setAddEducationForm({...addEducationForm, toYear})}/>
                         </View>
                     </View>
+                    <View className="flex flex-row gap-2">
+                        <CustomButton 
+                            isLoading={isLoadingNewEducation}
+                            text={isEditingEducation ? 'Update' : 'Add Education'}
+                            customClass="bg-green-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                            onClick={() => {
+                                if (isEditingEducation) {
+                                    handleEditEducation();
+                                } else {
+                                    handleAddEducation();
+                                }
+                            }}/>
+                        <CustomButton 
+                            text='Cancel'
+                            customClass="bg-red-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                            onClick={handleCloseEducationForm}/>
+                    </View>
+                </>}
+                {(isAddingExperience || isEditingExperience) &&
+                    <View className="flex flex-col gap-4 pb-10">
+                        <CustomInput 
+                            label="Title" 
+                            placeholder="e.g. Software Engineer"
+                            autoCapitalize="words"
+                            value={addExperienceForm.title} 
+                            returnKeyType="done"
+                            onChangeText={(title) => setAddExperienceForm({...addExperienceForm, title})}/>
+                        <CustomInput 
+                            label="Company" 
+                            placeholder="e.g. Amazon"
+                            autoCapitalize="words"
+                            value={addExperienceForm.company}
+                            returnKeyType="done" 
+                            onChangeText={(company) => setAddExperienceForm({...addExperienceForm, company})}/>
+                        <View className="flex flex-row gap-2">
+                            <View className="w-1/2">
+                                <CustomInput 
+                                    label="Start Year" 
+                                    placeholder="e.g. 2016" 
+                                    value={addExperienceForm.from}
+                                    returnKeyType="done" 
+                                    onChangeText={(fromYear) => setAddExperienceForm({...addExperienceForm, from: fromYear})}/>
+                            </View>
+                            <View className="w-1/2">
+                                <CustomInput 
+                                    label="End Year" 
+                                    placeholder="e.g. 2020 (leave empty if present)" 
+                                    value={addExperienceForm.to}
+                                    returnKeyType="done" 
+                                    onChangeText={(toYear) => setAddExperienceForm({...addExperienceForm, to: toYear})}/>
+                            </View>
+                        </View>
+                        <View className="flex flex-row gap-2">
+                            <View className="w-1/2">
+                                <CustomInput 
+                                    label="City" 
+                                    placeholder="e.g. San Francisco" 
+                                    value={addExperienceForm.city}
+                                    autoCapitalize="words"
+                                    returnKeyType="done" 
+                                    onChangeText={(city) => setAddExperienceForm({...addExperienceForm, city})}/>
+                            </View>
+                            <View className="w-1/2">
+                                <CustomInput 
+                                    label="Country" 
+                                    placeholder="e.g. USA" 
+                                    autoCapitalize="words"
+                                    value={addExperienceForm.country}
+                                    returnKeyType="done" 
+                                    onChangeText={(country) => setAddExperienceForm({...addExperienceForm, country})}/>
+                            </View>
+                        </View>
+                            <CustomInput
+                                label="Description (Sentences about your role, achievements, etc.)"
+                                placeholder="Enter your description"
+                                value={addExperienceForm.description}
+                                onChangeText={(description) => setAddExperienceForm({...addExperienceForm, description})}
+                                multiline={true}
+                                returnKeyType="done"
+                                customClass="w-full p-3 border border-gray-300 rounded-lg"
+                            />
                         <View className="flex flex-row gap-2">
                             <CustomButton 
-                                isLoading={isLoadingNewEducation}
-                                text={isEditingEducation ? 'Update' : 'Add Education'}
+                                isLoading={isLoadingNewExperience}
+                                text={isEditingExperience ? 'Update' : 'Add Experience'}
                                 customClass="bg-green-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
                                 onClick={() => {
-                                    if (isEditingEducation) {
-                                        handleEditEducation();
+                                    if (isEditingExperience) {
+                                        handleEditExperience();
                                     } else {
-                                        handleAddEducation();
+                                        handleAddExperience();
                                     }
                                 }}/>
                             <CustomButton 
                                 text='Cancel'
                                 customClass="bg-red-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
-                                onClick={handleCloseEducationForm}/>
+                                onClick={handleCloseExperienceForm}/>
                         </View>
-                </>}
+                        </View>
+                    }
             </View>
         </BottomSheetView>
       </BottomSheet>

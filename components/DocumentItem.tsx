@@ -7,7 +7,8 @@ import { WebView } from 'react-native-webview';
 
 const { height, width } = Dimensions.get("window");
 
-const DocumentItem = ({ document }: { document: UserDocument }) => {
+const DocumentItem = (
+  { document, customAction }: { document: UserDocument, customAction?: () => void }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleOpen = () => setModalVisible(true);
@@ -15,14 +16,18 @@ const DocumentItem = ({ document }: { document: UserDocument }) => {
 
   return (
     <>
-      {/* Document card */}
-      <TouchableOpacity className='document-item' onPress={handleOpen}>
-        <View className='bg-white absolute bottom-0 w-full p-2 items-center justify-center rounded-b-2xl'>
-          <Text>{document.documentType}</Text>
-        </View>
-      </TouchableOpacity>
+      <View className='relative'>
+        <TouchableOpacity className='document-item' onPress={handleOpen}>
+          <View className='bg-white absolute bottom-0 w-full p-2 items-center justify-center rounded-b-2xl'>
+            <Text>{document.documentType}</Text>
+          </View>
+        </TouchableOpacity>
+      {customAction && 
+      <TouchableOpacity className='absolute top-2 left-2 bg-white rounded-full p-1' onPress={customAction}>
+        <AntDesign name="edit" size={20} color="black" />
+      </TouchableOpacity>}
+      </View>
 
-      {/* Modal with centered popup */}
       <Modal
         transparent
         animationType="fade"
@@ -30,25 +35,21 @@ const DocumentItem = ({ document }: { document: UserDocument }) => {
         onRequestClose={handleClose}
       >
         <View className="flex-1 bg-black/45 justify-center items-center">
-          {/* Popup box */}
           <View 
             style={{ 
-              height: height * 0.6,   // 80% of screen height
-              width: width * 0.9,     // 90% of screen width
+              height: height * 0.6,
+              width: width * 0.9,
               borderRadius: 16,
               overflow: "hidden",
               backgroundColor: "white"
             }}
           >
-            {/* Header */}
             <View className="p-3 flex-row justify-between items-center bg-gray-200">
               <Text className="text-lg font-semibold">{document.documentType}</Text>
               <TouchableOpacity onPress={handleClose}>
                 <AntDesign name="close" size={24} color="black" />
               </TouchableOpacity>
             </View>
-
-            {/* WebView */}
             <WebView
               source={{ uri: getS3DocumentUrl(document.documentUrl) }}
               style={{ flex: 1 }}

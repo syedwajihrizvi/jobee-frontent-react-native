@@ -1,4 +1,4 @@
-import { AddUserEducationForm, AddUserSkillForm, Education, ProfileImageUpdate, UserSkill } from "@/type";
+import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, ProfileImageUpdate, UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ImagePickerResult } from "expo-image-picker";
 
@@ -85,7 +85,6 @@ export const addEducation = async (newEducation: AddUserEducationForm) => {
 }
 
 export const editEducation = async (educationId: number, updatedEducation: AddUserEducationForm) => {
-    console.log("Updating education with ID:", educationId, "with data:", updatedEducation);
     try {
         const token = await AsyncStorage.getItem('x-auth-token');
         if (!token) return null
@@ -105,4 +104,45 @@ export const editEducation = async (educationId: number, updatedEducation: AddUs
         console.error("Error updating education:", error);
         return null;
     }
+}
+
+export const addExperience = async (newExperience: AddExperienceForm) => {
+    return await new Promise<Experience | null>((resolve, reject) => {
+        setTimeout(async () => {
+            const token = await AsyncStorage.getItem('x-auth-token');
+            const result = await fetch(`${PROFILES_API_URL}/experiences`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': `Bearer ${token}`
+                },
+                body: JSON.stringify(newExperience)
+            })
+            if (result.status === 201) {
+                const response = await result.json()
+                return resolve(response as Experience)
+            }
+            return resolve(null)
+        }, 3000)
+    })
+}
+
+export const editExperience = async (experienceId: number, updatedExperience: AddExperienceForm) => {
+    return await new Promise<Experience | null>((resolve, reject) => {
+        setTimeout(async () => {
+            const token = await AsyncStorage.getItem('x-auth-token')
+            if (!token) return resolve(null)
+            const result = await fetch(`${PROFILES_API_URL}/experiences/${experienceId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': `Bearer ${token}`,
+                },
+                body: JSON.stringify(updatedExperience)
+            })
+            const response = await result.json()
+            if (result.status === 200) return resolve(response as Experience)
+            return resolve(null)
+        }, 3000)
+    })   
 }

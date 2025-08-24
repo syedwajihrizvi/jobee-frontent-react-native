@@ -27,7 +27,6 @@ const ManageDocuments = () => {
 
   useEffect(() => {
     if (user && user.documents) {
-      console.log('User documents:', user.documents);
       // Fetch user documents from the server or local storage
       // This is a placeholder, replace with actual API call
       const resumeDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
