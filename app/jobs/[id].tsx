@@ -174,7 +174,7 @@ const JobDetails = () => {
           <ApplicationInfo job={job!} application={application!}/>
         </BottomSheetView>
       </BottomSheet>}
-      <BottomSheet ref={applyBottomRef} index={-1} snapPoints={[`${65}%`]} enablePanDownToClose>
+      <BottomSheet ref={applyBottomRef} index={-1} snapPoints={[`${isAuthenticated ? '65' : '30'}%`]} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
           {(isAuthenticated && user) ?
           <ApplyBottomSheet
@@ -182,7 +182,16 @@ const JobDetails = () => {
             setOpenResumeDropdown={setOpenResumeDropdown} selectedCoverLetter={selectedCoverLetter} setSelectedCoverLetter={setSelectedCoverLetter}
             openCoverLetterDropdown={openCoverLetterDropdown} setOpenCoverLetterDropdown={setOpenCoverLetterDropdown} userDocuments={userDocuments}
             isSubmittingApplication={isSubmittingApplication} handleSubmitApplication={handleSubmitApplication} closeSheet={() => applyBottomRef.current?.close()}
-            /> : <Text>Sign up or login to apply</Text>}
+            /> : 
+            <View className='flex-1 justify-center items-center px-4'>
+              <Text>Sign up or login to get started</Text>
+              <TouchableOpacity className='bg-blue-500 p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
+                <Text>Create an Account</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className='bg-blue-500 p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
+                <Text>Sign In</Text>
+              </TouchableOpacity>
+            </View>}
         </BottomSheetView>
       </BottomSheet>
     </SafeAreaView>
