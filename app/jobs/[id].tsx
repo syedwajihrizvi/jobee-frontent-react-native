@@ -1,11 +1,15 @@
+import ApplicationInfo from '@/components/ApplicationInfo'
+import ApplyBottomSheet from '@/components/ApplyBottomSheet'
 import BoldLabeledText from '@/components/BoldLabeledText'
+import CompanyInfo from '@/components/CompanyInfo'
 import CompanyInformation from '@/components/CompanyInformation'
-import CustomButton from '@/components/CustomButton'
-import DocumentItem from '@/components/DocumentItem'
 import FavoriteJob from '@/components/FavoriteJob'
+import JobInfo from '@/components/JobInfo'
 import ViewMore from '@/components/ViewMore'
+import { UserDocumentType } from '@/constants'
 import { applyToJob } from '@/lib/jobEndpoints'
 import { useJob } from '@/lib/services/useJobs'
+import { isApplied } from '@/lib/utils'
 import useAuthStore from '@/store/auth.store'
 import { CreateApplication, UserDocument } from '@/type'
 import AntDesign from '@expo/vector-icons/AntDesign'
@@ -13,7 +17,6 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native'
-import DropDownPicker from 'react-native-dropdown-picker'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const JobDetails = () => {
@@ -33,8 +36,8 @@ const JobDetails = () => {
 
   useEffect(() => {
     if (user && user.documents) {
-      const resumes = user.documents.filter(doc => doc.documentType === 'RESUME');
-      const coverLetters = user.documents.filter(doc => doc.documentType === 'COVER_LETTER');
+      const resumes = user.documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
+      const coverLetters = user.documents.filter(doc => doc.documentType === UserDocumentType.COVER_LETTER);
       setUserDocuments({
         'RESUMES': resumes,
         'COVER_LETTERS': coverLetters
@@ -44,15 +47,7 @@ const JobDetails = () => {
       }
     }
   }, [isLoadingUser, user])
-  const formatDate = (date: string) => {
-    const parsedDate = new Date(date);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      year: '2-digit',
-      day: '2-digit',
-      month: '2-digit'
-    });
-    return formatter.format(parsedDate)
-  }
+
   const handleJobBottomOpen = () => {
     companyBottomRef.current?.close();
     applyBottomRef.current?.close();
@@ -81,10 +76,6 @@ const JobDetails = () => {
     viewApplicationBottomRef.current?.expand();
   }
 
-  const getUserDocumentById = (id: number): UserDocument | undefined => {
-    return user?.documents.find(doc => doc.id === id);
-  }
-
   const handleSubmitApplication = async () => {
     if (!selectedResume) {
       Alert.alert('Please select a resume to proceeed.')
@@ -101,13 +92,16 @@ const JobDetails = () => {
       await applyToJob(applicationInfo)
       Alert.alert('Application submitted successfully!')
       applyBottomRef.current?.close();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      
+      Alert.alert('Failed to submit application. Please try again.')
+      return
     } finally {
       setIsSubmittingApplication(false);
     }
   }
-  const application = user?.applications.find(app => app.jobId === Number(jobId))
+
+  const application = isApplied(user!, String(jobId));
 
   return (
     <SafeAreaView className='flex-1 bg-white relative'>
@@ -164,118 +158,31 @@ const JobDetails = () => {
           <FavoriteJob jobId={job?.id!} />
         </TouchableOpacity>
       </View>
-
+      
       <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["40%", "50%"]} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
-          <View className='p-4 bg-white flex-1'>
-            <Text className='font-quicksand-bold text-2xl'>Job Tags</Text>
-          </View>
+          <JobInfo/>
         </BottomSheetView>
       </BottomSheet>
       <BottomSheet ref={companyBottomRef} index={-1} snapPoints={["40%", "50%"]} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
-          <View className='p-4 bg-white flex-1'>
-            <Text className='font-quicksand-bold text-2xl'>Company Info</Text>
-          </View>
+          <CompanyInfo/>
         </BottomSheetView>
       </BottomSheet>
-      <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["50%"]} enablePanDownToClose>
+      {application && <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["50%"]} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
-          <View className='p-4'>
-            <Text className='font-quicksand-bold text-2xl'>Application Status</Text>
-            <Text className='font-quicksand-semibold text-base mt-2'>
-              You have already applied to this job. Our team is reviewing your application and will get back to you soon.
-            </Text>
-            <View className='divider'/>
-            <Text className='font-quicksand-bold text-xl'>Application Details</Text>
-            <View className='mt-2'>
-              <Text className='font-quicksand-semibold text-base'>Job Title: {job?.title}</Text>
-              <Text className='font-quicksand-semibold text-base'>Applied On: {formatDate(application?.appliedAt!)}</Text>
-              <Text className='font-quicksand-semibold text-base'>Status: {application?.status}</Text>
-          </View>
-          </View>
+          <ApplicationInfo job={job!} application={application!}/>
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheet>}
       <BottomSheet ref={applyBottomRef} index={-1} snapPoints={[`${65}%`]} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
-          {(isAuthenticated && user) ? 
-          <View className='p-4 bg-white flex-1'>
-            <View className='w-full flex-row items-center justify-between'>
-              <Text className='font-quicksand-bold text-2xl'>Please confirm details</Text>
-              <TouchableOpacity onPress={() => console.log("Show AI information")} className='p-1 rounded-full border border-black'>
-                <AntDesign name="info" size={16} color="black"/>
-              </TouchableOpacity>
-            </View>
-            <View>
-            <Text className='font-quicksand-bold text-xl'>Resume</Text>
-            <View className='flex-row gap-2 my-2'>
-              {selectedResume && <DocumentItem document={getUserDocumentById(Number(selectedResume))!} />}
-              <View className='w-1/2'>
-                {user && user.documents && user.documents.length > 0?
-                <View className='flex-col gap-2'>
-                  <DropDownPicker
-                    open={openResumeDropdown}
-                    value={selectedResume}
-                    items={userDocuments?.RESUMES.map((doc) => ({label: doc.filename, value: String(doc.id)})) ?? []}
-                    setOpen={setOpenResumeDropdown}
-                    setValue={setSelectedResume}
-                    onChangeValue={(value) => setSelectedResume(value)}
-                    containerStyle={{width: '100%'}}
-                    placeholder="Select a resume"
-                  />
-                  <Text className='font-quicksand-bold text-md color-blue-500'>Last Updated - {formatDate(user.documents[0].createdAt)}</Text>
-                </View> : <Text>Upload a resume please</Text>}
-              </View>
-            </View>
-            </View>
-            <View className='divider'/>
-            <View className='flex flex-col gap-2'>
-              <Text className='font-quicksand-bold text-xl'>Cover Letter (Optional)</Text>
-              <View className='flex-row gap-2 my-2'>
-                {
-                selectedCoverLetter && 
-                <DocumentItem 
-                  document={getUserDocumentById(Number(selectedCoverLetter))!}
-                  customAction={() => {setSelectedCoverLetter(null); setOpenCoverLetterDropdown(false)}} 
-                  actionIcon='delete'/>
-                }
-                <View className='w-1/2'>
-                  {user && user.documents && user.documents.length > 0?
-                  <View className='flex-col gap-2'>
-                    <DropDownPicker
-                      open={openCoverLetterDropdown}
-                      value={selectedCoverLetter}
-                      items={userDocuments?.COVER_LETTERS.map((doc) => ({label: doc.filename, value: String(doc.id)})) ?? []}
-                      setOpen={setOpenCoverLetterDropdown}
-                      setValue={setSelectedCoverLetter}
-                      onChangeValue={(value) => setSelectedCoverLetter(value)}
-                      containerStyle={{width: '100%'}}
-                      placeholder="Select a cover letter"
-                    />
-                    <Text className='font-quicksand-bold text-md color-blue-500'>Last Updated - {formatDate(user.documents[0].createdAt)}</Text>
-                  </View> : <Text>Upload a resume please</Text>}
-                </View>
-              </View>
-            </View>
-            <View className='divider'/>
-            <View>
-              <Text>Company specific questions: Please answer below</Text>
-            </View>
-            <View className='w-full flex flex-row gap-2'>
-              {/** TODO: New feature coming soon - Save for later */}
-              <CustomButton
-                customClass='apply-button w-1/2 items-center justify-center h-14 mt-4'
-                onClick={handleSubmitApplication}
-                text="Submit Application"
-                isLoading={isSubmittingApplication}
-                />
-              <CustomButton
-                customClass='cancel-button w-1/2 items-center justify-center h-14 mt-4'
-                onClick={() => applyBottomRef.current?.close()}
-                text="Cancel"
-                />
-            </View>
-          </View> : <Text>Sign up or login to apply</Text>}
+          {(isAuthenticated && user) ?
+          <ApplyBottomSheet
+            selectedResume={selectedResume} setSelectedResume={setSelectedResume} openResumeDropdown={openResumeDropdown}
+            setOpenResumeDropdown={setOpenResumeDropdown} selectedCoverLetter={selectedCoverLetter} setSelectedCoverLetter={setSelectedCoverLetter}
+            openCoverLetterDropdown={openCoverLetterDropdown} setOpenCoverLetterDropdown={setOpenCoverLetterDropdown} userDocuments={userDocuments}
+            isSubmittingApplication={isSubmittingApplication} handleSubmitApplication={handleSubmitApplication} closeSheet={() => applyBottomRef.current?.close()}
+            /> : <Text>Sign up or login to apply</Text>}
         </BottomSheetView>
       </BottomSheet>
     </SafeAreaView>

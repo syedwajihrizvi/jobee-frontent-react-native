@@ -6,16 +6,16 @@ import useAuthStore from '@/store/auth.store';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Profile = () => {
-  const { isLoading, user } = useAuthStore()
+  const { isAuthenticated, isLoading, user } = useAuthStore()
   const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
-
+  if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
   const handleProfileImagePicker = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
@@ -76,7 +76,6 @@ const Profile = () => {
       } else {
         Alert.alert('Error', 'Failed to update profile image. Please try again.');
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       Alert.alert('Error', 'An error occurred while uploading the profile image. Please try again.');
     } finally {
@@ -86,7 +85,6 @@ const Profile = () => {
 
   const renderProfileImage = () => {
     if (!user || !user.profileImageUrl) {
-      console.warn('User profile image URL is not available');
       return <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain' />;
     } else if (uploadedProfileImage) {
       return <Image source={{uri: getS3ProfileImage(uploadedProfileImage)}} className='size-14 rounded-full' resizeMode='contain' />;
@@ -131,6 +129,10 @@ const Profile = () => {
                 label={link.label} 
                 onPress={() => router.push(link.href as any)} />
             ))}
+            <ProfileLink 
+              icon="log-out" 
+              label="Sign Out" 
+              onPress={() => router.push('/(auth)/sign-in')} />
           </View>
         </>}
     </SafeAreaView>

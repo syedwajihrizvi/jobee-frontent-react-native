@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
-  const { isAuthenticated, isLoading, fetchAuthenticatedUser } = useAuthStore();
+  const { isLoading, fetchAuthenticatedUser } = useAuthStore();
   
   useEffect(() => {
     fetchAuthenticatedUser();
@@ -17,12 +17,5 @@ export default function Index() {
       </View>
     );
   }
-  
-  // Temporary bypass for authentication
-  if (isAuthenticated) {
-
-    return <Redirect href="/(tabs)/jobs" />;
-  } else {
-    return <Redirect href="/(auth)/sign-in" />;
-  }
+  return <Redirect href="/(tabs)/jobs" />;
 }

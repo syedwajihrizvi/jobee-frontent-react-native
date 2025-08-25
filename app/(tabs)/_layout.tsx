@@ -1,14 +1,10 @@
 // import useAuthStore from '@/store/auth.store';
-import useAuthStore from '@/store/auth.store';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { Redirect, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
 
 const TabsLayout = () => {
-  const { isAuthenticated } = useAuthStore();
   
-  if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
-
   return (
     <Tabs screenOptions={{
       headerShown: false, tabBarShowLabel: false, 

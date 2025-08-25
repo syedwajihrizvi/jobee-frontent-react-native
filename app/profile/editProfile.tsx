@@ -14,16 +14,9 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EditProfile() {
-  // TODO: Combine common states into one state object
   const { isLoading, user, setUser } = useAuthStore()
-  const [openGeneral, setOpenGeneral] = useState(false);
-  const [openSkills, setOpenSkills] = useState(false);
-  const [openSummary, setOpenSummary] = useState(false);
-  const [openEducation, setOpenEducation] = useState(false);
-  const [openSocials, setOpenSocials] = useState(false);
-  const [openExperience, setOpenExperience] = useState(false);
-  const [openPortfolio, setOpenPortfolio] = useState(false);
-  const [skillChunks, setSkillChunks] = useState<UserSkill[][]>([]);
+  const defaultOpenSectionValue = { general: false, skills: false, summary: false, education: false, experience: false, socials: false, portfolio: false }
+  const [openSection, setOpenSection] = useState(defaultOpenSectionValue)
   const [isEditingSummary, setIsEditingSummary] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [isAddingEducation, setIsAddingEducation] = useState(false);
@@ -31,6 +24,7 @@ export default function EditProfile() {
   const [isEditingSkill, setIsEditingSkill] = useState<UserSkill | null>(null)
   const [isEditingEducation, setIsEditingEducation] = useState<Education | null>(null)
   const [isEditingExperience, setIsEditingExperience] = useState<Experience | null>(null)
+  const [skillChunks, setSkillChunks] = useState<UserSkill[][]>([]);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const bottomSheetRef = useRef<BottomSheet>(null)
   const [addSkillForm, setAddSkillForm] = useState<AddUserSkillForm>({skill: '', experience: ''})
@@ -303,17 +297,26 @@ export default function EditProfile() {
    }
     
   const openBottomSheet = (type: 'skill' | 'education' | 'experience') => {
+    setAddEducationForm({ institution: '', degree: '', fromYear: '', toYear: '' });
+    setAddExperienceForm({ title: '', company: '', description: '', city: '', country: '', from: '', to: '' });
+    setAddSkillForm({ skill: '', experience: '' });
     if (type === 'skill') {
         setIsAddingSkill(true);
+        setIsEditingSkill(null);
+        setIsEditingEducation(null);
+        setIsEditingExperience(null);
         setIsAddingEducation(false);
         setIsAddingExperience(false);
     } else if (type === 'education') {
         setIsAddingEducation(true);
         setIsAddingSkill(false);
+        setIsEditingExperience(null);
+        setIsEditingSkill(null);
         setIsAddingExperience(false);
     } else if (type === 'experience') {
         setIsAddingExperience(true);
-        setIsAddingSkill(false);
+        setIsEditingEducation(null);
+        setIsEditingSkill(null);
         setIsAddingEducation(false);
     }
     bottomSheetRef.current?.expand();
@@ -334,6 +337,8 @@ export default function EditProfile() {
 
   const handleIsEditingEducation = (education: Education | null) => {
     setIsEditingEducation(education);
+    setIsEditingExperience(null);
+    setIsEditingSkill(null);
     setAddEducationForm({ 
         institution: education?.institution || '', degree: education?.degree || '', 
         fromYear: education?.fromYear.toString() || '', toYear: education?.toYear?.toString() || ''});
@@ -341,10 +346,12 @@ export default function EditProfile() {
   }
 
   const handleCloseEducationForm = () => {
+    console.log('Closing education form')
     setIsAddingEducation(false);
     setIsEditingEducation(null);
     setAddEducationForm({ institution: '', degree: '', fromYear: '', toYear: '' });
     bottomSheetRef.current?.close();
+
   }
 
   const handleCloseExperienceForm = () => {
@@ -363,7 +370,7 @@ export default function EditProfile() {
         city: experience?.city || '',
         country: experience?.country || '',
         from: experience?.from.toString() || '',
-        to: experience?.to.toString() || ''
+        to: (experience?.to && experience?.to.toString()) || ''
     });
     bottomSheetRef.current?.expand();
   }
@@ -371,7 +378,6 @@ export default function EditProfile() {
   return (
     <SafeAreaView className="flex-1 bg-white h-full">
       <BackBar label="Edit Profile" />
-      
       <ScrollView>
         {isLoading ? 
         <ActivityIndicator size='large' className='flex-1 justify-center items-center'/> :
@@ -381,15 +387,15 @@ export default function EditProfile() {
                     <Text className="font-quicksand-bold text-xl">
                         General Information
                     </Text>
-                    <TouchableOpacity onPress={() => setOpenGeneral(!openGeneral)}>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, general: !prev.general }))}>
                         <AntDesign 
-                        name={openGeneral ? "up" : "down"} 
+                        name={openSection.general ? "up" : "down"} 
                         size={20} 
                         color="black" 
                         />
                     </TouchableOpacity>
                 </View>
-                {openGeneral && 
+                {openSection.general && 
                 <View className="flex flex-row flex-wrap gap-4">
                     <EditProfileCard label="First Name" value={user?.firstName || ""} />
                     <EditProfileCard label="Last Name" value={user?.lastName || ""} />
@@ -417,14 +423,13 @@ export default function EditProfile() {
                                     <AntDesign name="edit" size={20} color="black" />
                                 </TouchableOpacity>}
                             </View>
-                            <TouchableOpacity onPress={() => setOpenSummary(!openSummary)} >
-                                <AntDesign name={openSummary ? "up" : "down"} size={20} color="black"/>
+                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, summary: !prev.summary }))} >
+                                <AntDesign name={openSection.summary ? "up" : "down"} size={20} color="black"/>
                             </TouchableOpacity>
                         </View>
-                        {(isEditingSummary || openSummary) &&
+                        {(isEditingSummary || openSection.summary) &&
                         <View className="flex flex-row flex-wrap">
-                            {isEditingSummary ? 
-                            <TextInput
+                            {isEditingSummary ? <TextInput
                                 placeholder="Enter your summary"
                                 value={user?.summary}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
@@ -440,15 +445,15 @@ export default function EditProfile() {
                     <View className="px-4 py-2">
                         <View className="flex flex-row justify-between items-start">
                             <Text className="font-quicksand-bold text-xl">Skills</Text>
-                            <TouchableOpacity onPress={() => setOpenSkills(!openSkills)}>
+                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, skills: !prev.skills }))}>
                                 <AntDesign 
-                                name={openSkills ? "up" : "down"} 
+                                name={openSection.skills ? "up" : "down"} 
                                 size={20} 
                                 color="black" 
                                 />
                             </TouchableOpacity>
                         </View>
-                        {openSkills &&
+                        {openSection.skills &&
                         <View className="flex flex-col flex-wrap gap-4 p-2 w-full">
                             {/*TODO: Fix horizontal scroll issue on skill card flat list*/}
                             <FlatList
@@ -479,15 +484,15 @@ export default function EditProfile() {
                     <View className="px-4 py-2 gap-4">
                         <View className="flex flex-row justify-between items-start">
                             <Text className="font-quicksand-bold text-xl">Education</Text>
-                            <TouchableOpacity onPress={() => setOpenEducation(!openEducation)}>
+                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, education: !prev.education }))}>
                                 <AntDesign 
-                                    name={openEducation ? "up" : "down"} 
+                                    name={openSection.education ? "up" : "down"} 
                                     size={20} 
                                     color="black" 
                                 />
                             </TouchableOpacity>
                         </View>
-                        {openEducation &&
+                        {openSection.education &&
                         <View className="flex flex-row flex-wrap gap-4">
                             {/*TODO: Fix edit button placement on the profile cards*/}
                             {user?.education?.map((edu) => (
@@ -507,15 +512,15 @@ export default function EditProfile() {
                     <View className="px-4 py-2 gap-4">
                         <View className="flex flex-row justify-between items-start">
                             <Text className="font-quicksand-bold text-xl">Experience</Text>
-                            <TouchableOpacity onPress={() => setOpenExperience(!openExperience)}>
+                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, experience: !prev.experience }))}>
                                 <AntDesign 
-                                    name={openExperience ? "up" : "down"} 
+                                    name={openSection.experience ? "up" : "down"} 
                                     size={20} 
                                     color="black" 
                                 />
                             </TouchableOpacity>
                         </View>
-                        {openExperience &&
+                        {openSection.experience &&
                         <View className="flex flex-row flex-wrap gap-4">
                             {user?.experiences?.map((exp) => (
                                 <ProfileExperienceCard
@@ -534,15 +539,15 @@ export default function EditProfile() {
                    <View className="px-4 py-2">
                         <View className="flex flex-row justify-between items-start">
                             <Text className="font-quicksand-bold text-xl">Socials</Text>
-                            <TouchableOpacity onPress={() => setOpenSocials(!openSocials)}>
+                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, socials: !prev.socials }))}>
                                 <AntDesign 
-                                    name={openSocials ? "up" : "down"} 
+                                    name={openSection.socials ? "up" : "down"} 
                                     size={20} 
                                     color="black" 
                                 />
                             </TouchableOpacity>
                         </View>
-                        {openSocials &&
+                        {openSection.socials &&
                         <View className="flex flex-row flex-wrap gap-4">
                             <Text>Socials</Text> 
                         </View>}
@@ -551,16 +556,15 @@ export default function EditProfile() {
                     <View className="px-4 py-2">
                         <View className="flex flex-row justify-between items-start">
                             <Text className="font-quicksand-bold text-xl">Portfolio</Text>
-                            <TouchableOpacity onPress={() => setOpenPortfolio(!openPortfolio)}>
+                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, portfolio: !prev.portfolio }))}>
                                 <AntDesign 
-                                    name={openPortfolio ? "up" : "down"} 
+                                    name={openSection.portfolio ? "up" : "down"} 
                                     size={20} 
                                     color="black" 
-                                    onPress={() => setOpenPortfolio(!openPortfolio)}
                                 />
                             </TouchableOpacity>
                         </View>
-                        {openPortfolio &&
+                        {openSection.portfolio &&
                         <View className="flex flex-row flex-wrap gap-4">
                             <Text>Experience</Text> 
                         </View>}
@@ -732,7 +736,7 @@ export default function EditProfile() {
                                 customClass="bg-red-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
                                 onClick={handleCloseExperienceForm}/>
                         </View>
-                        </View>
+                    </View>
                     }
             </View>
         </BottomSheetView>

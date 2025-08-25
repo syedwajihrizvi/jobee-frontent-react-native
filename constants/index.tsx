@@ -24,5 +24,4 @@ export const profileLinkInfo : {label: string, icon: ReactNode, href: string}[] 
     {'label': 'Manage Documents', 'icon': <Entypo name="documents" size={28} color="black"/>, 'href': '/profile/manageDocs'},
     {'label': 'Upcoming Interviews', 'icon': <AntDesign name="calendar" size={28} color="black"/>, 'href': '/profile/upcomingInterviews'},
     {'label': 'Account Settings', 'icon': <AntDesign name="setting" size={28} color="black"/>, 'href': '/profile/accountSettings'},
-    {'label': 'Logout', 'icon': <AntDesign name="logout" size={28} color="red"/>, 'href': '/(auth)/sign-in'}
 ]
