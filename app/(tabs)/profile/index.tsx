@@ -1,61 +1,15 @@
 import ProfileLink from '@/components/ProfileLink';
-import { images } from '@/constants';
+import { images, profileLinkInfo } from '@/constants';
 import { getS3ProfileImage } from '@/lib/s3Urls';
 import { updateUserProfileImage } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
-import { ProfileLinks } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-
-const links: ProfileLinks[] = [
-  {
-    icon: <AntDesign name="user" size={28} color="black"/>,
-    label: 'Edit Profile',
-    onPress: () => router.push('/profile/editProfile')
-  },
-  {
-    icon: <AntDesign name="filetext1" size={28} color="black"/>,
-    label: 'Job Applied To',
-    onPress: () => router.push('/profile/appliedJobs')
-  },
-  {
-    icon: <AntDesign name="staro" size={28} color="black"/>,
-    label: 'Favorite Jobs',
-    onPress: () => router.push('/profile/favoriteJobs')
-  },
-  {
-    icon: <Entypo name="documents" size={28} color="black" />,
-    label: 'Manage Documents',
-    onPress: () => router.push('/profile/manageDocs')
-  },
-  {
-    icon: <AntDesign name="calendar" size={28} color="black"/>,
-    label: 'Upcoming Interviews',
-    onPress: () => console.log('Upcoming Interviews Pressed')
-  },
-  {
-    icon: <AntDesign name="setting" size={28} color="black"/>,
-    label: 'Account Settings',
-    onPress: () => console.log('Settings Pressed')
-  },
-  {
-    icon: <AntDesign name="logout" size={28} color="red"/>,
-    label: 'Logout',
-    onPress: () => {
-      // Handle logout logic her
-      AsyncStorage.removeItem('x-auth-token'); // Clear token from storage
-      console.log('Logout Pressed');
-      router.push('/(auth)/sign-in'); // Redirect to login page
-    }
-  }
-]
 
 const Profile = () => {
   const { isLoading, user } = useAuthStore()
@@ -97,11 +51,7 @@ const Profile = () => {
               quality: 1,
             });
             if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
-              // Handle the image upload logic here
-              console.log('Image selected from gallery:', galleryResult.assets[0].uri);
               await uploadUserProfileImage(galleryResult);
-              // You can also update the user profile image in your store or state
-              // await updateUserProfileImage(galleryResult.assets[0].uri);
             }
             return
           }
@@ -126,8 +76,8 @@ const Profile = () => {
       } else {
         Alert.alert('Error', 'Failed to update profile image. Please try again.');
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      console.error('Error uploading profile image:', error);
       Alert.alert('Error', 'An error occurred while uploading the profile image. Please try again.');
     } finally {
       setUploadingUserProfileImage(false);
@@ -174,8 +124,12 @@ const Profile = () => {
           </View>
           <View className='divider'/>
           <View className='flex-col gap-2 mt-4'>
-            {links.map((link, index) => (
-              <ProfileLink key={index} icon={link.icon} label={link.label} onPress={link.onPress} />
+            {profileLinkInfo.map((link, index) => (
+              <ProfileLink 
+                key={index} 
+                icon={link.icon} 
+                label={link.label} 
+                onPress={() => router.push(link.href as any)} />
             ))}
           </View>
         </>}

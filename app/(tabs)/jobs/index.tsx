@@ -26,13 +26,12 @@ const Index = () => {
     salary: undefined,
     experience: undefined
   });
-  const [tempFilters, setTempFilters] = useState<JobFilters>({...filters});
-
   const { data: jobs, isLoading } = useJobs(filters)
   const [isOpen, setIsOpen] = useState(false)
-  const slideAnim = useRef(new Animated.Value(screenWidth)).current;
-  const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(false);
+  const [tempFilters, setTempFilters] = useState<JobFilters>({...filters});
   const { user, isLoading: isAuthLoading } = useAuthStore();
+  const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(false);
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current;
 
   useEffect(() => {
     const checkProfileCompletion = async () => {
@@ -106,6 +105,7 @@ const Index = () => {
     let application = user?.applications.find(app => app.jobId === jobId)
     return application;
   }
+
   return (
     <SafeAreaView className='relative flex-1 bg-white'>
         <View className='w-full flex-row items-center justify-center px-8 gap-4'>
@@ -129,7 +129,10 @@ const Index = () => {
         renderItem={({item, index}) => {
           let userApplication = hasUserAppliedToJob(item.id);
           let showFavorite = userApplication ? false : true
-          return <JobListing key={index} job={item} showFavorite={showFavorite} showStatus={!showFavorite} status={userApplication && userApplication.status} />
+          return <JobListing 
+                    key={index} job={item} 
+                    showFavorite={showFavorite} showStatus={!showFavorite} 
+                    status={userApplication && userApplication.status} />
         }}
         ItemSeparatorComponent={() => <View className='divider'/>}
       />}

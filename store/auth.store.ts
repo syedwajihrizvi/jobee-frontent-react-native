@@ -23,7 +23,7 @@ const useAuthStore = create<AuthState>((set) => ({
       set({ isLoading: false });
     }
   },
-  removeUser: () => set({ user: null, isAuthenticated: false })
+  removeUser: () => set({ user: null, isAuthenticated: false }),
 }))
 
 export default useAuthStore;
