@@ -23,7 +23,7 @@ const links: ProfileLinks[] = [
   {
     icon: <AntDesign name="filetext1" size={28} color="black"/>,
     label: 'Job Applied To',
-    onPress: () => console.log('Job Applied To Pressed')
+    onPress: () => router.push('/profile/appliedJobs')
   },
   {
     icon: <AntDesign name="staro" size={28} color="black"/>,

@@ -82,7 +82,8 @@ export type UserDocument = {
     id: number,
     documentUrl: string,
     documentType: string,
-    createdAt: Date,
+    createdAt: string,
+    filename: string
 }
 
 export type AllUserDocuments = {
@@ -107,6 +108,7 @@ export type User = {
     skills: UserSkill[];
     education: Education[];
     experiences: Experience[];
+    applications: Application[];
     profileComplete: boolean;
     profileImageUrl: string;
     favoriteJobs: {id:number}[];
@@ -176,4 +178,17 @@ export type AddExperienceForm = {
     country: string;
     from: string;
     to: string;
+}
+
+export type CreateApplication = {
+    jobId: number,
+    resumeDocumentId: number,
+    coverLetterDocumentId?: number
+}
+
+export type Application = {
+    id: number,
+    jobId: number,
+    status: string,
+    appliedAt: string
 }

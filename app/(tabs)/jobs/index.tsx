@@ -102,6 +102,10 @@ const Index = () => {
     AsyncStorage.setItem('profileReminderShown', 'true');
   }
 
+  const hasUserAppliedToJob = (jobId: number) => {
+    let application = user?.applications.find(app => app.jobId === jobId)
+    return application;
+  }
   return (
     <SafeAreaView className='relative flex-1 bg-white'>
         <View className='w-full flex-row items-center justify-center px-8 gap-4'>
@@ -122,10 +126,11 @@ const Index = () => {
       <FlatList
         className='w-full p-2'
         data={jobs} // Simulating multiple job listings
-        renderItem={({item, index}) => (
-          <JobListing key={index} {...item} />
-        
-      )}
+        renderItem={({item, index}) => {
+          let userApplication = hasUserAppliedToJob(item.id);
+          let showFavorite = userApplication ? false : true
+          return <JobListing key={index} job={item} showFavorite={showFavorite} showStatus={!showFavorite} status={userApplication && userApplication.status} />
+        }}
         ItemSeparatorComponent={() => <View className='divider'/>}
       />}
       {isOpen && (

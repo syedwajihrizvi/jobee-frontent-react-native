@@ -43,9 +43,6 @@ const ManageDocuments = () => {
       });
     }
   }, [isLoading, user])
-  console.log('User Documents:', userDocuments);
-  // TODO: Replace with actual user documents fetched from server
-
 
   const handleUpload = async (documentType: string) => {
     setUploadingDocument(true)

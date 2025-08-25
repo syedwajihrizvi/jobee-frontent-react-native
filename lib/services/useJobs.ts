@@ -2,6 +2,8 @@ import { Job, JobFilters } from '@/type';
 import { useQuery } from '@tanstack/react-query';
 
 const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
+const APPLICATIONS_API_URL = `http://10.0.0.135:8080/applications`;
+
 export const useJobs = (jobFilters: JobFilters) => {
     const { search, location, company, distance, salary, experience } = jobFilters
     const queryParams = new URLSearchParams()
@@ -56,3 +58,16 @@ export const useJobsByUserFavorites = (
   })
 }
 
+export const useJobsByUserApplications = (userId?: number) => {
+  const fetchAppliedJobs = async () => {
+    const response = await fetch(`${APPLICATIONS_API_URL}?userId=${userId}`)
+    return response.json()
+  }
+
+  return useQuery<{job: Job, status: string}[], Error>({
+    queryKey: ['jobs', 'applications', userId],  // ✅ userId in key means query refreshes when userId changes
+    queryFn: fetchAppliedJobs,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!userId, // ✅ only run if userId is set
+  })
+}

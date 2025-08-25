@@ -5,13 +5,15 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import CompanyInformation from './CompanyInformation';
 import FavoriteJob from './FavoriteJob';
 
-const JobListing = (job: Job) => {
+const JobListing = ({job, showFavorite = true, showStatus = false, status}: {job: Job, showFavorite?: boolean, showStatus?: boolean, status?: string}) => {
   return (
     <View className='w-full p-4 rounded-full'>
       <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${job.id}`)}>
         <View className='flex-row items-center justify-between'>
           <CompanyInformation company={job.businessName} />
-          <FavoriteJob jobId={job.id} />
+          {showFavorite && <FavoriteJob jobId={job.id} />}
+          {(showStatus && status) && 
+          <Text className='font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full'>{status}</Text>}
         </View>
         <Text className='font-quicksand-bold text-2xl'>{job.title}</Text>
         <Text className='font-quicksand-medium text-lg'>{job.businessName} {'\u00B7'} {job.location}</Text>

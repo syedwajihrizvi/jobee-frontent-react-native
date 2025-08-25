@@ -8,7 +8,7 @@ import { WebView } from 'react-native-webview';
 const { height, width } = Dimensions.get("window");
 
 const DocumentItem = (
-  { document, customAction }: { document: UserDocument, customAction?: () => void }) => {
+  { document, actionIcon = 'edit', customAction }: { document: UserDocument, actionIcon?: string, customAction?: () => void }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleOpen = () => setModalVisible(true);
@@ -24,7 +24,7 @@ const DocumentItem = (
         </TouchableOpacity>
       {customAction && 
       <TouchableOpacity className='absolute top-2 left-2 bg-white rounded-full p-1' onPress={customAction}>
-        <AntDesign name="edit" size={20} color="black" />
+        <AntDesign name={actionIcon as any} size={20} color="black" />
       </TouchableOpacity>}
       </View>
 
