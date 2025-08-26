@@ -1,5 +1,5 @@
 import ProfileLink from '@/components/ProfileLink';
-import { images, profileLinkInfo } from '@/constants';
+import { images, profileLinkInfo } from '@/constants/index';
 import { getS3ProfileImage } from '@/lib/s3Urls';
 import { updateUserProfileImage } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';

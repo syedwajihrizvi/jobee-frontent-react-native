@@ -5,13 +5,20 @@ interface SignInParams {
     password: string;
 }
 
-interface SignUpParams {
+interface UserSignUpParams {
     email: string;
     password: string;
     confirmPassword: string;
     firstName: string,
     lastName: string,
     age: number
+}
+
+interface BusinessSignUpParams {
+    companyName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
 }
 
 export type CustomInputProps = {
