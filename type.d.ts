@@ -71,7 +71,8 @@ export type Job = {
     tags: Tag[],
     applicants: number,
     createdAt: string,
-    employmentType: string
+    employmentType: string,
+    applications: Application[]
 }
 
 export type JobFilters = {

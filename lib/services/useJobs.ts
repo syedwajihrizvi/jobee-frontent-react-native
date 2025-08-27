@@ -67,16 +67,16 @@ export const useJobsByUserApplications = (userId?: number) => {
   }
 
   return useQuery<{job: Job, status: string}[], Error>({
-    queryKey: ['jobs', 'applications', userId],  // ✅ userId in key means query refreshes when userId changes
+    queryKey: ['jobs', 'applications', userId],
     queryFn: fetchAppliedJobs,
     staleTime: 1000 * 60 * 5,
-    enabled: !!userId, // ✅ only run if userId is set
+    enabled: !!userId
   })
 }
 
 export const useJobsByCompany = (companyId?: number) => {
   const fetchCompanyJobs = async () => {
-    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}`, {
+    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -91,5 +91,25 @@ export const useJobsByCompany = (companyId?: number) => {
     queryFn: fetchCompanyJobs,
     staleTime: 1000 * 60 * 5,
     enabled: !!companyId,
+  })
+}
+
+export const useJobsForBusiness = (companyId: number, jobId: number) => {
+  const fetchJobForBusiness = async () => {
+    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await response.json()
+    console.log(data)
+    return data
+  }
+  return useQuery<Job, Error>({
+    queryKey: ['job', 'business', companyId, jobId],
+    queryFn: fetchJobForBusiness,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!companyId && !!jobId,
   })
 }
