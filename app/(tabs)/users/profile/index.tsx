@@ -3,6 +3,7 @@ import { images, profileLinkInfo } from '@/constants/index';
 import { getS3ProfileImage } from '@/lib/s3Urls';
 import { updateUserProfileImage } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
+import { User } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import * as ImagePicker from 'expo-image-picker';
@@ -84,12 +85,12 @@ const Profile = () => {
   }
 
   const renderProfileImage = () => {
-    if (!user || !user.profileImageUrl) {
+    if (!user || !(user as User).profileImageUrl) {
       return <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain' />;
     } else if (uploadedProfileImage) {
       return <Image source={{uri: getS3ProfileImage(uploadedProfileImage)}} className='size-14 rounded-full' resizeMode='contain' />;
     }
-    const uri = getS3ProfileImage(user.profileImageUrl);
+    const uri = getS3ProfileImage((user as User).profileImageUrl);
     return <Image source={{uri}} className='size-14 rounded-full' resizeMode='contain' />;
   } 
 
@@ -116,8 +117,8 @@ const Profile = () => {
               </>}
             </TouchableOpacity>
             <View>
-              <Text className='font-quicksand-bold text-xl ml-2'>{user?.firstName} {user?.lastName}</Text>
-              <Text className='font-quicksand-semibold text-md ml-2'>{user?.title}</Text>
+              <Text className='font-quicksand-bold text-xl ml-2'>{(user as User)?.firstName} {(user as User)?.lastName}</Text>
+              <Text className='font-quicksand-semibold text-md ml-2'>{(user as User)?.title}</Text>
             </View>
           </View>
           <View className='divider'/>

@@ -4,8 +4,7 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
-  const { isLoading, fetchAuthenticatedUser } = useAuthStore();
-  
+  const { isLoading, fetchAuthenticatedUser, userType } = useAuthStore();
   useEffect(() => {
     fetchAuthenticatedUser();
   }, [fetchAuthenticatedUser]);
@@ -17,5 +16,5 @@ export default function Index() {
       </View>
     );
   }
-  return <Redirect href="/(tabs)/jobs" />;
+  return userType === 'user' ? <Redirect href="/(tabs)/users/jobs" /> : <Redirect href="/(tabs)/business/jobs" />;
 }

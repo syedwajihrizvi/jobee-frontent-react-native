@@ -4,7 +4,7 @@ import LinkInput from '@/components/LinkInput';
 import { UserDocumentType } from '@/constants';
 import { uploadUserDocument } from '@/lib/manageUserDocs';
 import useAuthStore from '@/store/auth.store';
-import { AllUserDocuments, UserDocument } from '@/type';
+import { AllUserDocuments, User, UserDocument } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as DocumentPicker from 'expo-document-picker';
@@ -15,7 +15,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ManageDocuments = () => {
-  const {isLoading, user} = useAuthStore()
+  const {isLoading, user:authUser} = useAuthStore()
   const [resumeLink, setResumeLink] = useState('');
   const [coverLetterLink, setCoverLetterLink] = useState('');
   const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
@@ -24,7 +24,7 @@ const ManageDocuments = () => {
   const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
   const addDocumentRef = useRef<BottomSheet>(null);
   const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(null);
-
+  const user = authUser as User | null; // Cast once at the top
   useEffect(() => {
     if (user && user.documents) {
       // Fetch user documents from the server or local storage

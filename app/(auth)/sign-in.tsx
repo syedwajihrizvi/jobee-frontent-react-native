@@ -30,8 +30,9 @@ const SignIn = () => {
         }
         await fetchAuthenticatedUser()
         setIsAuthenticated(true)
+        setType('user')
         AsyncStorage.setItem('profileReminderShown', "false");
-        router.replace("/(tabs)/jobs")
+        router.replace("/(tabs)/users/jobs")
       } catch (error) {
         Alert.alert('Error', 'Failed to sign in. Please try again.')
       } finally {
@@ -55,8 +56,9 @@ const SignIn = () => {
         }
         await fetchAuthenticatedUser()
         setIsAuthenticated(true)
+        setType('business')
         AsyncStorage.setItem('profileReminderShown', "false");
-        router.replace("/(tabs)/jobs")
+        router.replace("/(tabs)/business/jobs")
       } catch (error) {
         Alert.alert('Error', 'Failed to sign in. Please try again.')
       } finally {

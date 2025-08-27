@@ -41,10 +41,11 @@ export type CustomButtonProps = {
 
 export type AuthState = {
     isAuthenticated: boolean;
-    user: User | null;
+    user: User | BusinessUser | null;
+    userType: 'user' | 'business';
     isLoading: boolean;
     setIsAuthenticated: (isAuthenticated: boolean) => void;
-    setUser: (user: User | null) => void;
+    setUser: (user: User | BusinessUser | null) => void;
     setIsLoading: (isLoading: boolean) => void;
     fetchAuthenticatedUser: () => Promise<void>;
     removeUser: () => void
@@ -67,7 +68,10 @@ export type Job = {
     employmentType: string,
     minSalary: number,
     maxSalary: number,
-    tags: Tag[]
+    tags: Tag[],
+    applicants: number,
+    createdAt: string,
+    employmentType: string
 }
 
 export type JobFilters = {
@@ -120,6 +124,13 @@ export type User = {
     profileImageUrl: string;
     favoriteJobs: {id:number}[];
     documents: UserDocument[]
+}
+
+export type BusinessUser = {
+    id: number;
+    email: string;
+    companyName: string;
+    companyId: number;
 }
 
 export type EditUserProfileForm = {

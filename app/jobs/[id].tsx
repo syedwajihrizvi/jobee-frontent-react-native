@@ -11,7 +11,7 @@ import { applyToJob } from '@/lib/jobEndpoints'
 import { useJob } from '@/lib/services/useJobs'
 import { isApplied } from '@/lib/utils'
 import useAuthStore from '@/store/auth.store'
-import { CreateApplication, UserDocument } from '@/type'
+import { CreateApplication, User, UserDocument } from '@/type'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -35,9 +35,9 @@ const JobDetails = () => {
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
 
   useEffect(() => {
-    if (user && user.documents) {
-      const resumes = user.documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
-      const coverLetters = user.documents.filter(doc => doc.documentType === UserDocumentType.COVER_LETTER);
+    if (user && (user as User).documents) {
+      const resumes = (user as User).documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
+      const coverLetters = (user as User).documents.filter(doc => doc.documentType === UserDocumentType.COVER_LETTER);
       setUserDocuments({
         'RESUMES': resumes,
         'COVER_LETTERS': coverLetters
@@ -101,7 +101,7 @@ const JobDetails = () => {
     }
   }
 
-  const application = isApplied(user!, String(jobId));
+  const application = isApplied((user as User)!, String(jobId));
 
   return (
     <SafeAreaView className='flex-1 bg-white relative'>

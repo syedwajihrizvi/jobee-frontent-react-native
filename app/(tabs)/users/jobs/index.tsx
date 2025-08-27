@@ -7,7 +7,7 @@ import LocationSearch from '@/components/LocationSearch';
 import SearchBar from '@/components/SearchBar';
 import { useJobs } from '@/lib/services/useJobs';
 import useAuthStore from '@/store/auth.store';
-import { JobFilters } from '@/type';
+import { JobFilters, User } from '@/type';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -93,7 +93,7 @@ const Index = () => {
   const handleProfileComplete = () => {
     setShowProfileCompleteReminder(false);
     AsyncStorage.setItem('profileReminderShown', 'true');
-    router.push('/(tabs)/profile');
+    router.push('/(tabs)/users/profile');
   }
     
   const handleProfileLater = () => {
@@ -102,7 +102,7 @@ const Index = () => {
   }
 
   const hasUserAppliedToJob = (jobId: number) => {
-    let application = user?.applications.find(app => app.jobId === jobId)
+    let application = (user as User)?.applications.find(app => app.jobId === jobId)
     return application;
   }
 

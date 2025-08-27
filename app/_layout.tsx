@@ -26,7 +26,8 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{headerShown: false}}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(tabs)/business" />
+        <Stack.Screen name="(tabs)/users" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="jobs/[id]" />
       </Stack>

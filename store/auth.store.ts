@@ -1,11 +1,13 @@
 import { getCurrentUser } from '@/lib/auth';
 import { AuthState } from '@/type';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  userType: 'user',
   setUser: (user) => set({ user }),
   setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
   setIsLoading: (isLoading) => set({ isLoading }),
@@ -17,7 +19,9 @@ const useAuthStore = create<AuthState>((set) => ({
         set({ user: null, isAuthenticated: false });
         return;
       }
-      set({ user, isAuthenticated: true });
+      const type = await AsyncStorage.getItem('userType');
+      const userType = !type || type === 'user' ? 'user' : 'business';
+      set({ user, isAuthenticated: true, userType });
     } catch (error) {
     } finally {
       set({ isLoading: false });

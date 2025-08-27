@@ -7,14 +7,14 @@ import ProfileExperienceCard from "@/components/ProfileExperienceCard";
 import ProfileSkillCard from "@/components/ProfileSkillCard";
 import { addEducation, addExperience, addSkill, editEducation, editExperience } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
-import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, UserSkill } from "@/type";
+import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, User, UserSkill } from "@/type";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EditProfile() {
-  const { isLoading, user, setUser } = useAuthStore()
+  const { isLoading, user: authUser, setUser } = useAuthStore()
   const defaultOpenSectionValue = { general: false, skills: false, summary: false, education: false, experience: false, socials: false, portfolio: false }
   const [openSection, setOpenSection] = useState(defaultOpenSectionValue)
   const [isEditingSummary, setIsEditingSummary] = useState(false);
@@ -33,7 +33,7 @@ export default function EditProfile() {
   const [isLoadingNewSkill, setIsLoadingNewSkill] = useState(false);
   const [isLoadingNewEducation, setIsLoadingNewEducation] = useState(false);
   const [isLoadingNewExperience, setIsLoadingNewExperience] = useState(false);
-
+  const user = authUser as User | null; // Cast once at the top
   function chunkArray(array: UserSkill[], size: number): UserSkill[][] {
     const result: UserSkill[][] = [];
     for (let i = 0; i < array.length; i += size) {

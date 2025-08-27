@@ -47,7 +47,8 @@ export const useJobsByUserFavorites = (
 ) => {
   const fetchFavoriteJobs = async () => {
     const response = await fetch(`${JOBS_API_URL}/favorites?userId=${userId}`)
-    return response.json()
+    const data = await response.json()
+    return data
   }
 
   return useQuery<Job[], Error>({
@@ -61,7 +62,8 @@ export const useJobsByUserFavorites = (
 export const useJobsByUserApplications = (userId?: number) => {
   const fetchAppliedJobs = async () => {
     const response = await fetch(`${APPLICATIONS_API_URL}?userId=${userId}`)
-    return response.json()
+    const data = await response.json()
+    return data
   }
 
   return useQuery<{job: Job, status: string}[], Error>({
@@ -69,5 +71,25 @@ export const useJobsByUserApplications = (userId?: number) => {
     queryFn: fetchAppliedJobs,
     staleTime: 1000 * 60 * 5,
     enabled: !!userId, // ✅ only run if userId is set
+  })
+}
+
+export const useJobsByCompany = (companyId?: number) => {
+  const fetchCompanyJobs = async () => {
+    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await response.json()
+    return data
+  }
+
+  return useQuery<Job[], Error>({
+    queryKey: ['jobs', 'company', companyId],
+    queryFn: fetchCompanyJobs,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!companyId,
   })
 }

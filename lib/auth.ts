@@ -16,6 +16,7 @@ export const signInUser = async (request: SignInParams) => {
     const data = await response.json()
     if (response.status === 200) {
         await Asyncstorage.setItem('x-auth-token', data.token)
+        await Asyncstorage.setItem('userType', "user");
         return true
     }
     return false
@@ -32,6 +33,7 @@ export const signInBusiness= async (request: SignInParams) => {
     const data = await response.json()
     if (response.status === 200) {
         await Asyncstorage.setItem('x-auth-token', data.token)
+        await Asyncstorage.setItem('userType', "business");
         return true
     }
     return false
@@ -63,15 +65,20 @@ export const signUpBusiness = async (request: BusinessSignUpParams) => {
     
 export const signOut = async () => {
     await Asyncstorage.removeItem('x-auth-token')
-    Asyncstorage.setItem('profileReminderShown', "false");
+    await Asyncstorage.setItem('profileReminderShown', "false");
+    await Asyncstorage.removeItem('userType');
     return true
 }
 
 export const getCurrentUser = async () => {
+    const accountType = await Asyncstorage.getItem('userType')
+    if (!accountType) return null
+    const targetUrl = accountType === "user" ? PROFILES_API_URL : BUSINESS_ACCOUNTS_API_URL;
+    console.log("Target URL:", targetUrl); // Debugging line
     const token = await Asyncstorage.getItem('x-auth-token')
     if (!token) return null
 
-    const response = await fetch(`${PROFILES_API_URL}/me`, {
+    const response = await fetch(`${targetUrl}/me`, {
         headers: {
             'x-auth-token': `Bearer ${token}`
         }
@@ -79,6 +86,7 @@ export const getCurrentUser = async () => {
 
     if (response.status === 200) {
         const data = await response.json()
+        console.log("Fetched user data:", data); // Debugging line
         return data
     }
     return null
