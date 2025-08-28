@@ -209,5 +209,16 @@ export type Application = {
     id: number,
     jobId: number,
     status: string,
-    appliedAt: string
+    appliedAt: string;
+}
+
+export type ApplicationSummary = {
+    id: number;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    profileImageUrl: string;
+    appliedAt: string;
+    profileSummary: string;
+    title: string;
 }

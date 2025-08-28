@@ -74,7 +74,6 @@ export const getCurrentUser = async () => {
     const accountType = await Asyncstorage.getItem('userType')
     if (!accountType) return null
     const targetUrl = accountType === "user" ? PROFILES_API_URL : BUSINESS_ACCOUNTS_API_URL;
-    console.log("Target URL:", targetUrl); // Debugging line
     const token = await Asyncstorage.getItem('x-auth-token')
     if (!token) return null
 
@@ -86,7 +85,6 @@ export const getCurrentUser = async () => {
 
     if (response.status === 200) {
         const data = await response.json()
-        console.log("Fetched user data:", data); // Debugging line
         return data
     }
     return null

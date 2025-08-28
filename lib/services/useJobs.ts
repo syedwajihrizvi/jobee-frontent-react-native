@@ -1,4 +1,4 @@
-import { Job, JobFilters } from '@/type';
+import { ApplicationSummary, Job, JobFilters } from '@/type';
 import { useQuery } from '@tanstack/react-query';
 
 const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
@@ -103,7 +103,6 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
       },
     })
     const data = await response.json()
-    console.log(data)
     return data
   }
   return useQuery<Job, Error>({
@@ -111,5 +110,25 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
     queryFn: fetchJobForBusiness,
     staleTime: 1000 * 60 * 5,
     enabled: !!companyId && !!jobId,
+  })
+}
+
+export const useApplicantsForJob = (jobId?: number) => {
+  const fetchApplicantsForJob = async () => {
+    const response = await fetch(`${APPLICATIONS_API_URL}/job/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await response.json()
+    return data
+  }
+
+  return useQuery<ApplicationSummary[], Error>({
+    queryKey: ['applications', 'job', jobId],
+    queryFn: fetchApplicantsForJob,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!jobId,
   })
 }
