@@ -222,3 +222,12 @@ export type ApplicationSummary = {
     profileSummary: string;
     title: string;
 }
+
+export type ApplicationDetailsForBusiness = {
+    id: number;
+    appliedAt: string;
+    resumeUrl: string;
+    coverLetterUrl?: string;
+    fullName: string;
+    userProfile: User
+}
