@@ -1,5 +1,6 @@
 import { ApplicationSummary, Job, JobFilters } from '@/type';
 import { useQuery } from '@tanstack/react-query';
+import { getEducationLevel } from '../utils';
 
 const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
 const APPLICATIONS_API_URL = `http://10.0.0.135:8080/applications`;
@@ -113,9 +114,17 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
   })
 }
 
-export const useApplicantsForJob = (jobId?: number) => {
+export const useApplicantsForJob = (jobId?: number, filters?: { locations: string[], skills: string[], education: string }) => {
+  const queryParams = new URLSearchParams()
+  const locations = filters?.locations || []
+  locations.forEach(location => queryParams.append('locations', location))
+  const skills = filters?.skills || []
+  skills.forEach(skill => queryParams.append('skills', skill))
+  if (filters?.education && filters.education !== 'Any') 
+    queryParams.append('educationLevel', getEducationLevel(filters.education) ?? '')
+  const params = queryParams.toString()
   const fetchApplicantsForJob = async () => {
-    const response = await fetch(`${APPLICATIONS_API_URL}/job/${jobId}`, {
+    const response = await fetch(`${APPLICATIONS_API_URL}/job/${jobId}?${params}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -126,8 +135,29 @@ export const useApplicantsForJob = (jobId?: number) => {
   }
 
   return useQuery<ApplicationSummary[], Error>({
-    queryKey: ['applications', 'job', jobId],
+    queryKey: ['applications', 'job', jobId, filters],
     queryFn: fetchApplicantsForJob,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!jobId,
+  })
+}
+
+export const useShortListedCandidatesForJob = (jobId?: number) => {
+  const fetchShortListedCandidatesForJob = async () => {
+    const response = await fetch(`${JOBS_API_URL}/${jobId}/shortlisted`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await response.json()
+    console.log('Shortlisted candidates data:', data)
+    return data
+  }
+
+  return useQuery<number[], Error>({
+    queryKey: [jobId, 'shortlist'],
+    queryFn: fetchShortListedCandidatesForJob,
     staleTime: 1000 * 60 * 5,
     enabled: !!jobId,
   })

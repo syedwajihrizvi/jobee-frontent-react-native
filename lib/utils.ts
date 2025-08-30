@@ -14,4 +14,23 @@ export const isApplied = (user: User, jobId: string) =>user?.applications.find(a
 
 export const getUserDocumentById = (id: number, user: User): UserDocument | undefined => {
     return user?.documents.find(doc => doc.id === id);
-  }
+}
+
+export const getEducationLevel = (level: string) => {
+  switch(level) {
+    case 'High School':
+      return 'HIGH_SCHOOL';
+    case 'Diploma':
+      return "DIPLOMA";
+    case 'Associates':
+      return "ASSOCIATES";
+    case 'Undergraduate':
+      return "UNDERGRADUATE";
+    case 'Postgraduate':
+      return "POSTGRADUATE";
+    case 'PHD':
+      return "PHD";
+    case 'Post Docotorate':
+      return "POST_DOCTORATE";
+  };
+}

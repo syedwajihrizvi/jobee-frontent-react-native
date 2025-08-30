@@ -72,7 +72,8 @@ export type Job = {
     applicants: number,
     createdAt: string,
     employmentType: string,
-    applications: Application[]
+    applications: Application[],
+    totalShortListedCandidates: number
 }
 
 export type JobFilters = {
@@ -218,6 +219,7 @@ export type ApplicationSummary = {
     email: string;
     phoneNumber: string;
     profileImageUrl: string;
+    location: string;
     appliedAt: string;
     profileSummary: string;
     title: string;
@@ -229,5 +231,7 @@ export type ApplicationDetailsForBusiness = {
     resumeUrl: string;
     coverLetterUrl?: string;
     fullName: string;
+    jobId: number;
+    shortListed: boolean;
     userProfile: User
 }

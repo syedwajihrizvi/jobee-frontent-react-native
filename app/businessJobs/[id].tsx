@@ -1,5 +1,5 @@
 import BackBar from "@/components/BackBar";
-import { useJobsForBusiness } from "@/lib/services/useJobs";
+import { useJobsForBusiness, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { formatDate } from "@/lib/utils";
 import { router, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
@@ -7,6 +7,7 @@ import { ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View } from "r
 const BusinessJobDetails = () => {
     const { id: jobId, companyId } = useLocalSearchParams()
     const { data: job, isLoading } = useJobsForBusiness(Number(companyId), Number(jobId))
+    const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(Number(jobId))
     return (
         <SafeAreaView className="flex-1 bg-white relative">
             <BackBar label="Job Details"/>
@@ -14,19 +15,30 @@ const BusinessJobDetails = () => {
             {job && (
             <View className="p-4">
                 <View className="flex-row items-start justify-between">
-                    <Text className="text-2xl font-bold">{job.title}</Text>
-                    <TouchableOpacity onPress={() => router.push(`/businessJobs/applications/${jobId}`)}>
-                        <Text className="font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full">
-                            {job.applicants} Applicants
-                        </Text>
-                    </TouchableOpacity>
+                    <View>
+                        <Text className="text-2xl font-bold">{job.title}</Text>
+                        <Text className="font-quicksand-medium text-lg">{job.location}</Text>
+                        <Text className="font-quicksand-semibold text-sm">${job.minSalary} - ${job.maxSalary} | {job.employmentType}</Text>
+                        <Text className="font-quicksand-semibold text-sm">Posted on {formatDate(job.createdAt)}</Text>
+                    </View>
+                    <View className="gap-2">
+                        <TouchableOpacity onPress={() => router.push(`/businessJobs/applications/${jobId}`)}>
+                            <Text className="font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full">
+                                {job.applicants} Applicants
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => console.log('View Shortlist')}>
+                            <Text className="font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full">
+                                {loadingShortListedCandidates ? 'Loading...' : `${shortListedCandidates?.length || 0} Shortlisted`}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-                <Text className="font-quicksand-medium text-lg">{job.location}</Text>
-                <Text className="font-quicksand-semibold text-sm">${job.minSalary} - ${job.maxSalary} | {job.employmentType}</Text>
-                <Text className="font-quicksand-semibold text-sm">Posted on {formatDate(job.createdAt)}</Text>
                 <View className="divider my-4"/>
-                <Text className="font-quicksand-bold text-xl">Job Description</Text>
-                <Text className="font-quicksand-regular text-base">{job.description}</Text>
+                <View>
+                    <Text className="font-quicksand-bold text-xl">Job Description</Text>
+                    <Text className="font-quicksand-regular text-base">{job.description}</Text>
+                </View>
                 <View className="divider my-4"/>
                 <View>
                     <Text className="font-quicksand-bold text-xl mb-2">Tags</Text>
@@ -50,12 +62,21 @@ const BusinessJobDetails = () => {
             )}
             <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
                 <TouchableOpacity 
-                className='apply-button w-4/6 items-center justify-center h-14'
+                className='apply-button w-1/2 items-center justify-center h-14'
                 onPress={() => router.push(`/businessJobs/applications/${jobId}`)}>
-                <Text className='font-quicksand-semibold text-md'>
-                    View Applicants
-                </Text>
+                    <Text className='font-quicksand-semibold text-md'>
+                        View Applicants
+                    </Text>
                 </TouchableOpacity>
+                {shortListedCandidates && shortListedCandidates.length > 0 && (
+                    <TouchableOpacity 
+                    className='apply-button w-1/2 items-center justify-center h-14'
+                    onPress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}>
+                        <Text className='font-quicksand-semibold text-md'>
+                            View Shortlist
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </SafeAreaView>
     )

@@ -1,22 +1,74 @@
 import BackBar from '@/components/BackBar'
 import UserVideoIntro from '@/components/UserVideoIntro'
 import { images } from '@/constants'
+import { shortListCandidate, unshortListCandidate } from '@/lib/jobEndpoints'
+import { useShortListedCandidatesForJob } from '@/lib/services/useJobs'
 import { useApplicant } from '@/lib/services/useProfile'
 import { AntDesign, FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons'
+import { useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
-import React, { useState } from 'react'
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const ApplicantForBusiness = () => {
+  const queryClient = useQueryClient()
   const { id } = useLocalSearchParams()
   const { data: application, isLoading } = useApplicant(Number(id))
+  const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId))
   const { userProfile } = application || {}
   const [showSkills, setShowSkills] = useState(false)
   const [showExperience, setShowExperience] = useState(false)
   const [showEducation, setShowEducation] = useState(false)
   const [showProjects, setShowProjects] = useState(false)
   const [showCertificates, setShowCertificates] = useState(false)
+  const [makingShortListRequest, setMakingShortListRequest] = useState(false)
+  const [isShortListed, setIsShortListed] = useState(false)
+
+  useEffect(() => {
+    if (shortListedCandidates && application) {
+      setIsShortListed(shortListedCandidates?.includes(application?.id) || false)
+    }
+  }, [shortListedCandidates, application])
+
+  const handleShortList = async () => {
+    if (!application) return
+    setMakingShortListRequest(true)
+    try {
+        const result = await shortListCandidate({applicationId: application.id})
+        if (result) {
+            Alert.alert('Success', 'Candidate added to shortlist successfully.')
+            setIsShortListed(true)
+            queryClient.invalidateQueries({ queryKey: [application.jobId, 'shortlist'] })
+        } else {
+            Alert.alert('Error', 'Failed to add candidate to shortlist.')
+        }
+    } catch (error) {
+        Alert.alert('Error', 'Failed to add candidate to shortlist.')
+    } finally {
+        setMakingShortListRequest(false)
+    }
+  }
+
+  const handleUnshortList = async () => {
+    if (!application) return
+    setMakingShortListRequest(true)
+    try {
+        const result = await unshortListCandidate({applicationId: application.id})
+        if (result) {
+            Alert.alert('Success', 'Candidate removed from shortlist successfully.')
+            setIsShortListed(false)
+            queryClient.invalidateQueries({ queryKey: [application.jobId, 'shortlist'] })
+        } else {
+            Alert.alert('Error', 'Failed to remove candidate from shortlist.')
+        }
+    } catch (error) {
+        Alert.alert('Error', 'Failed to remove candidate from shortlist.')
+    } finally {
+        setMakingShortListRequest(false)
+    }
+
+  }
 
   return (
     <SafeAreaView className='flex-1 bg-white relative'>
@@ -44,10 +96,10 @@ const ApplicantForBusiness = () => {
             <Text className='font-quicksand-medium text-md text-gray-600'>{userProfile?.summary}</Text>
             <View className="flex-row gap-3 mt-2">
                 <TouchableOpacity className="bg-blue-100 px-4 py-2 rounded-full">
-                <Text className="font-quicksand-medium text-blue-800 text-sm">View Resume</Text>
+                    <Text className="font-quicksand-medium text-blue-800 text-sm">View Resume</Text>
                 </TouchableOpacity>
                 <TouchableOpacity className="bg-blue-100 px-4 py-2 rounded-full">
-                <Text className="font-quicksand-medium text-blue-800 text-sm">View Cover Letter</Text>
+                    <Text className="font-quicksand-medium text-blue-800 text-sm">View Cover Letter</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -139,8 +191,15 @@ const ApplicantForBusiness = () => {
             <TouchableOpacity className='apply-button w-1/2 items-center justify-center h-14'>
                 <Text className='font-quicksand-semibold text-lg'>Contact Applicant</Text>
             </TouchableOpacity>
-            <TouchableOpacity className='apply-button w-1/2 items-center justify-center h-14'>
-                <Text className='font-quicksand-semibold text-lg'>Shortlist</Text>
+            <TouchableOpacity 
+                className='apply-button w-1/2 items-center justify-center h-14'
+                onPress={isShortListed ? handleUnshortList : handleShortList}
+                disabled={makingShortListRequest}>
+                {makingShortListRequest ? 
+                <ActivityIndicator color="white" /> : 
+                <Text className='font-quicksand-semibold text-lg'>
+                    {isShortListed ? "Unshortlist" : "Shortlist"}
+                </Text>}
             </TouchableOpacity>
         </View>
       </>}
