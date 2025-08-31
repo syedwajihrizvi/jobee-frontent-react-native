@@ -1,5 +1,6 @@
 import ProfileLink from '@/components/ProfileLink';
 import { images, profileLinkInfo } from '@/constants/index';
+import { signOut } from '@/lib/auth';
 import { getS3ProfileImage } from '@/lib/s3Urls';
 import { updateUserProfileImage } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
@@ -13,7 +14,7 @@ import { ActivityIndicator, Alert, Image, Text, TouchableOpacity, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Profile = () => {
-  const { isAuthenticated, isLoading, user } = useAuthStore()
+  const { isAuthenticated, isLoading, user, removeUser, setUserType } = useAuthStore()
   const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
@@ -84,6 +85,13 @@ const Profile = () => {
     }
   }
 
+  const handleSignOut = async () => {
+    await signOut();
+    removeUser();
+    setUserType("user")
+    router.push('/(auth)/sign-in');
+  }
+
   const renderProfileImage = () => {
     if (!user || !(user as User).profileImageUrl) {
       return <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain' />;
@@ -131,9 +139,10 @@ const Profile = () => {
                 onPress={() => router.push(link.href as any)} />
             ))}
             <ProfileLink 
-              icon="log-out" 
+              icon={<AntDesign name="logout" size={24} color="black" />}
               label="Sign Out" 
-              onPress={() => router.push('/(auth)/sign-in')} />
+              onPress={handleSignOut}
+              rightIcon={false} />
           </View>
         </>}
     </SafeAreaView>

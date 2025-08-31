@@ -46,6 +46,7 @@ export type AuthState = {
     isLoading: boolean;
     setIsAuthenticated: (isAuthenticated: boolean) => void;
     setUser: (user: User | BusinessUser | null) => void;
+    setUserType: (type: 'user' | 'business') => void;
     setIsLoading: (isLoading: boolean) => void;
     fetchAuthenticatedUser: () => Promise<void>;
     removeUser: () => void
@@ -77,12 +78,14 @@ export type Job = {
 }
 
 export type JobFilters = {
-    search?: string;
-    location?: string;
-    company?: string;
-    distance?: number;
-    salary?: number;
-    experience?: number;
+    search: string;
+    locations: string[];
+    companies?: string[];
+    tags: string[];
+    distance?: string;
+    minSalary?: number;
+    maxSalary?: number;
+    experience?: string;
 }
 
 export type ProfileLinks = {

@@ -5,10 +5,13 @@ import React from 'react';
 import { Button } from 'react-native';
 
 const LogoutButton = () => {
-  const { removeUser } = useAuthStore()
+  const { removeUser, userType, setUserType } = useAuthStore()
   const handleLogout = async () => {
     await signOut();
     await removeUser();
+    if (userType === 'business') {
+      setUserType('business')
+    }
     router.push("/(auth)/sign-in");
   }
 

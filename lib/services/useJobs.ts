@@ -6,14 +6,15 @@ const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
 const APPLICATIONS_API_URL = `http://10.0.0.135:8080/applications`;
 
 export const useJobs = (jobFilters: JobFilters) => {
-    const { search, location, company, distance, salary, experience } = jobFilters
+    const { search, locations, companies, tags, minSalary, maxSalary } = jobFilters
     const queryParams = new URLSearchParams()
     if (search) queryParams.append('search', search)
-    if (location) queryParams.append('location', location)
-    if (company) queryParams.append('company', company)
-    if (distance !== undefined) queryParams.append('distance', Math.round(distance).toString())
-    if (salary !== undefined) queryParams.append('salary', Math.round(salary).toString())
-    if (experience !== undefined) queryParams.append('experience', Math.round(experience).toString())
+    locations.forEach(location => queryParams.append('locations', location))
+    if (companies) companies.forEach(company => queryParams.append('companies', company))
+    tags.forEach(tag => queryParams.append('tags', tag))
+
+    if (minSalary) queryParams.append('minSalary', minSalary.toString())
+    if (maxSalary) queryParams.append('maxSalary', maxSalary.toString())
     
     const params = queryParams.toString()
     const fetchJobs = async () => {
@@ -75,20 +76,28 @@ export const useJobsByUserApplications = (userId?: number) => {
   })
 }
 
-export const useJobsByCompany = (companyId?: number) => {
+export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
+  const urlParams = new URLSearchParams()
+  if (filters.search) urlParams.append('search', filters.search)
+  filters.locations.forEach(location => urlParams.append('locations', location))
+  filters.tags.forEach(tag => urlParams.append('tags', tag))
+  if (filters.minSalary) urlParams.append('minSalary', filters.minSalary.toString())
+  if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
+  const params = urlParams.toString()
   const fetchCompanyJobs = async () => {
-    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs`, {
+    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs?${params}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     })
     const data = await response.json()
+    console.log('Fetched company jobs:', data)
     return data
   }
 
   return useQuery<Job[], Error>({
-    queryKey: ['jobs', 'company', companyId],
+    queryKey: ['jobs', 'company', companyId, filters],
     queryFn: fetchCompanyJobs,
     staleTime: 1000 * 60 * 5,
     enabled: !!companyId,

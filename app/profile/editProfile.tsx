@@ -77,7 +77,6 @@ export default function EditProfile() {
     setIsLoadingNewSkill(true);
     try {
         const result = await addSkill({skill, experience});
-        console.log("Add skill result:", result);
         if (!result) {
             Alert.alert("Failed to add skill. Please try again.");
             return;

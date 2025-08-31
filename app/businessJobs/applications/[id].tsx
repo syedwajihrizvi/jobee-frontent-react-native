@@ -58,8 +58,6 @@ const Applications = () => {
   }
 
   const addSkill = (skill: string) => {
-    console.log('Adding skill:', skill);
-    console.log('Current skills:', tempFilters.skills);
     if (skill && !tempFilters.skills.includes(skill)) {
       setTempFilterCount(prev => prev + 1)
       setTempFilters({...tempFilters, skills: [...tempFilters.skills, skill]});
@@ -68,8 +66,6 @@ const Applications = () => {
   }
 
   const addLocation = (location: string) => {
-    console.log('Adding location:', location);
-    console.log('Current locations:', tempFilters.locations);
     if (location && !tempFilters.locations.includes(location)) {
       setTempFilterCount(prev => prev + 1)
       setTempFilters({...tempFilters, locations: [...tempFilters.locations, location]});

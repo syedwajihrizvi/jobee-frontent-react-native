@@ -3,9 +3,8 @@ import JobListing from '@/components/JobListing'
 import { useJobsByUserApplications } from '@/lib/services/useJobs'
 import useAuthStore from '@/store/auth.store'
 import { Job } from '@/type'
-import { router } from 'expo-router'
 import React from 'react'
-import { ActivityIndicator, FlatList, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const AppliedJobs = () => {
@@ -19,13 +18,11 @@ const AppliedJobs = () => {
         <ActivityIndicator size="large" color="#0000ff" className='flex-1 justify-center items-center'/> : 
         <FlatList
             className='w-full p-2'
-            data={jobs || []} // Simulating multiple job listings
+            data={jobs || []}
             renderItem={({item, index}: {item: {job: Job, status: string}; index: number}) => (
-            <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.job.id}`)}>
                 <JobListing 
                     key={index} job={item.job} showFavorite={false} showStatus={true} 
                     status={item.status}/>
-            </TouchableOpacity>
         )}
             ItemSeparatorComponent={() => <View className='divider'/>}
         />}
