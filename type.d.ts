@@ -238,3 +238,14 @@ export type ApplicationDetailsForBusiness = {
     shortListed: boolean;
     userProfile: User
 }
+
+export type CreateJobForm = {
+    title: string;
+    description: string;
+    location: string;
+    minSalary: string;
+    maxSalary: string;
+    experience: string;
+    employmentType: string;
+    tags: string[]
+}

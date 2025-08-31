@@ -92,7 +92,6 @@ export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
       },
     })
     const data = await response.json()
-    console.log('Fetched company jobs:', data)
     return data
   }
 
@@ -160,7 +159,6 @@ export const useShortListedCandidatesForJob = (jobId?: number) => {
       },
     })
     const data = await response.json()
-    console.log('Shortlisted candidates data:', data)
     return data
   }
 

@@ -9,6 +9,15 @@
     .input {
         @apply rounded-lg p-3 w-full text-base text-black border-b leading-5;
     }
+    .form-input {
+        @apply flex flex-col gap-2
+    }
+    .form-input__label {
+        @apply font-quicksand-bold text-lg
+    }
+    .form-input__input {
+        @apply rounded-lg p-3 w-full text-base text-black border leading-5
+    }
     .btn-group-x {
         @apply flex-row gap-4 w-full justify-center
     }

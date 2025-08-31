@@ -16,7 +16,6 @@ const SignIn = () => {
   const { type, setType } = useUserStore()
 
   const handleSignInForUser = async () => {
-    console.log("Signing in as user with form:", form)
     const { email, password } = form
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields')
@@ -35,7 +34,6 @@ const SignIn = () => {
         AsyncStorage.setItem('profileReminderShown', "false");
         router.replace("/(tabs)/users/jobs")
       } catch (error) {
-        console.log(error)
         Alert.alert('Error', 'Failed to sign in. Please try again.')
       } finally {
         setIsLoading(false)
@@ -44,7 +42,6 @@ const SignIn = () => {
   }
 
   const handleSignInForBusiness = async () => {
-    console.log("Business sign in called")
     const { email, password } = form
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields')
@@ -62,14 +59,12 @@ const SignIn = () => {
         setType('business')
         router.replace("/(tabs)/business/jobs")
       } catch (error) {
-        console.log(error)
         Alert.alert('Error', 'Failed to sign in. Please try again.')
       } finally {
         setIsLoading(false)
       }
     }
   }
-  console.log(type)
   const renderAccountTypeClass = (buttonType: 'user' | 'business') => {
     if (type === buttonType) {
       return 'border-b-2 border-blue-500 pb-1'

@@ -16,6 +16,5 @@ export default function Index() {
       </View>
     );
   }
-  console.log(userType)
   return userType === 'user' ? <Redirect href="/(tabs)/users/jobs" /> : <Redirect href="/(tabs)/business/jobs" />;
 }

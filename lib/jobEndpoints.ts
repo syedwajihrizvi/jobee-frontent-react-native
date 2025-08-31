@@ -1,7 +1,8 @@
-import { Application, CreateApplication } from "@/type";
+import { Application, CreateApplication, CreateJobForm } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const APPLICATION_API_URL = 'http://10.0.0.135:8080/applications'
+const JOBS_API_URL = 'http://10.0.0.135:8080/jobs'
 
 export const applyToJob = async (application: CreateApplication) => {
     return new Promise<Application | null>((resolve, reject) => {
@@ -48,4 +49,21 @@ export const unshortListCandidate = async ({applicationId}: {applicationId: numb
         }
     })
     return result.status === 200;
+}
+
+// TODO: Remove business account id since token will be used
+export const createJob = async (createJobForm: CreateJobForm, businessAccountId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null
+    const result = await fetch(`${JOBS_API_URL}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...createJobForm, businessAccountId })
+    })
+    if (result.status !== 201) return null;
+    const data = await result.json();
+    return data;
 }

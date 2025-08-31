@@ -1,11 +1,18 @@
+import { AntDesign } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import React from 'react'
-import { Text, View } from 'react-native'
+import { SafeAreaView, Text, TouchableOpacity } from 'react-native'
 
 const Dashboard = () => {
   return (
-    <View>
-      <Text>Dashboard</Text>
-    </View>
+    <SafeAreaView>
+      <TouchableOpacity 
+        className='mt-6 apply-button px-6 py-3 w-2/5 rounded-full flex-row items-center justify-center gap-2'
+        onPress={() => router.push('/businessJobs/createJob')}>
+        <Text className='font-quicksand-bold text-lg'>Create Job</Text>
+        <AntDesign name="pluscircleo" size={20} color="black" />
+      </TouchableOpacity>
+    </SafeAreaView>
   )
 }
 
