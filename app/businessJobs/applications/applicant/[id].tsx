@@ -1,4 +1,5 @@
 import BackBar from '@/components/BackBar'
+import DocumentModal from '@/components/DocumentModal'
 import UserVideoIntro from '@/components/UserVideoIntro'
 import { images } from '@/constants'
 import { shortListCandidate, unshortListCandidate } from '@/lib/jobEndpoints'
@@ -6,7 +7,7 @@ import { useShortListedCandidatesForJob } from '@/lib/services/useJobs'
 import { useApplicant } from '@/lib/services/useProfile'
 import { AntDesign, FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons'
 import { useQueryClient } from '@tanstack/react-query'
-import { useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -15,7 +16,7 @@ const ApplicantForBusiness = () => {
   const queryClient = useQueryClient()
   const { id } = useLocalSearchParams()
   const { data: application, isLoading } = useApplicant(Number(id))
-  const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId))
+  const { data: shortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId))
   const { userProfile } = application || {}
   const [showSkills, setShowSkills] = useState(false)
   const [showExperience, setShowExperience] = useState(false)
@@ -24,6 +25,7 @@ const ApplicantForBusiness = () => {
   const [showCertificates, setShowCertificates] = useState(false)
   const [makingShortListRequest, setMakingShortListRequest] = useState(false)
   const [isShortListed, setIsShortListed] = useState(false)
+  const [viewingDocument, setViewingDocument] = useState<string | undefined>()
 
   useEffect(() => {
     if (shortListedCandidates && application) {
@@ -31,6 +33,7 @@ const ApplicantForBusiness = () => {
     }
   }, [shortListedCandidates, application])
 
+  console.log("Application Data:", application);
   const handleShortList = async () => {
     if (!application) return
     setMakingShortListRequest(true)
@@ -48,6 +51,14 @@ const ApplicantForBusiness = () => {
     } finally {
         setMakingShortListRequest(false)
     }
+  }
+
+  const handleResumePress = () => {
+    setViewingDocument(application?.resumeUrl)
+  }
+
+  const handleCoverLetterPress = () => {
+    setViewingDocument(application?.coverLetterUrl)
   }
 
   const handleUnshortList = async () => {
@@ -91,17 +102,39 @@ const ApplicantForBusiness = () => {
                 </View>
             </View>
         </View>
+
         <View>
             <Text className='font-quicksand-semibold text-lg'>Professional Summary</Text>
             <Text className='font-quicksand-medium text-md text-gray-600'>{userProfile?.summary}</Text>
-            <View className="flex-row gap-3 mt-2">
-                <TouchableOpacity className="bg-blue-100 px-4 py-2 rounded-full">
-                    <Text className="font-quicksand-medium text-blue-800 text-sm">View Resume</Text>
+            <View className="flex-row flex-wrap gap-3 mt-2">
+                <TouchableOpacity 
+                    className="bg-green-100 px-4 py-2 rounded-full"
+                    onPress={handleResumePress}>
+                    <Text className="font-quicksand-medium text-black text-sm">View Resume</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="bg-blue-100 px-4 py-2 rounded-full">
-                    <Text className="font-quicksand-medium text-blue-800 text-sm">View Cover Letter</Text>
-                </TouchableOpacity>
+                {application?.coverLetterUrl &&<TouchableOpacity 
+                    className="bg-green-100 px-4 py-2 rounded-full"
+                    onPress={handleCoverLetterPress}>
+                    <Text className="font-quicksand-medium text-black text-sm">View Cover Letter</Text>
+                </TouchableOpacity>}
             </View>
+            {
+            application?.status === 'PENDING' ?
+             <TouchableOpacity 
+                className="bg-blue-100 px-4 py-2 rounded-full w-2/5 mt-2 flex-row items-start gap-1 justify-center"
+                onPress={() => (
+                    router.push(`/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`)
+                )}>
+                <Text className="font-quicksand-medium text-black text-sm">Schedule Interview</Text>
+            </TouchableOpacity> :
+             <TouchableOpacity 
+                className="bg-blue-100 px-4 py-2 rounded-full w-2/5 mt-2 flex-row items-start gap-1 justify-center"
+                onPress={() => (
+                    console.log('View interview details via bottom sheet')
+                )}>
+                <Text className="font-quicksand-medium text-black text-sm">Interview Scheduled</Text>
+            </TouchableOpacity>
+            }
         </View>
         <View className='divider'/>
         <View>
@@ -203,6 +236,13 @@ const ApplicantForBusiness = () => {
             </TouchableOpacity>
         </View>
       </>}
+      {viewingDocument &&
+      <DocumentModal
+        documentType='User Document'
+        documentUrl={viewingDocument}
+        visible={!!viewingDocument}
+        handleClose={() => setViewingDocument(undefined)}
+      />}
     </SafeAreaView>
   )
 }

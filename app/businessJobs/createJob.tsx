@@ -1,12 +1,14 @@
 import BackBar from '@/components/BackBar'
 import { createJob } from '@/lib/jobEndpoints'
 import useAuthStore from '@/store/auth.store'
-import { CreateJobForm } from '@/type'
+import { BusinessUser, CreateJobForm } from '@/type'
+import { useQueryClient } from '@tanstack/react-query'
 import React, { useRef, useState } from 'react'
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import DropDownPicker from 'react-native-dropdown-picker'
 
 const CreateJob = () => {
+  const queryClient = useQueryClient()
   const defaultJobForm: CreateJobForm = {
     title: '',
     location: '',
@@ -17,12 +19,13 @@ const CreateJob = () => {
     employmentType: '',
     tags: []
   } 
-  const { user } = useAuthStore();
+  const { user: authUser } = useAuthStore();
   const [createJobForm, setCreateJobForm] = useState<CreateJobForm>(defaultJobForm);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [addingJob, setAddingJob] = useState(false);
   const tagInputRef = useRef<TextInput>(null)
 
+  const user = authUser as BusinessUser | null
   const handleCreateJob = async () => {
     const { title, location, description, minSalary, maxSalary, experience, employmentType, tags } = createJobForm;
     if (!title || !location || !description || !minSalary || !maxSalary || !experience || !employmentType) {
@@ -57,9 +60,9 @@ const CreateJob = () => {
             Alert.alert('Error', 'Failed to create job. Please try again.');
             return
         }
-        console.log("Job created successfully:", result);
         Alert.alert('Success', 'Job created successfully');
         setCreateJobForm({...defaultJobForm});
+        queryClient.invalidateQueries({queryKey: ['jobs', 'company', user?.companyId]})
         tagInputRef.current?.clear();
     } catch (error) {
         Alert.alert('Error', 'Failed to create job. Please try again.');

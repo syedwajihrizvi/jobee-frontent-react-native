@@ -1,6 +1,6 @@
 import { User, UserDocument } from "@/type";
 
-  export const formatDate = (date: string) => {
+export const formatDate = (date: string) => {
     const parsedDate = new Date(date);
     const formatter = new Intl.DateTimeFormat('en-US', {
       year: '2-digit',
@@ -14,6 +14,20 @@ export const isApplied = (user: User, jobId: string) =>user?.applications.find(a
 
 export const getUserDocumentById = (id: number, user: User): UserDocument | undefined => {
     return user?.documents.find(doc => doc.id === id);
+}
+
+export const extractMeridiem = (time: string) => {
+  const formattedTime = time.replace(" ", "").toLowerCase()
+  return formattedTime.includes('am') ? 'AM' : 'PM';
+}
+
+export const extract24HourTime = (time: string) => {
+  const meridiem = extractMeridiem(time)
+  const formattedTime = time.replace(" ", "").toLowerCase().replace(meridiem.toLowerCase(), "")
+  let [hours, minutes] = formattedTime.split(':').map(Number);
+  if (meridiem === 'PM' && hours < 12) hours += 12;
+  if (meridiem === 'AM' && hours === 12) hours = 0;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export const getEducationLevel = (level: string) => {

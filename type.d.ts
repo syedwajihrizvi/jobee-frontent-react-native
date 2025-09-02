@@ -97,9 +97,9 @@ export type ProfileLinks = {
 export type UserDocument = {
     id: number,
     documentUrl: string,
-    documentType: string,
-    createdAt: string,
-    filename: string
+    documentType?: string,
+    createdAt?: string,
+    filename?: string
 }
 
 export type AllUserDocuments = {
@@ -136,6 +136,8 @@ export type BusinessUser = {
     email: string;
     companyName: string;
     companyId: number;
+    firstName: string;
+    lastName: string;
 }
 
 export type EditUserProfileForm = {
@@ -231,6 +233,7 @@ export type ApplicationSummary = {
 export type ApplicationDetailsForBusiness = {
     id: number;
     appliedAt: string;
+    status: string;
     resumeUrl: string;
     coverLetterUrl?: string;
     fullName: string;
@@ -248,4 +251,18 @@ export type CreateJobForm = {
     experience: string;
     employmentType: string;
     tags: string[]
+}
+
+export type CreateInterviewForm = {
+    title: string;
+    description: string;
+    conductors: {name: string; email: string}[];
+    interviewDate: string;
+    startTime: string;
+    timezone: string;
+    endTime: string;
+    interviewType: string;
+    location: string;
+    meetingLink: string;
+    phoneNumber: string;
 }

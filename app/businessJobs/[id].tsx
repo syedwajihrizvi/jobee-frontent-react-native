@@ -27,7 +27,7 @@ const BusinessJobDetails = () => {
                                 {job.applicants} Applicants
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => console.log('View Shortlist')}>
+                        <TouchableOpacity onPress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}>
                             <Text className="font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full">
                                 {loadingShortListedCandidates ? 'Loading...' : `${shortListedCandidates?.length || 0} Shortlisted`}
                             </Text>
