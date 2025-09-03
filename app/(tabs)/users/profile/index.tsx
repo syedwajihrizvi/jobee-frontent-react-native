@@ -139,6 +139,16 @@ const Profile = () => {
                 onPress={() => router.push(link.href as any)} />
             ))}
             <ProfileLink 
+              icon={<AntDesign name="calendar" size={28} color="black"/>}
+              label="Upcoming Interviews" 
+              onPress={() => router.push(`/profile/upcomingInterviews?userId=${user?.id}`)}
+              rightIcon={true} />
+            <ProfileLink 
+              icon={<AntDesign name="setting" size={28} color="black"/>}
+              label="Account Settings" 
+              onPress={() => console.log("Account Settings Pressed")}
+              rightIcon={true} />
+            <ProfileLink 
               icon={<AntDesign name="logout" size={24} color="black" />}
               label="Sign Out" 
               onPress={handleSignOut}

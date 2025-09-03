@@ -266,3 +266,16 @@ export type CreateInterviewForm = {
     meetingLink: string;
     phoneNumber: string;
 }
+
+export type Interview = {
+    id: number,
+    title: string;
+    jobTitle: string;
+    companyName: string;
+    description: string;
+    interview_date: string;
+    start_time: string;
+    end_time: string;
+    interviewType: string;
+    timezone: string
+}

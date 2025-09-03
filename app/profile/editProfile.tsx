@@ -4,14 +4,13 @@ import CustomInput from "@/components/CustomInput";
 import EditProfileCard from "@/components/EditProfileCard";
 import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
-import ProfileSkillCard from "@/components/ProfileSkillCard";
 import { addEducation, addExperience, addSkill, editEducation, editExperience } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
 import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, User, UserSkill } from "@/type";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Keyboard, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Keyboard, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EditProfile() {
   const { isLoading, user: authUser, setUser } = useAuthStore()
@@ -454,27 +453,20 @@ export default function EditProfile() {
                         </View>
                         {openSection.skills &&
                         <View className="flex flex-col flex-wrap gap-4 p-2 w-full">
-                            {/*TODO: Fix horizontal scroll issue on skill card flat list*/}
-                            <FlatList
-                                data={skillChunks}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ gap: 12, paddingTop: 8, paddingBottom: 8}}
-                                renderItem={({ item }) => (
-                                    <View style={{ flexDirection: "column", gap: 12 }}>
-                                    {item.map((s, idx) => (
-                                        <ProfileSkillCard
-                                            onEditSkill={() => handleIsEditingSkill(s)}
-                                            key={idx} skill={s.skill.name} experience={s.experience}/>
+                            <View className="flex flex-row flex-wrap gap-2">
+                                {user?.skills.map((skill) => (
+                                        <TouchableOpacity 
+                                            className="relative bg-red-100 px-4 py-2 rounded-full flex-row items-center gap-1" 
+                                            onPress={() => handleIsEditingSkill(skill)}
+                                            key={skill.id}>
+                                            <Text className="font-quicksand-semibold text-md">{skill.skill.name}</Text>
+                                        </TouchableOpacity>
                                     ))}
-                                    </View>
-                                )}
-                                keyExtractor={(_, index) => `chunk-${index}`}
-                            />
+                            </View>
                             <TouchableOpacity className="w-2/5" onPress={() => openBottomSheet('skill')}>
-                                <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-center items-center">
-                                    <Text className="text-white">Add new skill</Text>
-                                    <AntDesign name="plus" size={20} color="white" className="ml-2" />
+                                <View className="p-4 bg-green-500 rounded-2xl shadow-md flex-row justify-center items-center">
+                                    <Text className="font-quicksand-semibold text-md color-white">Add new skill</Text>
+                                    <AntDesign name="plus" size={18} color="white" className="ml-2" />
                                 </View>
                             </TouchableOpacity>
                         </View>}

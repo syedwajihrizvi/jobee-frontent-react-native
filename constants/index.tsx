@@ -21,7 +21,5 @@ export const profileLinkInfo : {label: string, icon: ReactNode, href: string}[] 
     {'label': 'Edit Profile', 'icon': <AntDesign name="user" size={28} color="black"/>, 'href': '/profile/editProfile'},
     {'label': 'Job Applied To', 'icon': <AntDesign name="filetext1" size={28} color="black"/>, 'href': '/profile/appliedJobs'},
     {'label': 'Favorite Jobs', 'icon': <AntDesign name="staro" size={28} color="black"/>, 'href': '/profile/favoriteJobs'},
-    {'label': 'Manage Documents', 'icon': <Entypo name="documents" size={28} color="black"/>, 'href': '/profile/manageDocs'},
-    {'label': 'Upcoming Interviews', 'icon': <AntDesign name="calendar" size={28} color="black"/>, 'href': '/profile/upcomingInterviews'},
-    {'label': 'Account Settings', 'icon': <AntDesign name="setting" size={28} color="black"/>, 'href': '/profile/accountSettings'},
+    {'label': 'Manage Documents', 'icon': <Entypo name="documents" size={28} color="black"/>, 'href': '/profile/manageDocs'}
 ]
