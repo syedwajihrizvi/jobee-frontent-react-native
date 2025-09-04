@@ -11,8 +11,15 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const documentTypes = [
+  { label: 'Resume', value: UserDocumentType.RESUME },
+  { label: 'Cover Letter', value: UserDocumentType.COVER_LETTER },
+  { label: 'Certificate', value: UserDocumentType.CERTIFICATE },
+  { label: 'Transcript', value: UserDocumentType.TRANSCRIPT },
+  { label: 'Recommendation', value: UserDocumentType.RECOMMENDATION }
+]
 
 const ManageDocuments = () => {
   const {isLoading, user:authUser} = useAuthStore()
@@ -179,30 +186,27 @@ const ManageDocuments = () => {
         {renderDocumentFlatList({title: 'My Recommendations', documents: userDocuments?.recommendationDocuments || []})}
       </ScrollView>}
       <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["40%", '50%']} enablePanDownToClose>
-        <BottomSheetView className='flex-1 bg-white p-4 gap-4 w-full justify-center items-center'>
+        <BottomSheetView className='flex-1 bg-white p-4 gap-2 w-full justify-center items-center'>
             <View>
-            <Text className='font-quicksand-bold text-md mb-1'>Document Type</Text>
-            <DropDownPicker
-                open={open}
-                value={selectedDocumentType}
-                items={[
-                    {label: 'Resume', value: UserDocumentType.RESUME},
-                    {label: 'Cover Letter', value: UserDocumentType.COVER_LETTER},
-                    {label: 'Certificate', value: UserDocumentType.CERTIFICATE},
-                    {label: 'Transcript', value: UserDocumentType.TRANSCRIPT},
-                    {label: 'Recommendation', value: UserDocumentType.RECOMMENDATION}
-                ]}
-                setOpen={setOpen}
-                setValue={(value) => setSelectedDocumentType(value)}
-                setItems={() => {}}
-                containerStyle={{width: '100%'}}
-                placeholder="Select Document Type"
-            />
+              <Text className='font-quicksand-bold text-md mb-1'>Document Type</Text>
+                <View className='flex flex-row flex-wrap gap-1'>
+                  {documentTypes.map((doc) => (
+                    <TouchableOpacity 
+                      key={doc.value} 
+                      className={`${selectedDocumentType === doc.value ? 'bg-green-200' : ''} px-3 py-1 rounded-full`}
+                      onPress={() => setSelectedDocumentType(doc.value)}>
+                      <View>
+                        <Text className="text-green-800 font-quicksand-medium">{doc.label}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
             </View>
+            <View className='flex flex-row gap-2'>
             {
             !uploadedDocument ? 
-            <TouchableOpacity className="action-button bg-blue-500 w-full" onPress={() => handleUpload(selectedDocumentType)}>
-                <Text className='action-button__text'>Upload a Document</Text>
+            <TouchableOpacity className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2" onPress={() => handleUpload(selectedDocumentType)}>
+                <Text className='action-button__text'>Upload</Text>
                 <AntDesign name="upload" size={20} color="black"/>
             </TouchableOpacity> :
             <View className='w-full flex-col gap-2'>
@@ -212,11 +216,13 @@ const ManageDocuments = () => {
                     <AntDesign name="file1" size={20} color="black"/>
                 </TouchableOpacity>
             </View>}
-            <Text className='font-quicksand-bold text-md'>OR</Text>
-            <TouchableOpacity className="action-button bg-blue-500 w-full"onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
-                <Text className='action-button__text'>Take a Photo</Text>
+            <TouchableOpacity 
+              className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 gap-2 px-4 py-2"
+              onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
+                <Text className='action-button__text'>Take Photo</Text>
                 <AntDesign name="camera" size={20} color="black"/>
             </TouchableOpacity>
+            </View>
             <Text className='font-quicksand-bold text-md'>OR</Text>
             <LinkInput
                 value={resumeLink}

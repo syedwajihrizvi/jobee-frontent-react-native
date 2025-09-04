@@ -1,16 +1,15 @@
 import BackBar from '@/components/BackBar'
 import CompanyInformation from '@/components/CompanyInformation'
-import { useProfileIntervies } from '@/lib/services/useProfile'
-import { useLocalSearchParams } from 'expo-router'
+import { useProfileInterviews } from '@/lib/services/useProfile'
+import { convertTo12Hour } from '@/lib/utils'
+import { router, useLocalSearchParams } from 'expo-router'
 import React from 'react'
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const UpcomingInterviews = () => {
   const { userId } = useLocalSearchParams()
-  const { data: interviews, isLoading } = useProfileIntervies(Number(userId))
-
-  console.log(interviews)
+  const { data: interviews, isLoading } = useProfileInterviews(Number(userId))
   return (
     <SafeAreaView>
         <BackBar label="Upcoming Interviews" />
@@ -20,23 +19,26 @@ const UpcomingInterviews = () => {
         data={interviews} // Temporary until API is ready
         renderItem={({ item }) => (
             <View key={item.id} className='w-full px-4 py-2 rounded-full'>
-                <TouchableOpacity onPress={() => console.log("Interview Pressed")}>
+                <TouchableOpacity 
+                    activeOpacity={0.2} 
+                    onPress={() => router.push(`/profile/interviews/${item.id}`)}>
                     <View className='flex-row items-center justify-between'>
                         <CompanyInformation company={item.companyName} />
                     </View>
                     <View>
                         <View className='flex flex-row items-center justify-between'>
                             <Text className='font-quicksand-bold text-2xl'>{item.jobTitle}</Text>
-                            <Text className='font-quicksand-semibold text-sm'>{item.interview_date}</Text>
+                            <Text className='font-quicksand-semibold text-sm'>{item.interviewDate}</Text>
                         </View>
                         <View>
+                            <Text className='font-quicksand-bold text-lg'>{item.title}</Text>
                             <Text className='font-quicksand-medium text-md'>{item.description}</Text>
                         </View>
                     </View>
                     <View className='flex flex-row gap-2 mt-2'>
                         <Text 
                             className='font-quicksand-semibold text-sm text-green-800 bg-green-200 px-2 py-1 rounded-full'>
-                            {item.start_time} - {item.end_time}
+                            {convertTo12Hour(item.startTime)} - {convertTo12Hour(item.endTime)}
                         </Text>
                         <Text className='font-quicksand-semibold text-sm text-blue-800 bg-blue-100 px-2 py-1 rounded-full'>
                             {item.timezone}

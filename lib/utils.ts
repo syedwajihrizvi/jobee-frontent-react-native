@@ -10,6 +10,21 @@ export const formatDate = (date: string) => {
     return formatter.format(parsedDate)
   }
 
+export const formatTime = (time: string) => {
+  const [hours, minutes] = time.split(':');
+  return `${hours}:${minutes}`;
+}
+
+export const  convertTo12Hour =(time24: string): string => {
+  // Expecting input like "23:15" or "08:05"
+  const [hourStr, minute] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12; // Convert 0 → 12 for midnight
+
+  return `${hour}:${minute} ${ampm}`;
+}
 export const isApplied = (user: User, jobId: string) =>user?.applications.find(app => app.jobId === Number(jobId))
 
 export const getUserDocumentById = (id: number, user: User): UserDocument | undefined => {

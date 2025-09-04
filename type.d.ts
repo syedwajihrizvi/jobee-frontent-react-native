@@ -267,15 +267,35 @@ export type CreateInterviewForm = {
     phoneNumber: string;
 }
 
-export type Interview = {
+export type InterviewDetails = {
     id: number,
     title: string;
     jobTitle: string;
+    jobId: number;
     companyName: string;
     description: string;
-    interview_date: string;
-    start_time: string;
-    end_time: string;
+    interviewDate: string;
+    startTime: string;
+    endTime: string;
     interviewType: string;
-    timezone: string
+    timezone: string;
+    interviewers: {name: string; email: string}[];
+    otherInterviewers: {name: string; email: string}[];
+    location: string;
+    meetingLink: string;
+    phoneNumber: string;
+    notes: string[];
+}
+
+export type InterviewSummary = {
+    id: number;
+    title: string;
+    interviewDate: string;
+    jobTitle: string;
+    description: string;
+    startTime: string;
+    endTime: string;
+    interviewType: string;
+    timezone: string;
+    companyName: string;
 }

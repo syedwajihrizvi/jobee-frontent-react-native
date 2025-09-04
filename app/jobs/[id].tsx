@@ -21,7 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams()
-  const { user, isAuthenticated, isLoading: isLoadingUser } = useAuthStore()
+  const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore()
   const {data:job, isLoading} = useJob(Number(jobId))
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
@@ -33,7 +33,8 @@ const JobDetails = () => {
   const viewApplicationBottomRef = useRef<BottomSheet>(null)
   const [userDocuments, setUserDocuments] = useState<{'RESUMES': UserDocument[], 'COVER_LETTERS': UserDocument[]} | null>(null);
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
-
+  const user = authUser as (User | null)
+  const userHasResume = user && user.documents && user.documents.some(doc => doc.documentType === 'RESUME');
   useEffect(() => {
     if (user && (user as User).documents) {
       const resumes = (user as User).documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
@@ -102,6 +103,12 @@ const JobDetails = () => {
   }
 
   const application = isApplied((user as User)!, String(jobId));
+
+  const calculateApplyButtonSnapPoints = () => {
+    if (!isAuthenticated) return ['30%']
+    if (!userHasResume) return ['32%']
+    return ['50%']
+  }
 
   return (
     <SafeAreaView className='flex-1 bg-white relative'>
@@ -174,10 +181,14 @@ const JobDetails = () => {
           <ApplicationInfo job={job!} application={application!}/>
         </BottomSheetView>
       </BottomSheet>}
-      <BottomSheet ref={applyBottomRef} index={-1} snapPoints={[`${isAuthenticated ? '65' : '30'}%`]} enablePanDownToClose>
+      <BottomSheet 
+        ref={applyBottomRef} index={-1} 
+        snapPoints={calculateApplyButtonSnapPoints()} 
+        enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white'>
           {(isAuthenticated && user) ?
           <ApplyBottomSheet
+            userHasResume={!!userHasResume} 
             selectedResume={selectedResume} setSelectedResume={setSelectedResume} openResumeDropdown={openResumeDropdown}
             setOpenResumeDropdown={setOpenResumeDropdown} selectedCoverLetter={selectedCoverLetter} setSelectedCoverLetter={setSelectedCoverLetter}
             openCoverLetterDropdown={openCoverLetterDropdown} setOpenCoverLetterDropdown={setOpenCoverLetterDropdown} userDocuments={userDocuments}
