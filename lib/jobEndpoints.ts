@@ -25,6 +25,23 @@ export const applyToJob = async (application: CreateApplication) => {
     })
 }
 
+export const quickApplyToJob = async (jobId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const result = await fetch(`${APPLICATION_API_URL}/quickApply`, {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ jobId })
+    })
+    if (result.status !== 201) return null;
+    const data = await result.json();
+    console.log("Quick Apply Response:", data);
+    return data;
+}
+
 export const shortListCandidate = async ({applicationId}: {applicationId: number}) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return false;

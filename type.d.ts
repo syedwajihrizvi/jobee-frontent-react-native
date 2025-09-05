@@ -128,7 +128,8 @@ export type User = {
     profileComplete: boolean;
     profileImageUrl: string;
     favoriteJobs: {id:number}[];
-    documents: UserDocument[]
+    documents: UserDocument[],
+    primaryResume: UserDocument | null
 }
 
 export type BusinessUser = {

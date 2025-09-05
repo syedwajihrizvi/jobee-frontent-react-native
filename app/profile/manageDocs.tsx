@@ -3,10 +3,12 @@ import DocumentItem from '@/components/DocumentItem';
 import LinkInput from '@/components/LinkInput';
 import { UserDocumentType } from '@/constants';
 import { uploadUserDocument } from '@/lib/manageUserDocs';
+import { useDocuments } from '@/lib/services/useDocuments';
 import useAuthStore from '@/store/auth.store';
 import { AllUserDocuments, User, UserDocument } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
@@ -23,6 +25,8 @@ const documentTypes = [
 
 const ManageDocuments = () => {
   const {isLoading, user:authUser} = useAuthStore()
+  const {data: userDocs, isLoading: isLoadingDocs} = useDocuments()
+  const queryClient = useQueryClient()
   const [resumeLink, setResumeLink] = useState('');
   const [coverLetterLink, setCoverLetterLink] = useState('');
   const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
@@ -33,14 +37,14 @@ const ManageDocuments = () => {
   const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(null);
   const user = authUser as User | null; // Cast once at the top
   useEffect(() => {
-    if (user && user.documents) {
+    if (userDocs && !isLoadingDocs) {
       // Fetch user documents from the server or local storage
       // This is a placeholder, replace with actual API call
-      const resumeDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
-      const coverLetterDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.COVER_LETTER);
-      const certificateDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.CERTIFICATE);
-      const transcriptDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.TRANSCRIPT);
-      const recommendationDocuments: UserDocument[] = user.documents.filter(doc => doc.documentType === UserDocumentType.RECOMMENDATION);
+      const resumeDocuments: UserDocument[] = userDocs.filter(doc => doc.documentType === UserDocumentType.RESUME);
+      const coverLetterDocuments: UserDocument[] = userDocs.filter(doc => doc.documentType === UserDocumentType.COVER_LETTER);
+      const certificateDocuments: UserDocument[] = userDocs.filter(doc => doc.documentType === UserDocumentType.CERTIFICATE);
+      const transcriptDocuments: UserDocument[] = userDocs.filter(doc => doc.documentType === UserDocumentType.TRANSCRIPT);
+      const recommendationDocuments: UserDocument[] = userDocs.filter(doc => doc.documentType === UserDocumentType.RECOMMENDATION);
       setUserDocuments({
         resumeDocuments,
         coverLetterDocuments,
@@ -49,7 +53,7 @@ const ManageDocuments = () => {
         recommendationDocuments
       });
     }
-  }, [isLoading, user])
+  }, [userDocs, isLoadingDocs]);
 
   const handleUpload = async (documentType: string) => {
     setUploadingDocument(true)
@@ -83,6 +87,7 @@ const ManageDocuments = () => {
         await uploadUserDocument(uploadedDocument, selectedDocumentType);
         Alert.alert('Success', 'Document uploaded successfully');
         addDocumentRef.current?.close();
+        queryClient.invalidateQueries({ queryKey: ['documents', 'user'] });
     } catch (error) {
         console.error('Error uploading document:', error);
         Alert.alert('Error', 'Failed to upload document. Please try again.');
@@ -93,11 +98,11 @@ const ManageDocuments = () => {
 
   const renderDocumentFlatList = ({title, documents}: {title: string, documents: UserDocument[]}) => (
     <View className='p-4 bg-white'>
-      <Text className='font-quicksand-bold text-xl'>{title}</Text>
+      <Text className='font-quicksand-bold text-md'>{title}</Text>
       <FlatList
         data={documents}
         renderItem={({ item }) => (
-          <DocumentItem document={item}/>
+          <DocumentItem document={item} actionIcon='edit' customAction={() => {}}/>
         )}
         horizontal
         keyExtractor={(item) => item.id.toString()}
@@ -166,6 +171,7 @@ const ManageDocuments = () => {
   3) Take a Photo which we will convert to PDF
   */
   // TODO: Replace RESUME and COVER_LETTER with actual DocumentType enum values
+  console.log(userDocs)
   return (
     <SafeAreaView className='flex-1 bg-white h-full'>
       <BackBar label="Manage Documents" optionalThirdItem={
@@ -185,10 +191,10 @@ const ManageDocuments = () => {
         <View className='divider'/>
         {renderDocumentFlatList({title: 'My Recommendations', documents: userDocuments?.recommendationDocuments || []})}
       </ScrollView>}
-      <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["40%", '50%']} enablePanDownToClose>
+      <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["30%", '40%']} enablePanDownToClose>
         <BottomSheetView className='flex-1 bg-white p-4 gap-2 w-full justify-center items-center'>
             <View>
-              <Text className='font-quicksand-bold text-md mb-1'>Document Type</Text>
+              <Text className='font-quicksand-bold text-lg mb-1'>Choose Document Type</Text>
                 <View className='flex flex-row flex-wrap gap-1'>
                   {documentTypes.map((doc) => (
                     <TouchableOpacity 
@@ -209,13 +215,15 @@ const ManageDocuments = () => {
                 <Text className='action-button__text'>Upload</Text>
                 <AntDesign name="upload" size={20} color="black"/>
             </TouchableOpacity> :
-            <View className='w-full flex-col gap-2'>
-                <Text className='font-quicksand-bold color-blue-500'>{uploadedDocument.assets && uploadedDocument.assets[0]?.name ? uploadedDocument.assets[0].name : 'No document name available'}</Text>
-                <TouchableOpacity className='action-button bg-red-500 w-full' onPress={() => setUploadedDocument(null)}>
-                    <Text className='action-button__text'>Remove Document</Text>
-                    <AntDesign name="file1" size={20} color="black"/>
+                <TouchableOpacity className='action-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2 bg-red-500' onPress={() => setUploadedDocument(null)}>
+                    <Text className='action-button__text'>
+                      {uploadedDocument?.assets && uploadedDocument.assets[0]?.name
+                        ? uploadedDocument.assets[0].name
+                        : 'Document Selected'}
+                    </Text>
+                    <AntDesign name="delete" size={20} color="black"/>
                 </TouchableOpacity>
-            </View>}
+            }
             <TouchableOpacity 
               className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 gap-2 px-4 py-2"
               onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>

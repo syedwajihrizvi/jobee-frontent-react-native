@@ -1,6 +1,8 @@
 import CompleteProfileReminder from '@/components/CompleteProfileReminder';
 import JobListing from '@/components/JobListing';
+import QuickApplyModal from '@/components/QuickApplyModal';
 import SearchBar from '@/components/SearchBar';
+import { quickApplyToJob } from '@/lib/jobEndpoints';
 import { useJobs } from '@/lib/services/useJobs';
 import useAuthStore from '@/store/auth.store';
 import { JobFilters, User } from '@/type';
@@ -26,15 +28,18 @@ const Index = () => {
   }
   const [filters, setFilters] = useState<JobFilters>({...defaultFilters});
   const [tempFilters, setTempFilters] = useState<JobFilters>({...defaultFilters});
+  const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
+  const [quickApplyJob, setQuickApplyJob] = useState<number | null>(null);
+  const [quickApplyLabel, setQuickApplyLabel] = useState('');
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const { data: jobs, isLoading } = useJobs(filters)
   const [isOpen, setIsOpen] = useState(false)
-  const { user, isLoading: isAuthLoading, userType } = useAuthStore();
+  const { user: authUser, isLoading: isAuthLoading, userType } = useAuthStore();
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(false);
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const locationInputRef = useRef<TextInput>(null);
-
+  const user = authUser as (User | null)
   useEffect(() => {
     const checkProfileCompletion = async () => {
       const profileReminderShown = await AsyncStorage.getItem('profileReminderShown');
@@ -149,6 +154,21 @@ const Index = () => {
     return <Redirect href="/(tabs)/business/jobs" />
   }
 
+  const handleQuickApply = (jobId: number, jobTitle: string, companyName: string) => {
+    setQuickApplyJob(jobId);
+    setQuickApplyLabel(`Quick Apply for ${jobTitle} at ${companyName}`);
+    setShowQuickApplyModal(true);
+  }
+
+  const handleQuickApplyClose = async (apply: boolean) => {
+    if (apply && quickApplyJob) {
+      await quickApplyToJob(quickApplyJob)
+      console.log("Proceed with quick apply");
+    }
+    setQuickApplyJob(null);
+    setShowQuickApplyModal(false);
+  }
+
   return (
     <SafeAreaView className='relative flex-1 bg-white'>
         <View className='w-full flex-row items-center justify-center px-8 gap-4'>
@@ -178,7 +198,9 @@ const Index = () => {
           return <JobListing 
                     key={index} job={item} 
                     showFavorite={showFavorite} showStatus={!showFavorite} 
-                    status={userApplication && userApplication.status} />
+                    status={userApplication && userApplication.status}
+                    handleQuickApply={() => handleQuickApply(item.id, item.title, item.businessName)}
+                    />
         }}
         ItemSeparatorComponent={() => <View className='divider'/>}
       />}
@@ -307,6 +329,11 @@ const Index = () => {
         </Animated.View>
         </>
       )}
+      <QuickApplyModal 
+        visible={showQuickApplyModal} 
+        label={quickApplyLabel}
+        handleClose={handleQuickApplyClose}
+        canQuickApply={!!user?.primaryResume}/>
     </SafeAreaView>
   )
 }

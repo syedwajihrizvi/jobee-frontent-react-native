@@ -17,9 +17,9 @@ const DocumentItem = (
   return (
     <>
       <View className='relative'>
-        <TouchableOpacity className='document-item' onPress={handleOpen}>
+        <TouchableOpacity className='document-item w-40 h-40' onPress={handleOpen}>
           <View className='bg-white absolute bottom-0 w-full p-2 items-center justify-center rounded-b-2xl'>
-            <Text>{document.documentType}</Text>
+            <Text className='font-quicksand-bold text-sm'>{document.documentType}</Text>
           </View>
         </TouchableOpacity>
       {customAction && 

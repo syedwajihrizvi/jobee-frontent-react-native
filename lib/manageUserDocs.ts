@@ -24,5 +24,7 @@ export const uploadUserDocument = async (
         },
         body: formData
     })
-    console.log('Upload response:', response);
+    if (response.status !== 201)
+        return false
+    return true
 }

@@ -49,7 +49,7 @@
         @apply absolute top-20 right-0 bottom-0 w-3/4 bg-white py-10 px-10 rounded-tl-3xl flex-col gap-8
     }
     .document-item {
-        @apply w-40 h-40 rounded-2xl bg-blue-500 shadow-sm relative
+        @apply rounded-2xl bg-blue-100 shadow-sm relative
     }
     .action-button {
         @apply flex-row items-center justify-center p-2 rounded-lg gap-2
