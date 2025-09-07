@@ -3,13 +3,13 @@ import JobListing from '@/components/JobListing';
 import QuickApplyModal from '@/components/QuickApplyModal';
 import SearchBar from '@/components/SearchBar';
 import { quickApplyToJob } from '@/lib/jobEndpoints';
-import { useJobs } from '@/lib/services/useJobs';
+import { useJobs, useUserAppliedJobs } from '@/lib/services/useJobs';
 import useAuthStore from '@/store/auth.store';
 import { JobFilters, User } from '@/type';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, router } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Dimensions, FlatList, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,6 +26,7 @@ const Index = () => {
     maxSalary: undefined,
     experience: ''
   }
+  const queryClient = useQueryClient()
   const [filters, setFilters] = useState<JobFilters>({...defaultFilters});
   const [tempFilters, setTempFilters] = useState<JobFilters>({...defaultFilters});
   const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
@@ -34,19 +35,14 @@ const Index = () => {
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const { data: jobs, isLoading } = useJobs(filters)
+  const { data: appliedJobs, isLoading: isAppliedJobsLoading } = useUserAppliedJobs();
   const [isOpen, setIsOpen] = useState(false)
   const { user: authUser, isLoading: isAuthLoading, userType } = useAuthStore();
-  const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(false);
+  const user = authUser as (User | null)
+  const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(!user?.profileComplete);
+  const [localApplyJobs, setLocalApplyJobs] = useState<number[]>(appliedJobs || []);
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const locationInputRef = useRef<TextInput>(null);
-  const user = authUser as (User | null)
-  useEffect(() => {
-    const checkProfileCompletion = async () => {
-      const profileReminderShown = await AsyncStorage.getItem('profileReminderShown');
-      setShowProfileCompleteReminder(profileReminderShown === 'false');
-    };
-    checkProfileCompletion();
-  }, [user]);
 
   const openFilters = () => {
     setIsOpen(true);
@@ -74,13 +70,11 @@ const Index = () => {
 
   const handleProfileComplete = () => {
     setShowProfileCompleteReminder(false);
-    AsyncStorage.setItem('profileReminderShown', 'true');
-    router.push('/(tabs)/users/profile');
+    router.push('/profile/completeProfile/uploadProfilePic');
   }
     
   const handleProfileLater = () => {
     setShowProfileCompleteReminder(false);
-    AsyncStorage.setItem('profileReminderShown', 'true');
   }
 
   const hasUserAppliedToJob = (jobId: number) => {
@@ -160,13 +154,21 @@ const Index = () => {
     setShowQuickApplyModal(true);
   }
 
-  const handleQuickApplyClose = async (apply: boolean) => {
+  const handleQuickApplyClose = async (apply: boolean, routeToSignUp: boolean) => {
     if (apply && quickApplyJob) {
-      await quickApplyToJob(quickApplyJob)
-      console.log("Proceed with quick apply");
+      const res = await quickApplyToJob(quickApplyJob)
+      if (res != null) {
+        queryClient.invalidateQueries({ queryKey: ['job', quickApplyJob, 'application'] });
+        queryClient.invalidateQueries({ queryKey: ['jobs', 'applications'] });
+        setLocalApplyJobs(prev => [...prev, quickApplyJob]);
+      }
     }
     setQuickApplyJob(null);
     setShowQuickApplyModal(false);
+  }
+
+  const canQuickApply = (jobId: number) => {
+    return !isAppliedJobsLoading && (!appliedJobs?.includes(jobId) && !localApplyJobs.includes(jobId)) && !hasUserAppliedToJob(jobId);
   }
 
   return (
@@ -185,7 +187,9 @@ const Index = () => {
       {
         !isAuthLoading && 
         showProfileCompleteReminder && 
-        <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater}/>
+        <CompleteProfileReminder 
+          onComplete={handleProfileComplete} 
+          onLater={handleProfileLater}/>
       }
       {isLoading ? 
       <ActivityIndicator size="large" color="#0000ff" className='flex-1 justify-center items-center'/> :
@@ -199,6 +203,7 @@ const Index = () => {
                     key={index} job={item} 
                     showFavorite={showFavorite} showStatus={!showFavorite} 
                     status={userApplication && userApplication.status}
+                    canQuickApply={canQuickApply(item.id)}
                     handleQuickApply={() => handleQuickApply(item.id, item.title, item.businessName)}
                     />
         }}

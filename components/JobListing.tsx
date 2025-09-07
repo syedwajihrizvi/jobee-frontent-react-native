@@ -1,3 +1,4 @@
+import useAuthStore from '@/store/auth.store';
 import { Job } from '@/type';
 import { router } from 'expo-router';
 import React from 'react';
@@ -6,8 +7,34 @@ import CompanyInformation from './CompanyInformation';
 import FavoriteJob from './FavoriteJob';
 
 const JobListing = (
-  {job, showFavorite = true, showStatus = false, status, handleQuickApply}: 
-  {job: Job, showFavorite?: boolean, showStatus?: boolean, status?: string, handleQuickApply?: () => void}) => {
+  {job, showFavorite = true, showStatus = false, status, showQuickApply = true, canQuickApply = true, handleQuickApply}: 
+  {job: Job, showFavorite?: boolean, showStatus?: boolean, status?: string, showQuickApply?: boolean, canQuickApply?: boolean, handleQuickApply?: () => void}) => {
+  const { isAuthenticated } = useAuthStore();
+  
+  const renderQuickApply = () => {
+    if (isAuthenticated && !canQuickApply) {
+      return (
+        <View className='mt-4 w-1/3'>
+          <Text className='text-center font-quicksand-semibold text-sm text-white bg-green-500 rounded-full px-3 py-1'>
+            Already Applied
+          </Text>
+        </View>
+      )
+    }
+    if (canQuickApply) {
+      return (
+        <TouchableOpacity onPress={handleQuickApply}>
+          <View className='mt-4 w-1/3'>
+            <Text className='text-center font-quicksand-semibold text-sm text-white bg-black rounded-full px-3 py-1'>
+              Quick Apply
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )
+    }
+    return null;
+  }
+
   return (
     <View className='w-full p-4 rounded-full'>
       <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${job.id}`)}>
@@ -26,14 +53,7 @@ const JobListing = (
           <Text key={index} className='bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm mx-1'>{tag.name}</Text>
         ))}
       </ScrollView>
-      {handleQuickApply && 
-      <TouchableOpacity onPress={handleQuickApply}>
-        <View className='mt-4 w-1/3'>
-        <Text className='text-center font-quicksand-semibold text-sm text-white bg-black rounded-full px-3 py-1'>
-        Quick Apply
-        </Text>
-        </View>
-      </TouchableOpacity> }
+      {showQuickApply && renderQuickApply()}
     </View>
   )
 }

@@ -1,5 +1,6 @@
-import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, ProfileImageUpdate, UserSkill } from "@/type";
+import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate, UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
 
 const PROFILES_API_URL = 'http://10.0.0.135:8080/profiles';
@@ -145,4 +146,53 @@ export const editExperience = async (experienceId: number, updatedExperience: Ad
             return resolve(null)
         }, 3000)
     })   
+}
+
+export const completeProfile = async (
+    document: DocumentPicker.DocumentPickerResult,
+    image: ImagePickerResult,
+    details: CompleteProfileForm
+) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData();
+    if (document && document.assets && document.assets.length > 0) {
+        formData.append('resume', {
+            uri: document.assets[0].uri,
+            name: document.assets[0].name,
+            type: document.assets[0].mimeType,
+        } as any);
+    }
+    if (image && image.assets && image.assets.length > 0) {
+        const localUri = image.assets[0].uri;
+        const fileName = image.assets[0].fileName || localUri.split('/').pop() || 'profile.jpg';
+        const type = image.assets[0].type || 'image/jpeg';
+        formData.append('profileImage', {
+            uri: localUri,
+            name: fileName,
+            type
+        } as any);
+    }
+    formData.append('data', JSON.stringify(details));
+    console.log(formData)
+    try {
+        const response = await fetch(
+            `${PROFILES_API_URL}/complete-profile`, {
+            method: 'PATCH',
+            headers: {
+                'x-auth-token': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+            },
+            body: formData,
+        });
+        if (response.status === 200) {
+            const data = await response.json();
+            console.log("Profile completed successfully:", data);
+            return data;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error completing profile:", error);
+        return null;
+    }
 }

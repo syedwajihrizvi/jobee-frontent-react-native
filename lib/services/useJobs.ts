@@ -1,9 +1,11 @@
-import { ApplicationSummary, Job, JobFilters } from '@/type';
+import { Application, ApplicationSummary, Job, JobFilters } from '@/type';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { getEducationLevel } from '../utils';
 
 const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
 const APPLICATIONS_API_URL = `http://10.0.0.135:8080/applications`;
+const USER_PROFILE_API_URL =`http://10.0.0.135:8080/profiles`;
 
 export const useJobs = (jobFilters: JobFilters) => {
     const { search, locations, companies, tags, minSalary, maxSalary } = jobFilters
@@ -41,6 +43,28 @@ export const useJob = (id: number) => {
         staleTime: 1000 * 60 * 5, // 5 minutes
         enabled: !!id, // Only fetch if id is defined
     })
+}
+
+export const useFavoriteJobs = () => {
+  const fetchFavoriteJobs = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return [];
+    const response = await fetch(`${JOBS_API_URL}/favorite-jobs`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': token
+      }
+    })
+    const data = await response.json()
+    return data
+  }
+
+  return useQuery<number[], Error>({
+    queryKey: ['jobs', 'favorites'],
+    queryFn: fetchFavoriteJobs,
+    staleTime: 1000 * 60 * 5,
+  })
 }
 
 export const useJobsByUserFavorites = (
@@ -165,6 +189,52 @@ export const useShortListedCandidatesForJob = (jobId?: number) => {
   return useQuery<number[], Error>({
     queryKey: [jobId, 'shortlist'],
     queryFn: fetchShortListedCandidatesForJob,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!jobId,
+  })
+}
+
+export const useUserAppliedJobs = () => {
+  const fetchUserAppliedJobs = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return [];
+    const response = await fetch(`${JOBS_API_URL}/applied`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': `Bearer ${token}`
+      },
+    })
+    const data = await response.json()
+    return data
+  }
+
+  return useQuery<number[], Error>({
+    queryKey: ['user', 'appliedJobs'],
+    queryFn: fetchUserAppliedJobs,
+    staleTime: 1000 * 60 * 5
+  })
+}
+
+export const useJobApplication = (jobId: number) => {
+  const fetchJobApplication = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const response = await fetch(`${USER_PROFILE_API_URL}/appliedJobs/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': `Bearer ${token}`
+      },
+    })
+    const data = await response.json()
+    console.log("Job Application Data:", data);
+    return data
+  }
+
+  return useQuery<Application | Error>({
+    queryKey: ['job', jobId, 'application'],
+    queryFn: fetchJobApplication,
     staleTime: 1000 * 60 * 5,
     enabled: !!jobId,
   })

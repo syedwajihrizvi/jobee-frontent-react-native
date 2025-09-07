@@ -25,7 +25,7 @@ export const  convertTo12Hour =(time24: string): string => {
 
   return `${hour}:${minute} ${ampm}`;
 }
-export const isApplied = (user: User, jobId: string) =>user?.applications.find(app => app.jobId === Number(jobId))
+export const isApplied = (user: User, jobId: string) => user?.applications.find(app => app.jobId === Number(jobId))
 
 export const getUserDocumentById = (id: number, user: User): UserDocument | undefined => {
     return user?.documents.find(doc => doc.id === id);

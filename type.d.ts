@@ -300,3 +300,13 @@ export type InterviewSummary = {
     timezone: string;
     companyName: string;
 }
+
+export type CompleteProfileForm = {
+    title: string;
+    city: string;
+    country: string;
+    summary: string;
+    company: string;
+    position: string;
+    phoneNumber: string;
+}

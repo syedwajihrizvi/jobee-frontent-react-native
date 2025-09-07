@@ -60,19 +60,19 @@ const SignUp = () => {
 
   const renderAccountTypeClass = (buttonType: 'user' | 'business') => {
     if (type === buttonType) {
-      return 'border-b-2 border-blue-500 pb-1'
+      return 'border-b-2 border-green-500 pb-1'
     }
     return 'pb-1'
   }
 
   return (
-    <View className='gap-6 bg-white px-4 pb-10'>
-      <View className='flex-row items-center justify-center gap-2'>
+    <View className='gap-2 bg-white px-4 pb-10'>
+      <View className='flex-row items-center justify-center gap-4'>
         <TouchableOpacity className={renderAccountTypeClass('user')} onPress={() => setType('user')}>
-          <Text>User</Text>
+          <Text className='font-quicksand-bold'>User</Text>
         </TouchableOpacity>
         <TouchableOpacity className={renderAccountTypeClass('business')} onPress={() => setType('business')}>
-          <Text>Enterprise</Text>
+          <Text className='font-quicksand-bold'>Enterprise</Text>
         </TouchableOpacity>
       </View>
       {type === 'user' ? 
@@ -82,7 +82,7 @@ const SignUp = () => {
         <CustomInput placeholder='Enter your last name' label='Last Name' value={userForm.lastName} onChangeText={(text) => setUserForm({...userForm, lastName: text})}/>
         <CustomInput placeholder='Enter your password' label='Password' value={userForm.password} onChangeText={(text) => setUserForm({...userForm, password: text})}/>
         <CustomInput placeholder='Confirm your password' label='Confirm Password' value={userForm.confirmPassword} onChangeText={(text) => setUserForm({...userForm, confirmPassword: text})}/>
-        <CustomButton text="Sign Up" customClass="auth-button" onClick={handleUserSignUp} isLoading={isLoading}/>
+        <CustomButton text="Sign Up" customClass="apply-button py-4" onClick={handleUserSignUp} isLoading={isLoading}/>
         <View className='items-center'>
           <Text>Already have an account? <Text onPress={() => router.navigate('/(auth)/sign-in')}>Sign In</Text></Text>
         </View>
@@ -92,7 +92,7 @@ const SignUp = () => {
         <CustomInput placeholder='Enter your email' label='Email' value={businessForm.email} onChangeText={(text) => setBusinessForm({...businessForm, email: text})}/>
         <CustomInput placeholder='Enter your password' label='Password' value={businessForm.password} onChangeText={(text) => setBusinessForm({...businessForm, password: text})}/>
         <CustomInput placeholder='Confirm your password' label='Confirm Password' value={businessForm.confirmPassword} onChangeText={(text) => setBusinessForm({...businessForm, confirmPassword: text})}/>
-        <CustomButton text="Join Now" customClass="auth-button" onClick={handleBusinessSignUp} isLoading={isLoading}/>
+        <CustomButton text="Join Now" customClass="apply-button py-4" onClick={handleBusinessSignUp} isLoading={isLoading}/>
         <View className='items-center'>
           <Text>Company already registered? <Text onPress={() => router.navigate('/(auth)/sign-in')}>Sign In</Text></Text>
         </View>

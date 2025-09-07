@@ -18,6 +18,7 @@ const Profile = () => {
   const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
+
   const handleProfileImagePicker = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {

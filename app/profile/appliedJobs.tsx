@@ -21,7 +21,10 @@ const AppliedJobs = () => {
             data={jobs || []}
             renderItem={({item, index}: {item: {job: Job, status: string}; index: number}) => (
                 <JobListing 
-                    key={index} job={item.job} showFavorite={false} showStatus={true} 
+                    key={index} job={item.job} 
+                    showFavorite={false} showStatus={true}
+                    showQuickApply={false}
+                    canQuickApply={false}
                     status={item.status}/>
         )}
             ItemSeparatorComponent={() => <View className='divider'/>}

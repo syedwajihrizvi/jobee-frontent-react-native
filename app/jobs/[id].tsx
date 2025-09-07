@@ -8,12 +8,12 @@ import JobInfo from '@/components/JobInfo'
 import ViewMore from '@/components/ViewMore'
 import { UserDocumentType } from '@/constants'
 import { applyToJob } from '@/lib/jobEndpoints'
-import { useJob } from '@/lib/services/useJobs'
-import { isApplied } from '@/lib/utils'
+import { useJob, useJobApplication } from '@/lib/services/useJobs'
 import useAuthStore from '@/store/auth.store'
 import { CreateApplication, User, UserDocument } from '@/type'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
+import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from 'react-native'
@@ -23,6 +23,7 @@ const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams()
   const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore()
   const {data:job, isLoading} = useJob(Number(jobId))
+  const { data: jobApplication, isLoading: isLoadingJobApplication } = useJobApplication(Number(jobId))
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
   const [selectedResume, setSelectedResume] = useState<string | null>(null);
@@ -35,6 +36,7 @@ const JobDetails = () => {
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
   const user = authUser as (User | null)
   const userHasResume = user && user.documents && user.documents.some(doc => doc.documentType === 'RESUME');
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (user && (user as User).documents) {
       const resumes = (user as User).documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
@@ -91,6 +93,7 @@ const JobDetails = () => {
       }
         
       await applyToJob(applicationInfo)
+      queryClient.invalidateQueries({ queryKey: ['jobs', 'applications'] });
       Alert.alert('Application submitted successfully!')
       applyBottomRef.current?.close();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -101,8 +104,6 @@ const JobDetails = () => {
       setIsSubmittingApplication(false);
     }
   }
-
-  const application = isApplied((user as User)!, String(jobId));
 
   const calculateApplyButtonSnapPoints = () => {
     if (!isAuthenticated) return ['30%']
@@ -156,9 +157,9 @@ const JobDetails = () => {
       <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
         <TouchableOpacity 
           className='apply-button w-4/6 items-center justify-center h-14'
-          onPress={application ? handleViewApplicationBottomOpen : handleApplyBottomOpen}>
+          onPress={jobApplication ? handleViewApplicationBottomOpen : handleApplyBottomOpen}>
           <Text className='font-quicksand-semibold text-md'>
-            {application ? 'View Application Status' : 'Apply Now'}
+            {jobApplication ? 'View Application Status' : 'Apply Now'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity className='favorite-button h-14 w-1/6 items-center justify-center'>
@@ -176,11 +177,13 @@ const JobDetails = () => {
           <CompanyInfo/>
         </BottomSheetView>
       </BottomSheet>
-      {application && <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["50%"]} enablePanDownToClose>
-        <BottomSheetView className='flex-1 bg-white'>
-          <ApplicationInfo job={job!} application={application!}/>
-        </BottomSheetView>
-      </BottomSheet>}
+      {(isAuthenticated && !isLoadingJobApplication && !(jobApplication instanceof Error)) && (
+        <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["50%"]} enablePanDownToClose>
+          <BottomSheetView className='flex-1 bg-white'>
+            <ApplicationInfo job={job!} application={jobApplication!}/>
+          </BottomSheetView>
+        </BottomSheet>
+      )}
       <BottomSheet 
         ref={applyBottomRef} index={-1} 
         snapPoints={calculateApplyButtonSnapPoints()} 
@@ -195,11 +198,11 @@ const JobDetails = () => {
             isSubmittingApplication={isSubmittingApplication} handleSubmitApplication={handleSubmitApplication} closeSheet={() => applyBottomRef.current?.close()}
             /> : 
             <View className='flex-1 justify-center items-center px-4'>
-              <Text>Sign up or login to get started</Text>
-              <TouchableOpacity className='bg-blue-500 p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
+              <Text className='font-quicksand-bold text-lg'>Sign up or login to get started</Text>
+              <TouchableOpacity className='apply-button p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
                 <Text>Create an Account</Text>
               </TouchableOpacity>
-              <TouchableOpacity className='bg-blue-500 p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
+              <TouchableOpacity className='apply-button p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
                 <Text>Sign In</Text>
               </TouchableOpacity>
             </View>}

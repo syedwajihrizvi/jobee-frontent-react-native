@@ -67,18 +67,18 @@ const SignIn = () => {
   }
   const renderAccountTypeClass = (buttonType: 'user' | 'business') => {
     if (type === buttonType) {
-      return 'border-b-2 border-blue-500 pb-1'
+      return 'border-b-2 border-green-500 pb-1'
     }
     return 'pb-1'
   }
   return (
-    <View className='gap-6 bg-white px-4'>
-      <View className='flex-row items-center justify-center gap-2'>
+    <View className='gap-2 bg-white px-4'>
+      <View className='flex-row items-center justify-center gap-4'>
         <TouchableOpacity className={renderAccountTypeClass('user')} onPress={() => setType('user')}>
-          <Text>User</Text>
+          <Text className='font-quicksand-bold'>User</Text>
         </TouchableOpacity>
         <TouchableOpacity className={renderAccountTypeClass('business')} onPress={() => setType('business')}>
-          <Text>Enterprise</Text>
+          <Text className='font-quicksand-bold'>Enterprise</Text>
         </TouchableOpacity>
       </View>
       {
@@ -86,7 +86,7 @@ const SignIn = () => {
         <>
         <CustomInput placeholder='Enter your email' label='Email' value={form.email} onChangeText={(text) => setForm({...form, email: text})}/>
         <CustomInput placeholder='Enter your password' label='Password' value={form.password} onChangeText={(text) => setForm({...form, password: text})}/>
-        <CustomButton text="Login" customClass="auth-button" onClick={handleSignInForUser} isLoading={isLoading}/>
+        <CustomButton text="Login" customClass="apply-button py-4" onClick={handleSignInForUser} isLoading={isLoading}/>
         <View className='items-center'>
           <Text>Dont have an account? <Text onPress={() => router.navigate('/(auth)/sign-up')}>Sign Up</Text></Text>
         </View>
@@ -94,7 +94,7 @@ const SignIn = () => {
         <>
         <CustomInput placeholder='Enter your email' label='Email' value={form.email} onChangeText={(text) => setForm({...form, email: text})}/>
         <CustomInput placeholder='Enter your password' label='Password' value={form.password} onChangeText={(text) => setForm({...form, password: text})}/>
-        <CustomButton text="Login" customClass="auth-button" onClick={handleSignInForBusiness} isLoading={isLoading}/>
+        <CustomButton text="Login" customClass="apply-button py-4" onClick={handleSignInForBusiness} isLoading={isLoading}/>
         <View className='items-center'>
           <Text>Business not registered? <Text onPress={() => router.navigate('/(auth)/sign-up')}>Register Now</Text></Text>
         </View>

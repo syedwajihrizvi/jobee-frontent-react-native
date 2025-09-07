@@ -1,12 +1,14 @@
+import useAuthStore from '@/store/auth.store';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
 const TabsLayout = () => {
+  const { isAuthenticated } = useAuthStore();
   return (
     <Tabs screenOptions={{
       headerShown: false, tabBarShowLabel: false, 
-      tabBarStyle: {borderTopLeftRadius: 40, 
+      tabBarStyle: isAuthenticated ? {borderTopLeftRadius: 40, 
       borderTopRightRadius: 40, borderBottomLeftRadius: 40,
       display: 'flex', 
       flexDirection: 'row', justifyContent: 'space-around', 
@@ -17,7 +19,7 @@ const TabsLayout = () => {
       bottom: 20, backgroundColor: '#fff', shadowColor: '#000', 
       shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.25, 
       shadowRadius: 3.84, elevation: 5, paddingHorizontal: 20, paddingVertical: 10
-      }}}>
+      } : {display: 'none'}}}>
         <Tabs.Screen 
           name="jobs/index"
           options={{
