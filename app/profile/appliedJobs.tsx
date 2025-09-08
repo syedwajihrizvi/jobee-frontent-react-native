@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 const AppliedJobs = () => {
   const { user } = useAuthStore()
   const { data: jobs, isLoading: isLoadingJobs } = useJobsByUserApplications(user?.id)
-  
+  console.log(jobs)
   return (
     <SafeAreaView className='relative flex-1 bg-white'>
         <BackBar label="Jobs I've Applied To"/>

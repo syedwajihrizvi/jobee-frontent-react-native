@@ -315,6 +315,7 @@ const ScheduleInterview = () => {
                             placeholder="eg. https://zoom.us/j/1234567890"
                             onChangeText={(text) => setInterviewDetails((prev) => ({...prev, meetingLink: text}))}
                             className="form-input__input mt-2"
+                            autoCapitalize='none'
                         />}
                     </View>
                     <View className='flex-row justify-center items-center gap-2 pt-6'>

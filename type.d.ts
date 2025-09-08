@@ -217,6 +217,7 @@ export type Application = {
     jobId: number,
     status: string,
     appliedAt: string;
+    interviewId: number | null
 }
 
 export type ApplicationSummary = {

@@ -172,7 +172,7 @@ const Index = () => {
   }
 
   return (
-    <SafeAreaView className='relative flex-1 bg-white'>
+    <SafeAreaView className='relative flex-1 bg-white pb-20'>
         <View className='w-full flex-row items-center justify-center px-8 gap-4'>
           <SearchBar 
             placeholder="Search for Jobs..." 
