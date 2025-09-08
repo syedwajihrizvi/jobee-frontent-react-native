@@ -78,7 +78,6 @@ export const addEducation = async (newEducation: AddUserEducationForm) => {
                 body: JSON.stringify(newEducation)
             })
             const response = await result.json();
-            console.log("Response from addEducation:", response);
             if (result.status === 201) 
                 return resolve(response as Education)
             return resolve(null);
@@ -97,7 +96,6 @@ export const editEducation = async (educationId: number, updatedEducation: AddUs
             },
             body: JSON.stringify(updatedEducation)
         });
-        console.log("Response status:", result.status);
         const response = await result.json();
         if (result.status === 200) return response as Education;
         throw new Error("Failed to update education");
@@ -174,7 +172,6 @@ export const completeProfile = async (
         } as any);
     }
     formData.append('data', JSON.stringify(details));
-    console.log(formData)
     try {
         const response = await fetch(
             `${PROFILES_API_URL}/complete-profile`, {
@@ -187,7 +184,6 @@ export const completeProfile = async (
         });
         if (response.status === 200) {
             const data = await response.json();
-            console.log("Profile completed successfully:", data);
             return data;
         }
         return null;

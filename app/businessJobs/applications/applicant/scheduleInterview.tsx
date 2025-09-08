@@ -89,7 +89,6 @@ const ScheduleInterview = () => {
         )
         if (res) {
             Alert.alert('Success', 'Interview created successfully.')
-            console.log("Invalidating applicant query for applicantId:", applicantId);
             queryClient.invalidateQueries({queryKey: ['applicant', Number(applicantId)]})
             setTimeout(() => {
                 setInterviewDetails({...defaultInterviewForm})
@@ -133,7 +132,6 @@ const ScheduleInterview = () => {
   }
 
   const addConductorToConductors = () => {
-    console.log(conductorName, conductorEmail)
     const currInterviewConductors = interviewDetails?.conductors || []
     const index = currInterviewConductors.findIndex(conductor => conductor.email === conductorEmail && conductor.name === conductorName)
     if (index > -1) {

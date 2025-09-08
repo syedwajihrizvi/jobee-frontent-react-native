@@ -13,7 +13,6 @@ export const useDocuments = () => {
             }
         });
         const data = await response.json();
-        console.log('Fetched user documents:', data);
         return data;
     }
     return useQuery<UserDocument[], Error>({

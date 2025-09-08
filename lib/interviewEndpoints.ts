@@ -30,7 +30,5 @@ export const createInterview = async (
         body: JSON.stringify(requestBody)
     })
     if (result.status !== 201) return null
-    const response = await result.json();
-    console.log(response)
     return true
 }

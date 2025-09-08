@@ -39,7 +39,6 @@ export const quickApplyToJob = async (jobId: number) => {
     })
     if (result.status !== 201) return null;
     const data = await result.json();
-    console.log("Quick Apply Response:", data);
     return data;
 }
 

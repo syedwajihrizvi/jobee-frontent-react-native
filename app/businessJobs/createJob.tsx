@@ -52,7 +52,6 @@ const CreateJob = () => {
       setAddingJob(false);
       return;
     }
-    console.log("Creating Job with data:", createJobForm);
     setAddingJob(true);
     try {
         const result = await createJob(createJobForm, user?.id!);

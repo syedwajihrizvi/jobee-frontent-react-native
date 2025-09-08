@@ -33,7 +33,6 @@ const ApplicantForBusiness = () => {
     }
   }, [shortListedCandidates, application])
 
-  console.log("Application Data:", application);
   const handleShortList = async () => {
     if (!application) return
     setMakingShortListRequest(true)

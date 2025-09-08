@@ -126,7 +126,6 @@ export default function EditProfile() {
     setIsLoadingNewEducation(true);
     try {
         const result = await addEducation({institution, degree, fromYear, toYear});
-        console.log("Add education result:", result);
         if (!result) {
             Alert.alert("Failed to add education. Please try again.");
             return;
@@ -174,7 +173,6 @@ export default function EditProfile() {
     setIsLoadingNewEducation(true);
     try {
         const result = await editEducation(isEditingEducation!.id, addEducationForm);
-        console.log("Edit education result:", result);
         if (!result) {
             Alert.alert("Failed to edit education. Please try again.");
             return;
@@ -344,7 +342,6 @@ export default function EditProfile() {
   }
 
   const handleCloseEducationForm = () => {
-    console.log('Closing education form')
     setIsAddingEducation(false);
     setIsEditingEducation(null);
     setAddEducationForm({ institution: '', degree: '', fromYear: '', toYear: '' });

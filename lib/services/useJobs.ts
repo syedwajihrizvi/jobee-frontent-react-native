@@ -107,6 +107,7 @@ export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
   filters.tags.forEach(tag => urlParams.append('tags', tag))
   if (filters.minSalary) urlParams.append('minSalary', filters.minSalary.toString())
   if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
+  if (companyId) urlParams.append('companyId', companyId.toString())
   const params = urlParams.toString()
   const fetchCompanyJobs = async () => {
     const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs?${params}`, {
@@ -228,7 +229,6 @@ export const useJobApplication = (jobId: number) => {
       },
     })
     const data = await response.json()
-    console.log("Job Application Data:", data);
     return data
   }
 

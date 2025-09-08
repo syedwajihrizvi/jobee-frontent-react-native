@@ -67,7 +67,6 @@ const ManageDocuments = () => {
         })
         if (!document.canceled) {
             setUploadedDocument(document);
-            console.log('Selected document:', document);
         }
     } catch (error) {
         console.error('Error picking document: ', error);
@@ -126,31 +125,23 @@ const ManageDocuments = () => {
             {
                 text: uploadByPhotoMsg,
                 onPress: async () => {
-                    const image = await ImagePicker.launchCameraAsync({
+                    await ImagePicker.launchCameraAsync({
                         mediaTypes: 'images',
                         allowsEditing: true,
                         aspect: [4, 3],
                         quality: 1,
                     });
-                    if (!image.canceled) {
-                        console.log('Image selected:', image);
-                        // Here you can convert the image to PDF or handle it as needed
-                    }
                 }
             },
             {
                 text: uploadByGalleryMsg,
                 onPress: async () => {
-                    const image = await ImagePicker.launchImageLibraryAsync({
+                    await ImagePicker.launchImageLibraryAsync({
                         mediaTypes: 'images',
                         allowsEditing: true,
                         aspect: [4, 3],
                         quality: 1,
                     });
-                    if (!image.canceled) {
-                        console.log('Image selected:', image);
-                        // Here you can convert the image to PDF or handle it as needed
-                    }
                 }
             },
             {
@@ -171,7 +162,6 @@ const ManageDocuments = () => {
   3) Take a Photo which we will convert to PDF
   */
   // TODO: Replace RESUME and COVER_LETTER with actual DocumentType enum values
-  console.log(userDocs)
   return (
     <SafeAreaView className='flex-1 bg-white h-full'>
       <BackBar label="Manage Documents" optionalThirdItem={
