@@ -223,6 +223,7 @@ const ApplicantForBusiness = () => {
             <TouchableOpacity className='apply-button w-1/2 items-center justify-center h-14'>
                 <Text className='font-quicksand-semibold text-lg'>Contact Applicant</Text>
             </TouchableOpacity>
+            {application?.status === 'PENDING' && 
             <TouchableOpacity 
                 className='apply-button w-1/2 items-center justify-center h-14'
                 onPress={isShortListed ? handleUnshortList : handleShortList}
@@ -233,6 +234,7 @@ const ApplicantForBusiness = () => {
                     {isShortListed ? "Unshortlist" : "Shortlist"}
                 </Text>}
             </TouchableOpacity>
+            }
         </View>
       </>}
       {viewingDocument &&

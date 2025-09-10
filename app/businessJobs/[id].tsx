@@ -20,6 +20,7 @@ const BusinessJobDetails = () => {
                         <Text className="font-quicksand-medium text-lg">{job.location}</Text>
                         <Text className="font-quicksand-semibold text-sm">${job.minSalary} - ${job.maxSalary} | {job.employmentType}</Text>
                         <Text className="font-quicksand-semibold text-sm">Posted on {formatDate(job.createdAt)}</Text>
+                        <Text className="font-quicksand-semibold text-sm">Application window closes on {formatDate(job.appDeadline)}</Text>
                     </View>
                     <View className="gap-2">
                         <TouchableOpacity onPress={() => router.push(`/businessJobs/applications/${jobId}`)}>

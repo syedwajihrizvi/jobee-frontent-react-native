@@ -63,3 +63,26 @@ export const getEducationLevel = (level: string) => {
       return "POST_DOCTORATE";
   };
 }
+
+export const getApplicationStatus = (status: string) => {
+  switch(status) {
+    case 'PENDING':
+      return "Pending";
+    case 'INTERVIEW_SCHEDULED':
+      return "Interview Scheduled";
+    case 'OFFER_MADE':
+      return "Offer Made";
+    case 'OFFER_ACCEPTED':
+      return "Offer Accepted";
+    case 'OFFER_REJECTED':
+      return "Offer Rejected";
+    case 'OFFER_WITHDRAWN':
+      return "Offer Withdrawn";
+    case 'WITHDRAWN_BY_USER':
+      return "Withdrawn by User";
+    case 'REJECTED':
+      return "Rejected";
+    case 'CANCELED':
+      return "Canceled";
+  }
+}

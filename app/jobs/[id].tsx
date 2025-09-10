@@ -37,6 +37,7 @@ const JobDetails = () => {
   const user = authUser as (User | null)
   const userHasResume = user && user.documents && user.documents.some(doc => doc.documentType === 'RESUME');
   const queryClient = useQueryClient();
+  console.log(jobApplication)
   useEffect(() => {
     if (user && (user as User).documents) {
       const resumes = (user as User).documents.filter(doc => doc.documentType === UserDocumentType.RESUME);
@@ -177,7 +178,7 @@ const JobDetails = () => {
           <CompanyInfo/>
         </BottomSheetView>
       </BottomSheet>
-      {(isAuthenticated && !isLoadingJobApplication && !(jobApplication instanceof Error)) && (
+      {(isAuthenticated && !isLoadingJobApplication && jobApplication && !(jobApplication instanceof Error)) && (
         <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["50%"]} enablePanDownToClose>
           <BottomSheetView className='flex-1 bg-white'>
             <ApplicationInfo job={job!} application={jobApplication!}/>

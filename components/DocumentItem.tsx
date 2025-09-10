@@ -1,8 +1,9 @@
+import { images } from '@/constants';
 import { getS3DocumentUrl } from '@/lib/s3Urls';
 import { UserDocument } from '@/type';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import React, { useState } from 'react';
-import { Dimensions, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, Modal, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 const { height, width } = Dimensions.get("window");
@@ -16,18 +17,20 @@ const DocumentItem = (
 
   return (
     <>
-      <View className='relative'>
-        <TouchableOpacity className='document-item w-40 h-40' onPress={handleOpen}>
-          <View className='bg-white absolute bottom-0 w-full p-2 items-center justify-center rounded-b-2xl'>
-            <Text className='font-quicksand-bold text-sm'>{document.documentType}</Text>
-          </View>
+     {customAction ? 
+      <View className='relative w-30 h-30 items-center justify-center'>
+        <TouchableOpacity className='w-20 h-20' onPress={handleOpen}>
+          <Image source={images.resumeImage} className='w-full h-full' resizeMode='cover'/>
         </TouchableOpacity>
-      {customAction && 
-      <TouchableOpacity className='absolute top-2 left-2 bg-white rounded-full p-1' onPress={customAction}>
-        <AntDesign name={actionIcon as any} size={20} color="black" />
-      </TouchableOpacity>}
-      </View>
-
+        <Text className='font-quicksand-semibold text-sm'>{document.documentType}</Text>
+      <TouchableOpacity className='absolute -top-2 -right-2 bg-white rounded-full p-1' onPress={customAction}>
+        <AntDesign name={actionIcon as any} size={12} color="black" />
+      </TouchableOpacity>
+      </View> :
+      <TouchableOpacity className='document-item w-20 h-20 flex items-center justify-center' onPress={handleOpen}>
+        <Text className='font-quicksand-bold text-sm'>Preview</Text>
+      </TouchableOpacity>
+    }
       <Modal
         transparent
         animationType="fade"

@@ -74,7 +74,8 @@ export type Job = {
     createdAt: string,
     employmentType: string,
     applications: Application[],
-    totalShortListedCandidates: number
+    totalShortListedCandidates: number,
+    appDeadline: string
 }
 
 export type JobFilters = {
@@ -230,6 +231,8 @@ export type ApplicationSummary = {
     appliedAt: string;
     profileSummary: string;
     title: string;
+    shortListed: boolean;
+    status: string;
 }
 
 export type ApplicationDetailsForBusiness = {

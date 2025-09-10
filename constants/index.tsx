@@ -1,12 +1,15 @@
+import resumeImage from "@/assets/images/sampleResume.jpg";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from "@expo/vector-icons/Entypo";
+
 import { ReactNode } from "react";
 
 const placeholder = "https://placehold.co/600x400/png"
 const companyLogo = "https://placehold.co/40x40/png"
 export const images = {
     placeholder,
-    companyLogo
+    companyLogo,
+    resumeImage
 }
 
 export enum UserDocumentType {

@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/utils';
 import useAuthStore from '@/store/auth.store';
 import { Job } from '@/type';
 import { router } from 'expo-router';
@@ -47,6 +48,7 @@ const JobListing = (
         <Text className='font-quicksand-bold text-2xl'>{job.title}</Text>
         <Text className='font-quicksand-medium text-lg'>{job.location}</Text>
         <Text className='font-quicksand-semibold text-sm'>${job.minSalary} - ${job.maxSalary}</Text>
+        {canQuickApply && <Text className='font-quicksand-semibold text-sm'>Deadline: {formatDate(job.appDeadline)}</Text>}
       </TouchableOpacity>
       <ScrollView className='flex-row flex-wrap gap-2 mt-2' horizontal showsHorizontalScrollIndicator={false}>
         {job.tags?.map((tag, index) => (

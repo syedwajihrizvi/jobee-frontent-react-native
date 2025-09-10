@@ -1,6 +1,7 @@
 import BackBar from '@/components/BackBar'
 import { images } from '@/constants'
 import { useApplicantsForJob, useShortListedCandidatesForJob } from '@/lib/services/useJobs'
+import { getApplicationStatus } from '@/lib/utils'
 import { ApplicationSummary } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -73,7 +74,6 @@ const Applications = () => {
     locationInputRef.current?.clear();
   }
 
-
   if (shortListed && applicantList?.length === 0) {
     return (
       <SafeAreaView className='flex-1 bg-white relative'>
@@ -91,6 +91,10 @@ const Applications = () => {
     )
   }
 
+  const isShortListed = (applicantId: number) => {
+    return shortListedApplicants?.includes(applicantId);
+  }
+
   const renderApplicantCard = ({ item }: {item : ApplicationSummary}) => (
     <TouchableOpacity 
       className='bg-white border border-gray-200 rounded-xl p-4 mb-3 shadow-sm'
@@ -98,11 +102,15 @@ const Applications = () => {
       onPress={() => router.push(`/businessJobs/applications/applicant/${item.id}`)}
     >
       <View className='relative flex-row items-start justify-between mb-3'>
-          {shortListedApplicants?.includes(item.id) && (
+          {isShortListed(item.id) ? (
             <View className='absolute top-0 right-0 bg-yellow-100 px-2 py-1 rounded-full'>
-              <Text>Shortlisted</Text>
+              <Text className='font-quicksand-bold text-sm'>Shortlisted</Text>
             </View>
-          )}
+          ) : (
+              <View className='absolute top-0 right-0 bg-green-100 px-2 py-1 rounded-full'>
+                <Text className='font-quicksand-bold text-sm color-green-800'>{getApplicationStatus(item.status)}</Text>
+              </View>
+            )}
           <View className='flex-row items-center gap-3'>
             <Image 
               source={{ uri: images.companyLogo }} 
@@ -110,7 +118,7 @@ const Applications = () => {
               resizeMode='cover'
             />
             <View className='flex-1'>
-              <Text className='font-quicksand-bold text-lg text-gray-900'>
+              <Text className='font-quicksand-bold text-lg text-gray-900 w-2/3'>
                 {item.fullName}
               </Text>
               <Text className='font-quicksand-medium text-sm text-gray-600'>

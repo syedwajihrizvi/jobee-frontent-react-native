@@ -1,4 +1,4 @@
-import { CreateInterviewForm } from "@/type";
+import { CreateInterviewForm, InterviewDetails } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { extract24HourTime } from "./utils";
 
@@ -31,4 +31,17 @@ export const createInterview = async (
     })
     if (result.status !== 201) return null
     return true
+}
+
+export const getMostRecentInterviewForJob = async (jobId: number) : Promise<InterviewDetails | null> => {
+    const result = await fetch(`${INTERVIEWS_API_URL}/job/${jobId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    if (result.status !== 200) return null
+    const interview = await result.json()
+    // get the first one as it is the most recent one
+    return interview[0] as InterviewDetails
 }

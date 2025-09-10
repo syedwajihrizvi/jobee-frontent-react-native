@@ -10,7 +10,7 @@ const CustomButton = ({text, customClass, onClick, isLoading}: CustomButtonProps
         onPress={onClick}
         disabled={isLoading}>
         {isLoading ? <ActivityIndicator color='white'/> : 
-        <Text className='font-quicksand-bold text-lg'>{text}</Text>}
+        <Text className='font-quicksand-semibold text-md'>{text}</Text>}
     </TouchableOpacity>
   )
 }

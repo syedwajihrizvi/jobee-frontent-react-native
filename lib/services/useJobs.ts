@@ -72,7 +72,13 @@ export const useJobsByUserFavorites = (
   options?: { enabled?: boolean }
 ) => {
   const fetchFavoriteJobs = async () => {
-    const response = await fetch(`${JOBS_API_URL}/favorites?userId=${userId}`)
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null || !userId) return [];
+    const response = await fetch(`${JOBS_API_URL}/favorites?userId=${userId}`, {
+      headers: {
+        'x-auth-token': `Bearer ${token}`
+      }
+    })
     const data = await response.json()
     return data
   }

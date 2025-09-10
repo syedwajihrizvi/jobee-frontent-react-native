@@ -1,12 +1,12 @@
 import BackBar from '@/components/BackBar'
-import { createInterview } from '@/lib/interviewEndpoints'
+import { createInterview, getMostRecentInterviewForJob } from '@/lib/interviewEndpoints'
 import useAuthStore from '@/store/auth.store'
 import { BusinessUser, CreateInterviewForm } from '@/type'
 import { AntDesign } from '@expo/vector-icons'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -37,6 +37,30 @@ const ScheduleInterview = () => {
   const [loadingNewInterview, setLoadingNewInterview] = useState(false);
   const [addedSelf, setAddedSelf] = useState(false);
   const user = authUser as BusinessUser | null
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchAnExistingInterview = async () => {
+        try {
+            const interview = await getMostRecentInterviewForJob(Number(jobId))
+            if (isMounted && interview) {
+                const { title, description, interviewType, interviewers, otherInterviewers } = interview
+                const conductors = [...interviewers.map(interviewer => ({ name: interviewer.name, email: interviewer.email })), ...otherInterviewers]
+                if (conductors.findIndex(conductor => conductor.email === user?.email) > -1) {
+                    setAddedSelf(true)
+                }
+                setInterviewDetails((prev) => ({ ...prev, title, description, interviewType, conductors}))
+            } else {
+                setInterviewDetails({...defaultInterviewForm})
+            }
+        } catch (error) {
+            console.log("Error fetching interview: ", error)
+        }
+    }
+    fetchAnExistingInterview()
+    return () => { isMounted = false }
+    // Check if an interview for this job already exists. If it does, prefill the form
+  }, [user, jobId])
 
   const handleInterviewFormSubmit = async () => {
     const { title, description, conductors: conductors, interviewDate, interviewType, startTime, endTime, location } = interviewDetails
@@ -147,6 +171,15 @@ const ScheduleInterview = () => {
     addConductorBottomSheetRef.current?.close()
   }
 
+  const removeConductor = (index: number) => {
+    const currInterviewConductors = interviewDetails?.conductors || []
+    currInterviewConductors.splice(index, 1)
+    setInterviewDetails((prev) => ({...prev, conductors: currInterviewConductors}))
+    if (user && currInterviewConductors.findIndex(conductor => conductor.email === user.email) === -1) {
+        setAddedSelf(false)
+    }
+  }
+
   const closeAddConductorBottomSheet = () => {
     setConductorEmail('')
     setConductorName('')
@@ -217,12 +250,23 @@ const ScheduleInterview = () => {
                                 <AntDesign name="plus" size={12} color="black" />
                             </TouchableOpacity>           
                         </View>
-                        {interviewDetails.conductors && interviewDetails.conductors.length > 0 && <View>
+                        {interviewDetails.conductors && interviewDetails.conductors.length > 0 && 
+                        <View>
                             {interviewDetails.conductors.map((conductor, index) => {
                                 return (
-                                    <Text key={index}>
-                                        {conductor.name} | {conductor.email}
-                                    </Text>
+                                    <View key={index} className='flex flex-row gap-1 items-center'>
+                                        <Text className='font-quicksand-bold text-md'>
+                                            {conductor.name} | {conductor.email}
+                                        </Text>
+                                        <TouchableOpacity>
+                                            <AntDesign 
+                                                name="minuscircleo" 
+                                                size={12} 
+                                                color="black"
+                                                onPress={() => removeConductor(index)}
+                                                />
+                                        </TouchableOpacity>
+                                    </View>
                                 )
                             })}
                         </View>}
@@ -322,6 +366,7 @@ const ScheduleInterview = () => {
                         <TouchableOpacity 
                             className='apply-button w-1/2 items-center justify-center h-14'
                             onPress={handleInterviewFormSubmit}
+                            disabled={loadingNewInterview}
                         >
                             <Text className='font-quicksand-semibold text-lg'>Done</Text>
                         </TouchableOpacity>
