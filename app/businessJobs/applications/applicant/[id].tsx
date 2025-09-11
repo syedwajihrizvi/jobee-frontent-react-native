@@ -3,7 +3,7 @@ import DocumentModal from '@/components/DocumentModal'
 import UserVideoIntro from '@/components/UserVideoIntro'
 import { images } from '@/constants'
 import { shortListCandidate, unshortListCandidate } from '@/lib/jobEndpoints'
-import { getS3VideoIntroUrl } from '@/lib/s3Urls'
+import { getS3ProfileImage, getS3VideoIntroUrl } from '@/lib/s3Urls'
 import { useShortListedCandidatesForJob } from '@/lib/services/useJobs'
 import { useApplicant } from '@/lib/services/useProfile'
 import { AntDesign, FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons'
@@ -93,7 +93,7 @@ const ApplicantForBusiness = () => {
       <ScrollView className='p-4'>
         <View className='flex- flex-row items-center justify-between'>
             <View className='flex flex-row items-start gap-2'>
-                <Image source={{uri: images.companyLogo}} className='size-14 rounded-full' resizeMode='contain' />
+                <Image source={{uri: userProfile?.profileImageUrl ? getS3ProfileImage(userProfile?.profileImageUrl) : images.companyLogo}} className='size-14 rounded-full' resizeMode='contain' />
                 <View>
                     <Text className='font-quicksand-bold text-xl'>{userProfile?.firstName} {userProfile?.lastName}</Text>
                     <Text className='font-quicksand-medium text-md text-gray-600'>

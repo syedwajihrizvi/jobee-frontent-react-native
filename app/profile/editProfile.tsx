@@ -11,8 +11,9 @@ import useAuthStore from "@/store/auth.store";
 import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, User, UserSkill } from "@/type";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Keyboard, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Keyboard, Linking, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function EditProfile() {
   const { isLoading, user: authUser, setUser } = useAuthStore()
@@ -28,6 +29,7 @@ export default function EditProfile() {
   const [skillChunks, setSkillChunks] = useState<UserSkill[][]>([]);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const bottomSheetRef = useRef<BottomSheet>(null)
+  const [uploadedVideoIntro, setUploadedVideoIntro] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [addSkillForm, setAddSkillForm] = useState<AddUserSkillForm>({skill: '', experience: ''})
   const [addEducationForm, setAddEducationForm] = useState<AddUserEducationForm>({institution: '', degree: '', fromYear: '', toYear: ''})
   const [addExperienceForm, setAddExperienceForm] = useState<AddExperienceForm>({title: '', city: '', country: '', company: '', description: '', from: '', to: ''})
@@ -35,7 +37,7 @@ export default function EditProfile() {
   const [isLoadingNewEducation, setIsLoadingNewEducation] = useState(false);
   const [isLoadingNewExperience, setIsLoadingNewExperience] = useState(false);
   const user = authUser as User | null; // Cast once at the top
-  console.log(user?.videoIntroUrl)
+
   function chunkArray(array: UserSkill[], size: number): UserSkill[][] {
     const result: UserSkill[][] = [];
     for (let i = 0; i < array.length; i += size) {
@@ -373,6 +375,73 @@ export default function EditProfile() {
     bottomSheetRef.current?.expand();
   }
 
+  const handleAddUserVideoIntro = async () => {
+    const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert(
+        "Permission Denied",
+        "You need to allow media library access to upload a video. Please enable in settings",
+        [
+          {
+            text: 'Go to Settings',
+            onPress: () => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            }
+          },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+      return;   
+    }
+    Alert.alert(
+        'Add Video Introduction',
+        '',
+        [
+        {
+          text: 'Gallery',
+          onPress: async () => {
+            const galleryResult = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: 'videos',
+              allowsEditing: true,
+              videoMaxDuration: 60,
+              aspect: [4, 3],
+              quality: 1,
+            });
+            if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
+              setUploadedVideoIntro(galleryResult)
+            }
+            return
+          }
+        },
+        {
+          text: 'Camera',
+          onPress: async () => {
+            const galleryResult = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: 'videos',
+              allowsEditing: true,
+              videoMaxDuration: 60,
+              aspect: [4, 3],
+              quality: 1,
+            });
+            if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
+              setUploadedVideoIntro(galleryResult)
+            }
+            return
+          }
+        },
+        { text: 'Cancel', style: 'cancel' }
+        ]
+    )
+  }
+
+  const handleVideoIntroSubmit = async () => {
+    console.log("Submit video intro");
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-white h-full">
       <BackBar label="Edit Profile" />
@@ -453,11 +522,34 @@ export default function EditProfile() {
                         />
                     </TouchableOpacity>
                 </View>
-                {openSection.videoIntro && 
+                {openSection.videoIntro &&
                 <View>
                     {user?.videoIntroUrl ?
                     <UserVideoIntro videoSource={getS3VideoIntroUrl(user.videoIntroUrl) } /> :
-                    <Text>No video introduction provided.</Text>}
+                    <View className="flex flex-col items-center justify-center gap-2">
+                        <Text className="font-quicksand-medium text-md">No video introduction provided. We highly recommend adding one to enhance your profile.</Text>
+                        {(uploadedVideoIntro && uploadedVideoIntro.assets) ? 
+                        <>
+                            <UserVideoIntro videoSource={uploadedVideoIntro.assets[0].uri} />
+                            <View className="flex flex-row w-full gap-4 px-2" style={{marginBottom: keyboardHeight}}>
+                                <TouchableOpacity 
+                                    className="bg-red-500 rounded-lg w-1/2 px-2 py-4 items-center justify-center"
+                                    onPress={() => setUploadedVideoIntro(null)}>
+                                    <Text className="font-quicksand-semibold text-md">Remove</Text>
+                                </TouchableOpacity>
+                            <TouchableOpacity 
+                                className="apply-button rounded-lg w-1/2 px-2 py-4 items-center justify-center"
+                                onPress={handleVideoIntroSubmit}>
+                                <Text className="font-quicksand-semibold text-md">Submit</Text>
+                            </TouchableOpacity>
+                            </View>
+                        </> : 
+                        <TouchableOpacity 
+                            className="apply-button w-1/2 px-2 py-4 items-center justify-center"
+                            onPress={handleAddUserVideoIntro}>
+                            <Text className="font-quicksand-semibold text-md">Add Video Introduction</Text>
+                        </TouchableOpacity>}
+                    </View>}
                 </View>}
             </View>
             <View className="divider"/>
