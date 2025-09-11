@@ -3,6 +3,7 @@ import DocumentModal from '@/components/DocumentModal'
 import UserVideoIntro from '@/components/UserVideoIntro'
 import { images } from '@/constants'
 import { shortListCandidate, unshortListCandidate } from '@/lib/jobEndpoints'
+import { getS3VideoIntroUrl } from '@/lib/s3Urls'
 import { useShortListedCandidatesForJob } from '@/lib/services/useJobs'
 import { useApplicant } from '@/lib/services/useProfile'
 import { AntDesign, FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons'
@@ -215,9 +216,9 @@ const ApplicantForBusiness = () => {
                 </View>
             </TouchableOpacity>
         </View>
-        <View className='mt-4'>
-            <UserVideoIntro videoSource='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'/>
-        </View>
+        {userProfile?.videoIntroUrl && <View className='mt-4'>
+            <UserVideoIntro videoSource={getS3VideoIntroUrl(userProfile.videoIntroUrl)} />
+        </View>}
       </ScrollView>
         <View className='w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center'>
             <TouchableOpacity className='apply-button w-1/2 items-center justify-center h-14'>

@@ -4,6 +4,8 @@ import CustomInput from "@/components/CustomInput";
 import EditProfileCard from "@/components/EditProfileCard";
 import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
+import UserVideoIntro from "@/components/UserVideoIntro";
+import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { addEducation, addExperience, addSkill, editEducation, editExperience } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
 import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, User, UserSkill } from "@/type";
@@ -14,7 +16,7 @@ import { ActivityIndicator, Alert, Keyboard, Platform, SafeAreaView, ScrollView,
 
 export default function EditProfile() {
   const { isLoading, user: authUser, setUser } = useAuthStore()
-  const defaultOpenSectionValue = { general: false, skills: false, summary: false, education: false, experience: false, socials: false, portfolio: false }
+  const defaultOpenSectionValue = { general: false, skills: false, summary: false, education: false, experience: false, socials: false, portfolio: false, videoIntro: false}
   const [openSection, setOpenSection] = useState(defaultOpenSectionValue)
   const [isEditingSummary, setIsEditingSummary] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
@@ -33,6 +35,7 @@ export default function EditProfile() {
   const [isLoadingNewEducation, setIsLoadingNewEducation] = useState(false);
   const [isLoadingNewExperience, setIsLoadingNewExperience] = useState(false);
   const user = authUser as User | null; // Cast once at the top
+  console.log(user?.videoIntroUrl)
   function chunkArray(array: UserSkill[], size: number): UserSkill[][] {
     const result: UserSkill[][] = [];
     for (let i = 0; i < array.length; i += size) {
@@ -400,163 +403,184 @@ export default function EditProfile() {
                     <EditProfileCard label="Phone" value={user?.phoneNumber || ""} />
                     <EditProfileCard label="Location" value={user?.location || ""} />
                 </View>}
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2">
+                <View className="flex flex-row justify-between items-start">
+                    <View className="fkex flex-row items-center gap-2">
+                        <Text className="font-quicksand-bold text-xl">Summary</Text>
+                        {isEditingSummary ? 
+                        <View className="flex flex-row gap-2">
+                            <TouchableOpacity onPress={() => setIsEditingSummary(false)}>
+                                <AntDesign name="check" size={20} color="green" />
+                            </TouchableOpacity>    
+                            <TouchableOpacity onPress={() => setIsEditingSummary(false)}>
+                                <AntDesign name="close" size={20} color="red" />
+                            </TouchableOpacity>  
+                        </View> : <TouchableOpacity onPress={() => setIsEditingSummary(true)}>
+                            <AntDesign name="edit" size={20} color="black" />
+                        </TouchableOpacity>}
                     </View>
-                    <View className="divider"/>
-                    <View className="px-4 py-2">
-                        <View className="flex flex-row justify-between items-start">
-                            <View className="fkex flex-row items-center gap-2">
-                                <Text className="font-quicksand-bold text-xl">Summary</Text>
-                                {isEditingSummary ? 
-                                <View className="flex flex-row gap-2">
-                                    <TouchableOpacity onPress={() => setIsEditingSummary(false)}>
-                                        <AntDesign name="check" size={20} color="green" />
-                                    </TouchableOpacity>    
-                                    <TouchableOpacity onPress={() => setIsEditingSummary(false)}>
-                                        <AntDesign name="close" size={20} color="red" />
-                                    </TouchableOpacity>  
-                                </View> : <TouchableOpacity onPress={() => setIsEditingSummary(true)}>
-                                    <AntDesign name="edit" size={20} color="black" />
-                                </TouchableOpacity>}
-                            </View>
-                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, summary: !prev.summary }))} >
-                                <AntDesign name={openSection.summary ? "up" : "down"} size={20} color="black"/>
-                            </TouchableOpacity>
-                        </View>
-                        {(isEditingSummary || openSection.summary) &&
-                        <View className="flex flex-row flex-wrap">
-                            {isEditingSummary ? <TextInput
-                                placeholder="Enter your summary"
-                                value={user?.summary}
-                                className="w-full p-2 border border-gray-300 rounded-lg"
-                                multiline={true}
-                                textAlignVertical="top"
-                            /> :
-                            <Text className="font-quicksand-semibold text-md text-gray-900">
-                               {user?.summary || "No summary provided."}
-                            </Text>}
-                        </View>}
-                    </View>
-                    <View className="divider"/>
-                    <View className="px-4 py-2">
-                        <View className="flex flex-row justify-between items-start">
-                            <Text className="font-quicksand-bold text-xl">Skills</Text>
-                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, skills: !prev.skills }))}>
-                                <AntDesign 
-                                name={openSection.skills ? "up" : "down"} 
-                                size={20} 
-                                color="black" 
-                                />
-                            </TouchableOpacity>
-                        </View>
-                        {openSection.skills &&
-                        <View className="flex flex-col flex-wrap gap-4 p-2 w-full">
-                            <View className="flex flex-row flex-wrap gap-2">
-                                {user?.skills.map((skill) => (
-                                        <TouchableOpacity 
-                                            className="relative bg-red-100 px-4 py-2 rounded-full flex-row items-center gap-1" 
-                                            onPress={() => handleIsEditingSkill(skill)}
-                                            key={skill.id}>
-                                            <Text className="font-quicksand-semibold text-md">{skill.skill.name}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                            </View>
-                            <TouchableOpacity className="w-2/5" onPress={() => openBottomSheet('skill')}>
-                                <View className="p-4 bg-green-500 rounded-2xl shadow-md flex-row justify-center items-center">
-                                    <Text className="font-quicksand-semibold text-md color-white">Add new skill</Text>
-                                    <AntDesign name="plus" size={18} color="white" className="ml-2" />
-                                </View>
-                            </TouchableOpacity>
-                        </View>}
-                    </View>
-                    <View className="divider"/>
-                    <View className="px-4 py-2 gap-4">
-                        <View className="flex flex-row justify-between items-start">
-                            <Text className="font-quicksand-bold text-xl">Education</Text>
-                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, education: !prev.education }))}>
-                                <AntDesign 
-                                    name={openSection.education ? "up" : "down"} 
-                                    size={20} 
-                                    color="black" 
-                                />
-                            </TouchableOpacity>
-                        </View>
-                        {openSection.education &&
-                        <View className="flex flex-row flex-wrap gap-4">
-                            {/*TODO: Fix edit button placement on the profile cards*/}
-                            {user?.education?.map((edu) => (
-                                <ProfileEducationCard 
-                                    key={edu.id} education={edu}
-                                    onEditEducation={() => handleIsEditingEducation(edu)} />
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, summary: !prev.summary }))} >
+                        <AntDesign name={openSection.summary ? "up" : "down"} size={20} color="black"/>
+                    </TouchableOpacity>
+                </View>
+                {(isEditingSummary || openSection.summary) &&
+                <View className="flex flex-row flex-wrap">
+                    {isEditingSummary ? <TextInput
+                        placeholder="Enter your summary"
+                        value={user?.summary}
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        multiline={true}
+                        textAlignVertical="top"
+                    /> :
+                    <Text className="font-quicksand-semibold text-md text-gray-900">
+                        {user?.summary || "No summary provided."}
+                    </Text>}
+                </View>}
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2">
+                <View className="flex flex-row justify-between items-start">
+                    <Text className="font-quicksand-bold text-xl">
+                        Video Introduction
+                    </Text>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, videoIntro: !prev.videoIntro }))}>
+                        <AntDesign 
+                        name={openSection.videoIntro ? "up" : "down"} 
+                        size={20} 
+                        color="black" 
+                        />
+                    </TouchableOpacity>
+                </View>
+                {openSection.videoIntro && 
+                <View>
+                    {user?.videoIntroUrl ?
+                    <UserVideoIntro videoSource={getS3VideoIntroUrl(user.videoIntroUrl) } /> :
+                    <Text>No video introduction provided.</Text>}
+                </View>}
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2">
+                <View className="flex flex-row justify-between items-start">
+                    <Text className="font-quicksand-bold text-xl">Skills</Text>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, skills: !prev.skills }))}>
+                        <AntDesign 
+                        name={openSection.skills ? "up" : "down"} 
+                        size={20} 
+                        color="black" 
+                        />
+                    </TouchableOpacity>
+                </View>
+                {openSection.skills &&
+                <View className="flex flex-col flex-wrap gap-4 p-2 w-full">
+                    <View className="flex flex-row flex-wrap gap-2">
+                        {user?.skills.map((skill) => (
+                                <TouchableOpacity 
+                                    className="relative bg-red-100 px-4 py-2 rounded-full flex-row items-center gap-1" 
+                                    onPress={() => handleIsEditingSkill(skill)}
+                                    key={skill.id}>
+                                    <Text className="font-quicksand-semibold text-md">{skill.skill.name}</Text>
+                                </TouchableOpacity>
                             ))}
-                            <TouchableOpacity onPress={() => openBottomSheet('education')}>
-                                <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-start items-center">
-                                    <Text className="text-white">Add new education</Text>
-                                    <AntDesign name="plus" size={20} color="white" className="ml-2" />
-                                </View>
-                            </TouchableOpacity>
-                        </View>}
                     </View>
-                    <View className="divider"/>
-                    <View className="px-4 py-2 gap-4">
-                        <View className="flex flex-row justify-between items-start">
-                            <Text className="font-quicksand-bold text-xl">Experience</Text>
-                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, experience: !prev.experience }))}>
-                                <AntDesign 
-                                    name={openSection.experience ? "up" : "down"} 
-                                    size={20} 
-                                    color="black" 
-                                />
-                            </TouchableOpacity>
+                    <TouchableOpacity className="w-2/5" onPress={() => openBottomSheet('skill')}>
+                        <View className="p-4 bg-green-500 rounded-2xl shadow-md flex-row justify-center items-center">
+                            <Text className="font-quicksand-semibold text-md color-white">Add new skill</Text>
+                            <AntDesign name="plus" size={18} color="white" className="ml-2" />
                         </View>
-                        {openSection.experience &&
-                        <View className="flex flex-row flex-wrap gap-4">
-                            {user?.experiences?.map((exp) => (
-                                <ProfileExperienceCard
-                                    key={exp.id} experience={exp} onEditExperience={() => handleIsEditingExperience(exp)}/>
-                            ))}
-                            <TouchableOpacity onPress={() => openBottomSheet('experience')}>
-                                <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-start items-center">
-                                    <Text className="text-white">Add new experience</Text>
-                                    <AntDesign name="plus" size={20} color="white" className="ml-2" />
-                                </View>
-                            </TouchableOpacity>
+                    </TouchableOpacity>
+                </View>}
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2 gap-4">
+                <View className="flex flex-row justify-between items-start">
+                    <Text className="font-quicksand-bold text-xl">Education</Text>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, education: !prev.education }))}>
+                        <AntDesign 
+                            name={openSection.education ? "up" : "down"} 
+                            size={20} 
+                            color="black" 
+                        />
+                    </TouchableOpacity>
+                </View>
+                {openSection.education &&
+                <View className="flex flex-row flex-wrap gap-4">
+                    {/*TODO: Fix edit button placement on the profile cards*/}
+                    {user?.education?.map((edu) => (
+                        <ProfileEducationCard 
+                            key={edu.id} education={edu}
+                            onEditEducation={() => handleIsEditingEducation(edu)} />
+                    ))}
+                    <TouchableOpacity onPress={() => openBottomSheet('education')}>
+                        <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-start items-center">
+                            <Text className="text-white">Add new education</Text>
+                            <AntDesign name="plus" size={20} color="white" className="ml-2" />
                         </View>
-                        }
-                    </View>
-                    <View className="divider"/>
-                   <View className="px-4 py-2">
-                        <View className="flex flex-row justify-between items-start">
-                            <Text className="font-quicksand-bold text-xl">Socials</Text>
-                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, socials: !prev.socials }))}>
-                                <AntDesign 
-                                    name={openSection.socials ? "up" : "down"} 
-                                    size={20} 
-                                    color="black" 
-                                />
-                            </TouchableOpacity>
+                    </TouchableOpacity>
+                </View>}
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2 gap-4">
+                <View className="flex flex-row justify-between items-start">
+                    <Text className="font-quicksand-bold text-xl">Experience</Text>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, experience: !prev.experience }))}>
+                        <AntDesign 
+                            name={openSection.experience ? "up" : "down"} 
+                            size={20} 
+                            color="black" 
+                        />
+                    </TouchableOpacity>
+                </View>
+                {openSection.experience &&
+                <View className="flex flex-row flex-wrap gap-4">
+                    {user?.experiences?.map((exp) => (
+                        <ProfileExperienceCard
+                            key={exp.id} experience={exp} onEditExperience={() => handleIsEditingExperience(exp)}/>
+                    ))}
+                    <TouchableOpacity onPress={() => openBottomSheet('experience')}>
+                        <View className="p-4 bg-green-500 rounded-2xl shadow-md border border-gray-100 flex-row justify-start items-center">
+                            <Text className="text-white">Add new experience</Text>
+                            <AntDesign name="plus" size={20} color="white" className="ml-2" />
                         </View>
-                        {openSection.socials &&
-                        <View className="flex flex-row flex-wrap gap-4">
-                            <Text>Socials</Text> 
-                        </View>}
-                    </View>
-                    <View className="divider"/>
-                    <View className="px-4 py-2">
-                        <View className="flex flex-row justify-between items-start">
-                            <Text className="font-quicksand-bold text-xl">Portfolio</Text>
-                            <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, portfolio: !prev.portfolio }))}>
-                                <AntDesign 
-                                    name={openSection.portfolio ? "up" : "down"} 
-                                    size={20} 
-                                    color="black" 
-                                />
-                            </TouchableOpacity>
-                        </View>
-                        {openSection.portfolio &&
-                        <View className="flex flex-row flex-wrap gap-4">
-                            <Text>Experience</Text> 
-                        </View>}
-                    </View>
+                    </TouchableOpacity>
+                </View>
+                }
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2">
+                <View className="flex flex-row justify-between items-start">
+                    <Text className="font-quicksand-bold text-xl">Socials</Text>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, socials: !prev.socials }))}>
+                        <AntDesign 
+                            name={openSection.socials ? "up" : "down"} 
+                            size={20} 
+                            color="black" 
+                        />
+                    </TouchableOpacity>
+                </View>
+                {openSection.socials &&
+                <View className="flex flex-row flex-wrap gap-4">
+                    <Text>Socials</Text> 
+                </View>}
+            </View>
+            <View className="divider"/>
+            <View className="px-4 py-2">
+                <View className="flex flex-row justify-between items-start">
+                    <Text className="font-quicksand-bold text-xl">Portfolio</Text>
+                    <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, portfolio: !prev.portfolio }))}>
+                        <AntDesign 
+                            name={openSection.portfolio ? "up" : "down"} 
+                            size={20} 
+                            color="black" 
+                        />
+                    </TouchableOpacity>
+                </View>
+                {openSection.portfolio &&
+                <View className="flex flex-row flex-wrap gap-4">
+                    <Text>Experience</Text> 
+                </View>}
+            </View>
         </>}
       </ScrollView>
       <BottomSheet ref={bottomSheetRef} index={-1} snapPoints={["40%"]} enablePanDownToClose>

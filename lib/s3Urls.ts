@@ -8,3 +8,7 @@ export const getS3ProfileImage = (key: string) => {
 export const getS3DocumentUrl = (key: string) => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/user-documents/${key}`;
 };
+
+export const getS3VideoIntroUrl = (key: string) => {
+    return`https://${bucketName}.s3.${region}.amazonaws.com/user-video-intros/${key}`;
+}

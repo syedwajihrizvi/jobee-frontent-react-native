@@ -149,6 +149,7 @@ export const editExperience = async (experienceId: number, updatedExperience: Ad
 export const completeProfile = async (
     document: DocumentPicker.DocumentPickerResult,
     image: ImagePickerResult,
+    videoIntro: ImagePickerResult,
     details: CompleteProfileForm
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
@@ -171,6 +172,16 @@ export const completeProfile = async (
             type
         } as any);
     }
+    if (videoIntro && videoIntro.assets && videoIntro.assets.length > 0) {
+        const localUri = videoIntro.assets[0].uri;
+        const fileName = videoIntro.assets[0].fileName || localUri.split('/').pop() || 'intro.mp4';
+        const type = videoIntro.assets[0].type || 'video/mp4';
+        formData.append('videoIntro', {
+            uri: localUri,
+            name: fileName,
+            type
+        } as any);
+    }
     formData.append('data', JSON.stringify(details));
     try {
         const response = await fetch(
@@ -188,7 +199,6 @@ export const completeProfile = async (
         }
         return null;
     } catch (error) {
-        console.error("Error completing profile:", error);
         return null;
     }
 }

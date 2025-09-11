@@ -1,3 +1,4 @@
+import UserVideoIntro from '@/components/UserVideoIntro';
 import { images } from '@/constants';
 import { completeProfile } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
@@ -7,12 +8,13 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React, { ReactNode, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, Image, KeyboardAvoidingView, Linking, Modal, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const UploadProfilePic = () => {
+const CompleteProfile = () => {
   const { fetchAuthenticatedUser } = useAuthStore();
   const [uploadedResume, setUploadedResume] = useState<DocumentPicker.DocumentPickerResult | null>(null);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<ImagePicker.ImagePickerResult | null>(null)
+  const [uploadedVideoIntro, setUploadedVideoIntro] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
   const [detailsForm, setDetailsForm] = useState<CompleteProfileForm>({
     title: '', city: '',  country: '', summary: '', company: '', position: '', phoneNumber: ''
@@ -20,6 +22,7 @@ const UploadProfilePic = () => {
   const [step, setSteps] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false)
   const translateX = useRef(new Animated.Value(0)).current;
+
   const handleProfileImageCamera = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
@@ -48,6 +51,7 @@ const UploadProfilePic = () => {
       ]
     );
   }
+
   const handleProfileImagePicker = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
@@ -77,6 +81,7 @@ const UploadProfilePic = () => {
       ]
     );
   }
+
   const handleUpload = async () => {
     try {
         const document = await DocumentPicker.getDocumentAsync({
@@ -93,6 +98,103 @@ const UploadProfilePic = () => {
         console.error('Error picking document: ', error);
         Alert.alert('Error', 'Failed to upload document. Please try again.')
     }
+  }
+
+  const handleVideoUpload = async () => {
+    const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert(
+        "Permission Denied",
+        "You need to allow media library access to upload a video. Please enable in settings",
+        [
+          {
+            text: 'Go to Settings',
+            onPress: () => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            }
+          },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+
+      return;
+    }
+    Alert.alert(
+      'Upload Intro Video',
+      '',
+      [
+        {
+          text: 'Gallery',
+          onPress: async () => {
+            const galleryResult = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: 'videos',
+              allowsEditing: true,
+              videoMaxDuration: 60,
+              aspect: [4, 3],
+              quality: 1,
+            });
+            if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
+              setUploadedVideoIntro(galleryResult)
+            }
+            return
+          }
+        },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    )
+  }
+
+
+  const handleVideoRecord = async () => {
+    const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert(
+        "Permission Denied",
+        "You need to allow media library access to upload a video. Please enable in settings",
+        [
+          {
+            text: 'Go to Settings',
+            onPress: () => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            }
+          },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+
+      return;
+    }
+    Alert.alert(
+      'Upload Intro Video',
+      '',
+      [
+        {
+          text: 'Camera',
+          onPress: async () => {
+            const galleryResult = await ImagePicker.launchCameraAsync({
+              mediaTypes: 'videos',
+              allowsEditing: true,
+              videoMaxDuration: 60,
+              aspect: [4, 3],
+              quality: 1,
+            });
+            if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
+              setUploadedVideoIntro(galleryResult)
+            }
+            return
+          }
+        },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    )
   }
 
   const renderProfileImageUri = () => {
@@ -117,7 +219,12 @@ const UploadProfilePic = () => {
   const handleDone = async () => {
     setIsSubmitting(true);
     try {
-        await completeProfile(uploadedResume!, uploadedProfileImage!, detailsForm);
+        const res = await completeProfile(uploadedResume!, uploadedProfileImage!, uploadedVideoIntro!,detailsForm);
+        if (res === null) {
+            Alert.alert('Error', 'Failed to complete profile. Please try again.');
+            setIsSubmitting(false);
+            return;
+        }
         setShowCompleteProfileModal(true);
         await fetchAuthenticatedUser();
     } catch (error) {
@@ -279,6 +386,38 @@ const UploadProfilePic = () => {
       ),
     },
     {
+      stepName: 'Upload 60 Second Intro Video (Optional but recommended)',
+      element: (
+        <View key={3} className='w-full h-full items-center justify-center gap-4'>
+          {uploadedVideoIntro && uploadedVideoIntro.assets && uploadedVideoIntro.assets.length > 0 && (
+            <UserVideoIntro videoSource={uploadedVideoIntro.assets[0].uri} />
+          )}
+          <Text className='text-center font-quicksand-medium px-4 text-md'>
+            This video will be used to introduce you to potential employers.
+          </Text>
+          {uploadedVideoIntro ? 
+          <TouchableOpacity 
+            className='bg-red-300 px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md'
+            onPress={() => setUploadedVideoIntro(null)}>
+            <Text className="font-quicksand-bold text-white">Remove Video</Text>
+          </TouchableOpacity> :
+          <View className='w-full flex-row gap-2'>
+            <TouchableOpacity 
+              className="apply-button px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md"
+              onPress={handleVideoUpload}>
+              <Text className="font-quicksand-bold text-white">Upload Video</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              className="apply-button px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md"
+              onPress={handleVideoRecord}>
+              <Text className="font-quicksand-bold text-white">Record Video</Text>
+            </TouchableOpacity>
+          </View> 
+          }
+        </View>
+      )
+    },
+    {
       stepName: '',
       element: (
         <View key={2} className="w-full h-full items-center justify-center gap-4">
@@ -313,9 +452,11 @@ const UploadProfilePic = () => {
       setSteps(step - 1);
     }
   };
-
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Animated.View
         style={{
           flexDirection: 'row',
@@ -333,13 +474,15 @@ const UploadProfilePic = () => {
               width: Dimensions.get('window').width,
             }}
           >
-            {screen.stepName &&<Text className="font-quicksand-bold text-2xl top-20 text-gray-700">
+            {screen.stepName &&
+            <Text className="font-quicksand-bold text-2xl text-gray-700 text-center">
               {index + 1}) {screen.stepName}
             </Text>}
             <View className="flex-1 items-center justify-center px-4">{screen.element}</View>
           </View>
         ))}
       </Animated.View>
+      </KeyboardAvoidingView>
       <View className="flex flex-row items-center justify-center w-full gap-4 p-4">
         <TouchableOpacity
           className={`${
@@ -406,4 +549,4 @@ const UploadProfilePic = () => {
   );
 };
 
-export default UploadProfilePic;
+export default CompleteProfile;

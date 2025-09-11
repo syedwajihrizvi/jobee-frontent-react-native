@@ -70,7 +70,7 @@ const Index = () => {
 
   const handleProfileComplete = () => {
     setShowProfileCompleteReminder(false);
-    router.push('/profile/completeProfile/uploadProfilePic');
+    router.push('/profile/completeProfile');
   }
     
   const handleProfileLater = () => {

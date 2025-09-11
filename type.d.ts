@@ -131,6 +131,7 @@ export type User = {
     favoriteJobs: {id:number}[];
     documents: UserDocument[],
     primaryResume: UserDocument | null
+    videoIntroUrl: string | null;
 }
 
 export type BusinessUser = {
