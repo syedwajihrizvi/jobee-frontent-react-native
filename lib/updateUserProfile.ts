@@ -29,6 +29,50 @@ export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     return null;
 };
 
+export const updateUserVideoIntro = async (videoIntro: ImagePickerResult) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData()
+    if (videoIntro && videoIntro.assets && videoIntro.assets.length > 0) {
+        const localUri = videoIntro.assets[0].uri;
+        const fileName = videoIntro.assets[0].fileName || localUri.split('/').pop() || 'intro.mp4';
+        const type = videoIntro.assets[0].type || 'video/mp4';
+        formData.append('videoIntro', {
+            uri: localUri,
+            name: fileName,
+            type
+        } as any);
+    }
+    const result = await fetch(`${PROFILES_API_URL}/update-video-intro`, {
+        method: 'PATCH',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+    if (result.status === 200) {
+        const data = await result.json();
+        return data;
+    }
+    return null
+}
+
+export const removeVideoIntro = async () => {
+    console.log("Removing video intro...");
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/remove-video-intro`, {
+        method: 'PATCH',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        }
+    });
+    if (result.status === 204) {
+        return true;
+    }
+    return false;
+}
+
 export const favoriteJob = async (jobId: number) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;

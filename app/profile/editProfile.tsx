@@ -6,7 +6,7 @@ import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
 import UserVideoIntro from "@/components/UserVideoIntro";
 import { getS3VideoIntroUrl } from "@/lib/s3Urls";
-import { addEducation, addExperience, addSkill, editEducation, editExperience } from "@/lib/updateUserProfile";
+import { addEducation, addExperience, addSkill, editEducation, editExperience, removeVideoIntro, updateUserVideoIntro } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
 import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, Education, Experience, User, UserSkill } from "@/type";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -34,6 +34,7 @@ export default function EditProfile() {
   const [addEducationForm, setAddEducationForm] = useState<AddUserEducationForm>({institution: '', degree: '', fromYear: '', toYear: ''})
   const [addExperienceForm, setAddExperienceForm] = useState<AddExperienceForm>({title: '', city: '', country: '', company: '', description: '', from: '', to: ''})
   const [isLoadingNewSkill, setIsLoadingNewSkill] = useState(false);
+  const [isLoadingNewVideoIntro, setIsLoadingNewVideoIntro] = useState(false);
   const [isLoadingNewEducation, setIsLoadingNewEducation] = useState(false);
   const [isLoadingNewExperience, setIsLoadingNewExperience] = useState(false);
   const user = authUser as User | null; // Cast once at the top
@@ -439,8 +440,56 @@ export default function EditProfile() {
   }
 
   const handleVideoIntroSubmit = async () => {
-    console.log("Submit video intro");
+    setIsLoadingNewVideoIntro(true);
+    try {
+        const result = await updateUserVideoIntro(uploadedVideoIntro!);
+        if (!result) {
+            Alert.alert("Failed to upload video introduction. Please try again.");
+            return;
+        }
+        if (user) {
+            setUser({...user, videoIntroUrl: result.videoIntroUrl})
+        }
+    } catch (error) {
+        
+    } finally {
+        setIsLoadingNewVideoIntro(false);
+    }
   }
+
+const handleRemoveVideoIntro = () => {
+    Alert.alert(
+        "Remove Video Introduction",
+        "Are you sure you want to remove your video introduction?",
+        [
+        { text: "Cancel", style: "cancel" },
+        {
+            text: "Remove",
+            style: "destructive",
+            onPress: () => {
+            if (!user) return;
+
+            setIsLoadingNewVideoIntro(true);
+
+            // run async logic without blocking the alert system
+            (async () => {
+                try {
+                const result = await removeVideoIntro();
+                if (result) {
+                    setUploadedVideoIntro(null)
+                    setUser({ ...user, videoIntroUrl: null });
+                }
+                } catch (error) {
+                console.error("Error removing video intro:", error);
+                } finally {
+                setIsLoadingNewVideoIntro(false);
+                }
+            })();
+            },
+        },
+        ]
+    );
+};
 
   return (
     <SafeAreaView className="flex-1 bg-white h-full">
@@ -523,9 +572,18 @@ export default function EditProfile() {
                     </TouchableOpacity>
                 </View>
                 {openSection.videoIntro &&
-                <View>
+                <View className="p-4">
                     {user?.videoIntroUrl ?
-                    <UserVideoIntro videoSource={getS3VideoIntroUrl(user.videoIntroUrl) } /> :
+                    <View className="flex flex-col items-center justify-center gap-2">
+                        <UserVideoIntro videoSource={getS3VideoIntroUrl(user.videoIntroUrl) } />
+                        <TouchableOpacity 
+                            className="bg-red-500 rounded-lg w-1/2 px-2 py-4 items-center justify-center"
+                            onPress={() => handleRemoveVideoIntro()}
+                            disabled={isLoadingNewVideoIntro}>
+                            {isLoadingNewVideoIntro ? <ActivityIndicator color="white"/> :
+                            <Text className="font-quicksand-semibold text-md">Remove</Text>}
+                        </TouchableOpacity>
+                    </View> :
                     <View className="flex flex-col items-center justify-center gap-2">
                         <Text className="font-quicksand-medium text-md">No video introduction provided. We highly recommend adding one to enhance your profile.</Text>
                         {(uploadedVideoIntro && uploadedVideoIntro.assets) ? 
@@ -533,21 +591,22 @@ export default function EditProfile() {
                             <UserVideoIntro videoSource={uploadedVideoIntro.assets[0].uri} />
                             <View className="flex flex-row w-full gap-4 px-2" style={{marginBottom: keyboardHeight}}>
                                 <TouchableOpacity 
+                                    className="apply-button rounded-lg w-1/2 px-2 py-4 items-center justify-center"
+                                    onPress={handleVideoIntroSubmit}
+                                    disabled={isLoadingNewVideoIntro}>
+                                    {isLoadingNewVideoIntro ? <ActivityIndicator color="white"/> : <Text className="font-quicksand-semibold text-md">Submit</Text>}
+                                </TouchableOpacity>
+                                <TouchableOpacity 
                                     className="bg-red-500 rounded-lg w-1/2 px-2 py-4 items-center justify-center"
                                     onPress={() => setUploadedVideoIntro(null)}>
                                     <Text className="font-quicksand-semibold text-md">Remove</Text>
                                 </TouchableOpacity>
-                            <TouchableOpacity 
-                                className="apply-button rounded-lg w-1/2 px-2 py-4 items-center justify-center"
-                                onPress={handleVideoIntroSubmit}>
-                                <Text className="font-quicksand-semibold text-md">Submit</Text>
-                            </TouchableOpacity>
                             </View>
                         </> : 
                         <TouchableOpacity 
                             className="apply-button w-1/2 px-2 py-4 items-center justify-center"
                             onPress={handleAddUserVideoIntro}>
-                            <Text className="font-quicksand-semibold text-md">Add Video Introduction</Text>
+                            <Text className="font-quicksand-semibold text-md">Add Video</Text>
                         </TouchableOpacity>}
                     </View>}
                 </View>}
