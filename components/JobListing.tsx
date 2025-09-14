@@ -1,4 +1,4 @@
-import { formatDate } from '@/lib/utils';
+import { formatDate, getApplicationStatus } from '@/lib/utils';
 import useAuthStore from '@/store/auth.store';
 import { Job } from '@/type';
 import { router } from 'expo-router';
@@ -15,9 +15,9 @@ const JobListing = (
   const renderQuickApply = () => {
     if (isAuthenticated && !canQuickApply) {
       return (
-        <View className='mt-4 w-1/3'>
+        <View className='mt-4 w-1/4'>
           <Text className='text-center font-quicksand-semibold text-sm text-white bg-green-500 rounded-full px-3 py-1'>
-            Already Applied
+            Applied
           </Text>
         </View>
       )
@@ -43,9 +43,11 @@ const JobListing = (
           <CompanyInformation company={job.businessName} />
           {showFavorite && <FavoriteJob jobId={job.id} />}         
           {(showStatus && status) && 
-          <Text className='font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full'>{status}</Text>}
+          <Text className='font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full'>
+            {getApplicationStatus(status)}
+          </Text>}
         </View>
-        <Text className='font-quicksand-bold text-2xl'>{job.title}</Text>
+        <Text className='font-quicksand-bold text-xl'>{job.title}</Text>
         <Text className='font-quicksand-medium text-lg'>{job.location}</Text>
         <Text className='font-quicksand-semibold text-sm'>${job.minSalary} - ${job.maxSalary}</Text>
         {canQuickApply && <Text className='font-quicksand-semibold text-sm'>Deadline: {formatDate(job.appDeadline)}</Text>}

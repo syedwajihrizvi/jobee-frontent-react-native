@@ -10,7 +10,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, router } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, FlatList, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, FlatList, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const screenWidth = Dimensions.get('window').width;
@@ -41,26 +42,24 @@ const Index = () => {
   const user = authUser as (User | null)
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(!user?.profileComplete);
   const [localApplyJobs, setLocalApplyJobs] = useState<number[]>(appliedJobs || []);
-  const slideAnim = useRef(new Animated.Value(screenWidth)).current;
+  const slideX = useSharedValue(screenWidth);
   const locationInputRef = useRef<TextInput>(null);
 
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: slideX.value }],
+    };
+  });
   const openFilters = () => {
+    slideX.value = withTiming(0, { duration: 300 });
     setIsOpen(true);
-    Animated.timing(slideAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: false
-    }).start();
+    setTempFilters({...filters});
+    setTempFilterCount(filterCount);
   }
 
   const closeFilters = () => {
-    Animated.timing(slideAnim, {
-      toValue: screenWidth,
-      duration: 300,
-      useNativeDriver: false
-    }).start(() => {
-      setIsOpen(false);
-    });
+    slideX.value = withTiming(screenWidth, { duration: 300 });
+    setIsOpen(false)
   }
 
   const handleSearchSubmit = (text: string) => {
@@ -170,7 +169,7 @@ const Index = () => {
   const canQuickApply = (jobId: number) => {
     return !isAppliedJobsLoading && (!appliedJobs?.includes(jobId) && !localApplyJobs.includes(jobId)) && !hasUserAppliedToJob(jobId);
   }
-
+  
   return (
     <SafeAreaView className='relative flex-1 bg-white pb-20'>
         <View className='w-full flex-row items-center justify-center px-8 gap-4'>
@@ -218,120 +217,128 @@ const Index = () => {
               top: 0,
               left: 0,
               width: '100%',
-              height: '100%',
+              height: '200%',
               backgroundColor: 'rgba(0, 0, 0, 0.5)',
               zIndex: 9,  
             }}/>
         </TouchableWithoutFeedback>
-        <Animated.View
-          className='animated-view'
-          style={{
-            transform: [{translateX: slideAnim}],
-            zIndex: 100,
-          }}>
-          <View>
-            <Text className="font-quicksand-bold text-2xl text-gray-900 text-center my-4">Filter Jobs</Text>
-              <View>
-                <Text className='font-quicksand-medium text-lg text-gray-900'>Location</Text>
-                <TextInput
-                  ref={locationInputRef}
-                  className='border border-black rounded-lg p-3 mt-2'
-                  placeholder='e.g. New York, San Francisco'
-                  returnKeyType='done'
-                  onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
-                />
-                <View className='flex-row flex-wrap gap-2 mt-3'>
-                  {tempFilters.locations.map((location, index) => (
-                    <TouchableOpacity key={index}>
-                        <View className="bg-green-100 px-3 py-1 rounded-full">
-                            <Text className="text-green-800 font-quicksand-medium">{location}</Text>
-                        </View>
-                    </TouchableOpacity>   
-                  ))}
-                </View>
-              </View>
-              <View className='divider'/>
-              <View>
-                <Text className='font-quicksand-medium text-lg text-gray-900'>Companies</Text>
-                <TextInput
-                  ref={locationInputRef}
-                  className='border border-black rounded-lg p-3 mt-2'
-                  placeholder='e.g. Google, Microsoft'
-                  returnKeyType='done'
-                  onSubmitEditing={(event) => addCompany(event.nativeEvent.text.trim())}
-                />
-                <View className='flex-row flex-wrap gap-2 mt-3'>
-                  {tempFilters.companies?.map((company, index) => (
-                    <TouchableOpacity key={index}>
-                        <View className="bg-green-100 px-3 py-1 rounded-full">
-                            <Text className="text-green-800 font-quicksand-medium">{company}</Text>
-                        </View>
-                    </TouchableOpacity>   
-                  ))}
-                </View>
-              </View>
-              <View className='divider'/>
-              <View>
-                <Text className='font-quicksand-medium text-lg text-gray-900'>Skills</Text>
-                <TextInput
-                  ref={locationInputRef}
-                  className='border border-black rounded-lg p-3 mt-2'
-                  placeholder='e.g. JavaScript, Python'
-                  returnKeyType='done'
-                  onSubmitEditing={(event) => addTag(event.nativeEvent.text.trim())}
-                />
-                <View className='flex-row flex-wrap gap-2 mt-3'>
-                  {tempFilters.tags.map((tag, index) => (
-                    <TouchableOpacity key={index}>
-                        <View className="bg-green-100 px-3 py-1 rounded-full">
-                            <Text className="text-green-800 font-quicksand-medium">{tag}</Text>
-                        </View>
-                    </TouchableOpacity>   
-                  ))}
-                </View>
-              </View>
-              <View className='divider'/>
-              <View className='flex flex-row justify-between items-center gap-2'>
-                <View className='w-1/2'>
-                  <Text>Min Salary</Text>
+          <Animated.View
+            className='animated-view'
+            style={[
+                {
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: screenWidth * 0.8,
+                  height: '150%',
+                  backgroundColor: 'white',
+                  zIndex: 100,
+                },
+                animatedStyle,
+              ]}>
+            <View>
+              <Text className="font-quicksand-bold text-2xl text-gray-900 text-center my-4">Filter Jobs</Text>
+                <View>
+                  <Text className='font-quicksand-medium text-lg text-gray-900'>Location</Text>
                   <TextInput
                     ref={locationInputRef}
                     className='border border-black rounded-lg p-3 mt-2'
+                    placeholder='e.g. New York, San Francisco'
                     returnKeyType='done'
-                    placeholder='e.g. 50000'
-                    onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
+                    onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
                   />
+                  <View className='flex-row flex-wrap gap-2 mt-3'>
+                    {tempFilters.locations.map((location, index) => (
+                      <TouchableOpacity key={index}>
+                          <View className="bg-green-100 px-3 py-1 rounded-full">
+                              <Text className="text-green-800 font-quicksand-medium">{location}</Text>
+                          </View>
+                      </TouchableOpacity>   
+                    ))}
+                  </View>
                 </View>
-                <View className='w-1/2'>
-                  <Text>Max Salary</Text>
+                <View className='divider'/>
+                <View>
+                  <Text className='font-quicksand-medium text-lg text-gray-900'>Companies</Text>
                   <TextInput
                     ref={locationInputRef}
                     className='border border-black rounded-lg p-3 mt-2'
-                    placeholder='e.g. 150000'
+                    placeholder='e.g. Google, Microsoft'
                     returnKeyType='done'
-                    onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
+                    onSubmitEditing={(event) => addCompany(event.nativeEvent.text.trim())}
                   />
+                  <View className='flex-row flex-wrap gap-2 mt-3'>
+                    {tempFilters.companies?.map((company, index) => (
+                      <TouchableOpacity key={index}>
+                          <View className="bg-green-100 px-3 py-1 rounded-full">
+                              <Text className="text-green-800 font-quicksand-medium">{company}</Text>
+                          </View>
+                      </TouchableOpacity>   
+                    ))}
+                  </View>
                 </View>
-              </View>
-                <View className='flex-row justify-center items-center gap-2'>
-                  <TouchableOpacity 
-                    className='mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center'
-                    onPress={handleFilterApply}>
-                    <Text className='font-quicksand-semibold text-md text-white'>
-                        Apply
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    className='mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center'
-                    onPress={handleClearFilters}>
-                    <Text className='font-quicksand-semibold text-md text-white'>
-                        Clear
-                    </Text>
-                  </TouchableOpacity>
+                <View className='divider'/>
+                <View>
+                  <Text className='font-quicksand-medium text-lg text-gray-900'>Skills</Text>
+                  <TextInput
+                    ref={locationInputRef}
+                    className='border border-black rounded-lg p-3 mt-2'
+                    placeholder='e.g. JavaScript, Python'
+                    returnKeyType='done'
+                    onSubmitEditing={(event) => addTag(event.nativeEvent.text.trim())}
+                  />
+                  <View className='flex-row flex-wrap gap-2 mt-3'>
+                    {tempFilters.tags.map((tag, index) => (
+                      <TouchableOpacity key={index}>
+                          <View className="bg-green-100 px-3 py-1 rounded-full">
+                              <Text className="text-green-800 font-quicksand-medium">{tag}</Text>
+                          </View>
+                      </TouchableOpacity>   
+                    ))}
+                  </View>
                 </View>
-              
-          </View>
-        </Animated.View>
+                <View className='divider'/>
+                <View className='flex flex-row justify-between items-center gap-2'>
+                  <View className='w-1/2'>
+                    <Text>Min Salary</Text>
+                    <TextInput
+                      ref={locationInputRef}
+                      className='border border-black rounded-lg p-3 mt-2'
+                      returnKeyType='done'
+                      placeholder='e.g. 50000'
+                      onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
+                    />
+                  </View>
+                  <View className='w-1/2'>
+                    <Text>Max Salary</Text>
+                    <TextInput
+                      ref={locationInputRef}
+                      className='border border-black rounded-lg p-3 mt-2'
+                      placeholder='e.g. 150000'
+                      returnKeyType='done'
+                      onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
+                    />
+                  </View>
+                </View>
+                  <View className='flex-row justify-center items-center gap-2'>
+                    <TouchableOpacity 
+                      className='mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center'
+                      onPress={handleFilterApply}>
+                      <Text className='font-quicksand-semibold text-md text-white'>
+                          Apply
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      className='mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center'
+                      onPress={handleClearFilters}>
+                      <Text className='font-quicksand-semibold text-md text-white'>
+                          Clear
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                
+            </View>
+          </Animated.View>
         </>
       )}
       <QuickApplyModal 

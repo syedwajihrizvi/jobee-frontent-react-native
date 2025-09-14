@@ -1,9 +1,9 @@
 import UserVideoIntro from '@/components/UserVideoIntro';
 import { images } from '@/constants';
 import { completeProfile } from '@/lib/updateUserProfile';
+import { convert10DigitNumberToPhoneFormat } from '@/lib/utils';
 import useAuthStore from '@/store/auth.store';
 import { CompleteProfileForm } from '@/type';
-import { Entypo } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
@@ -16,6 +16,7 @@ const CompleteProfile = () => {
   const { fetchAuthenticatedUser } = useAuthStore();
   const viewRef = useRef<KeyboardAvoidingView | null>(null);
   const width = Dimensions.get('window').width;
+  const phoneNumberRef = useRef<TextInput | null>(null);
   const [keyboardUp, setKeyboardUp] = useState(false);
   const [resumeTitle, setResumeTitle] = useState('');
   const [uploadedResume, setUploadedResume] = useState<DocumentPicker.DocumentPickerResult | null>(null);
@@ -296,11 +297,14 @@ const CompleteProfile = () => {
                 {renderUploadedResumeInfo()}
             </View>
             </> : 
-            <Entypo name="text-document" size={64} color="black" />}
+            <View>
+              <Text className='text-center font-quicksand-bold text-2xl text-gray-700'>Add your resume.</Text>  
+              <Text className='text-center font-quicksand text-gray-600'>This is your opportunity to showcase your skills and experience.</Text>
+            </View>}
             <View className="flex flex-col gap-4 mt-6">
               <TextInput
                 placeholder='Give your resume a title (e.g. My Resume)'
-                className="rounded-lg px-4 py-3 border border-gray-500 shadow-sm text-center"
+                className="rounded-lg px-4 py-3 border border-gray-500 shadow-sm"
                 value={resumeTitle}
                 onChangeText={(text) => setResumeTitle(text)}
               />
@@ -348,7 +352,7 @@ const CompleteProfile = () => {
                     value={detailsForm.city}
                     onChangeText={(text) => setDetailsForm({...detailsForm, city: text})}
                     className='form-input__input'
-                    placeholder="eg. New York, NY"
+                    placeholder="eg. Seattle, WA"
                 />
             </View>  
             <View className='form-input w-1/2'>
@@ -357,19 +361,20 @@ const CompleteProfile = () => {
                     value={detailsForm.country}
                     onChangeText={(text) => setDetailsForm({...detailsForm, country: text})}
                     className='form-input__input'
-                    placeholder="eg. New York, NY"
+                    placeholder="eg. USA"
                 />
             </View>            
           </View>
           <View className='w-full flex-row'>
             <View className='form-input w-full'>
                 <Text className='form-input__label'>Phone Number (optional but recommended)</Text>
-                <TextInput 
+                <TextInput
                     value={detailsForm.phoneNumber}
                     onChangeText={(text) => setDetailsForm({...detailsForm, phoneNumber: text})}
                     keyboardType='phone-pad'
                     className='form-input__input'
                     placeholder="eg. (123) 456-7890"
+                    onEndEditing={() => setDetailsForm({...detailsForm, phoneNumber: convert10DigitNumberToPhoneFormat(detailsForm.phoneNumber)})}
                 />
             </View>            
           </View>

@@ -86,3 +86,11 @@ export const getApplicationStatus = (status: string) => {
       return "Canceled";
   }
 }
+
+export const convert10DigitNumberToPhoneFormat = (num: string) => {
+  if (num.length !== 10) return num;
+  const areaCode = num.slice(0, 3);
+  const centralOfficeCode = num.slice(3, 6);
+  const lineNumber = num.slice(6);
+  return `(${areaCode}) ${centralOfficeCode}-${lineNumber}`;
+}
