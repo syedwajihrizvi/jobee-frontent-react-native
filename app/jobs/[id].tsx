@@ -153,7 +153,7 @@ const JobDetails = () => {
       </View>}
       <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
         <TouchableOpacity 
-          className='apply-button w-4/6 items-center justify-center h-14'
+          className='btn btn--green w-3/5 h-14 items-center'
           onPress={jobApplication ? handleViewApplicationBottomOpen : handleApplyBottomOpen}>
           <Text className='font-quicksand-semibold text-md'>
             {jobApplication ? 'View Application Status' : 'Apply Now'}
@@ -194,12 +194,12 @@ const JobDetails = () => {
             openCoverLetterDropdown={openCoverLetterDropdown} setOpenCoverLetterDropdown={setOpenCoverLetterDropdown} userDocuments={userDocuments}
             isSubmittingApplication={isSubmittingApplication} handleSubmitApplication={handleSubmitApplication} closeSheet={() => applyBottomRef.current?.close()}
             /> : 
-            <View className='flex-1 justify-center items-center px-4'>
+            <View className='flex-1 justify-center items-center px-4 w-full'>
               <Text className='font-quicksand-bold text-lg'>Sign up or login to get started</Text>
-              <TouchableOpacity className='apply-button p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
+              <TouchableOpacity className='btn btn--green w-1/2' onPress={() => router.push('/(auth)/sign-in')}>
                 <Text>Create an Account</Text>
               </TouchableOpacity>
-              <TouchableOpacity className='apply-button p-4 w-full rounded-lg mt-4 mb-2 items-center' onPress={() => router.push('/(auth)/sign-in')}>
+              <TouchableOpacity className='btn btn--green w-1/2' onPress={() => router.push('/(auth)/sign-in')}>
                 <Text>Sign In</Text>
               </TouchableOpacity>
             </View>}

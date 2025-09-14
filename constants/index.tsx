@@ -1,5 +1,5 @@
 import resumeImage from "@/assets/images/sampleResume.jpg";
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { Feather } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 
 import { ReactNode } from "react";
@@ -21,8 +21,8 @@ export enum UserDocumentType {
 }
 
 export const profileLinkInfo : {label: string, icon: ReactNode, href: string}[] = [
-    {'label': 'Edit Profile', 'icon': <AntDesign name="user" size={28} color="black"/>, 'href': '/profile/editProfile'},
-    {'label': 'Job Applied To', 'icon': <AntDesign name="file" size={28} color="black"/>, 'href': '/profile/appliedJobs'},
-    {'label': 'Favorite Jobs', 'icon': <AntDesign name="star" size={28} color="black"/>, 'href': '/profile/favoriteJobs'},
+    {'label': 'Edit Profile', 'icon': <Feather name="user" size={28} color="black"/>, 'href': '/profile/editProfile'},
+    {'label': 'Job Applied To', 'icon': <Feather name="file" size={28} color="black"/>, 'href': '/profile/appliedJobs'},
+    {'label': 'Favorite Jobs', 'icon': <Feather name="star" size={28} color="black"/>, 'href': '/profile/favoriteJobs'},
     {'label': 'Manage Documents', 'icon': <Entypo name="documents" size={28} color="black"/>, 'href': '/profile/manageDocs'}
 ]

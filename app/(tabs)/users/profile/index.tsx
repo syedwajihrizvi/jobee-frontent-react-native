@@ -1,3 +1,4 @@
+import BackBar from '@/components/BackBar';
 import ProfileLink from '@/components/ProfileLink';
 import { images, profileLinkInfo } from '@/constants/index';
 import { signOut } from '@/lib/auth';
@@ -5,6 +6,7 @@ import { getS3ProfileImage } from '@/lib/s3Urls';
 import { updateUserProfileImage } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
 import { User } from '@/type';
+import { Feather } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import * as ImagePicker from 'expo-image-picker';
@@ -104,18 +106,12 @@ const Profile = () => {
   } 
 
   return (
-    <SafeAreaView className="flex-1 bg-white h-full p-4">
+    <SafeAreaView className="flex-1 bg-white h-full">
+      <BackBar label="Profile" />
       {
         isLoading ? 
         <ActivityIndicator size="large" color="#0000ff" className='mt-20'/> :
-        <>
-          <View className='flex-row w-full justify-between items-center'>
-            <TouchableOpacity onPress={() => router.back()} >
-              <AntDesign name="arrow-left" size={24} color="black"/>
-            </TouchableOpacity>
-            <Text className='text-lg font-semibold '>Profile</Text>
-            <View style={{width:24}}/>
-          </View>
+        <View className='p-4'>
           <View className='flex flex-row items-start'>
             <TouchableOpacity className='relative' onPress={handleProfileImagePicker}>
               {
@@ -140,12 +136,12 @@ const Profile = () => {
                 onPress={() => router.push(link.href as any)} />
             ))}
             <ProfileLink 
-              icon={<AntDesign name="calendar" size={28} color="black"/>}
+              icon={<Feather name="calendar" size={28} color="black"/>}
               label="Upcoming Interviews" 
               onPress={() => router.push(`/profile/interviews?userId=${(user as User)?.id}`)}
               rightIcon={true} />
             <ProfileLink 
-              icon={<AntDesign name="setting" size={28} color="black"/>}
+              icon={<Feather name="settings" size={28} color="black"/>}
               label="Account Settings" 
               onPress={() => console.log("Account Settings Pressed")}
               rightIcon={true} />
@@ -155,7 +151,7 @@ const Profile = () => {
               onPress={handleSignOut}
               rightIcon={false} />
           </View>
-        </>}
+        </View>}
     </SafeAreaView>
   )
 }

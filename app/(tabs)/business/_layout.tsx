@@ -1,5 +1,5 @@
+import { Feather } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import Entypo from '@expo/vector-icons/Entypo';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
@@ -30,28 +30,28 @@ const TabsLayout = () => {
           name="jobs/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <Entypo name="briefcase" size={size} color={color} />
+              <Feather name="briefcase" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 
           name="messages/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="message1" size={size} color={color} />
+              <Feather name="message-circle" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 
           name="calendar/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="calendar" size={size} color={color} />
+              <Feather name="calendar" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 
           name="profile/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="user" size={size} color={color} />
+              <Feather name="user" size={size} color={color} />
             )
           }}/>
     </Tabs>

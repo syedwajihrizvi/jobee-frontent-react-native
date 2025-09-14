@@ -2,7 +2,7 @@ import BackBar from '@/components/BackBar'
 import CompanyInformation from '@/components/CompanyInformation'
 import { images } from '@/constants'
 import { useInterviewDetails } from '@/lib/services/useProfile'
-import { convertTo12Hour } from '@/lib/utils'
+import { convertTo12Hour, getInterviewStyle } from '@/lib/utils'
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import React from 'react'
@@ -47,7 +47,7 @@ const InterviewDetails = () => {
                     {interviewDetails?.timezone}
                 </Text>
                 <Text className='font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full'>
-                    {interviewDetails?.interviewType}
+                    {getInterviewStyle(interviewDetails?.interviewType!)}
                 </Text>
             </View>
             <View className='mt-4 flex flex-row flex-wrap gap-2'>

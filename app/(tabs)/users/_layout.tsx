@@ -1,5 +1,5 @@
 import useAuthStore from '@/store/auth.store';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
@@ -7,11 +7,12 @@ const TabsLayout = () => {
   const { isAuthenticated } = useAuthStore();
   return (
     <Tabs screenOptions={{
-      headerShown: false, tabBarShowLabel: false, 
+      headerShown: false, tabBarShowLabel: false,
+      tabBarActiveTintColor: '#22c55e',
       tabBarStyle: isAuthenticated ? {borderTopLeftRadius: 40, 
       borderTopRightRadius: 40, borderBottomLeftRadius: 40,
       display: 'flex', 
-      flexDirection: 'row', justifyContent: 'space-around', 
+      flexDirection: 'row', justifyContent: 'space-around',
       alignItems: 'center', 
       borderTopWidth: 0, borderBottomWidth: 0,
       borderBottomRightRadius: 40,
@@ -24,28 +25,28 @@ const TabsLayout = () => {
           name="jobs/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="home" size={size} color={color} />
+              <Feather name="home" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 
           name="messages/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="message" size={size} color={color} />
+              <Feather name="message-circle" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 
           name="calendar/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="calendar" size={size} color={color} />
+              <Feather name="calendar" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 
           name="profile/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="user" size={size} color={color} />
+              <Feather name="user" size={size} color={color} />
             )
           }}/>
     </Tabs>

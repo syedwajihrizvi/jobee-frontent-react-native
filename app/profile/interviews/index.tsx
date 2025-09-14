@@ -1,7 +1,7 @@
 import BackBar from '@/components/BackBar'
 import CompanyInformation from '@/components/CompanyInformation'
 import { useProfileInterviews } from '@/lib/services/useProfile'
-import { convertTo12Hour } from '@/lib/utils'
+import { convertTo12Hour, getInterviewStyle } from '@/lib/utils'
 import { router, useLocalSearchParams } from 'expo-router'
 import React from 'react'
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native'
@@ -27,7 +27,7 @@ const UpcomingInterviews = () => {
                     </View>
                     <View>
                         <View className='flex flex-row items-center justify-between'>
-                            <Text className='font-quicksand-bold text-2xl'>{item.jobTitle}</Text>
+                            <Text className='font-quicksand-bold text-xl'>{item.jobTitle}</Text>
                             <Text className='font-quicksand-semibold text-sm'>{item.interviewDate}</Text>
                         </View>
                         <View>
@@ -44,7 +44,7 @@ const UpcomingInterviews = () => {
                             {item.timezone}
                         </Text>
                         <Text className='font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full'>
-                            {item.interviewType}
+                            {getInterviewStyle(item.interviewType)}
                         </Text>
                     </View>
                 </TouchableOpacity>

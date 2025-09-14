@@ -5,7 +5,6 @@ import React from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
 const ApplicationInfo = ({job, application}: {job: Job, application: Application}) => {
-  console.log(application)
   return (
     <View className='p-4'>
         <Text className='font-quicksand-bold text-2xl'>Application Status</Text>

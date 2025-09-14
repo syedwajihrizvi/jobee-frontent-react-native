@@ -87,6 +87,18 @@ export const getApplicationStatus = (status: string) => {
   }
 }
 
+export const getInterviewStyle = (status: string) => {
+  console.log("Interview Type:", status);
+  switch(status) {
+    case 'ONLINE':
+      return "Online";
+    case 'IN_PERSON':
+      return "In Person";
+    case 'PHONE':
+      return "Phone";
+  }
+}
+
 export const convert10DigitNumberToPhoneFormat = (num: string) => {
   if (num.length !== 10) return num;
   const areaCode = num.slice(0, 3);

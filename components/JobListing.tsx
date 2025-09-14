@@ -54,7 +54,7 @@ const JobListing = (
       </TouchableOpacity>
       <ScrollView className='flex-row flex-wrap gap-2 mt-2' horizontal showsHorizontalScrollIndicator={false}>
         {job.tags?.map((tag, index) => (
-          <Text key={index} className='bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm mx-1'>{tag.name}</Text>
+          <Text key={index} className='badge badge--green text-sm mx-1'>{tag.name}</Text>
         ))}
       </ScrollView>
       {showQuickApply && renderQuickApply()}

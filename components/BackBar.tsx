@@ -8,7 +8,7 @@ const BackBar = (
   return (
       <View className='flex-row w-full justify-between items-center px-4'>
         <TouchableOpacity onPress={() => router.back()} >
-          <AntDesign name="arrow-left" size={24} color="black"/>
+          <AntDesign name="arrow-left" size={20} color="black"/>
         </TouchableOpacity>
         <Text className='text-lg font-semibold '>{label}</Text>
         {optionalThirdItem ? optionalThirdItem : <View style={{width:24}}/>}

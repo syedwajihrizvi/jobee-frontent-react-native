@@ -172,24 +172,16 @@ const Index = () => {
   
   return (
     <SafeAreaView className='relative flex-1 bg-white pb-20'>
-        <View className='w-full flex-row items-center justify-center px-8 gap-4'>
-          <SearchBar 
-            placeholder="Search for Jobs..." 
-            onSubmit={handleSearchSubmit}/>
-            <TouchableOpacity onPress={openFilters} className='relative'>
-              <Ionicons name="filter-circle-outline" size={30} color="black" />
-              <View className='absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center'>
-                <Text className='text-white font-quicksand-bold'>{filterCount}</Text>
-              </View>
-            </TouchableOpacity>
+        <View className='w-full flex-row items-center justify-center gap-4'>
+          <SearchBar placeholder="Search for Jobs..." onSubmit={handleSearchSubmit}/>
+          <TouchableOpacity onPress={openFilters} className='relative'>
+            <Ionicons name="filter-circle-outline" size={30} color="black" />
+            <View className='absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center'>
+              <Text className='text-white font-quicksand-bold'>{filterCount}</Text>
+            </View>
+          </TouchableOpacity>
         </View>
-      {
-        !isAuthLoading && 
-        showProfileCompleteReminder && 
-        <CompleteProfileReminder 
-          onComplete={handleProfileComplete} 
-          onLater={handleProfileLater}/>
-      }
+      { !isAuthLoading && showProfileCompleteReminder && <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater}/>}
       {isLoading ? 
       <ActivityIndicator size="large" color="#0000ff" className='flex-1 justify-center items-center'/> :
       <FlatList
