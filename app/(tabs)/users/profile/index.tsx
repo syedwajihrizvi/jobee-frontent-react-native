@@ -111,7 +111,7 @@ const Profile = () => {
         <>
           <View className='flex-row w-full justify-between items-center'>
             <TouchableOpacity onPress={() => router.back()} >
-              <AntDesign name="arrowleft" size={24} color="black"/>
+              <AntDesign name="arrow-left" size={24} color="black"/>
             </TouchableOpacity>
             <Text className='text-lg font-semibold '>Profile</Text>
             <View style={{width:24}}/>

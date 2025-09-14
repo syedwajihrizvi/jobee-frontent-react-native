@@ -1,9 +1,9 @@
 import { Application, CreateApplication, CreateJobForm } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const APPLICATION_API_URL = 'http://10.0.0.135:8080/applications'
-const JOBS_API_URL = 'http://10.0.0.135:8080/jobs'
-const USER_PROFILE_API_URL = 'http://10.0.0.135:8080/profiles'
+const APPLICATION_API_URL = 'http://192.168.2.29:8080/applications'
+const JOBS_API_URL = 'http://192.168.2.29:8080/jobs'
+const USER_PROFILE_API_URL = 'http://192.168.2.29:8080/profiles'
 
 export const applyToJob = async (application: CreateApplication) => {
     return new Promise<Application | null>((resolve, reject) => {

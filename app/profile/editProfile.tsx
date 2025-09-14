@@ -500,7 +500,7 @@ const handleRemoveVideoIntro = () => {
         <>
             <View className="px-4 py-2">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">
+                    <Text className="font-quicksand-semibold text-xl">
                         General Information
                     </Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, general: !prev.general }))}>
@@ -525,8 +525,8 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2">
                 <View className="flex flex-row justify-between items-start">
-                    <View className="fkex flex-row items-center gap-2">
-                        <Text className="font-quicksand-bold text-xl">Summary</Text>
+                    <View className="flex flex-row items-center gap-2">
+                        <Text className="font-quicksand-semibold text-xl">Summary</Text>
                         {isEditingSummary ? 
                         <View className="flex flex-row gap-2">
                             <TouchableOpacity onPress={() => setIsEditingSummary(false)}>
@@ -560,7 +560,7 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">
+                    <Text className="font-quicksand-semibold text-xl text-xl">
                         Video Introduction
                     </Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, videoIntro: !prev.videoIntro }))}>
@@ -614,7 +614,7 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">Skills</Text>
+                    <Text className="font-quicksand-semibold text-xl">Skills</Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, skills: !prev.skills }))}>
                         <AntDesign 
                         name={openSection.skills ? "up" : "down"} 
@@ -646,7 +646,7 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2 gap-4">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">Education</Text>
+                    <Text className="font-quicksand-semibold text-xl">Education</Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, education: !prev.education }))}>
                         <AntDesign 
                             name={openSection.education ? "up" : "down"} 
@@ -674,7 +674,7 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2 gap-4">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">Experience</Text>
+                    <Text className="font-quicksand-semibold text-xl">Experience</Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, experience: !prev.experience }))}>
                         <AntDesign 
                             name={openSection.experience ? "up" : "down"} 
@@ -701,7 +701,7 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">Socials</Text>
+                    <Text className="font-quicksand-semibold text-xl">Socials</Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, socials: !prev.socials }))}>
                         <AntDesign 
                             name={openSection.socials ? "up" : "down"} 
@@ -718,7 +718,7 @@ const handleRemoveVideoIntro = () => {
             <View className="divider"/>
             <View className="px-4 py-2">
                 <View className="flex flex-row justify-between items-start">
-                    <Text className="font-quicksand-bold text-xl">Portfolio</Text>
+                    <Text className="font-quicksand-semibold text-xl">Portfolio</Text>
                     <TouchableOpacity onPress={() => setOpenSection(prev => ({ ...defaultOpenSectionValue, portfolio: !prev.portfolio }))}>
                         <AntDesign 
                             name={openSection.portfolio ? "up" : "down"} 

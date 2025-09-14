@@ -1,5 +1,6 @@
 import ApplicationInfo from '@/components/ApplicationInfo'
 import ApplyBottomSheet from '@/components/ApplyBottomSheet'
+import BackBar from '@/components/BackBar'
 import BoldLabeledText from '@/components/BoldLabeledText'
 import CompanyInfo from '@/components/CompanyInfo'
 import CompanyInformation from '@/components/CompanyInformation'
@@ -11,7 +12,6 @@ import { applyToJob } from '@/lib/jobEndpoints'
 import { useJob, useJobApplication } from '@/lib/services/useJobs'
 import useAuthStore from '@/store/auth.store'
 import { CreateApplication, User, UserDocument } from '@/type'
-import AntDesign from '@expo/vector-icons/AntDesign'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { useQueryClient } from '@tanstack/react-query'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -114,11 +114,7 @@ const JobDetails = () => {
 
   return (
     <SafeAreaView className='flex-1 bg-white relative'>
-      <View className='w-full flex-row px-4'>
-        <TouchableOpacity onPress={() => router.back()} >
-          <AntDesign name="arrowleft" size={24} color="black"/>
-        </TouchableOpacity>
-      </View>
+      <BackBar label="Job Details" />
       {isLoading ? <ActivityIndicator/> : 
       <View className='w-full p-4'>
       <View>

@@ -2,7 +2,7 @@ import { CreateInterviewForm, InterviewDetails } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { extract24HourTime } from "./utils";
 
-const INTERVIEWS_API_URL = 'http://10.0.0.135:8080/interviews'
+const INTERVIEWS_API_URL = 'http://192.168.2.29:8080/interviews'
 export const createInterview = async (
         interview: CreateInterviewForm, jobId: number, 
         candidateId: number,

@@ -260,7 +260,7 @@ const ScheduleInterview = () => {
                                         </Text>
                                         <TouchableOpacity>
                                             <AntDesign 
-                                                name="minuscircleo" 
+                                                name="minus" 
                                                 size={12} 
                                                 color="black"
                                                 onPress={() => removeConductor(index)}

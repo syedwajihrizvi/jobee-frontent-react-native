@@ -31,7 +31,7 @@ const TabsLayout = () => {
           name="messages/index"
           options={{
             tabBarIcon: ({color, size}) => (
-              <AntDesign name="message1" size={size} color={color} />
+              <AntDesign name="message" size={size} color={color} />
             )
           }}/>
         <Tabs.Screen 

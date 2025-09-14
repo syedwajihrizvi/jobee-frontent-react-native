@@ -22,7 +22,7 @@ export enum UserDocumentType {
 
 export const profileLinkInfo : {label: string, icon: ReactNode, href: string}[] = [
     {'label': 'Edit Profile', 'icon': <AntDesign name="user" size={28} color="black"/>, 'href': '/profile/editProfile'},
-    {'label': 'Job Applied To', 'icon': <AntDesign name="filetext1" size={28} color="black"/>, 'href': '/profile/appliedJobs'},
-    {'label': 'Favorite Jobs', 'icon': <AntDesign name="staro" size={28} color="black"/>, 'href': '/profile/favoriteJobs'},
+    {'label': 'Job Applied To', 'icon': <AntDesign name="file" size={28} color="black"/>, 'href': '/profile/appliedJobs'},
+    {'label': 'Favorite Jobs', 'icon': <AntDesign name="star" size={28} color="black"/>, 'href': '/profile/favoriteJobs'},
     {'label': 'Manage Documents', 'icon': <Entypo name="documents" size={28} color="black"/>, 'href': '/profile/manageDocs'}
 ]

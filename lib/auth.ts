@@ -1,9 +1,9 @@
 import { BusinessSignUpParams, SignInParams, UserSignUpParams } from "@/type";
 import Asyncstorage from "@react-native-async-storage/async-storage";
 
-const USER_ACCOUNTS_API_URL = "http://10.0.0.135:8080/accounts";
-const PROFILES_API_URL = "http://10.0.0.135:8080/profiles";
-const BUSINESS_ACCOUNTS_API_URL = "http://10.0.0.135:8080/business-accounts";
+const USER_ACCOUNTS_API_URL = "http://192.168.2.29:8080/accounts";
+const PROFILES_API_URL = "http://192.168.2.29:8080/profiles";
+const BUSINESS_ACCOUNTS_API_URL = "http://192.168.2.29:8080/business-accounts";
 
 export const signInUser = async (request: SignInParams) => {
     const response = await fetch(`${USER_ACCOUNTS_API_URL}/login`, {

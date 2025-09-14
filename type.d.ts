@@ -100,7 +100,8 @@ export type UserDocument = {
     documentUrl: string,
     documentType?: string,
     createdAt?: string,
-    filename?: string
+    filename?: string,
+    title?: string
 }
 
 export type AllUserDocuments = {

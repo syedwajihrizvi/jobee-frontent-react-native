@@ -1,8 +1,8 @@
 import { ApplicationDetailsForBusiness, InterviewDetails, InterviewSummary } from "@/type";
 import { useQuery } from "@tanstack/react-query";
 
-const APPLICATIONS_API_URL = `http://10.0.0.135:8080/applications`;
-const INTERVIEWS_API_URL = `http://10.0.0.135:8080/interviews`;
+const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
+const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
 
 export const useApplicant = (applicantId?: number) => {
     const fetchApplicant = async () => {

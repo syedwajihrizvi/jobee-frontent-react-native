@@ -8,7 +8,7 @@ const ViewMore = ({label, onClick}:{label:string, onClick: () => void}) => {
      <TouchableOpacity onPress={onClick}>
         <Text className='font-quicksand-bold text-lg underline'>{label}</Text>
      </TouchableOpacity>
-     <AntDesign name="arrowright" size={20} color="black" className='mt-1'/>
+     <AntDesign name="arrow-right" size={20} color="black" className='mt-1'/>
     </View>
   )
 }

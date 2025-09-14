@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
 
-const PROFILES_API_URL = 'http://10.0.0.135:8080/profiles';
+const PROFILES_API_URL = 'http://192.168.2.29:8080/profiles';
 export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -194,7 +194,8 @@ export const completeProfile = async (
     document: DocumentPicker.DocumentPickerResult,
     image: ImagePickerResult,
     videoIntro: ImagePickerResult,
-    details: CompleteProfileForm
+    details: CompleteProfileForm,
+    resumeTitle: string
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -227,6 +228,7 @@ export const completeProfile = async (
         } as any);
     }
     formData.append('data', JSON.stringify(details));
+    formData.append('resumeTitle', resumeTitle);
     try {
         const response = await fetch(
             `${PROFILES_API_URL}/complete-profile`, {

@@ -2,7 +2,7 @@ import { UserDocument } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const DOCUMENTS_API_URL = `http://10.0.0.135:8080/user-documents`;
+const DOCUMENTS_API_URL = `http://192.168.2.29:8080/user-documents`;
 
 export const useDocuments = () => {
     const fetchDocumentsByUser = async () => {

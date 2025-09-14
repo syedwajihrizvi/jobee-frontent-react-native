@@ -3,15 +3,21 @@ import { images } from '@/constants';
 import { completeProfile } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
 import { CompleteProfileForm } from '@/type';
-import { AntDesign } from '@expo/vector-icons';
+import { Entypo } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import React, { ReactNode, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, Image, KeyboardAvoidingView, Linking, Modal, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Dimensions, Image, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 const CompleteProfile = () => {
   const { fetchAuthenticatedUser } = useAuthStore();
+  const viewRef = useRef<KeyboardAvoidingView | null>(null);
+  const width = Dimensions.get('window').width;
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  const [resumeTitle, setResumeTitle] = useState('');
   const [uploadedResume, setUploadedResume] = useState<DocumentPicker.DocumentPickerResult | null>(null);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<ImagePicker.ImagePickerResult | null>(null)
   const [uploadedVideoIntro, setUploadedVideoIntro] = useState<ImagePicker.ImagePickerResult | null>(null);
@@ -21,8 +27,22 @@ const CompleteProfile = () => {
   })
   const [step, setSteps] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const translateX = useRef(new Animated.Value(0)).current;
+  const translateX = useSharedValue(0)
 
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardUp(true); 
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardUp(false); 
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    }
+  }, [])
+  
   const handleProfileImageCamera = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
@@ -219,7 +239,9 @@ const CompleteProfile = () => {
   const handleDone = async () => {
     setIsSubmitting(true);
     try {
-        const res = await completeProfile(uploadedResume!, uploadedProfileImage!, uploadedVideoIntro!,detailsForm);
+        const res = await completeProfile(
+          uploadedResume!, uploadedProfileImage!,
+          uploadedVideoIntro!, detailsForm, resumeTitle);
         if (res === null) {
             Alert.alert('Error', 'Failed to complete profile. Please try again.');
             setIsSubmitting(false);
@@ -242,18 +264,18 @@ const CompleteProfile = () => {
           <View className="mb-4 p-4 rounded-lg flex flex-col items-center justify-center">
             <Image
               source={{ uri: renderProfileImageUri() }}
-              className="size-24 rounded-full border-2 border-gray-300"
-              resizeMode="contain"
+              className="size-24 rounded-xl border-2 border-gray-300"
+              resizeMode="cover"
             />
             <View className="flex flex-row gap-4 mt-6">
               <TouchableOpacity 
-                className="apply-button px-6 py-3 rounded-full shadow-md"
+                className="apply-button px-6 py-3 rounded-lg shadow-md"
                 onPress={handleProfileImagePicker}
               >
                 <Text className="font-quicksand-bold text-white">Upload Photo</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                className="apply-button px-6 py-3 rounded-full shadow-md"
+                className="apply-button px-6 py-3 rounded-lg shadow-md"
                 onPress={handleProfileImageCamera}
               >
                 <Text className="font-quicksand-bold text-white">Take Photo</Text>
@@ -274,22 +296,28 @@ const CompleteProfile = () => {
                 {renderUploadedResumeInfo()}
             </View>
             </> : 
-            <AntDesign name="file1" size={64} color="black" />}
-            <View className="flex flex-col gap-6 mt-6">
+            <Entypo name="text-document" size={64} color="black" />}
+            <View className="flex flex-col gap-4 mt-6">
+              <TextInput
+                placeholder='Give your resume a title (e.g. My Resume)'
+                className="rounded-lg px-4 py-3 border border-gray-500 shadow-sm text-center"
+                value={resumeTitle}
+                onChangeText={(text) => setResumeTitle(text)}
+              />
               <View className="flex flex-row gap-4">
                 <TouchableOpacity 
-                    className="apply-button px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md"
+                    className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
                     onPress={handleUpload}>
                   <Text className="font-quicksand-bold text-white">Upload Resume</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="apply-button px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md">
+                <TouchableOpacity className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md">
                   <Text className="font-quicksand-bold text-white">Take Photo</Text>
                 </TouchableOpacity>
               </View>
-              <Text className="text-center font-quicksand-bold text-gray-600">OR</Text>
+              <Text className="text-center font-quicksand-bold text-lg">OR</Text>
               <View>
                 <TextInput
-                  className="rounded-full px-4 py-3 border border-gray-300 shadow-sm text-center"
+                  className="rounded-lg px-4 py-3 border border-gray-500 shadow-sm text-center"
                   placeholder="Enter your resume link"
                 />
               </View>
@@ -389,15 +417,16 @@ const CompleteProfile = () => {
       stepName: 'Upload 60 Second Intro Video (Optional but recommended)',
       element: (
         <View key={3} className='w-full h-full items-center justify-center gap-4'>
-          {uploadedVideoIntro && uploadedVideoIntro.assets && uploadedVideoIntro.assets.length > 0 && (
-            <UserVideoIntro videoSource={uploadedVideoIntro.assets[0].uri} />
-          )}
+          <Text className='font-quicksand-bold text-2xl text-gray-700'>Upload 60 Second Intro Video</Text>
           <Text className='text-center font-quicksand-medium px-4 text-md'>
             This video will be used to introduce you to potential employers.
           </Text>
+          {uploadedVideoIntro && uploadedVideoIntro.assets && uploadedVideoIntro.assets.length > 0 ? (
+            <UserVideoIntro videoSource={uploadedVideoIntro.assets[0].uri} />
+          ) : <View className='w-full h-64 bg-gray-200 rounded-lg items-center justify-center'/>}
           {uploadedVideoIntro ? 
           <TouchableOpacity 
-            className='bg-red-300 px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md'
+            className='bg-red-500 px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md'
             onPress={() => setUploadedVideoIntro(null)}>
             <Text className="font-quicksand-bold text-white">Remove Video</Text>
           </TouchableOpacity> :
@@ -428,90 +457,68 @@ const CompleteProfile = () => {
             <Text className="text-center font-quicksand-medium px-4 text-md">
                 You can always update your profile information later from your profile settings.
             </Text>
+            <TouchableOpacity className='apply-button w-1/2 items-center justify-center h-14 px-6 py-2' onPress={handleDone} disabled={isSubmitting}>
+              {isSubmitting ? <ActivityIndicator animating={isSubmitting} color="white" /> : <Text className='font-quicksand-semibold text-white'>Done</Text>}
+            </TouchableOpacity>
         </View>
       ),
     },
   ];
 
-  const handleNext = () => {
-    if (step < screens.length - 1) {
-      Animated.spring(translateX, {
-        toValue: -(step + 1) * Dimensions.get('window').width,
-        useNativeDriver: true,
-      }).start();
-      setSteps(step + 1);
-    }
-  };
 
-  const handlePrev = () => {
-    if (step > 0) {
-      Animated.spring(translateX, {
-        toValue: -(step - 1) * Dimensions.get('window').width,
-        useNativeDriver: true,
-      }).start();
-      setSteps(step - 1);
-    }
-  };
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translateX.value = -step * width + event.translationX;
+    })
+    .onEnd((event) => {
+      if (event.translationX < -50 && step < screens.length - 1) {
+        runOnJS(setSteps)(step + 1);
+        translateX.value = withSpring(-(step + 1) * width);
+      } else if (event.translationX > 50 && step > 0) {
+        runOnJS(setSteps)(step - 1);
+        translateX.value = withSpring(-(step - 1) * width);
+      } else {
+        translateX.value = withSpring(-step * width);
+      }
+    });
+  
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: translateX.value }],
+    }));
+
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <Animated.View
-        style={{
-          flexDirection: 'row',
-          width: Dimensions.get('window').width * screens.length,
-          height: '80%',
-          transform: [{ translateX }],
-        }}
-      >
-        {screens.map((screen, index) => (
-          <View
-            key={index}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              width: Dimensions.get('window').width,
-            }}
+      <KeyboardAvoidingView 
+        style={{ flex: 1, position: 'relative' }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} ref={viewRef}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0} >
+      <GestureDetector gesture={panGesture}>
+        <ScrollView>
+          <Animated.View
+            style={[
+              { flexDirection: 'row', width: width * screens.length, height: '100%', marginTop: 20 },
+              animatedStyle
+            ]}
           >
-            {screen.stepName &&
-            <Text className="font-quicksand-bold text-2xl text-gray-700 text-center">
-              {index + 1}) {screen.stepName}
-            </Text>}
-            <View className="flex-1 items-center justify-center px-4">{screen.element}</View>
-          </View>
+            {screens.map((screen, index) => (
+            <View key={index} style={{ display: 'flex', width, padding: 16, height: '100%' }}>
+              <View className="flex-1 items-center justify-center px-4">
+                {screen.element}
+              </View>
+            </View>
+          ))}
+        </Animated.View> 
+        </ScrollView>   
+      </GestureDetector>
+      <View className='absolute bottom-20 w-full flex-row items-center justify-center gap-2'>
+        {screens.map((_, idx) => (
+          <View
+            key={idx}
+            className={`h-2 ${idx === step ? 'w-8' : 'w-2'} bg-gray-500 rounded-full`}
+          />
         ))}
-      </Animated.View>
-      </KeyboardAvoidingView>
-      <View className="flex flex-row items-center justify-center w-full gap-4 p-4">
-        <TouchableOpacity
-          className={`${
-            step === 0 ? 'bg-gray-300' : 'apply-button'
-          } w-1/2 items-center justify-center h-14 rounded-full`}
-          onPress={handlePrev}
-          disabled={step === 0}
-        >
-          <Text className="font-quicksand-bold text-white">Previous</Text>
-        </TouchableOpacity>
-        {step === screens.length - 1 ? 
-                <TouchableOpacity
-          className='apply-button w-1/2 items-center justify-center h-14 rounded-full'
-          onPress={handleDone}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text className="font-quicksand-bold text-white">Done</Text>}
-        </TouchableOpacity> :
-        <TouchableOpacity
-          className={`${
-            step === screens.length - 1 ? 'bg-gray-300' : 'apply-button'
-          } w-1/2 items-center justify-center h-14 rounded-full`}
-          onPress={handleNext}
-          disabled={step === screens.length - 1}
-        >
-          <Text className="font-quicksand-bold text-white">Next</Text>
-        </TouchableOpacity>
-        }
-      </View>
+      </View> 
+    </KeyboardAvoidingView> 
     <Modal
         transparent
         animationType="fade"

@@ -10,7 +10,7 @@ const UserVideoIntro = ({ videoSource }: { videoSource: string }) => {
   
 
   return (
-    <View className="w-full px-4 mb-6">
+    <View className="w-fullpx-4 mb-6">
       <TouchableOpacity
         activeOpacity={0.9}
         className="w-full aspect-video rounded-2xl overflow-hidden shadow-md bg-black relative"
@@ -19,7 +19,6 @@ const UserVideoIntro = ({ videoSource }: { videoSource: string }) => {
           style={{ width: "100%", height: "100%" }}
           player={player}
           contentFit="cover"
-          allowsFullscreen={false}
           allowsPictureInPicture={false}
         />
       </TouchableOpacity>

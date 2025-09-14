@@ -1,3 +1,4 @@
+import { EvilIcons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import React, { useRef, useState } from 'react'
 import { TextInput, TouchableOpacity, View } from 'react-native'
@@ -16,7 +17,7 @@ const SearchBar = (
             shadowRadius: 4,
             elevation: 3,
         }}>
-        <AntDesign name="search1" size={18} color="black" className='left-4 z-10' />
+        <EvilIcons name="search" size={20} color="black" className='left-4 z-10' />
         <TextInput 
           className='search-bar' placeholder={placeholder} value={value}
           onChangeText={(text) => setValue(text)}

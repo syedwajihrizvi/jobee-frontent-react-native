@@ -3,9 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { getEducationLevel } from '../utils';
 
-const JOBS_API_URL = `http://10.0.0.135:8080/jobs`;
-const APPLICATIONS_API_URL = `http://10.0.0.135:8080/applications`;
-const USER_PROFILE_API_URL =`http://10.0.0.135:8080/profiles`;
+const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
+const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
+const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
 
 export const useJobs = (jobFilters: JobFilters) => {
     const { search, locations, companies, tags, minSalary, maxSalary } = jobFilters

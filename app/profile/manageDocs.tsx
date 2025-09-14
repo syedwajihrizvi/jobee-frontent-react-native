@@ -12,7 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const documentTypes = [
@@ -31,6 +31,7 @@ const ManageDocuments = () => {
   const [coverLetterLink, setCoverLetterLink] = useState('');
   const [selectedDocumentType, setSelectedDocumentType] = useState('RESUME');
   const [open, setOpen] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState('');
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
   const addDocumentRef = useRef<BottomSheet>(null);
@@ -66,6 +67,7 @@ const ManageDocuments = () => {
             ]
         })
         if (!document.canceled) {
+          console.log('Selected document: ', document);
             setUploadedDocument(document);
         }
     } catch (error) {
@@ -83,10 +85,12 @@ const ManageDocuments = () => {
     }
     setUploadingDocument(true);
     try {
-        await uploadUserDocument(uploadedDocument, selectedDocumentType);
+        await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
         Alert.alert('Success', 'Document uploaded successfully');
+        setUploadedDocument(null);
+        setDocumentTitle('');
         addDocumentRef.current?.close();
-        queryClient.invalidateQueries({ queryKey: ['documents', 'user'] });
+        queryClient.invalidateQueries({ queryKey: ['documents', 'user']});
     } catch (error) {
         console.error('Error uploading document:', error);
         Alert.alert('Error', 'Failed to upload document. Please try again.');
@@ -101,13 +105,15 @@ const ManageDocuments = () => {
       <FlatList
         data={documents}
         renderItem={({ item }) => (
-          <DocumentItem document={item} actionIcon='edit' customAction={() => {}}/>
+          <DocumentItem  
+            document={item} actionIcon='edit' customAction={() => {}}
+            outline={item.id === user?.primaryResume?.id}/>
         )}
         horizontal
         keyExtractor={(item) => item.id.toString()}
         showsHorizontalScrollIndicator={false}
         ItemSeparatorComponent={() => <View className='w-5'/>}
-        contentContainerStyle={{ paddingHorizontal: 2, paddingVertical: 4 }}
+        contentContainerStyle={{ marginTop: 8}}
       />
     </View>
   )
@@ -155,92 +161,103 @@ const ManageDocuments = () => {
     console.log('Sending document URI to server...');
   }
 
-  /*
-  User can upload documents the following ways
-  1) Upload File
-  2) Pase Google Drive / Dropbox Link
-  3) Take a Photo which we will convert to PDF
-  */
-  // TODO: Replace RESUME and COVER_LETTER with actual DocumentType enum values
   return (
-    <SafeAreaView className='flex-1 bg-white h-full'>
+    <SafeAreaView className='bg-white flex-1'>
       <BackBar label="Manage Documents" optionalThirdItem={
         <TouchableOpacity onPress={() => addDocumentRef.current?.expand()}>
             <AntDesign name="plus" size={24} color="black"/>
         </TouchableOpacity>
-      }/>     
-      {isLoading ? <ActivityIndicator size='large' className='flex-1 justify-center items-center'/> :
-        <ScrollView>
+      }/>    
+      {isLoading ? 
+      <ActivityIndicator size='large' className='flex-1 justify-center items-center'/> :
+        <KeyboardAvoidingView
+            style={{ flex: 1}}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0} 
+        >
+        <ScrollView 
+            contentContainerStyle={{ paddingBottom: 10, height: '100%'}} 
+            keyboardShouldPersistTaps='handled' 
+            showsVerticalScrollIndicator={false}>
           {renderDocumentFlatList({title: 'My Resumes', documents: userDocuments?.resumeDocuments || []})}
           <View className='divider'/>
           {renderDocumentFlatList({title: 'My Cover Letters', documents: userDocuments?.coverLetterDocuments || []})}
           <View className='divider'/>
           {renderDocumentFlatList({title: 'My Certificates', documents: userDocuments?.certificateDocuments || []})}
-        <View className='divider'/>
-        {renderDocumentFlatList({title: 'My Transcripts', documents: userDocuments?.transcriptDocuments || []})}
-        <View className='divider'/>
-        {renderDocumentFlatList({title: 'My Recommendations', documents: userDocuments?.recommendationDocuments || []})}
-      </ScrollView>}
-      <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["30%", '40%']} enablePanDownToClose>
-        <BottomSheetView className='flex-1 bg-white p-4 gap-2 w-full justify-center items-center'>
-            <View>
-              <Text className='font-quicksand-bold text-lg mb-1'>Choose Document Type</Text>
-                <View className='flex flex-row flex-wrap gap-1'>
-                  {documentTypes.map((doc) => (
-                    <TouchableOpacity 
-                      key={doc.value} 
-                      className={`${selectedDocumentType === doc.value ? 'bg-green-200' : ''} px-3 py-1 rounded-full`}
-                      onPress={() => setSelectedDocumentType(doc.value)}>
-                      <View>
-                        <Text className="text-green-800 font-quicksand-medium">{doc.label}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-            </View>
-            <View className='flex flex-row gap-2'>
-            {
-            !uploadedDocument ? 
-            <TouchableOpacity className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2" onPress={() => handleUpload(selectedDocumentType)}>
-                <Text className='action-button__text'>Upload</Text>
-                <AntDesign name="upload" size={20} color="black"/>
-            </TouchableOpacity> :
-                <TouchableOpacity className='action-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2 bg-red-500' onPress={() => setUploadedDocument(null)}>
-                    <Text className='action-button__text'>
-                      {uploadedDocument?.assets && uploadedDocument.assets[0]?.name
-                        ? uploadedDocument.assets[0].name
-                        : 'Document Selected'}
-                    </Text>
-                    <AntDesign name="delete" size={20} color="black"/>
-                </TouchableOpacity>
-            }
-            <TouchableOpacity 
-              className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 gap-2 px-4 py-2"
-              onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
-                <Text className='action-button__text'>Take Photo</Text>
-                <AntDesign name="camera" size={20} color="black"/>
-            </TouchableOpacity>
-            </View>
-            <Text className='font-quicksand-bold text-md'>OR</Text>
-            <LinkInput
-                value={resumeLink}
-                onChangeText={setResumeLink}
-                onIconPress={sendDocumentUriToServer}
-            />
-            <View className="w-full p-4 flex-row gap-2 items-center justify-center">
-                <TouchableOpacity 
-                    className='apply-button w-3/6 items-center justify-center h-14'
-                    onPress={handleDocumentUploadSubmit}>
-                <Text className='font-quicksand-semibold text-md'>Done</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    className='favorite-button h-14 w-3/6 items-center justify-center'
-                    onPress={() => addDocumentRef.current?.close()}>
-                <Text className='font-quicksand-semibold text-md'>Close</Text>
-                </TouchableOpacity>
-            </View>
-        </BottomSheetView>
-      </BottomSheet>
+          <View className='divider'/>
+          {renderDocumentFlatList({title: 'My Transcripts', documents: userDocuments?.transcriptDocuments || []})}
+          <View className='divider'/>
+          {renderDocumentFlatList({title: 'My Recommendations', documents: userDocuments?.recommendationDocuments || []})}
+        <BottomSheet ref={addDocumentRef} index={-1} snapPoints={["30%", '40%']} enablePanDownToClose>
+          <BottomSheetView className='flex-1 p-4 gap-2 w-full justify-center items-center'>
+              <View>
+                <Text className='font-quicksand-bold text-lg mb-1'>Choose Document Type</Text>
+                  <View className='flex flex-row flex-wrap gap-1'>
+                    {documentTypes.map((doc) => (
+                      <TouchableOpacity 
+                        key={doc.value} 
+                        className={`${selectedDocumentType === doc.value ? 'bg-green-200' : ''} px-3 py-1 rounded-full`}
+                        onPress={() => setSelectedDocumentType(doc.value)}>
+                        <View>
+                          <Text className="text-green-800 font-quicksand-medium">{doc.label}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+              </View>
+              {uploadedDocument?.assets && uploadedDocument.assets[0]?.name && uploadedDocument.assets[0].name && 
+              <Text className='font-quicksand-medium underline w-full'>{uploadedDocument.assets[0].name}</Text>}
+              <TextInput
+                className='border border-gray-300 rounded-md p-2 w-full'
+                placeholder='Provide an Optional Title for document...'
+                value={documentTitle}
+                onChangeText={(text) => setDocumentTitle(text)}
+              />
+              <View className='flex flex-row gap-2'>
+              {
+              !uploadedDocument ? 
+              <TouchableOpacity className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2" onPress={() => handleUpload(selectedDocumentType)}>
+                  <Text className='font-quicksand-semibold text-md'>Upload</Text>
+                  <AntDesign name="upload" size={20} color="black"/>
+              </TouchableOpacity> :
+                  <TouchableOpacity className='action-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2 bg-red-500' onPress={() => setUploadedDocument(null)}>
+                      <Text className='font-quicksand-semibold text-md'>
+                        Remove
+                      </Text>
+                      <AntDesign name="delete" size={20} color="black"/>
+                  </TouchableOpacity>
+              }
+              <TouchableOpacity 
+                className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 gap-2 px-4 py-2"
+                onPress={() => handleDocImagePicker("Need to access camera!", "Upload document by taking a photo", "Choose an option", "Upload from Gallery")}>
+                  <Text className='font-quicksand-semibold text-md'>Take Photo</Text>
+                  <AntDesign name="camera" size={20} color="black"/>
+              </TouchableOpacity>
+              </View>
+              <Text className='font-quicksand-bold text-md'>OR</Text>
+              <LinkInput
+                  value={resumeLink}
+                  onChangeText={setResumeLink}
+                  onIconPress={sendDocumentUriToServer}
+              />
+              <View className="w-full p-4 flex-row gap-2 items-center justify-center">
+                  <TouchableOpacity 
+                      className='apply-button w-3/6 items-center justify-center h-14'
+                      onPress={handleDocumentUploadSubmit}
+                      disabled={uploadingDocument}
+                  >
+                  {uploadingDocument ? <ActivityIndicator size="small" color="#0000ff" /> : <Text className='font-quicksand-semibold text-md'>Done</Text>}
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                      className='favorite-button h-14 w-3/6 items-center justify-center'
+                      onPress={() => addDocumentRef.current?.close()}>
+                  <Text className='font-quicksand-semibold text-md'>Close</Text>
+                  </TouchableOpacity>
+              </View>
+          </BottomSheetView>
+        </BottomSheet>
+      </ScrollView>
+      </KeyboardAvoidingView>}
     </SafeAreaView>
   )
 }
