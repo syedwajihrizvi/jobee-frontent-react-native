@@ -1,20 +1,20 @@
-import { useFavoriteJobs } from '@/lib/services/useJobs';
 import { favoriteJob } from '@/lib/updateUserProfile';
 import useAuthStore from '@/store/auth.store';
 import { User } from '@/type';
-import Entypo from '@expo/vector-icons/Entypo';
-import { router } from 'expo-router';
+import { AntDesign } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 
 const FavoriteJob = ({jobId}: {jobId: number}) => {
- const { setUser, user: authUser, isAuthenticated } = useAuthStore()
+ const { user: authUser, setUser, isAuthenticated } = useAuthStore()
  const [showModal, setShowModal] = useState(false);
- const { data: favoriteJobs, isLoading} = useFavoriteJobs();
- const isFavorite = favoriteJobs?.some(id => id === jobId) ?? false;
  const user = authUser as (User | null)
+ const isFavorite = isAuthenticated && user && user.favoriteJobs.some(fav => fav.id === jobId)
+ 
 
+ console.log(`${jobId}, ${isFavorite}`)
  const handlePress = async () => {
+
   if (!isAuthenticated) {
     setShowModal(true);
     return;
@@ -42,11 +42,11 @@ const FavoriteJob = ({jobId}: {jobId: number}) => {
   return (
     <>
       <TouchableOpacity 
-        onPress={handlePress} 
-        className='p-2 rounded-full shadow-md' style={{elevation: 2}}>
-        <Entypo name="star" size={28} color={ isFavorite  ? "gold" : "black"} />
+        onPress={handlePress} className='p-2 rounded-full'
+        activeOpacity={1}>
+        <AntDesign name="star" size={28} color={ isFavorite  ? "gold" : "black"} />
       </TouchableOpacity> 
-      <Modal
+      {/* <Modal
         transparent
         animationType="fade"
         visible={showModal}>
@@ -82,7 +82,7 @@ const FavoriteJob = ({jobId}: {jobId: number}) => {
                 </View>
           </View>  
         </View>      
-      </Modal>
+      </Modal> */}
     </>
   )
 }

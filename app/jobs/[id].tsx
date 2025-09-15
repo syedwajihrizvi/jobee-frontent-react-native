@@ -37,7 +37,7 @@ const JobDetails = () => {
   const user = authUser as (User | null)
   const userHasResume = user && user.documents && user.documents.some(doc => doc.documentType === 'RESUME');
   const queryClient = useQueryClient();
-  console.log(jobApplication)
+
   useEffect(() => {
     if (user && (user as User).documents) {
       const resumes = (user as User).documents.filter(doc => doc.documentType === UserDocumentType.RESUME);

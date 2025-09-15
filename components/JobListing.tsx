@@ -11,7 +11,6 @@ const JobListing = (
   {job, showFavorite = true, showStatus = false, status, showQuickApply = true, canQuickApply = true, handleQuickApply}: 
   {job: Job, showFavorite?: boolean, showStatus?: boolean, status?: string, showQuickApply?: boolean, canQuickApply?: boolean, handleQuickApply?: () => void}) => {
   const { isAuthenticated } = useAuthStore();
-  
   const renderQuickApply = () => {
     if (isAuthenticated && !canQuickApply) {
       return (
@@ -35,7 +34,7 @@ const JobListing = (
     }
     return null;
   }
-
+  
   return (
     <View className='w-full p-4 rounded-full'>
       <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${job.id}`)}>
