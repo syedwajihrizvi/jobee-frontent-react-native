@@ -45,14 +45,11 @@ export const useJob = (id: number) => {
     })
 }
 
-export const useJobsByUserFavorites = (
-  userId?: number,
-  options?: { enabled?: boolean }
-) => {
+export const useJobsByUserFavorites = () => {
   const fetchFavoriteJobs = async () => {
     const token = await AsyncStorage.getItem('x-auth-token');
-    if (token == null || !userId) return [];
-    const response = await fetch(`${JOBS_API_URL}/favorites?userId=${userId}`, {
+    if (token == null) return [];
+    const response = await fetch(`${USER_PROFILE_API_URL}/favorite-jobs`, {
       headers: {
         'x-auth-token': `Bearer ${token}`
       }
@@ -62,10 +59,9 @@ export const useJobsByUserFavorites = (
   }
 
   return useQuery<Job[], Error>({
-    queryKey: ['jobs', 'favorites', userId],  // ✅ userId in key means query refreshes when userId changes
+    queryKey: ['jobs', 'favorites'],
     queryFn: fetchFavoriteJobs,
     staleTime: 1000 * 60 * 5,
-    enabled: !!userId && (options?.enabled ?? true), // ✅ only run if userId is set
   })
 }
 
