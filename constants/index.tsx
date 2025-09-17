@@ -1,4 +1,5 @@
 import resumeImage from "@/assets/images/sampleResume.jpg";
+import popSound from "@/assets/sounds/pop.mp3";
 import { Feather } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 
@@ -10,6 +11,10 @@ export const images = {
   placeholder,
   companyLogo,
   resumeImage,
+};
+
+export const sounds = {
+  popSound,
 };
 
 export enum UserDocumentType {
@@ -45,4 +50,19 @@ export const profileLinkInfo: {
     icon: <Entypo name="documents" size={28} color="black" />,
     href: "/profile/manageDocs",
   },
+];
+
+export const employmentTypes = [
+  { label: "Full-Time", value: "FULL_TIME" },
+  { label: "Part-Time", value: "PART_TIME" },
+  { label: "Contract", value: "CONTRACT" },
+  { label: "Internship", value: "INTERN" },
+  { label: "Freelance", value: "FREELANCE" },
+];
+
+export const experienceLevels = [
+  { label: "0-2", value: "0-2" },
+  { label: "3-5", value: "3-5" },
+  { label: "6-8", value: "6-8" },
+  { label: "9+", value: "9+" },
 ];

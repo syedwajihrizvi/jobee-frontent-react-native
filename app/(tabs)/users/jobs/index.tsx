@@ -2,12 +2,15 @@ import CompleteProfileReminder from "@/components/CompleteProfileReminder";
 import JobListing from "@/components/JobListing";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import SearchBar from "@/components/SearchBar";
+import { employmentTypes, experienceLevels, sounds } from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
 import { useJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
+import { onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { JobFilters, User } from "@/type";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAudioPlayer } from "expo-audio";
 import { Redirect, router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -15,6 +18,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
@@ -41,7 +45,10 @@ const Index = () => {
     minSalary: undefined,
     maxSalary: undefined,
     experience: "",
+    employmentTypes: [],
+    experienceLevel: "",
   };
+  const player = useAudioPlayer(sounds.popSound);
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<JobFilters>({ ...defaultFilters });
   const [tempFilters, setTempFilters] = useState<JobFilters>({
@@ -56,16 +63,20 @@ const Index = () => {
   const { data: appliedJobs, isLoading: isAppliedJobsLoading } =
     useUserAppliedJobs();
   const [isOpen, setIsOpen] = useState(false);
-  const { user: authUser, isLoading: isAuthLoading, userType } = useAuthStore();
+  const {
+    user: authUser,
+    isLoading: isAuthLoading,
+    userType,
+    isAuthenticated,
+  } = useAuthStore();
   const user = authUser as User | null;
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] =
-    useState(!user?.profileComplete);
+    useState(!user?.profileComplete && isAuthenticated);
   const [localApplyJobs, setLocalApplyJobs] = useState<number[]>(
     appliedJobs || []
   );
   const slideX = useSharedValue(screenWidth);
   const locationInputRef = useRef<TextInput>(null);
-
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: slideX.value }],
@@ -151,6 +162,22 @@ const Index = () => {
     locationInputRef.current?.clear();
   };
 
+  const addEmploymentType = (type: string) => {
+    if (type && !tempFilters.employmentTypes?.includes(type)) {
+      setTempFilterCount((prev) => prev + 1);
+      setTempFilters({
+        ...tempFilters,
+        employmentTypes: [...(tempFilters.employmentTypes || []), type],
+      });
+    } else if (type && tempFilters.employmentTypes?.includes(type)) {
+      setTempFilterCount((prev) => prev - 1);
+      setTempFilters({
+        ...tempFilters,
+        employmentTypes: tempFilters.employmentTypes.filter((t) => t !== type),
+      });
+    }
+  };
+
   const handleMinSalary = (text: string) => {
     const salary = Number(text);
     if (isNaN(salary)) {
@@ -192,10 +219,7 @@ const Index = () => {
     setShowQuickApplyModal(true);
   };
 
-  const handleQuickApplyClose = async (
-    apply: boolean,
-    routeToSignUp: boolean
-  ) => {
+  const handleQuickApplyClose = async (apply: boolean) => {
     if (apply && quickApplyJob) {
       const res = await quickApplyToJob(quickApplyJob);
       if (res != null) {
@@ -204,6 +228,9 @@ const Index = () => {
         });
         queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
         setLocalApplyJobs((prev) => [...prev, quickApplyJob]);
+        player.seekTo(0);
+        player.play();
+        await onActionSuccess();
       }
     }
     setQuickApplyJob(null);
@@ -221,6 +248,7 @@ const Index = () => {
 
   return (
     <SafeAreaView className="relative flex-1 bg-white pb-20">
+      <StatusBar hidden={true} />
       <View className="w-full flex-row items-center justify-center gap-4">
         <SearchBar
           placeholder="Search for Jobs..."
@@ -359,6 +387,51 @@ const Index = () => {
               <View className="divider" />
               <View>
                 <Text className="font-quicksand-medium text-lg text-gray-900">
+                  Employment Type
+                </Text>
+                <View className="flex flex-row flex-wrap gap-2 mt-2">
+                  {employmentTypes.map((type) => (
+                    <TouchableOpacity
+                      className={`${tempFilters.employmentTypes?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() => addEmploymentType(type.value)}
+                      activeOpacity={1}
+                      key={type.value}
+                    >
+                      <Text className="font-quicksand-medium text-green-800 text-sm">
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="divider" />
+              <View>
+                <Text className="font-quicksand-medium text-lg text-gray-900">
+                  Experience (Years)
+                </Text>
+                <View className="flex flex-row flex-wrap gap-2 mt-2">
+                  {experienceLevels.map((type) => (
+                    <TouchableOpacity
+                      className={`${tempFilters.experienceLevel === type.value ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() =>
+                        setTempFilters({
+                          ...tempFilters,
+                          experienceLevel: type.value,
+                        })
+                      }
+                      activeOpacity={1}
+                      key={type.value}
+                    >
+                      <Text className="font-quicksand-medium text-green-800 text-sm">
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="divider" />
+              <View>
+                <Text className="font-quicksand-medium text-lg text-gray-900">
                   Skills
                 </Text>
                 <TextInput
@@ -411,20 +484,16 @@ const Index = () => {
               </View>
               <View className="flex-row justify-center items-center gap-2">
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
                   onPress={handleFilterApply}
                 >
-                  <Text className="font-quicksand-semibold text-md text-white">
-                    Apply
-                  </Text>
+                  <Text className="font-quicksand-semibold text-md">Apply</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
                   onPress={handleClearFilters}
                 >
-                  <Text className="font-quicksand-semibold text-md text-white">
-                    Clear
-                  </Text>
+                  <Text className="font-quicksand-semibold text-md">Clear</Text>
                 </TouchableOpacity>
               </View>
             </View>

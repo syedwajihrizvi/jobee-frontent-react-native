@@ -87,6 +87,8 @@ export type JobFilters = {
     minSalary?: number;
     maxSalary?: number;
     experience?: string;
+    employmentTypes?: string[];
+    experienceLevel?: string
 }
 
 export type ProfileLinks = {

@@ -87,13 +87,13 @@ const FavoriteJob = ({ jobId }: { jobId: number }) => {
                   router.push("/(auth)/sign-in");
                 }}
               >
-                <Text className="font-quicksand-bold">Sign Up</Text>
+                <Text className="font-quicksand-semibold text-md">Sign Up</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="apply-button w-1/2 items-center justify-center h-14"
                 onPress={() => setShowModal(false)}
               >
-                <Text className="font-quicksand-bold">Cancel</Text>
+                <Text className="font-quicksand-semibold text-md">Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>

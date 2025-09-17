@@ -1,4 +1,5 @@
 import { User, UserDocument } from "@/type";
+import * as Haptics from 'expo-haptics';
 
 export const formatDate = (date: string) => {
     const parsedDate = new Date(date);
@@ -105,4 +106,9 @@ export const convert10DigitNumberToPhoneFormat = (num: string) => {
   const centralOfficeCode = num.slice(3, 6);
   const lineNumber = num.slice(6);
   return `(${areaCode}) ${centralOfficeCode}-${lineNumber}`;
+}
+
+export const onActionSuccess = async () => {
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
 }
