@@ -1,4 +1,8 @@
-import { formatDate, getApplicationStatus } from "@/lib/utils";
+import {
+  formatDate,
+  getApplicationStatus,
+  getEmploymentType,
+} from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { Job } from "@/type";
 import { router } from "expo-router";
@@ -67,7 +71,9 @@ const JobListing = ({
           )}
         </View>
         <Text className="font-quicksand-bold text-xl">{job.title}</Text>
-        <Text className="font-quicksand-medium text-lg">{job.location}</Text>
+        <Text className="font-quicksand-medium text-lg">
+          {job.location} | {getEmploymentType(job.employmentType)}
+        </Text>
         <Text className="font-quicksand-semibold text-sm">
           ${job.minSalary} - ${job.maxSalary}
         </Text>

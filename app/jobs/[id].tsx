@@ -10,7 +10,7 @@ import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { applyToJob } from "@/lib/jobEndpoints";
 import { useJob, useJobApplication } from "@/lib/services/useJobs";
-import { onActionSuccess } from "@/lib/utils";
+import { getEmploymentType, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { CreateApplication, User, UserDocument } from "@/type";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -137,6 +137,12 @@ const JobDetails = () => {
     }
   };
 
+  const renderMatchPercentage = (percentage: number) => {
+    if (percentage >= 75) return "bg-green-500";
+    if (percentage >= 50) return "bg-yellow-400";
+    return "bg-red-600";
+  };
+
   const calculateApplyButtonSnapPoints = () => {
     if (!isAuthenticated) return ["20%"];
     if (!userHasResume) return ["32%"];
@@ -155,10 +161,25 @@ const JobDetails = () => {
               <CompanyInformation company={job?.businessName!} />
               <FavoriteJob jobId={job?.id!} />
             </View>
-            <Text className="font-quicksand-bold text-2xl">{job?.title}</Text>
-            <Text className="font-quicksand-semibold text-sm">
-              {job?.location}
-            </Text>
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="font-quicksand-bold text-2xl">
+                  {job?.title}
+                </Text>
+                <Text className="font-quicksand-semibold text-sm">
+                  {job?.location}
+                </Text>
+              </View>
+              {isAuthenticated && (
+                <TouchableOpacity
+                  className={`${renderMatchPercentage(80)} rounded-full px-4 py-2 flex items-center justify-center`}
+                >
+                  <Text className={`font-quicksand-semibold text-sm`}>
+                    Check Match
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
           <View className="divider" />
           <View className="flex-col gap-1">
@@ -180,7 +201,7 @@ const JobDetails = () => {
               />
               <BoldLabeledText
                 label="Employment Type"
-                value={job?.employmentType!}
+                value={getEmploymentType(job?.employmentType)!}
               />
               <BoldLabeledText label="Posted On" value="August 1st 2025" />
               <BoldLabeledText label="Apply By" value="August 31st 2025" />

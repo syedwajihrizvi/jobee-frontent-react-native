@@ -1,6 +1,7 @@
 import CompleteProfileReminder from "@/components/CompleteProfileReminder";
 import JobListing from "@/components/JobListing";
 import QuickApplyModal from "@/components/QuickApplyModal";
+import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
 import SearchBar from "@/components/SearchBar";
 import { employmentTypes, experienceLevels, sounds } from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
@@ -46,7 +47,6 @@ const Index = () => {
     maxSalary: undefined,
     experience: "",
     employmentTypes: [],
-    experienceLevel: "",
   };
   const player = useAudioPlayer(sounds.popSound);
   const queryClient = useQueryClient();
@@ -140,7 +140,6 @@ const Index = () => {
     setFilterCount(0);
     setTempFilters({ ...defaultFilters });
     setFilters({ ...defaultFilters });
-    closeFilters();
   };
 
   const addCompany = (company: string) => {
@@ -175,6 +174,16 @@ const Index = () => {
         ...tempFilters,
         employmentTypes: tempFilters.employmentTypes.filter((t) => t !== type),
       });
+    }
+  };
+
+  const addExperienceLevel = (level: string) => {
+    if (level && tempFilters.experience !== level) {
+      setTempFilterCount((prev) => prev + 1);
+      setTempFilters({ ...tempFilters, experience: level });
+    } else if (level && tempFilters.experience === level) {
+      setTempFilterCount((prev) => prev - 1);
+      setTempFilters({ ...tempFilters, experience: "" });
     }
   };
 
@@ -245,7 +254,6 @@ const Index = () => {
       !hasUserAppliedToJob(jobId)
     );
   };
-
   return (
     <SafeAreaView className="relative flex-1 bg-white pb-20">
       <StatusBar hidden={true} />
@@ -263,6 +271,11 @@ const Index = () => {
           </View>
         </TouchableOpacity>
       </View>
+      {isAuthenticated && (
+        <View className="px-3 my-1">
+          <RecommendedJobsPreview />
+        </View>
+      )}
       {!isAuthLoading && showProfileCompleteReminder && (
         <CompleteProfileReminder
           onComplete={handleProfileComplete}
@@ -412,13 +425,8 @@ const Index = () => {
                 <View className="flex flex-row flex-wrap gap-2 mt-2">
                   {experienceLevels.map((type) => (
                     <TouchableOpacity
-                      className={`${tempFilters.experienceLevel === type.value ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
-                      onPress={() =>
-                        setTempFilters({
-                          ...tempFilters,
-                          experienceLevel: type.value,
-                        })
-                      }
+                      className={`${tempFilters.experience === type.value ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() => addExperienceLevel(type.value)}
                       activeOpacity={1}
                       key={type.value}
                     >

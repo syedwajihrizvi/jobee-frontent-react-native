@@ -100,6 +100,21 @@ export const getInterviewStyle = (status: string) => {
   }
 }
 
+export const getEmploymentType = (type?: string) => {
+  switch(type) {
+    case 'FULL_TIME':
+      return "Full Time";
+    case 'PART_TIME':
+      return "Part Time";
+    case 'CONTRACT':
+      return "Contract";
+    case 'INTERN':
+      return "Intern";
+    case 'FREELANCE':
+      return "Freelance";
+  }
+}
+
 export const convert10DigitNumberToPhoneFormat = (num: string) => {
   if (num.length !== 10) return num;
   const areaCode = num.slice(0, 3);

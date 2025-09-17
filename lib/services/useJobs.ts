@@ -8,16 +8,22 @@ const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
 
 export const useJobs = (jobFilters: JobFilters) => {
-    const { search, locations, companies, tags, minSalary, maxSalary } = jobFilters
+    const { search, locations, companies, tags, minSalary, maxSalary, experience, employmentTypes } = jobFilters
     const queryParams = new URLSearchParams()
     if (search) queryParams.append('search', search)
     locations.forEach(location => queryParams.append('locations', location))
     if (companies) companies.forEach(company => queryParams.append('companies', company))
     tags.forEach(tag => queryParams.append('tags', tag))
-
+    employmentTypes?.forEach(type => queryParams.append('employmentTypes', type))
     if (minSalary) queryParams.append('minSalary', minSalary.toString())
     if (maxSalary) queryParams.append('maxSalary', maxSalary.toString())
-    
+    if (experience) {
+      const experienceLevels = experience.split('-')
+      const minExp = experienceLevels[0]
+      const maxExp = experienceLevels[1]
+      if (minExp) queryParams.append('minExperience', minExp)
+      if (maxExp) queryParams.append('maxExperience', maxExp)
+    }
     const params = queryParams.toString()
     const fetchJobs = async () => {
         const response = await fetch(`${JOBS_API_URL}?${params}`)
@@ -29,6 +35,25 @@ export const useJobs = (jobFilters: JobFilters) => {
         queryFn: fetchJobs,
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
+}
+
+export const useRecommendedJobs = () => {
+  const fetchRecommendedJobs = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return [];
+    const response = await fetch(`${USER_PROFILE_API_URL}/recommended-jobs`, {
+      headers: {
+        'x-auth-token': `Bearer ${token}`
+     }
+    })
+    const data = await response.json()
+    return data
+  }
+  return useQuery<Job[], Error>({
+    queryKey: ['jobs', 'recommended'],
+    queryFn: fetchRecommendedJobs,
+    staleTime: 1000 * 60 * 720, //12 Hours
+  })
 }
 
 export const useJob = (id: number) => {
