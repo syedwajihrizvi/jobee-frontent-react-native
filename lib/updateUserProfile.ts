@@ -227,6 +227,11 @@ export const completeProfile = async (
             type
         } as any);
     }
+    const { phoneNumber } = details;
+    if (phoneNumber != null) {
+        const formattedNumber = phoneNumber.replace(/[\s()]/g, '');
+        details.phoneNumber = formattedNumber;
+    }
     formData.append('data', JSON.stringify(details));
     formData.append('resumeTitle', resumeTitle);
     try {

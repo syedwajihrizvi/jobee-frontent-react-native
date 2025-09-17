@@ -313,7 +313,5 @@ export type CompleteProfileForm = {
     city: string;
     country: string;
     summary: string;
-    company: string;
-    position: string;
     phoneNumber: string;
 }
