@@ -49,7 +49,7 @@ const RecommendedJobsPreview = () => {
       <Animated.View style={animatedStyle}>
         {isLoadingRecommended ? (
           <ActivityIndicator color="green" />
-        ) : (
+        ) : recommendedJobs && recommendedJobs?.length > 0 ? (
           <View className="flex flex-row justify-between items-end">
             <View>
               {recommendedJobs
@@ -71,6 +71,11 @@ const RecommendedJobsPreview = () => {
               <Text className="font-quicksand">View All</Text>
             </TouchableOpacity>
           </View>
+        ) : (
+          <Text className="font-quicksand text-sm">
+            No recommended jobs at the moment. Please upload a resume to get
+            recommendations.
+          </Text>
         )}
       </Animated.View>
     </View>

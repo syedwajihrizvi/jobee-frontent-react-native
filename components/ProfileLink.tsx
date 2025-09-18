@@ -20,7 +20,7 @@ const ProfileLink = ({
     >
       <View className="flex-row items-center gap-2">
         {icon}
-        <Text className="ml-2 font-quicksand-semibold text-xl">{label}</Text>
+        <Text className="ml-2 font-quicksand-bold text-lg">{label}</Text>
       </View>
       {rightIcon && (
         <Entypo

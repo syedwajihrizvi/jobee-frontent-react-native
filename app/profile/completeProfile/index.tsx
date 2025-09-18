@@ -495,7 +495,7 @@ const CompleteProfile = () => {
           )}
           {uploadedVideoIntro ? (
             <TouchableOpacity
-              className="bg-red-500 px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md"
+              className="bg-red-500 px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
               onPress={() => setUploadedVideoIntro(null)}
             >
               <Text className="font-quicksand-bold text-white">
@@ -505,7 +505,7 @@ const CompleteProfile = () => {
           ) : (
             <View className="w-full flex-row gap-2">
               <TouchableOpacity
-                className="apply-button px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md"
+                className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
                 onPress={handleVideoUpload}
               >
                 <Text className="font-quicksand-bold text-white">
@@ -513,7 +513,7 @@ const CompleteProfile = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="apply-button px-6 py-3 w-1/2 rounded-full items-center justify-center shadow-md"
+                className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
                 onPress={handleVideoRecord}
               >
                 <Text className="font-quicksand-bold text-white">
@@ -544,7 +544,7 @@ const CompleteProfile = () => {
             profile settings.
           </Text>
           <TouchableOpacity
-            className="apply-button w-1/2 items-center justify-center h-14 px-6 py-2"
+            className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
             onPress={handleDone}
             disabled={isSubmitting}
           >

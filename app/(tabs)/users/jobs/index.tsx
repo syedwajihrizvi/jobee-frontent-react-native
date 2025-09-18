@@ -276,12 +276,16 @@ const Index = () => {
           <RecommendedJobsPreview />
         </View>
       )}
-      {!isAuthLoading && showProfileCompleteReminder && (
+      {/* {!isAuthLoading && showProfileCompleteReminder && (
         <CompleteProfileReminder
           onComplete={handleProfileComplete}
           onLater={handleProfileLater}
         />
-      )}
+      )} */}
+      <CompleteProfileReminder
+        onComplete={handleProfileComplete}
+        onLater={handleProfileLater}
+      />
       {isLoading ? (
         <ActivityIndicator
           size="large"
