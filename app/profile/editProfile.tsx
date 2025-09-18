@@ -37,13 +37,13 @@ import {
   Keyboard,
   Linking,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProfile() {
   const { isLoading, user: authUser, setUser } = useAuthStore();
@@ -67,7 +67,6 @@ export default function EditProfile() {
     useState<Education | null>(null);
   const [isEditingExperience, setIsEditingExperience] =
     useState<Experience | null>(null);
-  const [skillChunks, setSkillChunks] = useState<UserSkill[][]>([]);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [uploadedVideoIntro, setUploadedVideoIntro] =
@@ -100,14 +99,6 @@ export default function EditProfile() {
   const [isLoadingNewExperience, setIsLoadingNewExperience] = useState(false);
   const user = authUser as User | null; // Cast once at the top
 
-  function chunkArray(array: UserSkill[], size: number): UserSkill[][] {
-    const result: UserSkill[][] = [];
-    for (let i = 0; i < array.length; i += size) {
-      result.push(array.slice(i, i + size));
-    }
-    return result;
-  }
-
   useEffect(() => {
     const showSub = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
@@ -123,12 +114,6 @@ export default function EditProfile() {
       hideSub.remove();
     };
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      setSkillChunks(chunkArray(user.skills, 2));
-    }
-  }, [user]);
 
   const handleAddSkill = async () => {
     const { skill, experience } = addSkillForm;
@@ -494,7 +479,7 @@ export default function EditProfile() {
     setIsEditingSkill(skill);
     setAddSkillForm({
       skill: skill?.skill.name || "",
-      experience: skill?.experience.toString() || "",
+      experience: skill?.experience ? skill?.experience.toString() : "",
     });
     bottomSheetRef.current?.expand();
   };
@@ -642,6 +627,13 @@ export default function EditProfile() {
     } finally {
       setIsLoadingNewVideoIntro(false);
     }
+  };
+
+  const renderSnapPointPercentage = () => {
+    if (isAddingSkill) return "35%";
+    if (isAddingEducation) return "45%";
+    if (isAddingExperience) return "50%";
+    return "40%";
   };
 
   const handleRemoveVideoIntro = () => {
@@ -1082,7 +1074,7 @@ export default function EditProfile() {
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
-        snapPoints={["40%"]}
+        snapPoints={[renderSnapPointPercentage()]}
         enablePanDownToClose
       >
         <BottomSheetView
@@ -1112,7 +1104,9 @@ export default function EditProfile() {
                   placeholder={
                     isAddingSkill
                       ? "e.g. 3"
-                      : isEditingSkill?.experience.toString()!
+                      : isEditingSkill?.experience
+                        ? isEditingSkill?.experience.toString()!
+                        : ""
                   }
                   value={addSkillForm.experience.toString()}
                   returnKeyType="done"
@@ -1124,12 +1118,12 @@ export default function EditProfile() {
                   <CustomButton
                     isLoading={isLoadingNewSkill}
                     text={isEditingSkill ? "Update" : "Add Skill"}
-                    customClass="bg-green-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                    customClass="bg-green-500 p-4 rounded-lg flex-1"
                     onClick={handleAddSkill}
                   />
                   <CustomButton
                     text="Cancel"
-                    customClass="bg-red-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                    customClass="bg-red-500 p-4 rounded-lg flex-1"
                     onClick={handleCloseSkillsForm}
                   />
                 </View>
@@ -1185,7 +1179,7 @@ export default function EditProfile() {
                   <CustomButton
                     isLoading={isLoadingNewEducation}
                     text={isEditingEducation ? "Update" : "Add Education"}
-                    customClass="bg-green-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                    customClass="bg-green-500 p-4 rounded-lg"
                     onClick={() => {
                       if (isEditingEducation) {
                         handleEditEducation();
@@ -1196,7 +1190,7 @@ export default function EditProfile() {
                   />
                   <CustomButton
                     text="Cancel"
-                    customClass="bg-red-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                    customClass="bg-red-500 p-4 rounded-lg"
                     onClick={handleCloseEducationForm}
                   />
                 </View>
@@ -1242,7 +1236,7 @@ export default function EditProfile() {
                   <View className="w-1/2">
                     <CustomInput
                       label="End Year"
-                      placeholder="e.g. 2020 (leave empty if present)"
+                      placeholder="e.g. 2020 (Optional)"
                       value={addExperienceForm.to}
                       returnKeyType="done"
                       onChangeText={(toYear) =>
@@ -1295,7 +1289,7 @@ export default function EditProfile() {
                   <CustomButton
                     isLoading={isLoadingNewExperience}
                     text={isEditingExperience ? "Update" : "Add Experience"}
-                    customClass="bg-green-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                    customClass="bg-green-500 p-4 rounded-lg"
                     onClick={() => {
                       if (isEditingExperience) {
                         handleEditExperience();
@@ -1306,7 +1300,7 @@ export default function EditProfile() {
                   />
                   <CustomButton
                     text="Cancel"
-                    customClass="bg-red-500 p-4 rounded-2xl shadow-md border border-gray-100 flex-1"
+                    customClass="bg-red-500 p-4 rounded-lg"
                     onClick={handleCloseExperienceForm}
                   />
                 </View>

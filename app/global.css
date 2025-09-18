@@ -22,7 +22,7 @@
     }
 
     .form-input__label {
-        @apply font-quicksand-bold text-lg
+        @apply font-quicksand-semibold text-md
     }
     .form-input__input {
         @apply rounded-lg p-3 w-full text-base text-black border leading-5

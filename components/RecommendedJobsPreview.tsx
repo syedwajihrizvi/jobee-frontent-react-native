@@ -18,8 +18,8 @@ import Animated, {
 const RecommendedJobsPreview = () => {
   const { data: recommendedJobs, isLoading: isLoadingRecommended } =
     useRecommendedJobs();
-  const [open, setOpen] = useState(true);
-  const height = useSharedValue(50);
+  const [open, setOpen] = useState(false);
+  const height = useSharedValue(0);
 
   const toggleDropdown = () => {
     setOpen(!open);

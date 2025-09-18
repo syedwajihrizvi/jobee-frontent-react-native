@@ -10,7 +10,11 @@ import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { applyToJob } from "@/lib/jobEndpoints";
 import { useJob, useJobApplication } from "@/lib/services/useJobs";
-import { getEmploymentType, onActionSuccess } from "@/lib/utils";
+import {
+  getEmploymentType,
+  getWorkArrangement,
+  onActionSuccess,
+} from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { CreateApplication, User, UserDocument } from "@/type";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -162,7 +166,11 @@ const JobDetails = () => {
                   {job?.title}
                 </Text>
                 <Text className="font-quicksand-semibold text-sm">
-                  {job?.location}
+                  {job?.location} · {getEmploymentType(job?.employmentType)} ·{" "}
+                  {getWorkArrangement(job?.setting)}
+                </Text>
+                <Text className="font-quicksand-semibold text-sm">
+                  {`$${job?.minSalary} - $${job?.maxSalary}`}
                 </Text>
               </View>
               {isAuthenticated && (
@@ -194,18 +202,9 @@ const JobDetails = () => {
               {job?.description}
             </Text>
             <View className="mt-2 flex-col gap-2">
-              <BoldLabeledText label="Location" value={job?.location!} />
-              <BoldLabeledText
-                label="Salary"
-                value={`$${job?.minSalary} - $${job?.maxSalary} per year`}
-              />
               <BoldLabeledText
                 label="Experience"
                 value={job?.experience.toLocaleString()!}
-              />
-              <BoldLabeledText
-                label="Employment Type"
-                value={getEmploymentType(job?.employmentType)!}
               />
               <BoldLabeledText label="Posted On" value="August 1st 2025" />
               <BoldLabeledText label="Apply By" value="August 31st 2025" />
