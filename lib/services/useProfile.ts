@@ -51,7 +51,6 @@ export const useInterviewDetails = (interviewId?: number) => {
             }
         })
         const data = await response.json()
-        console.log(data)
         return data
     }
     return useQuery<InterviewDetails, Error>({

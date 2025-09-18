@@ -37,9 +37,11 @@ const RecommendedJobsPreview = () => {
         className="flex flex-row items-center justify-between"
         onPress={toggleDropdown}
       >
-        <Text className="font-quicksand-bold text-md">
-          Recommended {`(${recommendedJobs?.length})`}
-        </Text>
+        <View className="flex flex-row items-center gap-2">
+          <Text className="font-quicksand-bold text-md">
+            Recommended ({recommendedJobs ? recommendedJobs.length : 0})
+          </Text>
+        </View>
         <Entypo
           name={open ? "chevron-up" : "chevron-down"}
           size={18}
@@ -50,7 +52,7 @@ const RecommendedJobsPreview = () => {
         {isLoadingRecommended ? (
           <ActivityIndicator color="green" />
         ) : recommendedJobs && recommendedJobs?.length > 0 ? (
-          <View className="flex flex-row justify-between items-end">
+          <View className="flex flex-row justify-between items-start">
             <View>
               {recommendedJobs
                 ?.slice(0, Math.min(recommendedJobs.length, 3))

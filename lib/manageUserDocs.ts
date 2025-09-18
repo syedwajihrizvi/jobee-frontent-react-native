@@ -21,7 +21,6 @@ export const uploadUserDocument = async (
         name: safeName || 'document.pdf',
         type: document.assets![0].mimeType,
     } as any)
-    console.log(formData)
     formData.append('documentType', documentType);
     formData.append('title', documentTitle);
     const response = await fetch(

@@ -917,11 +917,11 @@ export default function EditProfile() {
                   <View className="flex flex-row flex-wrap gap-2">
                     {user?.skills.map((skill) => (
                       <TouchableOpacity
-                        className="relative bg-red-100 px-4 py-2 rounded-full flex-row items-center gap-1"
+                        className="relative bg-green-100 px-4 py-2 rounded-full flex-row items-center gap-1"
                         onPress={() => handleIsEditingSkill(skill)}
                         key={skill.id}
                       >
-                        <Text className="font-quicksand-semibold text-md">
+                        <Text className="font-quicksand-semibold text-md text-green-800">
                           {skill.skill.name}
                         </Text>
                       </TouchableOpacity>

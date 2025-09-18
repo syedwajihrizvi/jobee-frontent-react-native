@@ -54,7 +54,7 @@ const FavoriteJob = ({ jobId }: { jobId: number }) => {
       >
         <AntDesign
           name="star"
-          size={28}
+          size={24}
           color={isFavorite ? "gold" : "black"}
         />
       </TouchableOpacity>

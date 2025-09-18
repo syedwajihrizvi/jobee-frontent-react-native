@@ -103,9 +103,9 @@ export const getInterviewStyle = (status: string) => {
 export const getEmploymentType = (type?: string) => {
   switch(type) {
     case 'FULL_TIME':
-      return "Full Time";
+      return "Full-Time";
     case 'PART_TIME':
-      return "Part Time";
+      return "Part-Time";
     case 'CONTRACT':
       return "Contract";
     case 'INTERN':
