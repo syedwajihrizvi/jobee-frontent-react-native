@@ -73,6 +73,7 @@ export type Job = {
     applicants: number,
     createdAt: string,
     employmentType: string,
+    setting: string
     applications: Application[],
     totalShortListedCandidates: number,
     appDeadline: string
@@ -88,6 +89,7 @@ export type JobFilters = {
     maxSalary?: number;
     experience?: string;
     employmentTypes?: string[];
+    workArrangements?: string[];
 }
 
 export type ProfileLinks = {
@@ -258,6 +260,8 @@ export type CreateJobForm = {
     maxSalary: string;
     experience: string;
     employmentType: string;
+    setting: string;
+    appDeadline: string;
     tags: string[]
 }
 

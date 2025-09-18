@@ -115,6 +115,17 @@ export const getEmploymentType = (type?: string) => {
   }
 }
 
+export const getWorkArrangement = (arrangement?: string) => {
+  switch(arrangement) {
+    case 'ON_SITE':
+      return "On-Site";
+    case 'REMOTE':
+      return "Remote";
+    case 'HYBRID':
+      return "Hybrid";
+  }
+}
+
 export const convert10DigitNumberToPhoneFormat = (num: string) => {
   if (num.length !== 10) return num;
   const areaCode = num.slice(0, 3);

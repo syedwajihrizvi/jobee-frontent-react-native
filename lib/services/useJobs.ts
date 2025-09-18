@@ -8,13 +8,14 @@ const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
 
 export const useJobs = (jobFilters: JobFilters) => {
-    const { search, locations, companies, tags, minSalary, maxSalary, experience, employmentTypes } = jobFilters
+    const { search, locations, companies, tags, minSalary, maxSalary, experience, employmentTypes, workArrangements } = jobFilters
     const queryParams = new URLSearchParams()
     if (search) queryParams.append('search', search)
     locations.forEach(location => queryParams.append('locations', location))
     if (companies) companies.forEach(company => queryParams.append('companies', company))
     tags.forEach(tag => queryParams.append('tags', tag))
     employmentTypes?.forEach(type => queryParams.append('employmentTypes', type))
+    workArrangements?.forEach(arrangement => queryParams.append('settings', arrangement))
     if (minSalary) queryParams.append('minSalary', minSalary.toString())
     if (maxSalary) queryParams.append('maxSalary', maxSalary.toString())
     if (experience) {

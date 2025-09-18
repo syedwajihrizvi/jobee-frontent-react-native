@@ -1,6 +1,11 @@
 import BusinessJobListings from "@/components/BusinessJobListings";
 import SearchBar from "@/components/SearchBar";
-import { images } from "@/constants";
+import {
+  employmentTypes,
+  experienceLevels,
+  images,
+  workArrangements,
+} from "@/constants";
 import { useJobsByCompany } from "@/lib/services/useJobs";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, JobFilters } from "@/type";
@@ -12,6 +17,8 @@ import {
   Dimensions,
   FlatList,
   Image,
+  ScrollView,
+  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
@@ -35,7 +42,11 @@ const Jobs = () => {
     tags: [],
     minSalary: undefined,
     maxSalary: undefined,
+    employmentTypes: [],
+    workArrangements: [],
+    experience: undefined,
   };
+
   const locationInputRef = useRef<TextInput>(null);
   const { user: businessUser } = useAuthStore();
   const user = businessUser as BusinessUser | null;
@@ -92,6 +103,50 @@ const Jobs = () => {
     locationInputRef.current?.clear();
   };
 
+  const addEmploymentType = (type: string) => {
+    if (type && !tempFilters.employmentTypes?.includes(type)) {
+      setTempFilterCount((prev) => prev + 1);
+      setTempFilters({
+        ...tempFilters,
+        employmentTypes: [...(tempFilters.employmentTypes || []), type],
+      });
+    } else if (type && tempFilters.employmentTypes?.includes(type)) {
+      setTempFilterCount((prev) => prev - 1);
+      setTempFilters({
+        ...tempFilters,
+        employmentTypes: tempFilters.employmentTypes.filter((t) => t !== type),
+      });
+    }
+  };
+
+  const addWorkArrangement = (type: string) => {
+    if (type && !tempFilters.workArrangements?.includes(type)) {
+      setTempFilterCount((prev) => prev + 1);
+      setTempFilters({
+        ...tempFilters,
+        workArrangements: [...(tempFilters.workArrangements || []), type],
+      });
+    } else if (type && tempFilters.workArrangements?.includes(type)) {
+      setTempFilterCount((prev) => prev - 1);
+      setTempFilters({
+        ...tempFilters,
+        workArrangements: tempFilters.workArrangements.filter(
+          (t) => t !== type
+        ),
+      });
+    }
+  };
+
+  const addExperienceLevel = (level: string) => {
+    if (level && tempFilters.experience !== level) {
+      setTempFilterCount((prev) => prev + 1);
+      setTempFilters({ ...tempFilters, experience: level });
+    } else if (level && tempFilters.experience === level) {
+      setTempFilterCount((prev) => prev - 1);
+      setTempFilters({ ...tempFilters, experience: "" });
+    }
+  };
+
   const handleMinSalary = (text: string) => {
     const salary = Number(text);
     if (isNaN(salary)) {
@@ -135,6 +190,7 @@ const Jobs = () => {
 
   return (
     <SafeAreaView>
+      <StatusBar hidden={true} />
       <View className="w-full flex-row items-center justify-center px-2 gap-4">
         <SearchBar
           placeholder="Search for Jobs..."
@@ -199,40 +255,98 @@ const Jobs = () => {
               animatedStyle,
             ]}
           >
-            <View>
+            <ScrollView className="px-4 pb-10">
+              <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-4">
+                Filter Jobs
+              </Text>
               <View>
-                <Text className="font-quicksand-bold text-2xl text-gray-900 text-center my-4">
-                  Filter Jobs
+                <Text className="font-quicksand-medium text-md text-gray-900">
+                  Location
                 </Text>
-                <View>
-                  <Text className="font-quicksand-medium text-lg text-gray-900">
-                    Location
-                  </Text>
-                  <TextInput
-                    ref={locationInputRef}
-                    className="border border-black rounded-lg p-3 mt-2"
-                    placeholder="e.g. New York, San Francisco"
-                    returnKeyType="done"
-                    onSubmitEditing={(event) =>
-                      addLocation(event.nativeEvent.text.trim())
-                    }
-                  />
-                  <View className="flex-row flex-wrap gap-2 mt-3">
-                    {tempFilters.locations.map((location, index) => (
-                      <TouchableOpacity key={index}>
-                        <View className="bg-green-100 px-3 py-1 rounded-full">
-                          <Text className="text-green-800 font-quicksand-medium">
-                            {location}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                <TextInput
+                  ref={locationInputRef}
+                  className="border border-black rounded-lg p-3 mt-2"
+                  placeholder="e.g. New York, San Francisco"
+                  returnKeyType="done"
+                  onSubmitEditing={(event) =>
+                    addLocation(event.nativeEvent.text.trim())
+                  }
+                />
+                <View className="flex-row flex-wrap gap-2 mt-3">
+                  {tempFilters.locations.map((location, index) => (
+                    <TouchableOpacity key={index}>
+                      <View className="bg-green-100 px-3 py-1 rounded-full">
+                        <Text className="text-green-800 font-quicksand-medium">
+                          {location}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
+                <Text className="font-quicksand-medium text-md text-gray-900">
+                  Employment Type
+                </Text>
+                <View className="flex flex-row flex-wrap gap-2 mt-2">
+                  {employmentTypes.map((type) => (
+                    <TouchableOpacity
+                      className={`${tempFilters.employmentTypes?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() => addEmploymentType(type.value)}
+                      activeOpacity={1}
+                      key={type.value}
+                    >
+                      <Text className="font-quicksand-medium text-green-800 text-sm">
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="divider" />
+              <View>
+                <Text className="font-quicksand-medium text-md text-gray-900">
+                  Work Arrangement
+                </Text>
+                <View className="flex flex-row flex-wrap gap-2 mt-2">
+                  {workArrangements.map((type) => (
+                    <TouchableOpacity
+                      className={`${tempFilters.workArrangements?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() => addWorkArrangement(type.value)}
+                      activeOpacity={1}
+                      key={type.value}
+                    >
+                      <Text className="font-quicksand-medium text-green-800 text-sm">
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="divider" />
+              <View>
+                <Text className="font-quicksand-medium text-md text-gray-900">
+                  Experience (Years)
+                </Text>
+                <View className="flex flex-row flex-wrap gap-2 mt-2">
+                  {experienceLevels.map((type) => (
+                    <TouchableOpacity
+                      className={`${tempFilters.experience === type.value ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() => addExperienceLevel(type.value)}
+                      activeOpacity={1}
+                      key={type.value}
+                    >
+                      <Text className="font-quicksand-medium text-green-800 text-sm">
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="divider" />
+              <View>
+                <Text className="font-quicksand-medium text-md text-gray-900">
                   Skills
                 </Text>
                 <TextInput
@@ -285,23 +399,19 @@ const Jobs = () => {
               </View>
               <View className="flex-row justify-center items-center gap-2">
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
                   onPress={handleFilterApply}
                 >
-                  <Text className="font-quicksand-semibold text-md text-white">
-                    Apply
-                  </Text>
+                  <Text className="font-quicksand-semibold text-md">Apply</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
                   onPress={handleClearFilters}
                 >
-                  <Text className="font-quicksand-semibold text-md text-white">
-                    Clear
-                  </Text>
+                  <Text className="font-quicksand-semibold text-md">Clear</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </ScrollView>
           </Animated.View>
         </>
       )}

@@ -3,7 +3,12 @@ import JobListing from "@/components/JobListing";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
 import SearchBar from "@/components/SearchBar";
-import { employmentTypes, experienceLevels, sounds } from "@/constants";
+import {
+  employmentTypes,
+  experienceLevels,
+  sounds,
+  workArrangements,
+} from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
 import { useJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
 import { onActionSuccess } from "@/lib/utils";
@@ -19,6 +24,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  ScrollView,
   StatusBar,
   Text,
   TextInput,
@@ -47,6 +53,7 @@ const Index = () => {
     maxSalary: undefined,
     experience: "",
     employmentTypes: [],
+    workArrangements: [],
   };
   const player = useAudioPlayer(sounds.popSound);
   const queryClient = useQueryClient();
@@ -54,6 +61,7 @@ const Index = () => {
   const [tempFilters, setTempFilters] = useState<JobFilters>({
     ...defaultFilters,
   });
+
   const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
   const [quickApplyJob, setQuickApplyJob] = useState<number | null>(null);
   const [quickApplyLabel, setQuickApplyLabel] = useState("");
@@ -177,6 +185,24 @@ const Index = () => {
     }
   };
 
+  const addWorkArrangement = (type: string) => {
+    if (type && !tempFilters.workArrangements?.includes(type)) {
+      setTempFilterCount((prev) => prev + 1);
+      setTempFilters({
+        ...tempFilters,
+        workArrangements: [...(tempFilters.workArrangements || []), type],
+      });
+    } else if (type && tempFilters.workArrangements?.includes(type)) {
+      setTempFilterCount((prev) => prev - 1);
+      setTempFilters({
+        ...tempFilters,
+        workArrangements: tempFilters.workArrangements.filter(
+          (t) => t !== type
+        ),
+      });
+    }
+  };
+
   const addExperienceLevel = (level: string) => {
     if (level && tempFilters.experience !== level) {
       setTempFilterCount((prev) => prev + 1);
@@ -276,16 +302,12 @@ const Index = () => {
           <RecommendedJobsPreview />
         </View>
       )}
-      {/* {!isAuthLoading && showProfileCompleteReminder && (
+      {!isAuthLoading && showProfileCompleteReminder && (
         <CompleteProfileReminder
           onComplete={handleProfileComplete}
           onLater={handleProfileLater}
         />
-      )} */}
-      <CompleteProfileReminder
-        onComplete={handleProfileComplete}
-        onLater={handleProfileLater}
-      />
+      )}
       {isLoading ? (
         <ActivityIndicator
           size="large"
@@ -346,12 +368,12 @@ const Index = () => {
               animatedStyle,
             ]}
           >
-            <View>
-              <Text className="font-quicksand-bold text-2xl text-gray-900 text-center my-4">
+            <ScrollView className="px-4 pb-10">
+              <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-2">
                 Filter Jobs
               </Text>
               <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
+                <Text className="font-quicksand-medium text-md text-gray-900">
                   Location
                 </Text>
                 <TextInput
@@ -377,7 +399,7 @@ const Index = () => {
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
+                <Text className="font-quicksand-medium text-md text-gray-900">
                   Companies
                 </Text>
                 <TextInput
@@ -403,7 +425,7 @@ const Index = () => {
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
+                <Text className="font-quicksand-medium text-md text-gray-900">
                   Employment Type
                 </Text>
                 <View className="flex flex-row flex-wrap gap-2 mt-2">
@@ -423,7 +445,27 @@ const Index = () => {
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
+                <Text className="font-quicksand-medium text-md text-gray-900">
+                  Work Arrangement
+                </Text>
+                <View className="flex flex-row flex-wrap gap-2 mt-2">
+                  {workArrangements.map((type) => (
+                    <TouchableOpacity
+                      className={`${tempFilters.workArrangements?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                      onPress={() => addWorkArrangement(type.value)}
+                      activeOpacity={1}
+                      key={type.value}
+                    >
+                      <Text className="font-quicksand-medium text-green-800 text-sm">
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View className="divider" />
+              <View>
+                <Text className="font-quicksand-medium text-md text-gray-900">
                   Experience (Years)
                 </Text>
                 <View className="flex flex-row flex-wrap gap-2 mt-2">
@@ -443,7 +485,7 @@ const Index = () => {
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
+                <Text className="font-quicksand-medium text-md text-gray-900">
                   Skills
                 </Text>
                 <TextInput
@@ -508,7 +550,7 @@ const Index = () => {
                   <Text className="font-quicksand-semibold text-md">Clear</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </ScrollView>
           </Animated.View>
         </>
       )}

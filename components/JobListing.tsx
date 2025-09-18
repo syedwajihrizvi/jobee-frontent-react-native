@@ -2,6 +2,7 @@ import {
   formatDate,
   getApplicationStatus,
   getEmploymentType,
+  getWorkArrangement,
 } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { Job } from "@/type";
@@ -71,8 +72,9 @@ const JobListing = ({
           )}
         </View>
         <Text className="font-quicksand-bold text-xl">{job.title}</Text>
-        <Text className="font-quicksand-medium text-lg">
-          {job.location} | {getEmploymentType(job.employmentType)}
+        <Text className="font-quicksand-medium text-md">
+          {job.location} · {getEmploymentType(job.employmentType)} ·{" "}
+          {getWorkArrangement(job.setting)}
         </Text>
         <Text className="font-quicksand-semibold text-sm">
           ${job.minSalary} - ${job.maxSalary}

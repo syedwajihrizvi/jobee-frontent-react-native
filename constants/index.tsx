@@ -60,6 +60,12 @@ export const employmentTypes = [
   { label: "Freelance", value: "FREELANCE" },
 ];
 
+export const workArrangements = [
+  { label: "On-Site", value: "ON_SITE" },
+  { label: "Remote", value: "REMOTE" },
+  { label: "Hybrid", value: "HYBRID" },
+];
+
 export const experienceLevels = [
   { label: "0-2", value: "0-2" },
   { label: "3-5", value: "3-5" },
