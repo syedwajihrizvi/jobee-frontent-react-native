@@ -942,7 +942,7 @@ export default function EditProfile() {
             <View className="divider" />
             <View className="px-4 py-2 gap-4">
               <View className="flex flex-row justify-between items-start">
-                <Text className="font-quicksand-semibold text-xl">
+                <Text className="font-quicksand-semibold text-lg">
                   Education
                 </Text>
                 <TouchableOpacity

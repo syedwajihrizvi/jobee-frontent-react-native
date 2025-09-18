@@ -1,21 +1,36 @@
-import { Education } from '@/type'
-import AntDesign from '@expo/vector-icons/AntDesign'
-import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { Education } from "@/type";
+import { Feather } from "@expo/vector-icons";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
-const ProfileEducationCard = ({ education, onEditEducation }: { education: Education, onEditEducation: () => void }) => {
+const ProfileEducationCard = ({
+  education,
+  onEditEducation,
+}: {
+  education: Education;
+  onEditEducation: () => void;
+}) => {
   return (
-    <View className='bg-white p-4 rounded-lg shadow-md w-full relative'>
-      <View className='w-full flex-row items-center justify-between'>
-        <Text className='font-quicksand-bold italic'>{education.institution}</Text>
-        <Text className='font-quicksand-bold italic'>{education.fromYear}-{education.toYear ? education.toYear : "Present"}</Text>
+    <View className="bg-white p-4 rounded-lg shadow-md w-full relative">
+      <View className="w-full flex-row items-center justify-between">
+        <Text className="font-quicksand-semibold text-md w-2/3">
+          {education.institution}
+        </Text>
+        <Text className="font-quicksand-semibold text-sm">
+          {education.fromYear}-{education.toYear ? education.toYear : "Present"}
+        </Text>
       </View>
-      <Text className='font-quicksand-semibold text-sm'>{education.degree}</Text>
-        <TouchableOpacity className="absolute -top-2 -right-2 rounded-full p-1" onPress={onEditEducation}>
-            <AntDesign name="edit" size={20} color="black" />
-        </TouchableOpacity>
+      <Text className="font-quicksand-semibold text-sm">
+        {education.degree}
+      </Text>
+      <TouchableOpacity
+        className="absolute -top-2 -right-2 rounded-full p-1"
+        onPress={onEditEducation}
+      >
+        <Feather name="edit" size={20} color="black" />
+      </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
-export default ProfileEducationCard
+export default ProfileEducationCard;

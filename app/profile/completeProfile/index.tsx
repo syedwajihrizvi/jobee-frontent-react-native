@@ -1,9 +1,10 @@
 import UserVideoIntro from "@/components/UserVideoIntro";
-import { images } from "@/constants";
+import { images, sounds } from "@/constants";
 import { completeProfile } from "@/lib/updateUserProfile";
 import { convert10DigitNumberToPhoneFormat } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { CompleteProfileForm } from "@/type";
+import { useAudioPlayer } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -36,6 +37,7 @@ const CompleteProfile = () => {
   const { fetchAuthenticatedUser } = useAuthStore();
   const viewRef = useRef<KeyboardAvoidingView | null>(null);
   const width = Dimensions.get("window").width;
+  const player = useAudioPlayer(sounds.popSound);
   const [resumeTitle, setResumeTitle] = useState("");
   const [uploadedResume, setUploadedResume] =
     useState<DocumentPicker.DocumentPickerResult | null>(null);
@@ -289,6 +291,8 @@ const CompleteProfile = () => {
         return;
       }
       setShowCompleteProfileModal(true);
+      player.seekTo(0);
+      player.play();
       await fetchAuthenticatedUser();
     } catch (error) {
       console.error("Error completing profile:", error);
@@ -313,17 +317,13 @@ const CompleteProfile = () => {
                 className="apply-button px-6 py-3 rounded-lg shadow-md"
                 onPress={handleProfileImagePicker}
               >
-                <Text className="font-quicksand-bold text-white">
-                  Upload Photo
-                </Text>
+                <Text className="font-quicksand-semibold">Upload Photo</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="apply-button px-6 py-3 rounded-lg shadow-md"
                 onPress={handleProfileImageCamera}
               >
-                <Text className="font-quicksand-bold text-white">
-                  Take Photo
-                </Text>
+                <Text className="font-quicksand-semibold">Take Photo</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -362,14 +362,10 @@ const CompleteProfile = () => {
                   className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
                   onPress={handleUpload}
                 >
-                  <Text className="font-quicksand-bold text-white">
-                    Upload Resume
-                  </Text>
+                  <Text className="font-quicksand-semibold">Upload Resume</Text>
                 </TouchableOpacity>
                 <TouchableOpacity className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md">
-                  <Text className="font-quicksand-bold text-white">
-                    Take Photo
-                  </Text>
+                  <Text className="font-quicksand-semibold">Take Photo</Text>
                 </TouchableOpacity>
               </View>
               <Text className="text-center font-quicksand-bold text-lg">
@@ -498,9 +494,7 @@ const CompleteProfile = () => {
               className="bg-red-500 px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
               onPress={() => setUploadedVideoIntro(null)}
             >
-              <Text className="font-quicksand-bold text-white">
-                Remove Video
-              </Text>
+              <Text className="font-quicksand-semibold">Remove Video</Text>
             </TouchableOpacity>
           ) : (
             <View className="w-full flex-row gap-2">
@@ -508,17 +502,13 @@ const CompleteProfile = () => {
                 className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
                 onPress={handleVideoUpload}
               >
-                <Text className="font-quicksand-bold text-white">
-                  Upload Video
-                </Text>
+                <Text className="font-quicksand-semibold">Upload Video</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="apply-button px-6 py-3 w-1/2 rounded-lg items-center justify-center shadow-md"
                 onPress={handleVideoRecord}
               >
-                <Text className="font-quicksand-bold text-white">
-                  Record Video
-                </Text>
+                <Text className="font-quicksand-semibold">Record Video</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -549,9 +539,14 @@ const CompleteProfile = () => {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator animating={isSubmitting} color="white" />
+              <View className="flex flex-row gap-2 items-center justify-center">
+                <Text className="font-quicksand-semibold">
+                  Updating Profile
+                </Text>
+                <ActivityIndicator color="white" />
+              </View>
             ) : (
-              <Text className="font-quicksand-semibold text-white">Done</Text>
+              <Text className="font-quicksand-semibold">Done</Text>
             )}
           </TouchableOpacity>
         </View>

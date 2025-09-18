@@ -12,15 +12,21 @@ const ProfileExperienceCard = ({
 }) => {
   return (
     <View className="bg-white p-4 rounded-lg shadow-md w-full relative">
-      <View className="w-full flex-row items-center justify-between">
-        <Text className="font-bold text-lg">{experience.title}</Text>
-        <Text className="font-semibold text-md">
+      <View className="w-full flex-row items-start justify-between">
+        <Text className="font-quicksand-semibold text-md w-2/3">
+          {experience.title}
+        </Text>
+        <Text className="font-quicksand-semibold text-sm">
           {experience.from} -{" "}
           {experience.currentlyWorking ? "Present" : experience.to}
         </Text>
       </View>
-      <Text className="italic text-md">{experience.company}</Text>
-      <Text className="text-md">{experience.description}</Text>
+      <Text className="font-quicksand-semibold text-sm">
+        {experience.company}
+      </Text>
+      <Text className="font-quicksand-semibold text-sm">
+        {experience.description}
+      </Text>
       <TouchableOpacity
         className="absolute -top-2 -right-2 rounded-full p-1"
         onPress={onEditExperience}
