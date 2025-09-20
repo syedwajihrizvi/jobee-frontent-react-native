@@ -16,9 +16,11 @@ const ProfileEducationCard = ({
         <Text className="font-quicksand-semibold text-md w-2/3">
           {education.institution}
         </Text>
-        <Text className="font-quicksand-semibold text-sm">
-          {education.fromYear}-{education.toYear ? education.toYear : "Present"}
-        </Text>
+        {education.fromYear && education.toYear && (
+          <Text className="font-quicksand-semibold text-sm">
+            {education.fromYear}-{education.toYear}
+          </Text>
+        )}
       </View>
       <Text className="font-quicksand-semibold text-sm">
         {education.degree}

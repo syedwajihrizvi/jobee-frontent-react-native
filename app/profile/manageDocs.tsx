@@ -120,6 +120,10 @@ const ManageDocuments = () => {
       setDocumentTitle("");
       addDocumentRef.current?.close();
       queryClient.invalidateQueries({ queryKey: ["documents", "user"] });
+      // Incase of update to skills, educations or experiences
+      queryClient.invalidateQueries({ queryKey: ["skills", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["education", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["experience", "user"] });
     } catch (error) {
       console.error("Error uploading document:", error);
       Alert.alert("Error", "Failed to upload document. Please try again.");
@@ -345,7 +349,7 @@ const ManageDocuments = () => {
                     disabled={uploadingDocument}
                   >
                     {uploadingDocument ? (
-                      <ActivityIndicator size="small" color="#0000ff" />
+                      <ActivityIndicator size="small" color="white" />
                     ) : (
                       <Text className="font-quicksand-semibold text-md">
                         Done

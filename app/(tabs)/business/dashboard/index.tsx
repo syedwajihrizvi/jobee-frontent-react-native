@@ -1,7 +1,8 @@
 import { Entypo } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { SafeAreaView, Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Dashboard = () => {
   return (

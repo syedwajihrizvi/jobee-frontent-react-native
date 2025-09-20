@@ -6,6 +6,9 @@ import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
 import UserVideoIntro from "@/components/UserVideoIntro";
 import { getS3VideoIntroUrl } from "@/lib/s3Urls";
+import { useEducations } from "@/lib/services/useEducations";
+import { useExperiences } from "@/lib/services/useExperiences";
+import { useSkills } from "@/lib/services/useSkills";
 import {
   addEducation,
   addExperience,
@@ -47,6 +50,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProfile() {
   const { isLoading, user: authUser, setUser } = useAuthStore();
+  const { data: userSkills } = useSkills();
+  const { data: userEducations } = useEducations();
+  const { data: userExperiences } = useExperiences();
+  const [skills, setSkills] = useState<UserSkill[]>(userSkills || []);
+  const [educations, setEducations] = useState<Education[]>(
+    userEducations || []
+  );
+  const [experiences, setExperiences] = useState<Experience[]>(
+    userExperiences || []
+  );
   const defaultOpenSectionValue = {
     general: false,
     skills: false,
@@ -115,6 +128,12 @@ export default function EditProfile() {
     };
   }, []);
 
+  useEffect(() => {
+    setSkills(userSkills || []);
+    setEducations(userEducations || []);
+    setExperiences(userExperiences || []);
+  }, [userSkills, userEducations, userExperiences]);
+
   const handleAddSkill = async () => {
     const { skill, experience } = addSkillForm;
     if (!skill || !experience) {
@@ -140,18 +159,16 @@ export default function EditProfile() {
       };
       let newSkills = [];
       const userContainsSkill =
-        user?.skills && user?.skills.some((s) => s.id === newSkill.id);
+        skills && skills.some((s) => s.id === newSkill.id);
       if (userContainsSkill) {
-        newSkills = [
-          ...user.skills.filter((s) => s.id !== newSkill.id),
-          newSkill,
-        ];
+        newSkills = [...skills.filter((s) => s.id !== newSkill.id), newSkill];
       } else {
-        newSkills = [...(user?.skills ?? []), newSkill];
+        newSkills = [...(skills ?? []), newSkill];
       }
-      if (user) {
-        setUser({ ...user, skills: newSkills });
-      }
+
+      console.log(newSkills);
+      console.log(newSkill);
+      setSkills(newSkills);
       Alert.alert("Skill added successfully!");
       setAddSkillForm({ skill: "", experience: "" });
       bottomSheetRef.current?.close();
@@ -215,10 +232,8 @@ export default function EditProfile() {
         fromYear: "",
         toYear: "",
       });
-      let newUserEducation = [...(user?.education ?? []), newEducation];
-      if (user) {
-        setUser({ ...user, education: newUserEducation });
-      }
+      let newUserEducation = [...(educations ?? []), newEducation];
+      setEducations(newUserEducation);
       bottomSheetRef.current?.close();
     } catch (error) {
       Alert.alert("Failed to add education. Please try again.");
@@ -279,12 +294,10 @@ export default function EditProfile() {
         toYear: "",
       });
       let newUserEducation = [
-        ...(user?.education?.filter((e) => e.id !== result.id) ?? []),
+        ...(educations.filter((e) => e.id !== result.id) ?? []),
         newEducation,
       ];
-      if (user) {
-        setUser({ ...user, education: newUserEducation });
-      }
+      setEducations(newUserEducation);
       bottomSheetRef.current?.close();
     } catch (error) {
       Alert.alert("Failed to add education. Please try again.");
@@ -343,10 +356,8 @@ export default function EditProfile() {
         to: result.to,
         currentlyWorking: result.currentlyWorking,
       };
-      const newExperiences = [...(user?.experiences ?? []), newExperience];
-      if (user) {
-        setUser({ ...user, experiences: newExperiences });
-      }
+      const newExperiences = [...(userExperiences ?? []), newExperience];
+      setExperiences(newExperiences);
       Alert.alert("Experience added successfully!");
       setAddExperienceForm({
         title: "",
@@ -411,11 +422,9 @@ export default function EditProfile() {
       }
       let newExperiences = [
         newExperience,
-        ...(user?.experiences.filter((e) => e.id !== newExperience.id) ?? []),
+        ...(userExperiences?.filter((e) => e.id !== newExperience.id) ?? []),
       ];
-      if (user) {
-        setUser({ ...user, experiences: newExperiences });
-      }
+      setExperiences(newExperiences);
       Alert.alert("Experience updated successfully!");
       setAddExperienceForm({
         title: "",
@@ -434,6 +443,15 @@ export default function EditProfile() {
     } finally {
       setIsLoadingNewExperience(false);
     }
+  };
+
+  const resetAllBottomSheetStates = () => {
+    setIsAddingSkill(false);
+    setIsEditingSkill(null);
+    setIsAddingEducation(false);
+    setIsEditingEducation(null);
+    setIsAddingExperience(false);
+    setIsEditingExperience(null);
   };
 
   const openBottomSheet = (type: "skill" | "education" | "experience") => {
@@ -476,6 +494,7 @@ export default function EditProfile() {
   };
 
   const handleIsEditingSkill = (skill: UserSkill | null) => {
+    resetAllBottomSheetStates();
     setIsEditingSkill(skill);
     setAddSkillForm({
       skill: skill?.skill.name || "",
@@ -485,28 +504,25 @@ export default function EditProfile() {
   };
 
   const handleCloseSkillsForm = () => {
-    setIsAddingSkill(false);
-    setIsEditingSkill(null);
+    resetAllBottomSheetStates();
     setAddSkillForm({ skill: "", experience: "" });
     bottomSheetRef.current?.close();
   };
 
   const handleIsEditingEducation = (education: Education | null) => {
+    resetAllBottomSheetStates();
     setIsEditingEducation(education);
-    setIsEditingExperience(null);
-    setIsEditingSkill(null);
     setAddEducationForm({
       institution: education?.institution || "",
       degree: education?.degree || "",
-      fromYear: education?.fromYear.toString() || "",
-      toYear: education?.toYear?.toString() || "",
+      fromYear: education?.fromYear || "",
+      toYear: education?.toYear || "",
     });
     bottomSheetRef.current?.expand();
   };
 
   const handleCloseEducationForm = () => {
-    setIsAddingEducation(false);
-    setIsEditingEducation(null);
+    resetAllBottomSheetStates();
     setAddEducationForm({
       institution: "",
       degree: "",
@@ -517,8 +533,7 @@ export default function EditProfile() {
   };
 
   const handleCloseExperienceForm = () => {
-    setIsAddingExperience(false);
-    setIsEditingExperience(null);
+    resetAllBottomSheetStates();
     setAddExperienceForm({
       title: "",
       company: "",
@@ -532,6 +547,7 @@ export default function EditProfile() {
   };
 
   const handleIsEditingExperience = (experience: Experience | null) => {
+    resetAllBottomSheetStates();
     setIsEditingExperience(experience);
     setAddExperienceForm({
       title: experience?.title || "",
@@ -630,9 +646,9 @@ export default function EditProfile() {
   };
 
   const renderSnapPointPercentage = () => {
-    if (isAddingSkill) return "35%";
-    if (isAddingEducation) return "45%";
-    if (isAddingExperience) return "50%";
+    if (isAddingSkill || isEditingSkill) return "35%";
+    if (isAddingEducation || isEditingEducation) return "45%";
+    if (isAddingExperience || isEditingExperience) return "50%";
     return "40%";
   };
 
@@ -905,9 +921,18 @@ export default function EditProfile() {
                 </TouchableOpacity>
               </View>
               {openSection.skills && (
-                <View className="flex flex-col flex-wrap gap-4 w-full">
+                <View className="flex flex-row flex-wrap gap-4 w-full">
+                  <TouchableOpacity
+                    className="bg-green-500 rounded-xl px-4 py-2 flex-row items-center justify-center shadow-md w-1/2 mt-2"
+                    onPress={() => openBottomSheet("skill")}
+                  >
+                    <Text className="text-white font-quicksand-semibold text-sm mr-2">
+                      New Skill
+                    </Text>
+                    <AntDesign name="plus" size={16} color="white" />
+                  </TouchableOpacity>
                   <View className="flex flex-row flex-wrap gap-2">
-                    {user?.skills.map((skill) => (
+                    {skills?.map((skill) => (
                       <TouchableOpacity
                         className="relative bg-green-100 px-4 py-2 rounded-full flex-row items-center gap-1"
                         onPress={() => handleIsEditingSkill(skill)}
@@ -919,15 +944,6 @@ export default function EditProfile() {
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <TouchableOpacity
-                    className="apply-button flex-row  gap-1 items-center justify-center w-1/4 py-2"
-                    onPress={() => openBottomSheet("skill")}
-                  >
-                    <Text className="font-quicksand-semibold text-md">
-                      New Skill
-                    </Text>
-                    <Feather name="plus" size={16} color="black" />
-                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -954,23 +970,22 @@ export default function EditProfile() {
               </View>
               {openSection.education && (
                 <View className="flex flex-row flex-wrap gap-4">
-                  {/*TODO: Fix edit button placement on the profile cards*/}
-                  {user?.education?.map((edu) => (
+                  <TouchableOpacity
+                    className="bg-green-500 rounded-xl px-4 py-2 flex-row items-center justify-center shadow-md w-1/2"
+                    onPress={() => openBottomSheet("education")}
+                  >
+                    <Text className="text-white font-quicksand-semibold text-sm mr-2">
+                      New Education
+                    </Text>
+                    <AntDesign name="plus" size={16} color="white" />
+                  </TouchableOpacity>
+                  {educations.map((edu) => (
                     <ProfileEducationCard
                       key={edu.id}
                       education={edu}
                       onEditEducation={() => handleIsEditingEducation(edu)}
                     />
                   ))}
-                  <TouchableOpacity
-                    className="apply-button flex-row gap-1 items-center justify-center w-1/2 py-2"
-                    onPress={() => openBottomSheet("education")}
-                  >
-                    <Text className="font-quicksand-semibold">
-                      New education
-                    </Text>
-                    <AntDesign name="plus" size={16} />
-                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -997,22 +1012,22 @@ export default function EditProfile() {
               </View>
               {openSection.experience && (
                 <View className="flex flex-row flex-wrap gap-4">
-                  {user?.experiences?.map((exp) => (
+                  <TouchableOpacity
+                    className="bg-green-500 rounded-xl px-4 py-2 flex-row items-center justify-center shadow-md w-1/2 mt-2"
+                    onPress={() => openBottomSheet("experience")}
+                  >
+                    <Text className="text-white font-quicksand-semibold text-sm mr-2">
+                      Add Experience
+                    </Text>
+                    <AntDesign name="plus" size={16} color="white" />
+                  </TouchableOpacity>
+                  {experiences?.map((exp) => (
                     <ProfileExperienceCard
                       key={exp.id}
                       experience={exp}
                       onEditExperience={() => handleIsEditingExperience(exp)}
                     />
                   ))}
-                  <TouchableOpacity
-                    className="apply-button flex-row gap-1 items-center justify-center w-1/2 py-2"
-                    onPress={() => openBottomSheet("experience")}
-                  >
-                    <Text className="font-quicksand-semibold">
-                      New experience
-                    </Text>
-                    <AntDesign name="plus" size={18} />
-                  </TouchableOpacity>
                 </View>
               )}
             </View>

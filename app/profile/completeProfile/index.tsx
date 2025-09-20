@@ -18,7 +18,6 @@ import {
   Linking,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -32,6 +31,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CompleteProfile = () => {
   const { fetchAuthenticatedUser } = useAuthStore();

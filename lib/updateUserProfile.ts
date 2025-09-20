@@ -110,6 +110,9 @@ export const addSkill = async (newSkill: AddUserSkillForm) => {
 }
 
 export const addEducation = async (newEducation: AddUserEducationForm) => {
+    if (!newEducation.toYear) {
+        newEducation.toYear = 'Present';
+    }
     return await new Promise<Education | null>((resolve, reject) => {
         setTimeout(async () => {
             const token = await AsyncStorage.getItem('x-auth-token');
