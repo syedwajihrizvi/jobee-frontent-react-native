@@ -10,8 +10,12 @@ import {
   workArrangements,
 } from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
-import { useJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
-import { onActionSuccess } from "@/lib/utils";
+import {
+  useJobs,
+  useRecommendedJobs,
+  useUserAppliedJobs,
+} from "@/lib/services/useJobs";
+import { hasUserAppliedToJob, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { JobFilters, User } from "@/type";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -68,8 +72,11 @@ const Index = () => {
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const { data: jobs, isLoading } = useJobs(filters);
+  const { data: recommendedJobs, isLoading: isLoadingRecommended } =
+    useRecommendedJobs();
   const { data: appliedJobs, isLoading: isAppliedJobsLoading } =
     useUserAppliedJobs();
+  const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const {
     user: authUser,
@@ -117,13 +124,6 @@ const Index = () => {
 
   const handleProfileLater = () => {
     setShowProfileCompleteReminder(false);
-  };
-
-  const hasUserAppliedToJob = (jobId: number) => {
-    let application = (user as User)?.applications.find(
-      (app) => app.jobId === jobId
-    );
-    return application;
   };
 
   const addLocation = (location: string) => {
@@ -277,7 +277,7 @@ const Index = () => {
       !isAppliedJobsLoading &&
       !appliedJobs?.includes(jobId) &&
       !localApplyJobs.includes(jobId) &&
-      !hasUserAppliedToJob(jobId)
+      !hasUserAppliedToJob(user, jobId)
     );
   };
   return (
@@ -299,7 +299,12 @@ const Index = () => {
       </View>
       {isAuthenticated && (
         <View className="px-3 my-1">
-          <RecommendedJobsPreview />
+          <RecommendedJobsPreview
+            recommendedJobs={recommendedJobs}
+            isLoadingRecommended={isLoadingRecommended}
+            isViewingRecommended={isViewingRecommended}
+            handleViewAll={() => setIsViewRecommended(!isViewingRecommended)}
+          />
         </View>
       )}
       {!isAuthLoading && showProfileCompleteReminder && (
@@ -317,9 +322,9 @@ const Index = () => {
       ) : (
         <FlatList
           className="w-full p-2"
-          data={jobs} // Simulating multiple job listings
+          data={isViewingRecommended ? recommendedJobs : jobs} // Simulating multiple job listings
           renderItem={({ item, index }) => {
-            let userApplication = hasUserAppliedToJob(item.id);
+            let userApplication = hasUserAppliedToJob(user, item.id);
             let showFavorite = userApplication ? false : true;
             return (
               <JobListing

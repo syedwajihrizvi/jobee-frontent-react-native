@@ -13,6 +13,7 @@ import {
   addEducation,
   addExperience,
   addSkill,
+  deleteSkill,
   editEducation,
   editExperience,
   removeVideoIntro,
@@ -442,6 +443,38 @@ export default function EditProfile() {
       return;
     } finally {
       setIsLoadingNewExperience(false);
+    }
+  };
+
+  const handleDeleteSkill = async () => {
+    setIsLoadingNewSkill(true);
+    try {
+      Alert.alert("Confirm Action", "Are you sure you want to delete skill?", [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            const result = await deleteSkill(isEditingSkill!.id);
+            if (result) {
+              const newSkills = skills.filter(
+                (s) => s.id !== isEditingSkill!.id
+              );
+              setSkills(newSkills);
+              resetAllBottomSheetStates();
+              bottomSheetRef.current?.close();
+            }
+          },
+        },
+      ]);
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Failed to delete skill. Please try again.");
+    } finally {
+      setIsLoadingNewSkill(false);
     }
   };
 
@@ -1141,6 +1174,14 @@ export default function EditProfile() {
                     customClass="bg-red-500 p-4 rounded-lg flex-1"
                     onClick={handleCloseSkillsForm}
                   />
+                  {isEditingSkill && (
+                    <CustomButton
+                      text="Remove"
+                      customClass="bg-red-500 p-4 rounded-lg flex-1"
+                      onClick={handleDeleteSkill}
+                      isLoading={isLoadingNewSkill}
+                    />
+                  )}
                 </View>
               </>
             )}
@@ -1208,6 +1249,13 @@ export default function EditProfile() {
                     customClass="bg-red-500 p-4 rounded-lg"
                     onClick={handleCloseEducationForm}
                   />
+                  {isEditingEducation && (
+                    <CustomButton
+                      text="Remove"
+                      customClass="bg-red-500 p-4 rounded-lg flex-1"
+                      onClick={() => {}}
+                    />
+                  )}
                 </View>
               </>
             )}
@@ -1318,6 +1366,13 @@ export default function EditProfile() {
                     customClass="bg-red-500 p-4 rounded-lg"
                     onClick={handleCloseExperienceForm}
                   />
+                  {isEditingExperience && (
+                    <CustomButton
+                      text="Remove"
+                      customClass="bg-red-500 p-4 rounded-lg flex-1"
+                      onClick={() => {}}
+                    />
+                  )}
                 </View>
               </View>
             )}

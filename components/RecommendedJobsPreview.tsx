@@ -1,4 +1,4 @@
-import { useRecommendedJobs } from "@/lib/services/useJobs";
+import { Job } from "@/type";
 import { Entypo } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -15,9 +15,17 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const RecommendedJobsPreview = () => {
-  const { data: recommendedJobs, isLoading: isLoadingRecommended } =
-    useRecommendedJobs();
+const RecommendedJobsPreview = ({
+  recommendedJobs,
+  isLoadingRecommended,
+  isViewingRecommended,
+  handleViewAll,
+}: {
+  handleViewAll: () => void;
+  recommendedJobs?: Job[];
+  isLoadingRecommended: boolean;
+  isViewingRecommended?: boolean;
+}) => {
   const [open, setOpen] = useState(false);
   const height = useSharedValue(0);
 
@@ -69,8 +77,13 @@ const RecommendedJobsPreview = () => {
                   </Pressable>
                 ))}
             </View>
-            <TouchableOpacity className="bg-green-500 rounded-full px-8 py-1">
-              <Text className="font-quicksand">View All</Text>
+            <TouchableOpacity
+              className={`bg-${isViewingRecommended ? "red" : "green"}-500 rounded-full px-8 py-1`}
+              onPress={handleViewAll}
+            >
+              <Text className="font-quicksand">
+                {isViewingRecommended ? "Close" : "View All"}
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (

@@ -1,4 +1,4 @@
-import { User, UserDocument } from "@/type";
+import { Application, User, UserDocument } from "@/type";
 import * as Haptics from 'expo-haptics';
 
 export const formatDate = (date: string) => {
@@ -137,4 +137,11 @@ export const convert10DigitNumberToPhoneFormat = (num: string) => {
 export const onActionSuccess = async () => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
+}
+
+export const hasUserAppliedToJob = (user: User | null, jobId: number) : Application | undefined => {
+    let application = (user as User)?.applications.find(
+      (app) => app.jobId === jobId
+    );
+    return application;  
 }

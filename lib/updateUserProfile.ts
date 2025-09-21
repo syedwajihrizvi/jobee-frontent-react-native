@@ -193,6 +193,20 @@ export const editExperience = async (experienceId: number, updatedExperience: Ad
     })   
 }
 
+export const deleteSkill = async (skillId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/skills/${skillId}`, {
+        method: 'DELETE',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        }
+    });
+    console.log(result)
+    console.log("Delete skill response status:", result.status);
+    return result.status === 204;
+}
+
 export const completeProfile = async (
     document: DocumentPicker.DocumentPickerResult,
     image: ImagePickerResult,

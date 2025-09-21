@@ -1,5 +1,4 @@
 import {
-  formatDate,
   getApplicationStatus,
   getEmploymentType,
   getWorkArrangement,
@@ -55,7 +54,7 @@ const JobListing = ({
   };
 
   return (
-    <View className="w-full p-4 rounded-full">
+    <View className="w-full px-4 py-1 rounded-full">
       <TouchableOpacity
         activeOpacity={0.2}
         onPress={() => router.push(`/jobs/${job.id}`)}
@@ -79,11 +78,6 @@ const JobListing = ({
         <Text className="font-quicksand-semibold text-sm">
           ${job.minSalary} - ${job.maxSalary}
         </Text>
-        {canQuickApply && (
-          <Text className="font-quicksand-semibold text-sm">
-            Deadline: {formatDate(job.appDeadline)}
-          </Text>
-        )}
       </TouchableOpacity>
       <ScrollView
         className="flex-row flex-wrap gap-2 mt-2"
