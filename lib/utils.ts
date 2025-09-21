@@ -89,7 +89,6 @@ export const getApplicationStatus = (status: string) => {
 }
 
 export const getInterviewStyle = (status: string) => {
-  console.log("Interview Type:", status);
   switch(status) {
     case 'ONLINE':
       return "Online";

@@ -1,6 +1,6 @@
-import { Application, ApplicationSummary, Job, JobFilters } from '@/type';
+import { Application, ApplicationSummary, Job, JobFilters, PagedResponse } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery } from '@tanstack/react-query';
+import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getEducationLevel } from '../utils';
 
 const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
@@ -10,6 +10,7 @@ const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
 export const useJobs = (jobFilters: JobFilters) => {
     const { search, locations, companies, tags, minSalary, maxSalary, experience, employmentTypes, workArrangements } = jobFilters
     const queryParams = new URLSearchParams()
+
     if (search) queryParams.append('search', search)
     locations.forEach(location => queryParams.append('locations', location))
     if (companies) companies.forEach(company => queryParams.append('companies', company))
@@ -26,14 +27,20 @@ export const useJobs = (jobFilters: JobFilters) => {
       if (maxExp) queryParams.append('maxExperience', maxExp)
     }
     const params = queryParams.toString()
-    const fetchJobs = async () => {
-        const response = await fetch(`${JOBS_API_URL}?${params}`)
-        const data = await response.json()
-        return data
+    const fetchJobs = async ({ pageParam = 0} : QueryFunctionContext) : Promise<{ jobs: Job[]; nextPage: number; hasMore: boolean }> => {
+        const pageSize = 8;
+        const page = pageParam as number;
+        const response = await fetch(`${JOBS_API_URL}?${params}&pageNumber=${pageParam}&pageSize=${pageSize}`)
+        const data : PagedResponse<Job> = await response.json()
+        return { jobs: data.content, nextPage: page + 1, hasMore: data.hasMore}
     }
-    return useQuery<Job[], Error>({
+    return useInfiniteQuery<{jobs: Job[]; nextPage: number; hasMore: boolean}, Error>({
         queryKey: ['jobs', params],
         queryFn: fetchJobs,
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => {
+          return lastPage.hasMore ? lastPage.nextPage : undefined
+        },
         staleTime: 1000 * 60 * 5, // 5 minutes
     })
 }
@@ -115,20 +122,26 @@ export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
   if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
   if (companyId) urlParams.append('companyId', companyId.toString())
   const params = urlParams.toString()
-  const fetchCompanyJobs = async () => {
-    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs?${params}`, {
+  const fetchCompanyJobs = async ({ pageParam = 0} : QueryFunctionContext) => {
+    const pageSize = 6;
+    const page = pageParam as number;
+    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs?${params}&pageNumber=${page}&pageSize=${pageSize}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     })
-    const data = await response.json()
-    return data
+    const data : PagedResponse<Job> = await response.json()
+    return { jobs: data.content, nextPage: page + 1, hasMore: data.hasMore}
   }
 
-  return useQuery<Job[], Error>({
+  return useInfiniteQuery<{jobs: Job[]; nextPage: number; hasMore: boolean}, Error>({
     queryKey: ['jobs', 'company', companyId, filters],
     queryFn: fetchCompanyJobs,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      return lastPage.hasMore ? lastPage.nextPage : undefined
+    },
     staleTime: 1000 * 60 * 5,
     enabled: !!companyId,
   })

@@ -92,7 +92,6 @@ const ManageDocuments = () => {
         ],
       });
       if (!document.canceled) {
-        console.log("Selected document: ", document);
         setUploadedDocument(document);
       }
     } catch (error) {

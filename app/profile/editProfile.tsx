@@ -5,6 +5,7 @@ import EditProfileCard from "@/components/EditProfileCard";
 import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
 import UserVideoIntro from "@/components/UserVideoIntro";
+import { sounds } from "@/constants";
 import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { useEducations } from "@/lib/services/useEducations";
 import { useExperiences } from "@/lib/services/useExperiences";
@@ -13,6 +14,8 @@ import {
   addEducation,
   addExperience,
   addSkill,
+  deleteEducation,
+  deleteExperience,
   deleteSkill,
   editEducation,
   editExperience,
@@ -33,6 +36,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { useAudioPlayer } from "expo-audio";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -55,6 +59,7 @@ export default function EditProfile() {
   const { data: userEducations } = useEducations();
   const { data: userExperiences } = useExperiences();
   const [skills, setSkills] = useState<UserSkill[]>(userSkills || []);
+  const player = useAudioPlayer(sounds.popSound);
   const [educations, setEducations] = useState<Education[]>(
     userEducations || []
   );
@@ -167,8 +172,6 @@ export default function EditProfile() {
         newSkills = [...(skills ?? []), newSkill];
       }
 
-      console.log(newSkills);
-      console.log(newSkill);
       setSkills(newSkills);
       Alert.alert("Skill added successfully!");
       setAddSkillForm({ skill: "", experience: "" });
@@ -449,27 +452,33 @@ export default function EditProfile() {
   const handleDeleteSkill = async () => {
     setIsLoadingNewSkill(true);
     try {
-      Alert.alert("Confirm Action", "Are you sure you want to delete skill?", [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          onPress: async () => {
-            const result = await deleteSkill(isEditingSkill!.id);
-            if (result) {
-              const newSkills = skills.filter(
-                (s) => s.id !== isEditingSkill!.id
-              );
-              setSkills(newSkills);
-              resetAllBottomSheetStates();
-              bottomSheetRef.current?.close();
-            }
+      Alert.alert(
+        "Confirm Action",
+        `Are you sure you want to delete ${isEditingSkill?.skill.name} from your profile?`,
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
           },
-        },
-      ]);
+          {
+            text: "Delete",
+            onPress: async () => {
+              const result = await deleteSkill(isEditingSkill!.id);
+              if (result) {
+                const newSkills = skills.filter(
+                  (s) => s.id !== isEditingSkill!.id
+                );
+                setSkills(newSkills);
+                player.seekTo(0);
+                player.play();
+                resetAllBottomSheetStates();
+                bottomSheetRef.current?.close();
+              }
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.log(error);
       Alert.alert("Failed to delete skill. Please try again.");
@@ -478,6 +487,77 @@ export default function EditProfile() {
     }
   };
 
+  const handleDeleteEducation = async () => {
+    setIsLoadingNewEducation(true);
+    try {
+      Alert.alert(
+        "Confirm Action",
+        `Are you sure you want to delete this education from your profile?`,
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: async () => {
+              const result = await deleteEducation(isEditingEducation!.id);
+              if (result) {
+                const newEducation = educations.filter(
+                  (e) => e.id !== isEditingEducation!.id
+                );
+                setEducations(newEducation);
+                player.seekTo(0);
+                player.play();
+                resetAllBottomSheetStates();
+                bottomSheetRef.current?.close();
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+    } finally {
+      setIsLoadingNewEducation(false);
+    }
+  };
+
+  const handleDeleteExperience = async () => {
+    setIsLoadingNewExperience(true);
+    try {
+      Alert.alert(
+        "Confirm Action",
+        `Are you sure you want to delete this experience from your profile?`,
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: async () => {
+              const result = await deleteExperience(isEditingExperience!.id);
+              if (result) {
+                const newExperience = experiences.filter(
+                  (e) => e.id !== isEditingExperience!.id
+                );
+                setExperiences(newExperience);
+                player.seekTo(0);
+                player.play();
+                resetAllBottomSheetStates();
+                bottomSheetRef.current?.close();
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+    } finally {
+      setIsLoadingNewExperience(false);
+    }
+  };
   const resetAllBottomSheetStates = () => {
     setIsAddingSkill(false);
     setIsEditingSkill(null);
@@ -1222,7 +1302,7 @@ export default function EditProfile() {
                   <View className="w-1/2">
                     <CustomInput
                       label="End Year (or expected)"
-                      placeholder="e.g. 2020 (leave empty if ongoing)"
+                      placeholder="e.g. 2020"
                       value={addEducationForm.toYear}
                       returnKeyType="done"
                       onChangeText={(toYear) =>
@@ -1253,7 +1333,8 @@ export default function EditProfile() {
                     <CustomButton
                       text="Remove"
                       customClass="bg-red-500 p-4 rounded-lg flex-1"
-                      onClick={() => {}}
+                      isLoading={isLoadingNewEducation}
+                      onClick={handleDeleteEducation}
                     />
                   )}
                 </View>
@@ -1341,6 +1422,7 @@ export default function EditProfile() {
                   label="Description (Sentences about your role, achievements, etc.)"
                   placeholder="Enter your description"
                   value={addExperienceForm.description}
+                  autoCapitalize="word"
                   onChangeText={(description) =>
                     setAddExperienceForm({ ...addExperienceForm, description })
                   }
@@ -1370,7 +1452,8 @@ export default function EditProfile() {
                     <CustomButton
                       text="Remove"
                       customClass="bg-red-500 p-4 rounded-lg flex-1"
-                      onClick={() => {}}
+                      isLoading={isLoadingNewExperience}
+                      onClick={handleDeleteExperience}
                     />
                   )}
                 </View>

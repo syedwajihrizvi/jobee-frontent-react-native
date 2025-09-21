@@ -58,7 +58,12 @@ const Jobs = () => {
   });
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const { data: jobs, isLoading } = useJobsByCompany(filters, user?.companyId);
+  const {
+    data: jobs,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+  } = useJobsByCompany(filters, user?.companyId);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -219,10 +224,20 @@ const Jobs = () => {
         <ActivityIndicator size="large" color="#0000ff" className="mt-20" />
       ) : (
         <FlatList
-          data={jobs}
+          data={jobs?.pages.flatMap((page) => page.jobs) || []}
           renderItem={({ item }) => <BusinessJobListings job={item} />}
           ItemSeparatorComponent={() => <View className="divider" />}
           contentContainerClassName="pb-60"
+          onEndReached={() => {
+            if (hasNextPage) {
+              fetchNextPage();
+            }
+          }}
+          ListFooterComponent={() => {
+            return isLoading ? (
+              <ActivityIndicator size="small" color="green" />
+            ) : null;
+          }}
         />
       )}
       {isOpen && (

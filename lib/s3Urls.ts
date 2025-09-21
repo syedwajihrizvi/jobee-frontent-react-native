@@ -10,7 +10,5 @@ export const getS3DocumentUrl = (key: string) => {
 };
 
 export const getS3VideoIntroUrl = (key: string) => {
-    const res = `https://${bucketName}.s3.${region}.amazonaws.com/user-video-intros/${key}`;
-    console.log(res)
-    return res;
+    return `https://${bucketName}.s3.${region}.amazonaws.com/user-video-intros/${key}`;
 }

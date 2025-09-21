@@ -319,3 +319,12 @@ export type CompleteProfileForm = {
     summary: string;
     phoneNumber: string;
 }
+
+export interface PagedResponse<T> {
+  content: T[]
+  pageNumber: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+  hasMore: boolean
+}

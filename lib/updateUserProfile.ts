@@ -58,7 +58,6 @@ export const updateUserVideoIntro = async (videoIntro: ImagePickerResult) => {
 }
 
 export const removeVideoIntro = async () => {
-    console.log("Removing video intro...");
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
     const result = await fetch(`${PROFILES_API_URL}/remove-video-intro`, {
@@ -202,8 +201,30 @@ export const deleteSkill = async (skillId: number) => {
             'x-auth-token': `Bearer ${token}`,
         }
     });
-    console.log(result)
-    console.log("Delete skill response status:", result.status);
+    return result.status === 204;
+}
+
+export const deleteEducation = async (educationId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/education/${educationId}`, {
+        method: 'DELETE',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        }
+    });
+    return result.status === 204;
+}
+
+export const deleteExperience = async (experienceId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/experiences/${experienceId}`, {
+        method: 'DELETE',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        }
+    });
     return result.status === 204;
 }
 

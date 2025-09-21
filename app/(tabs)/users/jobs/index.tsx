@@ -71,7 +71,12 @@ const Index = () => {
   const [quickApplyLabel, setQuickApplyLabel] = useState("");
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
-  const { data: jobs, isLoading } = useJobs(filters);
+  const {
+    data: jobs,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+  } = useJobs(filters);
   const { data: recommendedJobs, isLoading: isLoadingRecommended } =
     useRecommendedJobs();
   const { data: appliedJobs, isLoading: isAppliedJobsLoading } =
@@ -97,6 +102,7 @@ const Index = () => {
       transform: [{ translateX: slideX.value }],
     };
   });
+  const isLoadingNewJobs = true;
   const openFilters = () => {
     slideX.value = withTiming(0, { duration: 300 });
     setIsOpen(true);
@@ -322,7 +328,11 @@ const Index = () => {
       ) : (
         <FlatList
           className="w-full p-2"
-          data={isViewingRecommended ? recommendedJobs : jobs} // Simulating multiple job listings
+          data={
+            isViewingRecommended
+              ? recommendedJobs
+              : jobs?.pages.flatMap((page) => page.jobs) || []
+          } // Simulating multiple job listings
           renderItem={({ item, index }) => {
             let userApplication = hasUserAppliedToJob(user, item.id);
             let showFavorite = userApplication ? false : true;
@@ -339,6 +349,16 @@ const Index = () => {
                 }
               />
             );
+          }}
+          onEndReached={() => {
+            if (hasNextPage && !isViewingRecommended) {
+              fetchNextPage();
+            }
+          }}
+          ListFooterComponent={() => {
+            return isLoading ? (
+              <ActivityIndicator size="small" color="green" />
+            ) : null;
           }}
           ItemSeparatorComponent={() => <View className="divider" />}
         />
@@ -366,14 +386,14 @@ const Index = () => {
                 top: 0,
                 right: 0,
                 width: screenWidth * 0.8,
-                height: "150%",
+                height: "120%",
                 backgroundColor: "white",
                 zIndex: 100,
               },
               animatedStyle,
             ]}
           >
-            <ScrollView className="px-4 pb-10">
+            <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
               <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-2">
                 Filter Jobs
               </Text>
@@ -541,7 +561,7 @@ const Index = () => {
                   />
                 </View>
               </View>
-              <View className="flex-row justify-center items-center gap-2">
+              <View className="flex-row justify-center items-center gap-2 mb-20">
                 <TouchableOpacity
                   className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
                   onPress={handleFilterApply}
