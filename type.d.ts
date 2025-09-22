@@ -63,6 +63,7 @@ export type Job = {
     title: string,
     description: string,
     businessName: string,
+    companyId: number,
     businessAccountId: number,
     experience: number,
     location: string,
@@ -115,6 +116,17 @@ export type AllUserDocuments = {
     recommendationDocuments: UserDocument[];
 }
 
+export type Company = {
+    id: number;
+    name: string;
+    website: string;
+    foundedYear: number;
+    numEmployees: number,
+    industry: string;
+    description: string;
+    location: string;
+}
+    
 export type User = {
     id: number;
     firstName: string;

@@ -1,7 +1,6 @@
 import ApplicationInfo from "@/components/ApplicationInfo";
 import ApplyBottomSheet from "@/components/ApplyBottomSheet";
 import BackBar from "@/components/BackBar";
-import BoldLabeledText from "@/components/BoldLabeledText";
 import CompanyInfo from "@/components/CompanyInfo";
 import CompanyInformation from "@/components/CompanyInformation";
 import FavoriteJob from "@/components/FavoriteJob";
@@ -9,6 +8,7 @@ import JobInfo from "@/components/JobInfo";
 import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { applyToJob } from "@/lib/jobEndpoints";
+import { useCompany } from "@/lib/services/useCompany";
 import { useJob, useJobApplication } from "@/lib/services/useJobs";
 import {
   getEmploymentType,
@@ -42,6 +42,9 @@ const JobDetails = () => {
   const { data: job, isLoading } = useJob(Number(jobId));
   const { data: jobApplication, isLoading: isLoadingJobApplication } =
     useJobApplication(Number(jobId));
+  const { data: company, isLoading: isLoadingCompany } = useCompany(
+    job?.companyId ?? undefined
+  );
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
   const [selectedResume, setSelectedResume] = useState<string | null>(null);
@@ -154,7 +157,7 @@ const JobDetails = () => {
       {isLoading ? (
         <ActivityIndicator />
       ) : (
-        <View className="w-full p-4">
+        <ScrollView className="w-full px-4 pt-4 mb-20">
           <View>
             <View className="w-full flex-row items-center justify-between">
               <CompanyInformation company={job?.businessName!} />
@@ -198,17 +201,19 @@ const JobDetails = () => {
             <Text className="font-quicksand-bold text-2xl">
               Job Description
             </Text>
-            <Text className="font-quicksand-semibold text-base">
-              {job?.description}
+            <Text className="font-quicksand-semibold text-md">
+              {/* {job?.description} */}
+              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vero non
+              at, numquam ipsum odio dolor voluptate laudantium fuga odit
+              nostrum consectetur? Fugit nesciunt laudantium, inventore suscipit
+              praesentium tempore nemo vitae sint, aliquid accusamus qui. Esse
+              quo qui, veniam magnam obcaecati consequatur asperiores,
+              dignissimos tempore at excepturi, facere dolore doloribus harum
+              provident. Commodi cupiditate distinctio, sit illo iusto corrupti
+              dolore atque. Architecto provident, excepturi labore autem ipsa
+              facere ea cum animi eius, dolorem magni aperiam quas expedita
+              voluptatibus! Quis, ipsum iusto?
             </Text>
-            <View className="mt-2 flex-col gap-2">
-              <BoldLabeledText
-                label="Experience"
-                value={job?.experience.toLocaleString()!}
-              />
-              <BoldLabeledText label="Posted On" value="August 1st 2025" />
-              <BoldLabeledText label="Apply By" value="August 31st 2025" />
-            </View>
             <ViewMore
               label="View More About Job"
               onClick={handleJobBottomOpen}
@@ -218,25 +223,27 @@ const JobDetails = () => {
               <Text className="font-quicksand-bold text-2xl">
                 Company Overview
               </Text>
-              <BoldLabeledText
-                label="Business Name"
-                value={job?.businessName!}
-              />
-              <BoldLabeledText label="Employee Count" value={"10000+"} />
-              <BoldLabeledText label="Founded" value={"2005"} />
-              <BoldLabeledText
-                label="Industry"
-                value={"Information Technology and Services"}
-              />
-              <BoldLabeledText label="Website" value={"www.example.com"} />
+              {isLoadingCompany ? (
+                <ActivityIndicator />
+              ) : (
+                <Text className="font-quicksand-semibold text-md">
+                  {/* {company.description} */}
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                  Necessitatibus, asperiores quas! Odit rem nostrum veniam ea
+                  laboriosam maiores minus tenetur, odio delectus consequatur
+                  non repellendus inventore, distinctio necessitatibus magni,
+                  vero unde doloribus! Eum, similique aperiam quae facere
+                  cupiditate tenetur magnam! Quaerat odio numquam sit
+                  consequuntur. Hic ab sapiente dignissimos architecto?
+                </Text>
+              )}
             </View>
             <ViewMore
               label="View More About Company"
               onClick={handleCompanyBottomOpen}
             />
-            <View className="divider" />
           </View>
-        </View>
+        </ScrollView>
       )}
       <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
         <TouchableOpacity
@@ -259,21 +266,29 @@ const JobDetails = () => {
       <BottomSheet
         ref={jobBottomRef}
         index={-1}
-        snapPoints={["40%", "50%"]}
+        snapPoints={["20%", "30%"]}
         enablePanDownToClose
       >
         <BottomSheetView className="flex-1 bg-white">
-          <JobInfo />
+          {isLoading ? (
+            <ActivityIndicator />
+          ) : job ? (
+            <JobInfo job={job} />
+          ) : null}
         </BottomSheetView>
       </BottomSheet>
       <BottomSheet
         ref={companyBottomRef}
         index={-1}
-        snapPoints={["40%", "50%"]}
+        snapPoints={["20%", "30%"]}
         enablePanDownToClose
       >
         <BottomSheetView className="flex-1 bg-white">
-          <CompanyInfo />
+          {isLoadingCompany ? (
+            <ActivityIndicator />
+          ) : company ? (
+            <CompanyInfo company={company} />
+          ) : null}
         </BottomSheetView>
       </BottomSheet>
       {isAuthenticated &&
