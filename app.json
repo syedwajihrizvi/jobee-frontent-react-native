@@ -3,18 +3,25 @@
     "name": "JobeeFrontEnd",
     "slug": "JobeeFrontEnd",
     "version": "1.0.0",
+    "icon": "./assets/images/splash-icon.png", 
     "orientation": "portrait",
     "scheme": "jobeefrontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.syedwajihrizvi.JobeeFrontEnd"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.syedwajihrizvi.JobeeFrontEnd"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +44,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6851f387-1408-4233-95b4-adea689cfab4"
+      }
     }
   }
 }

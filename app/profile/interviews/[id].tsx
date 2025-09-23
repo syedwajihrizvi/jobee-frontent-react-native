@@ -1,13 +1,21 @@
 import BackBar from "@/components/BackBar";
 import CompanyInformation from "@/components/CompanyInformation";
+import PrepareWithJobee from "@/components/PrepareWithJobee";
 import { images } from "@/constants";
+import { prepareForInterview } from "@/lib/interviewEndpoints";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
-import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import {
+  AntDesign,
+  Feather,
+  Ionicons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   Text,
@@ -16,18 +24,56 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const sampleNotes: string[] = [
-  "Research the company and its products/services.",
-  "Practice common interview questions and answers.",
-  "Prepare questions to ask the interviewer.",
-  "Use the STAR method to structure your responses.",
-];
-
 const InterviewDetails = () => {
   const { id: interviewId } = useLocalSearchParams();
+  const [showInterviewPrepModal, setShowInterviewPrepModal] = useState(false);
+  const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] =
+    useState(false);
   const { data: interviewDetails, isLoading } = useInterviewDetails(
     Number(interviewId)
   );
+  const handlePrepareWithJobee = () => {
+    if (interviewDetails?.preparationStatus === "NOT_STARTED") {
+      setShowInterviewPrepModal(true);
+    } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
+      console.log("Already in progress");
+    } else {
+      console.log("Already prepared");
+    }
+  };
+
+  const renderInterviePrepText = () => {
+    if (interviewDetails?.preparationStatus === "NOT_STARTED") {
+      return "Prepare with Jobee";
+    } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
+      return "Continue Preparing";
+    } else {
+      return "Prepared";
+    }
+  };
+
+  const handleShowInterviewPrepModalClose = () => {
+    setShowInterviewPrepModal(false);
+  };
+
+  const handlePrepareWithJobeeConfirm = async () => {
+    setIsSendingInterviewPrepRequest(true);
+    try {
+      const res = await prepareForInterview(Number(interviewId));
+      if (res) {
+        Alert.alert(
+          "Success",
+          "You are all set! We will notify you once we are ready. Approximately 5 minutes"
+        );
+        console.log("Preparation started");
+        handleShowInterviewPrepModalClose();
+      }
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong. Please try again later.");
+    } finally {
+      setIsSendingInterviewPrepRequest(false);
+    }
+  };
 
   return (
     <SafeAreaView className="h-full relative">
@@ -35,7 +81,7 @@ const InterviewDetails = () => {
       {isLoading ? (
         <ActivityIndicator size="large" className="mt-10" />
       ) : (
-        <ScrollView className="p-4">
+        <ScrollView className="p-4 mb-20">
           <CompanyInformation company={interviewDetails?.companyName!} />
           <View>
             <Text className="font-quicksand-bold text-lg">
@@ -104,14 +150,21 @@ const InterviewDetails = () => {
               Preperation Tips From Company
             </Text>
             <View className="p-4 border border-gray-300 rounded-lg mt-2">
-              {sampleNotes.map((note, index) => (
-                <View key={index} className="flex flex-row items-start mb-2">
-                  <Text className="font-quicksand-bold text-lg mr-2">•</Text>
-                  <Text className="font-quicksand-medium text-md flex-shrink">
-                    {note}
-                  </Text>
-                </View>
-              ))}
+              {interviewDetails?.preparationTipsFromInterviewer.map(
+                (note, index) => (
+                  <View key={index} className="flex flex-row items-start mb-2">
+                    <Feather
+                      name="check-square"
+                      size={12}
+                      color="green"
+                      className="mt-1 mr-2"
+                    />
+                    <Text className="font-quicksand-semibold text-md flex-shrink">
+                      {note}
+                    </Text>
+                  </View>
+                )
+              )}
             </View>
           </View>
           <View className="divider my-4" />
@@ -136,20 +189,26 @@ const InterviewDetails = () => {
           </View>
         </ScrollView>
       )}
-      <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
+      <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center px-4">
         <TouchableOpacity
           className="apply-button w-1/2 items-center flex-row  gap-2 justify-center h-14"
-          onPress={() => {}}
+          onPress={handlePrepareWithJobee}
         >
           <Text className="font-quicksand-semibold text-md">
-            Prepare with Jobee
+            {renderInterviePrepText()}
           </Text>
           <Ionicons name="sparkles" size={20} color="gold" />
         </TouchableOpacity>
-        <TouchableOpacity className="favorite-button h-14 w-1/2 items-center justify-center">
+        <TouchableOpacity className="favorite-button w-1/2 h-14 items-center justify-center">
           <Text>Reschedule</Text>
         </TouchableOpacity>
       </View>
+      <PrepareWithJobee
+        visible={showInterviewPrepModal}
+        handlePrepareWithJobeeConfirm={handlePrepareWithJobeeConfirm}
+        company={interviewDetails?.companyName!}
+        handleClose={handleShowInterviewPrepModalClose}
+      />
     </SafeAreaView>
   );
 };

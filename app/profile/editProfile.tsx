@@ -4,11 +4,13 @@ import CustomInput from "@/components/CustomInput";
 import EditProfileCard from "@/components/EditProfileCard";
 import ProfileEducationCard from "@/components/ProfileEducationCard";
 import ProfileExperienceCard from "@/components/ProfileExperienceCard";
+import ProfileProjectCard from "@/components/ProfileProjectCard";
 import UserVideoIntro from "@/components/UserVideoIntro";
 import { sounds } from "@/constants";
 import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { useEducations } from "@/lib/services/useEducations";
 import { useExperiences } from "@/lib/services/useExperiences";
+import { useProjects } from "@/lib/services/useProjects";
 import { useSkills } from "@/lib/services/useSkills";
 import {
   addEducation,
@@ -30,6 +32,7 @@ import {
   AddUserSkillForm,
   Education,
   Experience,
+  Project,
   User,
   UserSkill,
 } from "@/type";
@@ -58,6 +61,8 @@ export default function EditProfile() {
   const { data: userSkills } = useSkills();
   const { data: userEducations } = useEducations();
   const { data: userExperiences } = useExperiences();
+  const { data: userProjects } = useProjects();
+
   const [skills, setSkills] = useState<UserSkill[]>(userSkills || []);
   const player = useAudioPlayer(sounds.popSound);
   const [educations, setEducations] = useState<Education[]>(
@@ -66,12 +71,15 @@ export default function EditProfile() {
   const [experiences, setExperiences] = useState<Experience[]>(
     userExperiences || []
   );
+  const [projects, setProjects] = useState<Project[]>(userProjects || []);
+
   const defaultOpenSectionValue = {
     general: false,
     skills: false,
     summary: false,
     education: false,
     experience: false,
+    project: false,
     socials: false,
     portfolio: false,
     videoIntro: false,
@@ -138,7 +146,8 @@ export default function EditProfile() {
     setSkills(userSkills || []);
     setEducations(userEducations || []);
     setExperiences(userExperiences || []);
-  }, [userSkills, userEducations, userExperiences]);
+    setProjects(userProjects || []);
+  }, [userSkills, userEducations, userExperiences, userProjects]);
 
   const handleAddSkill = async () => {
     const { skill, experience } = addSkillForm;
@@ -1106,7 +1115,7 @@ export default function EditProfile() {
             <View className="px-4 py-2 gap-4">
               <View className="flex flex-row justify-between items-start">
                 <Text className="font-quicksand-semibold text-lg">
-                  Experience
+                  Experiences
                 </Text>
                 <TouchableOpacity
                   onPress={() =>
@@ -1140,6 +1149,44 @@ export default function EditProfile() {
                       experience={exp}
                       onEditExperience={() => handleIsEditingExperience(exp)}
                     />
+                  ))}
+                </View>
+              )}
+            </View>
+            <View className="divider" />
+            <View className="px-4 py-2 gap-4">
+              <View className="flex flex-row justify-between items-start">
+                <Text className="font-quicksand-semibold text-lg">
+                  Projects
+                </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setOpenSection((prev) => ({
+                      ...defaultOpenSectionValue,
+                      project: !prev.project,
+                    }))
+                  }
+                >
+                  <AntDesign
+                    name={openSection.project ? "up" : "down"}
+                    size={20}
+                    color="black"
+                  />
+                </TouchableOpacity>
+              </View>
+              {openSection.project && (
+                <View className="flex flex-row flex-wrap gap-4">
+                  <TouchableOpacity
+                    className="bg-green-500 rounded-xl px-4 py-2 flex-row items-center justify-center shadow-md w-1/2 mt-2"
+                    onPress={() => console.log("Add project")}
+                  >
+                    <Text className="text-white font-quicksand-semibold text-sm mr-2">
+                      Add Project
+                    </Text>
+                    <AntDesign name="plus" size={16} color="white" />
+                  </TouchableOpacity>
+                  {projects?.map((project) => (
+                    <ProfileProjectCard key={project.id} project={project} />
                   ))}
                 </View>
               )}

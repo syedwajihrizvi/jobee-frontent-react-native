@@ -141,6 +141,7 @@ export type User = {
     skills: UserSkill[];
     education: Education[];
     experiences: Experience[];
+    projects: Project[];
     applications: Application[];
     profileComplete: boolean;
     profileImageUrl: string;
@@ -177,6 +178,14 @@ export type Experience = {
     from: string;
     to: string;
     currentlyWorking: boolean;
+}
+
+export type Project = {
+   id: number;
+   name: string;
+   description: string;
+   link: string;
+   yearCompleted: string; 
 }
 
 export type UserSkill = {
@@ -305,10 +314,12 @@ export type InterviewDetails = {
     timezone: string;
     interviewers: {name: string; email: string}[];
     otherInterviewers: {name: string; email: string}[];
+    preparationTipsFromInterviewer: string[];
     location: string;
     meetingLink: string;
     phoneNumber: string;
     notes: string[];
+    preparationStatus: string;
 }
 
 export type InterviewSummary = {
