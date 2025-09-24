@@ -33,12 +33,13 @@ const InterviewDetails = () => {
     Number(interviewId)
   );
   const handlePrepareWithJobee = () => {
+    // TODO: Check status of preparation and route accordingly
     if (interviewDetails?.preparationStatus === "NOT_STARTED") {
       setShowInterviewPrepModal(true);
     } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
-      console.log("Already in progress");
+      router.push(`/profile/interviews/prep?id=${interviewId}`);
     } else {
-      console.log("Already prepared");
+      router.push(`/profile/interviews/prep?id=${interviewId}`);
     }
   };
 
@@ -46,9 +47,9 @@ const InterviewDetails = () => {
     if (interviewDetails?.preparationStatus === "NOT_STARTED") {
       return "Prepare with Jobee";
     } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
-      return "Continue Preparing";
+      return "Get Ready";
     } else {
-      return "Prepared";
+      return "Review Prep";
     }
   };
 
