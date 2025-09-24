@@ -335,6 +335,16 @@ export type InterviewSummary = {
     companyName: string;
 }
 
+export type InterviewPreparation = {
+    id: number;
+    strengths: string[];
+    weaknesses: string[];
+    questions: {question: string; answer: string}[];
+    resources: {title: string, link: string, description: string, type: string}[];
+    overallAdvice: string;
+    notesFromInterviewer: string[]
+}
+    
 export type CompleteProfileForm = {
     title: string;
     city: string;
