@@ -72,3 +72,10 @@ export const experienceLevels = [
   { label: "6-8", value: "6-8" },
   { label: "9+", value: "9+" },
 ];
+
+export const interviewPrepChecklist = [
+  "Go over your strenghts and why you are a great fit for this role",
+  "Analye your weaknesses and how you can improve on them",
+  "Find resouces and online tools to help you prepare for the interview",
+  "Try sample questions and practice your answers",
+];
