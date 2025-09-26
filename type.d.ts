@@ -335,11 +335,18 @@ export type InterviewSummary = {
     companyName: string;
 }
 
+export type InterviewPrepQuestion = {
+    id: number;
+    question: string;
+    answer: string;
+    questionAudioUrl: string | null;
+}
+
 export type InterviewPreparation = {
     id: number;
     strengths: string[];
     weaknesses: string[];
-    questions: {id: number, question: string; answer: string}[];
+    questions: InterviewPrepQuestion[];
     resources: {title: string, link: string, description: string, type: string}[];
     overallAdvice: string;
     notesFromInterviewer: string[]

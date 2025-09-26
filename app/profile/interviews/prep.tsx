@@ -1,3 +1,11 @@
+import Animated, {
+  configureReanimatedLogger,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+
 import BackBar from "@/components/BackBar";
 import PrepQuestion from "@/components/PrepQuestion";
 import VerticalAnimatedList from "@/components/VerticalAnimatedList";
@@ -18,6 +26,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import React, { ReactNode, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Image,
   KeyboardAvoidingView,
@@ -32,30 +41,25 @@ import {
   Gesture,
   GestureDetector,
 } from "react-native-gesture-handler";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+configureReanimatedLogger({
+  strict: false, // Disable strict mode
+});
 
 const PrepForInterview = () => {
   const { id: interviewId } = useLocalSearchParams();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const { data: interviewPrep, isLoading: isLoadingInterviewPrep } =
-    useInterviewPrep({
-      interviewId: Number(interviewId),
-    });
-  const { data: interviewDetails, isLoading } = useInterviewDetails(
-    Number(interviewId)
-  );
+  const { data: interviewPrep, isLoading } = useInterviewPrep({
+    interviewId: Number(interviewId),
+  });
+  const { data: interviewDetails } = useInterviewDetails(Number(interviewId));
   const viewRef = useRef<KeyboardAvoidingView | null>(null);
   const width = Dimensions.get("window").width;
   const [step, setSteps] = useState(0);
   const translateX = useSharedValue(0);
-
+  console.log(interviewPrep?.questions[currentQuestionIndex]);
   const interviewers = [
     ...(interviewDetails?.interviewers || []),
     ...(interviewDetails?.otherInterviewers || []),
@@ -74,9 +78,10 @@ const PrepForInterview = () => {
     console.log("Share resources");
   };
 
-  const { question, answer } = interviewPrep?.questions[
-    currentQuestionIndex
-  ] || { question: "", answer: "" };
+  const { question } = interviewPrep?.questions[currentQuestionIndex] || {
+    question: "",
+    answer: "",
+  };
 
   const screens: ReactNode[] = [
     <View key={1} className="w-full h-full items-center justify-start gap-4">
@@ -402,11 +407,7 @@ const PrepForInterview = () => {
       <View className="flex-1 justify-center">
         <PrepQuestion
           interviewId={Number(interviewId)}
-          questionId={interviewPrep?.questions[currentQuestionIndex]?.id || 0}
-          question={
-            interviewPrep?.questions[currentQuestionIndex]?.question || ""
-          }
-          answer={interviewPrep?.questions[currentQuestionIndex]?.answer || ""}
+          questionInfo={interviewPrep?.questions[currentQuestionIndex]!}
         />
       </View>
     </View>,
@@ -418,11 +419,13 @@ const PrepForInterview = () => {
     })
     .onEnd((event) => {
       if (event.translationX < -50 && step < screens.length - 1) {
-        runOnJS(setSteps)(step + 1);
-        translateX.value = withSpring(-(step + 1) * width);
+        const nextStep = step + 1;
+        translateX.value = withSpring(-nextStep * width);
+        runOnJS(setSteps)(nextStep); // Use runOnJS here
       } else if (event.translationX > 50 && step > 0) {
-        runOnJS(setSteps)(step - 1);
-        translateX.value = withSpring(-(step - 1) * width);
+        const prevStep = step - 1;
+        translateX.value = withSpring(-prevStep * width);
+        runOnJS(setSteps)(prevStep); // Use runOnJS here
       } else {
         translateX.value = withSpring(-step * width);
       }
@@ -441,43 +444,49 @@ const PrepForInterview = () => {
         ref={viewRef}
         keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
       >
-        <GestureDetector gesture={panGesture}>
-          <Animated.View
-            style={[
-              {
-                flexDirection: "row",
-                width: width * screens.length,
-                height: "100%",
-                marginTop: 20,
-              },
-              animatedStyle,
-            ]}
-          >
-            {screens.map((screen, index) => (
-              <View
-                key={index}
-                style={{
-                  display: "flex",
-                  width,
-                  padding: 16,
-                }}
-                className="h-full"
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#00ff00" className="mt-10" />
+        ) : (
+          <>
+            <GestureDetector gesture={panGesture}>
+              <Animated.View
+                style={[
+                  {
+                    flexDirection: "row",
+                    width: width * screens.length,
+                    height: "100%",
+                    marginTop: 20,
+                  },
+                  animatedStyle,
+                ]}
               >
-                <View className="flex-1 items-center justify-center px-4">
-                  {screen}
-                </View>
-              </View>
-            ))}
-          </Animated.View>
-        </GestureDetector>
-        <View className="absolute bottom-20 w-full flex-row items-center justify-center gap-2">
-          {screens.map((_, idx) => (
-            <View
-              key={idx}
-              className={`h-2 ${idx === step ? "w-8" : "w-2"} bg-gray-500 rounded-full`}
-            />
-          ))}
-        </View>
+                {screens.map((screen, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      display: "flex",
+                      width,
+                      padding: 16,
+                    }}
+                    className="h-full"
+                  >
+                    <View className="flex-1 items-center justify-center px-4">
+                      {screen}
+                    </View>
+                  </View>
+                ))}
+              </Animated.View>
+            </GestureDetector>
+            <View className="absolute bottom-20 w-full flex-row items-center justify-center gap-2">
+              {screens.map((_, idx) => (
+                <View
+                  key={idx}
+                  className={`h-2 ${idx === step ? "w-8" : "w-2"} bg-gray-500 rounded-full`}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

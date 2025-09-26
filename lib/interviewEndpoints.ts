@@ -59,10 +59,11 @@ export const prepareForInterview = async (interviewId: number) : Promise<boolean
     return result.status === 200
 }
 
-export const generateInterviewQuestionPrepTextToSpeech = async (interviewPrepId: number, questionId: number) => {
+export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: number, questionId: number) => {
+    console.log("Generating TTS for interview prep id: ", interviewId, " questionId: ", questionId)
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null
-    const response = await fetch(`${INTERVIEWS_API_URL}/prep/${interviewPrepId}/questions/${questionId}/audio`, {
+    const response = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/questions/${questionId}/text-to-speech`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -70,5 +71,6 @@ export const generateInterviewQuestionPrepTextToSpeech = async (interviewPrepId:
         }
     })
     const data = await response.json()
+    console.log(data)
     return data as {questionAudioUrl: string}
 }

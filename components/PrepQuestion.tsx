@@ -1,35 +1,45 @@
 import { generateInterviewQuestionPrepTextToSpeech } from "@/lib/interviewEndpoints";
+import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
+import { InterviewPrepQuestion } from "@/type";
 import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
+import { useAudioPlayer } from "expo-audio";
 import React, { useState } from "react";
 import { View } from "react-native";
 import PulsatingButton from "./PulsatingButton";
 
 const PrepQuestion = ({
   interviewId,
-  questionId,
-  question,
-  answer,
+  questionInfo: { id, question, answer, questionAudioUrl },
 }: {
   interviewId: number;
-  questionId: number;
-  question: string;
-  answer: string;
+  questionInfo: InterviewPrepQuestion;
 }) => {
   const [pulsating, setPulsating] = useState({
     volume: false,
     mic: false,
     confirm: false,
   });
-
+  const player = useAudioPlayer({
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id),
+  });
+  console.log("Question Audio URL: ", questionAudioUrl);
   const handleListenToQuestion = async () => {
     if (!pulsating.volume) {
-      const res = await generateInterviewQuestionPrepTextToSpeech(
-        interviewId,
-        questionId
-      );
-      if (res == null) return;
-      const { questionAudioUrl } = res;
-      console.log("Audio URL: ", questionAudioUrl);
+      if (!questionAudioUrl) {
+        const res = await generateInterviewQuestionPrepTextToSpeech(
+          interviewId,
+          id
+        );
+        if (res == null) return;
+        const { questionAudioUrl } = res;
+        console.log("Audio URL: ", questionAudioUrl);
+      } else {
+        // play from S3 url
+        console.log("Using existing audio URL: ", questionAudioUrl);
+        player.volume = 1.0;
+        player.seekTo(0);
+        player.play();
+      }
     }
     setPulsating({
       mic: false,
