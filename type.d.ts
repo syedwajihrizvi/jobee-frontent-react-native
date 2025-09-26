@@ -339,7 +339,7 @@ export type InterviewPreparation = {
     id: number;
     strengths: string[];
     weaknesses: string[];
-    questions: {question: string; answer: string}[];
+    questions: {id: number, question: string; answer: string}[];
     resources: {title: string, link: string, description: string, type: string}[];
     overallAdvice: string;
     notesFromInterviewer: string[]

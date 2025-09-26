@@ -102,7 +102,7 @@ const Index = () => {
       transform: [{ translateX: slideX.value }],
     };
   });
-  const isLoadingNewJobs = true;
+
   const openFilters = () => {
     slideX.value = withTiming(0, { duration: 300 });
     setIsOpen(true);

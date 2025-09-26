@@ -157,3 +157,12 @@ export const renderInterviewType = (type: string | undefined) => {
       return "Interview type not specified. Please check with the recruiter for more details.";
   }
 }
+
+export const renderQuestionSteps = [
+  "Select the volume icon to hear the question.",
+  "Press the microphone icon to start recording your response.",
+  "Press the microphone icon again to stop recording.",
+  "Select the play icon to review your answer.",
+  "If you are satisfied with your response, select the checkmark icon to submit. Otherwise, you can re-record your answer by pressing the microphone icon again.",
+  "Once the answer is submitted, I will give you feedback and you can re-record if you'd like to improve it.",
+]
