@@ -14,7 +14,5 @@ export const getS3VideoIntroUrl = (key: string) => {
 }
 
 export const getS3InterviewQuestionAudioUrl = (interviewId: number, prepQuestion: number) => {
-    const res = `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${interviewId}/${prepQuestion}.mp3`;
-    console.log("Generated S3 URL: ", res);
-    return res;
+    return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${interviewId}/${prepQuestion}.mp3`;
 }

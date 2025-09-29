@@ -59,7 +59,6 @@ const PrepForInterview = () => {
   const width = Dimensions.get("window").width;
   const [step, setSteps] = useState(0);
   const translateX = useSharedValue(0);
-  console.log(interviewPrep?.questions[currentQuestionIndex]);
   const interviewers = [
     ...(interviewDetails?.interviewers || []),
     ...(interviewDetails?.otherInterviewers || []),

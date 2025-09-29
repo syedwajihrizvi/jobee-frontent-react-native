@@ -340,6 +340,7 @@ export type InterviewPrepQuestion = {
     question: string;
     answer: string;
     questionAudioUrl: string | null;
+    answerAudioUrl: string | null;
 }
 
 export type InterviewPreparation = {
