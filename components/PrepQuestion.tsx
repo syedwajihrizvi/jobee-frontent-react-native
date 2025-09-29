@@ -1,5 +1,8 @@
 import { sounds } from "@/constants";
-import { generateInterviewQuestionPrepTextToSpeech } from "@/lib/interviewEndpoints";
+import {
+  generateInterviewQuestionPrepTextToSpeech,
+  generateInterviewQuestionSpeechToText,
+} from "@/lib/interviewEndpoints";
 import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
 import { InterviewPrepQuestion } from "@/type";
 import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
@@ -43,9 +46,11 @@ const PrepQuestion = ({
   >(answerAudioUrl);
   const progress = useSharedValue(0);
   const player = useAudioPlayer({
-    uri: getS3InterviewQuestionAudioUrl(interviewId, id),
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
   });
+  player.volume = 1.0;
   const answerPlayer = useAudioPlayer();
+  answerPlayer.volume = 1.0;
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const beepSound = useAudioPlayer(sounds.beepSound);
   const animatedStyle = useAnimatedStyle(() => {
@@ -53,6 +58,7 @@ const PrepQuestion = ({
       width: `${progress.value}%`,
     };
   });
+  console.log(questionAnswerAudioUrl);
   useEffect(() => {
     setPulsating({ volume: false, mic: false, confirm: false });
   }, [id]);
@@ -146,7 +152,6 @@ const PrepQuestion = ({
   const handlePlaybackAnswer = () => {
     if (questionAnswerAudioUrl == null) return;
     if (!answerPlayer.playing) {
-      answerPlayer.volume = 1.0;
       answerPlayer.play();
       setListeningToAnswer(true);
       const remaining = answerPlayer.duration - answerPlayer.currentTime;
@@ -179,7 +184,7 @@ const PrepQuestion = ({
         setAudioUrl(questionAudioUrl);
         console.log("Generated Audio URL: ", questionAudioUrl);
         player.replace({
-          uri: getS3InterviewQuestionAudioUrl(interviewId, id),
+          uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
         });
       } else {
         // play from S3 url
@@ -200,18 +205,31 @@ const PrepQuestion = ({
   };
 
   const handleSubmitAnswer = () => {
-    if (answerAudioUrl == null) {
+    if (questionAnswerAudioUrl == null) {
       Alert.alert("No Answer Recorded", "Please record your answer first.");
       return;
     }
     Alert.alert("Submit Answer", "Are you sure you want to submit?", [
       {
         text: "Yes",
-        onPress: () => {},
+        onPress: async () => {
+          console.log("Submitting answer for question id: ", id);
+          const uri = recorder.uri;
+          if (!uri) {
+            Alert.alert(
+              "No Answer Recorded",
+              "Please record your answer first."
+            );
+            return;
+          }
+          await generateInterviewQuestionSpeechToText(interviewId, id, uri);
+        },
       },
       {
         text: "No",
-        onPress: () => {},
+        onPress: () => {
+          console.log("Cancelled submit");
+        },
       },
     ]);
   };

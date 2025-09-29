@@ -63,7 +63,7 @@ export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: num
     console.log("Generating TTS for interview prep id: ", interviewId, " questionId: ", questionId)
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null
-    const response = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/questions/${questionId}/text-to-speech`, {
+    const response = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/questions/${questionId}/question/text-to-speech`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -73,4 +73,27 @@ export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: num
     const data = await response.json()
     console.log(data)
     return data as {questionAudioUrl: string}
+}
+
+export const generateInterviewQuestionSpeechToText = async (
+    interviewId: number, questionId: number, uri: string) => {
+    console.log("Generating STT for interview prep id: ", interviewId, " questionId: ", questionId)
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null
+    const formData = new FormData();
+    formData.append('audioFile', {
+        uri,
+        type: 'audio/m4a',
+        name: `answer-${questionId}.m4a`
+    } as any)
+    const response = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/questions/${questionId}/answer/speech-to-text`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: formData
+    })
+    const data = await response.json()
+    console.log(data)
 }

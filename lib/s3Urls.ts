@@ -13,6 +13,7 @@ export const getS3VideoIntroUrl = (key: string) => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/user-video-intros/${key}`;
 }
 
-export const getS3InterviewQuestionAudioUrl = (interviewId: number, prepQuestion: number) => {
-    return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${interviewId}/${prepQuestion}.mp3`;
+export const getS3InterviewQuestionAudioUrl = (interviewId: number, prepQuestion: number, type: 'question' | 'answer') => {
+    return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${interviewId}/${prepQuestion}-${type}.mp3`;
 }
+
