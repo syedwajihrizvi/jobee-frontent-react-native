@@ -49,7 +49,9 @@ const PrepQuestion = ({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
   });
   player.volume = 1.0;
-  const answerPlayer = useAudioPlayer();
+  const answerPlayer = useAudioPlayer({
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "answer"),
+  });
   answerPlayer.volume = 1.0;
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const beepSound = useAudioPlayer(sounds.beepSound);
@@ -58,10 +60,14 @@ const PrepQuestion = ({
       width: `${progress.value}%`,
     };
   });
-  console.log(questionAnswerAudioUrl);
+
   useEffect(() => {
     setPulsating({ volume: false, mic: false, confirm: false });
   }, [id]);
+
+  useEffect(() => {
+    setQuestionAnswerAudioUrl(answerAudioUrl);
+  }, [answerAudioUrl]);
 
   useEffect(() => {
     setAudioUrl(questionAudioUrl);
