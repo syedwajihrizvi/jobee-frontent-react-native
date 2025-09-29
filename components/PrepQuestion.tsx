@@ -1,3 +1,4 @@
+import { sounds } from "@/constants";
 import { generateInterviewQuestionPrepTextToSpeech } from "@/lib/interviewEndpoints";
 import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
 import { InterviewPrepQuestion } from "@/type";
@@ -34,7 +35,7 @@ const PrepQuestion = ({
     confirm: false,
   });
   const [listeningToAnswer, setListeningToAnswer] = useState(false);
-
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [answerPlayStartTime, setAnswerPlayStartTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(questionAudioUrl);
   const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<
@@ -46,6 +47,7 @@ const PrepQuestion = ({
   });
   const answerPlayer = useAudioPlayer();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const beepSound = useAudioPlayer(sounds.beepSound);
   const animatedStyle = useAnimatedStyle(() => {
     return {
       width: `${progress.value}%`,
@@ -58,6 +60,18 @@ const PrepQuestion = ({
   useEffect(() => {
     setAudioUrl(questionAudioUrl);
   }, [questionAudioUrl]);
+
+  useEffect(() => {
+    const onEnd = player.addListener("playbackStatusUpdate", () => {
+      if (player.playing === false && player.currentTime >= player.duration) {
+        setPulsating((prev) => ({ ...prev, volume: false }));
+        player.seekTo(0);
+      }
+    });
+    return () => {
+      onEnd.remove();
+    };
+  }, [player, player.playing]);
 
   useEffect(() => {
     const onEnd = answerPlayer.addListener("playbackStatusUpdate", () => {
@@ -95,9 +109,30 @@ const PrepQuestion = ({
         playsInSilentMode: true,
       });
       await recorder.prepareToRecordAsync();
-      recorder.record();
       // start recording
-      setPulsating((prev) => ({ ...prev, mic: true }));
+      setQuestionAnswerAudioUrl(null);
+      progress.value = 0;
+      let counter = 3;
+      beepSound.volume = 1.0;
+      beepSound.seekTo(0);
+      beepSound.play();
+      setCountdown(counter);
+      const countdownInterval = setInterval(() => {
+        counter -= 1;
+        if (counter === 0) {
+          clearInterval(countdownInterval);
+          setCountdown(null);
+        } else {
+          beepSound.volume = 1.0;
+          beepSound.seekTo(0);
+          beepSound.play();
+          setCountdown(counter);
+        }
+      }, 1000);
+      setTimeout(() => {
+        recorder.record();
+        setPulsating((prev) => ({ ...prev, mic: true }));
+      }, 3000);
     } else {
       await recorder.stop();
       // Get the recorded uri
@@ -183,31 +218,38 @@ const PrepQuestion = ({
 
   return (
     <View className="h-full items-center">
-      {questionAnswerAudioUrl && (
-        <View className="flex flex-col items-center gap-2 ">
+      <View className="flex flex-col items-center gap-2 ">
+        {questionAnswerAudioUrl ? (
           <Text className="font-quicksand-bold text-sm text-center">
-            If you&apos;re satisfied with your answer, press{" "}
-            <Entypo name="check" size={16} color="#21c55e" /> to submit.
+            Press <Entypo name="check" size={16} color="#21c55e" /> to submit
+            your answer.
           </Text>
-          <View className="flex flex-row items-center justify-center gap-4 mb-4 w-full bg-green-500 rounded-full p-2">
-            <TouchableOpacity onPress={handlePlaybackAnswer}>
-              <Feather
-                name={listeningToAnswer ? `pause-circle` : `play-circle`}
-                size={34}
-                color="black"
+        ) : (
+          <Text className="font-quicksand-bold text-sm text-center">
+            Press <FontAwesome name="microphone" size={16} color="#21c55e" /> to
+            record your answer.
+          </Text>
+        )}
+
+        <View className="flex flex-row items-center justify-center gap-4 mb-4 w-full bg-green-500 rounded-full p-2">
+          <TouchableOpacity onPress={handlePlaybackAnswer}>
+            <Feather
+              name={listeningToAnswer ? `pause-circle` : `play-circle`}
+              size={34}
+              color={questionAnswerAudioUrl == null ? `gray` : `black`}
+              disabled={questionAnswerAudioUrl == null}
+            />
+          </TouchableOpacity>
+          <View className="w-3/4">
+            <View className="w-full rounded-full h-3 bg-white">
+              <Animated.View
+                className="bg-black h-3 rounded-full"
+                style={animatedStyle}
               />
-            </TouchableOpacity>
-            <View className="w-3/4">
-              <View className="w-full rounded-full h-3 bg-white">
-                <Animated.View
-                  className="bg-black h-3 rounded-full"
-                  style={animatedStyle}
-                />
-              </View>
             </View>
           </View>
         </View>
-      )}
+      </View>
       <View className="flex flex-row gap-4 items-center justify-between w-full px-4 py-2">
         <PulsatingButton
           pulsating={pulsating.volume}
@@ -219,8 +261,13 @@ const PrepQuestion = ({
         <PulsatingButton
           pulsating={pulsating.mic}
           handlePress={handleAnswerQuestion}
+          disabled={countdown !== null}
         >
-          <FontAwesome name="microphone" size={24} color="black" />
+          {countdown ? (
+            <Text className="font-quicksand-bold text-xl">{countdown}</Text>
+          ) : (
+            <FontAwesome name="microphone" size={24} color="black" />
+          )}
         </PulsatingButton>
 
         <PulsatingButton

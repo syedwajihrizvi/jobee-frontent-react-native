@@ -11,10 +11,12 @@ const PulsatingButton = ({
   pulsating,
   children,
   handlePress,
+  disabled = false,
 }: {
   pulsating: boolean;
   children: React.ReactNode;
   handlePress: () => void;
+  disabled?: boolean;
 }) => {
   const borderOpacity = useSharedValue(0);
 
@@ -44,6 +46,7 @@ const PulsatingButton = ({
     >
       <TouchableOpacity
         onPress={handlePress}
+        disabled={disabled}
         className="bg-green-500 dark:bg-[#1e1e1e] rounded-full shadow-md p-4 size-20 justify-center items-center"
       >
         {children}

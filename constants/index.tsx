@@ -1,4 +1,5 @@
 import resumeImage from "@/assets/images/sampleResume.jpg";
+import beepSound from "@/assets/sounds/beep.mp3";
 import popSound from "@/assets/sounds/pop.mp3";
 import { Feather } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -15,6 +16,7 @@ export const images = {
 
 export const sounds = {
   popSound,
+  beepSound,
 };
 
 export enum UserDocumentType {
