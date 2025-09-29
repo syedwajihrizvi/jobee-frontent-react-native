@@ -11,7 +11,14 @@ import {
   useAudioRecorder,
 } from "expo-audio";
 import React, { useEffect, useState } from "react";
-import { Alert, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import PulsatingButton from "./PulsatingButton";
 
 const PrepQuestion = ({
@@ -27,19 +34,23 @@ const PrepQuestion = ({
     confirm: false,
   });
   const [listeningToAnswer, setListeningToAnswer] = useState(false);
-  const [answerPlayerProgress, setAnswerPlayerProgress] = useState(50);
+
+  const [answerPlayStartTime, setAnswerPlayStartTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(questionAudioUrl);
   const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<
     string | null
   >(answerAudioUrl);
+  const progress = useSharedValue(0);
   const player = useAudioPlayer({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id),
   });
   const answerPlayer = useAudioPlayer();
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY, (status) =>
-    console.log("Recording Status: ", status)
-  );
-
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${progress.value}%`,
+    };
+  });
   useEffect(() => {
     setPulsating({ volume: false, mic: false, confirm: false });
   }, [id]);
@@ -55,7 +66,9 @@ const PrepQuestion = ({
         answerPlayer.currentTime >= answerPlayer.duration
       ) {
         setListeningToAnswer(false);
+        setAnswerPlayStartTime(0);
         answerPlayer.seekTo(0);
+        progress.value = 0;
       }
     });
     return () => {
@@ -64,7 +77,6 @@ const PrepQuestion = ({
   }, [answerPlayer, answerPlayer.playing]);
 
   const handleAnswerQuestion = async () => {
-    console.log("Handle answer question for question id: ", id);
     if (!pulsating.mic) {
       const { status } = await getRecordingPermissionsAsync();
       if (status !== "granted") {
@@ -102,17 +114,20 @@ const PrepQuestion = ({
       answerPlayer.volume = 1.0;
       answerPlayer.play();
       setListeningToAnswer(true);
+      const remaining = answerPlayer.duration - answerPlayer.currentTime;
+      progress.value = withTiming(100, {
+        duration: remaining * 1000,
+        easing: Easing.linear,
+      });
+      if (answerPlayStartTime === 0) setAnswerPlayStartTime(Date.now());
     } else {
       answerPlayer.pause();
       setListeningToAnswer(false);
+      console.log(progress.value);
+      cancelAnimation(progress);
     }
   };
 
-  useEffect(() => {
-    answerPlayer.addListener("playbackStatusUpdate", (status) => {
-      console.log("Answer Player Status: ", status);
-    });
-  }, [answerPlayer]);
   const handleListenToQuestion = async () => {
     console.log("Handle listen to question for question id: ", id);
     if (!pulsating.volume) {
@@ -169,20 +184,26 @@ const PrepQuestion = ({
   return (
     <View className="h-full items-center">
       {questionAnswerAudioUrl && (
-        <View className="flex flex-row items-center justify-center gap-4 mb-4 w-full bg-green-500 rounded-full p-2">
-          <TouchableOpacity onPress={handlePlaybackAnswer}>
-            <Feather
-              name={listeningToAnswer ? `pause-circle` : `play-circle`}
-              size={34}
-              color="black"
-            />
-          </TouchableOpacity>
-          <View className="w-3/4">
-            <View className="w-full rounded-full h-3 bg-white">
-              <View
-                className="bg-black h-3 rounded-full"
-                style={{ width: `${answerPlayerProgress}%` }}
+        <View className="flex flex-col items-center gap-2 ">
+          <Text className="font-quicksand-bold text-sm text-center">
+            If you&apos;re satisfied with your answer, press{" "}
+            <Entypo name="check" size={16} color="#21c55e" /> to submit.
+          </Text>
+          <View className="flex flex-row items-center justify-center gap-4 mb-4 w-full bg-green-500 rounded-full p-2">
+            <TouchableOpacity onPress={handlePlaybackAnswer}>
+              <Feather
+                name={listeningToAnswer ? `pause-circle` : `play-circle`}
+                size={34}
+                color="black"
               />
+            </TouchableOpacity>
+            <View className="w-3/4">
+              <View className="w-full rounded-full h-3 bg-white">
+                <Animated.View
+                  className="bg-black h-3 rounded-full"
+                  style={animatedStyle}
+                />
+              </View>
             </View>
           </View>
         </View>
