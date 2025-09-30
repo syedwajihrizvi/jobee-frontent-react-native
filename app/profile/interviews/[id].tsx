@@ -1,37 +1,22 @@
 import BackBar from "@/components/BackBar";
+import CheckList from "@/components/CheckList";
 import CompanyInformation from "@/components/CompanyInformation";
 import PrepareWithJobee from "@/components/PrepareWithJobee";
 import { images } from "@/constants";
 import { prepareForInterview } from "@/lib/interviewEndpoints";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
-import {
-  AntDesign,
-  Feather,
-  Ionicons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const InterviewDetails = () => {
   const { id: interviewId } = useLocalSearchParams();
   const [showInterviewPrepModal, setShowInterviewPrepModal] = useState(false);
-  const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] =
-    useState(false);
-  const { data: interviewDetails, isLoading } = useInterviewDetails(
-    Number(interviewId)
-  );
+  const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] = useState(false);
+  const { data: interviewDetails, isLoading } = useInterviewDetails(Number(interviewId));
   const handlePrepareWithJobee = () => {
     // TODO: Check status of preparation and route accordingly
     if (interviewDetails?.preparationStatus === "NOT_STARTED") {
@@ -62,10 +47,7 @@ const InterviewDetails = () => {
     try {
       const res = await prepareForInterview(Number(interviewId));
       if (res) {
-        Alert.alert(
-          "Success",
-          "You are all set! We will notify you once we are ready. Approximately 5 minutes"
-        );
+        Alert.alert("Success", "You are all set! We will notify you once we are ready. Approximately 5 minutes");
         console.log("Preparation started");
         handleShowInterviewPrepModalClose();
       }
@@ -85,19 +67,13 @@ const InterviewDetails = () => {
         <ScrollView className="p-4 mb-20">
           <CompanyInformation company={interviewDetails?.companyName!} />
           <View>
-            <Text className="font-quicksand-bold text-lg">
-              {interviewDetails?.title}
-            </Text>
-            <Text className="font-quicksand-medium text-md">
-              {interviewDetails?.description}
-            </Text>
+            <Text className="font-quicksand-bold text-lg">{interviewDetails?.title}</Text>
+            <Text className="font-quicksand-medium text-md">{interviewDetails?.description}</Text>
             <TouchableOpacity
               className="bg-green-200 px-4 py-2 rounded-full w-2/5 mt-2"
               onPress={() => router.push(`/jobs/${interviewDetails?.jobId}`)}
             >
-              <Text className="font-quicksand-bold text-green-800 text-sm">
-                View Job Posting
-              </Text>
+              <Text className="font-quicksand-bold text-green-800 text-sm">View Job Posting</Text>
             </TouchableOpacity>
           </View>
           <View className="divider my-4" />
@@ -108,8 +84,7 @@ const InterviewDetails = () => {
                 {interviewDetails?.interviewDate}
               </Text>
               <Text className="font-quicksand-semibold text-sm text-green-800 bg-green-200 px-2 py-1 rounded-full">
-                {convertTo12Hour(interviewDetails?.startTime!)} -{" "}
-                {convertTo12Hour(interviewDetails?.endTime!)}
+                {convertTo12Hour(interviewDetails?.startTime!)} - {convertTo12Hour(interviewDetails?.endTime!)}
               </Text>
               <Text className="font-quicksand-semibold text-sm text-blue-800 bg-blue-100 px-2 py-1 rounded-full">
                 {interviewDetails?.timezone}
@@ -122,70 +97,40 @@ const InterviewDetails = () => {
               {interviewDetails?.location && (
                 <View>
                   <MaterialIcons name="location-on" size={24} color="black" />
-                  <Text className="font-quicksand-medium text-md mt-2">
-                    {interviewDetails?.location}
-                  </Text>
+                  <Text className="font-quicksand-medium text-md mt-2">{interviewDetails?.location}</Text>
                 </View>
               )}
               {interviewDetails?.phoneNumber && (
                 <View className="rounded-full bg-blue-200 flex flex-row items-center justify-center gap-2 py-2 px-4">
                   <MaterialIcons name="phone" size={16} color="black" />
-                  <Text className="font-quicksand-medium text-sm">
-                    {interviewDetails?.phoneNumber}
-                  </Text>
+                  <Text className="font-quicksand-medium text-sm">{interviewDetails?.phoneNumber}</Text>
                 </View>
               )}
               {interviewDetails?.meetingLink && (
                 <View className="rounded-full bg-blue-200 flex flex-row items-center justify-center gap-2 py-2 px-4">
                   <AntDesign name="link" size={16} color="black" />
-                  <Text className="font-quicksand-medium text-sm">
-                    Meeting Link
-                  </Text>
+                  <Text className="font-quicksand-medium text-sm">Meeting Link</Text>
                 </View>
               )}
             </View>
           </View>
           <View className="divider my-4" />
           <View>
-            <Text className="font-quicksand-bold text-lg">
-              Preperation Tips From Company
-            </Text>
-            <View className="p-4 border border-gray-300 rounded-lg mt-2">
-              {interviewDetails?.preparationTipsFromInterviewer.map(
-                (note, index) => (
-                  <View key={index} className="flex flex-row items-start mb-2">
-                    <Feather
-                      name="check-square"
-                      size={12}
-                      color="green"
-                      className="mt-1 mr-2"
-                    />
-                    <Text className="font-quicksand-semibold text-md flex-shrink">
-                      {note}
-                    </Text>
-                  </View>
-                )
-              )}
-            </View>
+            <Text className="font-quicksand-bold text-lg">Preperation Tips From Company</Text>
+            <CheckList items={interviewDetails?.preparationTipsFromInterviewer || []} />
           </View>
           <View className="divider my-4" />
           <View>
             <Text className="font-quicksand-bold text-lg">Interviewers</Text>
             <View className="flex flex-row flex-wrap">
-              {[
-                ...(interviewDetails?.interviewers ?? []),
-                ...(interviewDetails?.otherInterviewers ?? []),
-              ].map((interviewer, index) => (
-                <View key={index} className="flex flex-col items-center p-4">
-                  <Image
-                    source={{ uri: images.companyLogo }}
-                    className="w-16 h-16 rounded-full"
-                  />
-                  <Text className="font-quicksand-bold text-md">
-                    {interviewer.name}
-                  </Text>
-                </View>
-              ))}
+              {[...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])].map(
+                (interviewer, index) => (
+                  <View key={index} className="flex flex-col items-center p-4">
+                    <Image source={{ uri: images.companyLogo }} className="w-16 h-16 rounded-full" />
+                    <Text className="font-quicksand-bold text-md">{interviewer.name}</Text>
+                  </View>
+                )
+              )}
             </View>
           </View>
         </ScrollView>
@@ -195,9 +140,7 @@ const InterviewDetails = () => {
           className="apply-button w-1/2 items-center flex-row  gap-2 justify-center h-14"
           onPress={handlePrepareWithJobee}
         >
-          <Text className="font-quicksand-semibold text-md">
-            {renderInterviePrepText()}
-          </Text>
+          <Text className="font-quicksand-semibold text-md">{renderInterviePrepText()}</Text>
           <Ionicons name="sparkles" size={20} color="gold" />
         </TouchableOpacity>
         <TouchableOpacity className="favorite-button w-1/2 h-14 items-center justify-center">

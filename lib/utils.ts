@@ -148,13 +148,17 @@ export const hasUserAppliedToJob = (user: User | null, jobId: number) : Applicat
 export const renderInterviewType = (type: string | undefined) => {
   switch(type) {
     case 'ONLINE':
-      return "This interview will be conducted online via a video conferencing platform. Please ensure you have a stable internet connection and a quiet environment for the interview.";
+      return (
+        `This interview will be conducted online. Please ensure you have a stable 
+        internet connection and a quiet environment for the interview.
+        Make sure there is good lighting and we recommend you use headphones 
+        and dress professionally even if it is a virtual interview.`);
     case 'IN_PERSON':
-      return "This interview will take place at the company's office location. Please arrive 10-15 minutes early and bring any necessary documents or identification.";
+      return ("This interview will take place at the company's office location. Please arrive 10-15 minutes early and bring any necessary documents or identification.");
     case 'PHONE':
-      return "This interview will be conducted over the phone. Please ensure you are in a quiet location with good reception at the scheduled time.";
+      return ("This interview will be conducted over the phone. Please ensure you are in a quiet location with good reception at the scheduled time.");
     default:
-      return "Interview type not specified. Please check with the recruiter for more details.";
+      return ("Interview type not specified. Please check with the recruiter for more details.");
   }
 }
 

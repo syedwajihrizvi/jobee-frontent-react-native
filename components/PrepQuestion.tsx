@@ -41,9 +41,7 @@ const PrepQuestion = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [answerPlayStartTime, setAnswerPlayStartTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(questionAudioUrl);
-  const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<
-    string | null
-  >(answerAudioUrl);
+  const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<string | null>(answerAudioUrl);
   const progress = useSharedValue(0);
   const player = useAudioPlayer({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
@@ -87,10 +85,7 @@ const PrepQuestion = ({
 
   useEffect(() => {
     const onEnd = answerPlayer.addListener("playbackStatusUpdate", () => {
-      if (
-        answerPlayer.playing === false &&
-        answerPlayer.currentTime >= answerPlayer.duration
-      ) {
+      if (answerPlayer.playing === false && answerPlayer.currentTime >= answerPlayer.duration) {
         setListeningToAnswer(false);
         setAnswerPlayStartTime(0);
         answerPlayer.seekTo(0);
@@ -109,10 +104,7 @@ const PrepQuestion = ({
         const granted = await requestRecordingPermissionsAsync();
         console.log("Recording permission granted: ", granted);
         if (granted.status !== "granted") {
-          Alert.alert(
-            "Permission Denied",
-            "You need to allow microphone access to record your answer."
-          );
+          Alert.alert("Permission Denied", "You need to allow microphone access to record your answer.");
           return;
         }
       }
@@ -180,10 +172,7 @@ const PrepQuestion = ({
       console.log("Playing audio for question id: ", id);
       if (!audioUrl) {
         console.log("No audio URL, generating TTS...");
-        const res = await generateInterviewQuestionPrepTextToSpeech(
-          interviewId,
-          id
-        );
+        const res = await generateInterviewQuestionPrepTextToSpeech(interviewId, id);
         console.log("TTS generation response: ", res);
         if (res == null) return;
         const { questionAudioUrl } = res;
@@ -222,10 +211,7 @@ const PrepQuestion = ({
           console.log("Submitting answer for question id: ", id);
           const uri = recorder.uri;
           if (!uri) {
-            Alert.alert(
-              "No Answer Recorded",
-              "Please record your answer first."
-            );
+            Alert.alert("No Answer Recorded", "Please record your answer first.");
             return;
           }
           await generateInterviewQuestionSpeechToText(interviewId, id, uri);
@@ -245,13 +231,11 @@ const PrepQuestion = ({
       <View className="flex flex-col items-center gap-2 ">
         {questionAnswerAudioUrl ? (
           <Text className="font-quicksand-bold text-sm text-center">
-            Press <Entypo name="check" size={16} color="#21c55e" /> to submit
-            your answer.
+            Press <Entypo name="check" size={16} color="#21c55e" /> to submit your answer.
           </Text>
         ) : (
           <Text className="font-quicksand-bold text-sm text-center">
-            Press <FontAwesome name="microphone" size={16} color="#21c55e" /> to
-            record your answer.
+            Press <FontAwesome name="microphone" size={16} color="#21c55e" /> to record your answer.
           </Text>
         )}
 
@@ -266,27 +250,17 @@ const PrepQuestion = ({
           </TouchableOpacity>
           <View className="w-3/4">
             <View className="w-full rounded-full h-3 bg-white">
-              <Animated.View
-                className="bg-black h-3 rounded-full"
-                style={animatedStyle}
-              />
+              <Animated.View className="bg-black h-3 rounded-full" style={animatedStyle} />
             </View>
           </View>
         </View>
       </View>
       <View className="flex flex-row gap-4 items-center justify-between w-full px-4 py-2">
-        <PulsatingButton
-          pulsating={pulsating.volume}
-          handlePress={handleListenToQuestion}
-        >
+        <PulsatingButton pulsating={pulsating.volume} handlePress={handleListenToQuestion}>
           <Feather name="volume-2" size={24} color="black" />
         </PulsatingButton>
 
-        <PulsatingButton
-          pulsating={pulsating.mic}
-          handlePress={handleAnswerQuestion}
-          disabled={countdown !== null}
-        >
+        <PulsatingButton pulsating={pulsating.mic} handlePress={handleAnswerQuestion} disabled={countdown !== null}>
           {countdown ? (
             <Text className="font-quicksand-bold text-xl">{countdown}</Text>
           ) : (
@@ -294,10 +268,7 @@ const PrepQuestion = ({
           )}
         </PulsatingButton>
 
-        <PulsatingButton
-          pulsating={pulsating.confirm}
-          handlePress={handleSubmitAnswer}
-        >
+        <PulsatingButton pulsating={pulsating.confirm} handlePress={handleSubmitAnswer}>
           <Entypo name="check" size={24} color="black" />
         </PulsatingButton>
       </View>

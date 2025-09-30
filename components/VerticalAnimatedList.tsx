@@ -5,7 +5,7 @@ import { FlatList } from "react-native-gesture-handler";
 
 const VerticalAnimatedList = ({ strengths }: { strengths: string[] }) => {
   return (
-    <View className="w-full h-[550px] mt-2 overflow-hidden">
+    <View className="w-full h-[450px] mt-2 overflow-hidden">
       <FlatList
         data={strengths}
         keyExtractor={(_, index) => index.toString()}
