@@ -29,6 +29,12 @@ import PulsatingButton from "./PulsatingButton";
 
 const PrepQuestion = ({ interviewId, questionInfo }: { interviewId: number; questionInfo: InterviewPrepQuestion }) => {
   const { id, questionAudioUrl, answerAudioUrl, aiAnswerAudioUrl, userAnswerScore, reasonForScore } = questionInfo;
+  console.log("Rendering PrepQuestion component for question id: ", id);
+  console.log("Question Audio URL: ", questionAudioUrl);
+  console.log("Answer Audio URL: ", answerAudioUrl);
+  console.log("AI Answer Audio URL: ", aiAnswerAudioUrl);
+  console.log("User Answer Score: ", userAnswerScore);
+  console.log("Reason For Score: ", reasonForScore);
   const [pulsating, setPulsating] = useState({
     volume: false,
     mic: false,
@@ -46,6 +52,7 @@ const PrepQuestion = ({ interviewId, questionInfo }: { interviewId: number; ques
     reasonForScore,
     aiAnswerAudioUrl,
   });
+
   const progress = useSharedValue(0);
   const questionPlayer = useAudioPlayer({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
@@ -114,6 +121,15 @@ const PrepQuestion = ({ interviewId, questionInfo }: { interviewId: number; ques
       onEnd.remove();
     };
   }, [answerPlayer, answerPlayer.playing]);
+
+  useEffect(() => {
+    setFeedback((prev) => ({
+      ...prev,
+      aiAnswerAudioUrl,
+      reasonForScore,
+      userAnswerScore: userAnswerScore !== null ? Number(userAnswerScore) : null,
+    }));
+  }, [id, aiAnswerAudioUrl, userAnswerScore, reasonForScore]);
 
   const getLocalRecordingPath = (questionId: string) => {
     const destination = new Directory(Paths.document, `interview-prep/questions/answers/audio`);
@@ -262,6 +278,7 @@ const PrepQuestion = ({ interviewId, questionInfo }: { interviewId: number; ques
               setShowModal(false);
               return;
             }
+            console.log("Received STT and feedback response: ", response);
             const { aiAnswerAudioUrl, userAnswerScore, reasonForScore } = response;
             setFeedback((prev) => ({
               ...prev,
@@ -300,44 +317,64 @@ const PrepQuestion = ({ interviewId, questionInfo }: { interviewId: number; ques
           </Text>
         )}
 
-        <View className="flex flex-row items-center justify-center gap-4 mb-4 w-full bg-green-500 rounded-full p-2">
+        <View className="flex flex-row items-center justify-start gap-2 mb-4 w-full bg-green-500 rounded-full px-2 py-1">
           <TouchableOpacity onPress={handlePlaybackAnswer}>
             <Feather
               name={listeningToAnswer ? `pause-circle` : `play-circle`}
-              size={34}
+              size={24}
               color={questionAnswerAudioUrl == null ? `gray` : `black`}
               disabled={questionAnswerAudioUrl == null}
             />
           </TouchableOpacity>
           <View className="w-3/4">
-            <View className="w-full rounded-full h-3 bg-white">
-              <Animated.View className="bg-black h-3 rounded-full" style={animatedStyle} />
+            <View className="w-full rounded-full h-1 bg-white">
+              <Animated.View className="bg-black h-1 rounded-full" style={animatedStyle} />
             </View>
           </View>
         </View>
       </View>
+      {(feedback.userAnswerScore !== null || feedback.reasonForScore) && (
+        <TouchableOpacity
+          onPress={() => setShowModal(true)}
+          className="flex-row items-center gap-2 bg-blue-500 px-4 py-2 rounded-full mb-4"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
+          <Entypo name="bar-graph" size={16} color="white" />
+          <Text className="font-quicksand-semibold text-white text-sm">View Feedback</Text>
+          {feedback.userAnswerScore !== null && (
+            <View className="bg-white/20 px-2 py-1 rounded-full">
+              <Text className="font-quicksand-bold text-white text-xs">{feedback.userAnswerScore}/10</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      )}
       <View className="flex flex-row gap-4 items-center justify-between w-full px-4 py-2">
         <PulsatingButton pulsating={pulsating.volume} handlePress={handleListenToQuestion}>
-          <Feather name="volume-2" size={24} color="black" />
+          <Feather name="volume-2" size={20} color="black" />
         </PulsatingButton>
 
         <PulsatingButton pulsating={pulsating.mic} handlePress={handleAnswerQuestion} disabled={countdown !== null}>
           {countdown ? (
             <Text className="font-quicksand-bold text-xl">{countdown}</Text>
           ) : (
-            <FontAwesome name="microphone" size={24} color="black" />
+            <FontAwesome name="microphone" size={20} color="black" />
           )}
         </PulsatingButton>
 
         <PulsatingButton pulsating={pulsating.confirm} handlePress={handleSubmitAnswer} disabled={submittingAnswer}>
-          <Entypo name="check" size={24} color="black" />
+          <Entypo name="check" size={20} color="black" />
         </PulsatingButton>
       </View>
-      <TouchableOpacity onPress={() => setShowModal(true)}>
-        <Text>Test Modal</Text>
-      </TouchableOpacity>
       <AnswerReview
         showModal={showModal}
+        interviewId={interviewId}
+        questionId={id}
         setShowModal={setShowModal}
         submittingAnswer={submittingAnswer}
         score={feedback.userAnswerScore || null}

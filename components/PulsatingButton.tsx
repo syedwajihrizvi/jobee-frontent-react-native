@@ -1,11 +1,6 @@
 import React from "react";
 import { TouchableOpacity } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
 const PulsatingButton = ({
   pulsating,
@@ -21,11 +16,7 @@ const PulsatingButton = ({
   const borderOpacity = useSharedValue(0);
 
   if (pulsating) {
-    borderOpacity.value = withRepeat(
-      withTiming(1, { duration: 600 }),
-      -1,
-      true
-    );
+    borderOpacity.value = withRepeat(withTiming(1, { duration: 600 }), -1, true);
   } else {
     borderOpacity.value = withTiming(0, { duration: 200 });
   }
@@ -47,7 +38,7 @@ const PulsatingButton = ({
       <TouchableOpacity
         onPress={handlePress}
         disabled={disabled}
-        className="bg-green-500 dark:bg-[#1e1e1e] rounded-full shadow-md p-4 size-20 justify-center items-center"
+        className="bg-green-500 dark:bg-[#1e1e1e] rounded-full shadow-md p-2 size-16 justify-center items-center"
       >
         {children}
       </TouchableOpacity>

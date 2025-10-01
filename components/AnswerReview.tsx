@@ -1,11 +1,14 @@
+import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
 import { Entypo, Feather } from "@expo/vector-icons";
+import { useAudioPlayer } from "expo-audio";
 import React from "react";
 import { ActivityIndicator, Dimensions, Modal, Text, TouchableOpacity, View } from "react-native";
-
 const { height, width } = Dimensions.get("window");
 
 type Props = {
   showModal: boolean;
+  interviewId: number;
+  questionId: number;
   score: number | null;
   feedback: string | null;
   answerAudioUrl: string | null;
@@ -13,7 +16,28 @@ type Props = {
   submittingAnswer: boolean;
 };
 
-const AnswerReview = ({ showModal, setShowModal, score, feedback, answerAudioUrl, submittingAnswer }: Props) => {
+const AnswerReview = ({
+  showModal,
+  interviewId,
+  questionId,
+  setShowModal,
+  score,
+  feedback,
+  answerAudioUrl,
+  submittingAnswer,
+}: Props) => {
+  const player = useAudioPlayer({ uri: getS3InterviewQuestionAudioUrl(interviewId, questionId, "ai-answer") });
+
+  const handlePlayAnswer = () => {
+    player.volume = 1.0;
+    player.seekTo(0);
+    if (player.playing) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  };
+
   return (
     <Modal transparent animationType="fade" visible={showModal}>
       <View className="flex-1 bg-black/50 justify-center items-center px-4">
@@ -50,7 +74,7 @@ const AnswerReview = ({ showModal, setShowModal, score, feedback, answerAudioUrl
                 <View className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-6 items-center">
                   <Text className="font-quicksand-medium text-gray-600 mb-2">Your Score</Text>
                   <View className="flex-row items-baseline">
-                    <Text className="font-quicksand-bold text-3xl text-green-600">{score !== null ? score : 0}</Text>
+                    <Text className={`font-quicksand-bold text-3xl text-green-600"`}>{score !== null ? score : 0}</Text>
                     <Text className="font-quicksand-semibold text-xl text-gray-500 ml-1">/10</Text>
                   </View>
                   <View className="w-full bg-gray-200 rounded-full h-2 mt-3">
@@ -80,7 +104,7 @@ const AnswerReview = ({ showModal, setShowModal, score, feedback, answerAudioUrl
                   </Text>
                   <View className="flex-row items-center justify-center gap-3 bg-white rounded-xl p-4">
                     <TouchableOpacity
-                      onPress={() => console.log("Play AI answer")}
+                      onPress={handlePlayAnswer}
                       className="flex-row items-center gap-2 bg-blue-500 px-4 py-2 rounded-full"
                     >
                       <Feather name="play" size={16} color="white" />
