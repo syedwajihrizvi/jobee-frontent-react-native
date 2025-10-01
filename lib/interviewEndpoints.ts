@@ -1,4 +1,4 @@
-import { CreateInterviewForm, InterviewDetails } from "@/type";
+import { CreateInterviewForm, InterviewDetails, InterviewPrepQuestion } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { extract24HourTime } from "./utils";
 
@@ -76,7 +76,7 @@ export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: num
 }
 
 export const generateInterviewQuestionSpeechToText = async (
-    interviewId: number, questionId: number, uri: string) => {
+    interviewId: number, questionId: number, uri: string) : Promise<InterviewPrepQuestion | null> => {
     console.log("Generating STT for interview prep id: ", interviewId, " questionId: ", questionId)
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null
@@ -95,5 +95,5 @@ export const generateInterviewQuestionSpeechToText = async (
         body: formData
     })
     const data = await response.json()
-    console.log(data)
+    return data as InterviewPrepQuestion
 }

@@ -341,6 +341,9 @@ export type InterviewPrepQuestion = {
     answer: string;
     questionAudioUrl: string | null;
     answerAudioUrl: string | null;
+    aiAnswer: string | null;
+    userAnswerScore: string | null;
+    reasonForScore: string | null;
 }
 
 export type InterviewPreparation = {

@@ -23,6 +23,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import AnswerReview from "./AnswerReview";
 import PulsatingButton from "./PulsatingButton";
 
 const PrepQuestion = ({
@@ -37,20 +38,26 @@ const PrepQuestion = ({
     mic: false,
     confirm: false,
   });
+  const [showModal, setShowModal] = useState(false);
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [listeningToAnswer, setListeningToAnswer] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [answerPlayStartTime, setAnswerPlayStartTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(questionAudioUrl);
   const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<string | null>(answerAudioUrl);
   const progress = useSharedValue(0);
-  const player = useAudioPlayer({
+  const questionPlayer = useAudioPlayer({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
   });
-  player.volume = 1.0;
+  questionPlayer.volume = 1.0;
   const answerPlayer = useAudioPlayer({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id, "answer"),
   });
   answerPlayer.volume = 1.0;
+  const aiAnswerPlayer = useAudioPlayer({
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "aiAnswer"),
+  });
+  aiAnswerPlayer.volume = 1.0;
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const beepSound = useAudioPlayer(sounds.beepSound);
   const animatedStyle = useAnimatedStyle(() => {
@@ -61,27 +68,31 @@ const PrepQuestion = ({
 
   useEffect(() => {
     setPulsating({ volume: false, mic: false, confirm: false });
+    setListeningToAnswer(false);
+    setCountdown(null);
+    setAnswerPlayStartTime(0);
+    progress.value = 0;
   }, [id]);
 
   useEffect(() => {
     setQuestionAnswerAudioUrl(answerAudioUrl);
-  }, [answerAudioUrl]);
+  }, [id, answerAudioUrl]);
 
   useEffect(() => {
     setAudioUrl(questionAudioUrl);
-  }, [questionAudioUrl]);
+  }, [id, questionAudioUrl]);
 
   useEffect(() => {
-    const onEnd = player.addListener("playbackStatusUpdate", () => {
-      if (player.playing === false && player.currentTime >= player.duration) {
+    const onEnd = questionPlayer.addListener("playbackStatusUpdate", () => {
+      if (questionPlayer.playing === false && questionPlayer.currentTime >= questionPlayer.duration) {
         setPulsating((prev) => ({ ...prev, volume: false }));
-        player.seekTo(0);
+        questionPlayer.seekTo(0);
       }
     });
     return () => {
       onEnd.remove();
     };
-  }, [player, player.playing]);
+  }, [questionPlayer, questionPlayer.playing]);
 
   useEffect(() => {
     const onEnd = answerPlayer.addListener("playbackStatusUpdate", () => {
@@ -161,36 +172,28 @@ const PrepQuestion = ({
     } else {
       answerPlayer.pause();
       setListeningToAnswer(false);
-      console.log(progress.value);
       cancelAnimation(progress);
     }
   };
 
   const handleListenToQuestion = async () => {
-    console.log("Handle listen to question for question id: ", id);
     if (!pulsating.volume) {
-      console.log("Playing audio for question id: ", id);
       if (!audioUrl) {
-        console.log("No audio URL, generating TTS...");
         const res = await generateInterviewQuestionPrepTextToSpeech(interviewId, id);
-        console.log("TTS generation response: ", res);
         if (res == null) return;
         const { questionAudioUrl } = res;
         setAudioUrl(questionAudioUrl);
-        console.log("Generated Audio URL: ", questionAudioUrl);
-        player.replace({
+        questionPlayer.replace({
           uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
         });
       } else {
         // play from S3 url
         console.log("Using existing audio URL: ", audioUrl);
       }
-      player.volume = 1.0;
-      console.log(player.volume);
-      player.seekTo(0);
-      player.play();
+      questionPlayer.seekTo(0);
+      questionPlayer.play();
     } else {
-      player.pause();
+      questionPlayer.pause();
     }
     setPulsating({
       mic: false,
@@ -214,7 +217,18 @@ const PrepQuestion = ({
             Alert.alert("No Answer Recorded", "Please record your answer first.");
             return;
           }
-          await generateInterviewQuestionSpeechToText(interviewId, id, uri);
+          setSubmittingAnswer(true);
+          setShowModal(true);
+          try {
+            const data = await generateInterviewQuestionSpeechToText(interviewId, id, uri);
+            console.log("STT generation response: ", data);
+          } catch (error) {
+            console.log("Error submitting answer: ", error);
+            setShowModal(false);
+            return;
+          } finally {
+            setSubmittingAnswer(false);
+          }
         },
       },
       {
@@ -268,10 +282,14 @@ const PrepQuestion = ({
           )}
         </PulsatingButton>
 
-        <PulsatingButton pulsating={pulsating.confirm} handlePress={handleSubmitAnswer}>
+        <PulsatingButton pulsating={pulsating.confirm} handlePress={handleSubmitAnswer} disabled={submittingAnswer}>
           <Entypo name="check" size={24} color="black" />
         </PulsatingButton>
       </View>
+      <TouchableOpacity onPress={() => setShowModal(true)}>
+        <Text>Test Modal</Text>
+      </TouchableOpacity>
+      <AnswerReview showModal={showModal} setShowModal={setShowModal} submittingAnswer={submittingAnswer} />
     </View>
   );
 };
