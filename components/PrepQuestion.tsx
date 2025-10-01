@@ -4,7 +4,7 @@ import {
   generateInterviewQuestionSpeechToText,
 } from "@/lib/interviewEndpoints";
 import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
-import { InterviewPrepQuestion } from "@/type";
+import { AnswerFeedback, InterviewPrepQuestion } from "@/type";
 import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
 import {
   getRecordingPermissionsAsync,
@@ -14,6 +14,7 @@ import {
   useAudioPlayer,
   useAudioRecorder,
 } from "expo-audio";
+import { Directory, File, Paths } from "expo-file-system";
 import React, { useEffect, useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
@@ -26,13 +27,8 @@ import Animated, {
 import AnswerReview from "./AnswerReview";
 import PulsatingButton from "./PulsatingButton";
 
-const PrepQuestion = ({
-  interviewId,
-  questionInfo: { id, questionAudioUrl, answerAudioUrl },
-}: {
-  interviewId: number;
-  questionInfo: InterviewPrepQuestion;
-}) => {
+const PrepQuestion = ({ interviewId, questionInfo }: { interviewId: number; questionInfo: InterviewPrepQuestion }) => {
+  const { id, questionAudioUrl, answerAudioUrl, aiAnswerAudioUrl, userAnswerScore, reasonForScore } = questionInfo;
   const [pulsating, setPulsating] = useState({
     volume: false,
     mic: false,
@@ -45,6 +41,11 @@ const PrepQuestion = ({
   const [answerPlayStartTime, setAnswerPlayStartTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(questionAudioUrl);
   const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<string | null>(answerAudioUrl);
+  const [feedback, setFeedback] = useState<AnswerFeedback>({
+    userAnswerScore: userAnswerScore !== null ? Number(userAnswerScore) : null,
+    reasonForScore,
+    aiAnswerAudioUrl,
+  });
   const progress = useSharedValue(0);
   const questionPlayer = useAudioPlayer({
     uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
@@ -55,7 +56,7 @@ const PrepQuestion = ({
   });
   answerPlayer.volume = 1.0;
   const aiAnswerPlayer = useAudioPlayer({
-    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "aiAnswer"),
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "ai-answer"),
   });
   aiAnswerPlayer.volume = 1.0;
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -75,7 +76,13 @@ const PrepQuestion = ({
   }, [id]);
 
   useEffect(() => {
-    setQuestionAnswerAudioUrl(answerAudioUrl);
+    const localUri = getLocalRecordingPath(id.toString());
+    if (localUri) {
+      setQuestionAnswerAudioUrl(localUri);
+      answerPlayer.replace({ uri: localUri });
+    } else {
+      setQuestionAnswerAudioUrl(answerAudioUrl);
+    }
   }, [id, answerAudioUrl]);
 
   useEffect(() => {
@@ -107,6 +114,32 @@ const PrepQuestion = ({
       onEnd.remove();
     };
   }, [answerPlayer, answerPlayer.playing]);
+
+  const getLocalRecordingPath = (questionId: string) => {
+    const destination = new Directory(Paths.document, `interview-prep/questions/answers/audio`);
+    const file = new File(destination, `${questionId}-answer.m4a`);
+    if (file.exists) {
+      return file.uri;
+    }
+    return null;
+  };
+
+  getLocalRecordingPath(id.toString());
+  const saveRecordingLocally = async (uri: string, questionId: string) => {
+    try {
+      const destination = new Directory(Paths.document, `interview-prep/questions/answers/audio`);
+      destination.create({ intermediates: true, idempotent: true });
+      const file = new File(destination, `${questionId}-answer.m4a`);
+      if (file.exists) {
+        file.delete();
+      }
+      new File(uri).copy(file);
+      console.log(file.name);
+      return file.uri;
+    } catch (error) {
+      console.log("Error saving recording locally: ", error);
+    }
+  };
 
   const handleAnswerQuestion = async () => {
     if (!pulsating.mic) {
@@ -153,12 +186,15 @@ const PrepQuestion = ({
       // Get the recorded uri
       const uri = recorder.uri;
       setQuestionAnswerAudioUrl(uri);
+      saveRecordingLocally(uri!, id.toString());
+      console.log("Updated local answer uri: ", uri);
       if (uri) answerPlayer.replace({ uri: uri });
       setPulsating((prev) => ({ ...prev, mic: false }));
     }
   };
 
   const handlePlaybackAnswer = () => {
+    console.log("Playing back answer from URL: ", questionAnswerAudioUrl);
     if (questionAnswerAudioUrl == null) return;
     if (!answerPlayer.playing) {
       answerPlayer.play();
@@ -220,8 +256,19 @@ const PrepQuestion = ({
           setSubmittingAnswer(true);
           setShowModal(true);
           try {
-            const data = await generateInterviewQuestionSpeechToText(interviewId, id, uri);
-            console.log("STT generation response: ", data);
+            const response = await generateInterviewQuestionSpeechToText(interviewId, id, uri);
+            if (response == null) {
+              Alert.alert("Submission Failed", "There was an error submitting your answer. Please try again.");
+              setShowModal(false);
+              return;
+            }
+            const { aiAnswerAudioUrl, userAnswerScore, reasonForScore } = response;
+            setFeedback((prev) => ({
+              ...prev,
+              aiAnswerAudioUrl,
+              reasonForScore,
+              userAnswerScore: parseInt(userAnswerScore!),
+            }));
           } catch (error) {
             console.log("Error submitting answer: ", error);
             setShowModal(false);
@@ -289,7 +336,14 @@ const PrepQuestion = ({
       <TouchableOpacity onPress={() => setShowModal(true)}>
         <Text>Test Modal</Text>
       </TouchableOpacity>
-      <AnswerReview showModal={showModal} setShowModal={setShowModal} submittingAnswer={submittingAnswer} />
+      <AnswerReview
+        showModal={showModal}
+        setShowModal={setShowModal}
+        submittingAnswer={submittingAnswer}
+        score={feedback.userAnswerScore || null}
+        feedback={feedback.reasonForScore || ""}
+        answerAudioUrl={feedback.aiAnswerAudioUrl || aiAnswerAudioUrl}
+      />
     </View>
   );
 };

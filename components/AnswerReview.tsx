@@ -6,11 +6,14 @@ const { height, width } = Dimensions.get("window");
 
 type Props = {
   showModal: boolean;
+  score: number | null;
+  feedback: string | null;
+  answerAudioUrl: string | null;
   setShowModal: (value: boolean) => void;
   submittingAnswer: boolean;
 };
 
-const AnswerReview = ({ showModal, setShowModal, submittingAnswer }: Props) => {
+const AnswerReview = ({ showModal, setShowModal, score, feedback, answerAudioUrl, submittingAnswer }: Props) => {
   return (
     <Modal transparent animationType="fade" visible={showModal}>
       <View className="flex-1 bg-black/50 justify-center items-center px-4">
@@ -47,11 +50,14 @@ const AnswerReview = ({ showModal, setShowModal, submittingAnswer }: Props) => {
                 <View className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-6 items-center">
                   <Text className="font-quicksand-medium text-gray-600 mb-2">Your Score</Text>
                   <View className="flex-row items-baseline">
-                    <Text className="font-quicksand-bold text-3xl text-green-600">7</Text>
+                    <Text className="font-quicksand-bold text-3xl text-green-600">{score !== null ? score : 0}</Text>
                     <Text className="font-quicksand-semibold text-xl text-gray-500 ml-1">/10</Text>
                   </View>
                   <View className="w-full bg-gray-200 rounded-full h-2 mt-3">
-                    <View className="bg-green-500 h-2 rounded-full" style={{ width: "70%" }} />
+                    <View
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{ width: `${(score !== null ? score : 0) * 10}%` }}
+                    />
                   </View>
                 </View>
               </View>
@@ -59,8 +65,7 @@ const AnswerReview = ({ showModal, setShowModal, submittingAnswer }: Props) => {
                 <Text className="font-quicksand-bold text-lg text-gray-800 mb-3">Feedback</Text>
                 <View className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
                   <Text className="font-quicksand-medium text-sm text-gray-700 leading-5">
-                    Great structure and relevant examples! To improve, try to be more specific about measurable outcomes
-                    and connect your experience more directly to the role requirements.
+                    {feedback ? feedback : "No feedback available."}
                   </Text>
                 </View>
                 <View className="bg-blue-50 rounded-2xl p-4">

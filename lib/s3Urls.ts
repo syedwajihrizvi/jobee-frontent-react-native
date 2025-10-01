@@ -16,7 +16,7 @@ export const getS3VideoIntroUrl = (key: string) => {
 export const getS3InterviewQuestionAudioUrl = (
     interviewId: number, 
     prepQuestion: number, 
-    type: 'question' | 'answer' | 'aiAnswer') => {
+    type: 'question' | 'answer' | 'ai-answer') => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${interviewId}/${prepQuestion}-${type}.mp3`;
 }
 

@@ -342,6 +342,7 @@ export type InterviewPrepQuestion = {
     questionAudioUrl: string | null;
     answerAudioUrl: string | null;
     aiAnswer: string | null;
+    aiAnswerAudioUrl: string | null;
     userAnswerScore: string | null;
     reasonForScore: string | null;
 }
@@ -356,6 +357,12 @@ export type InterviewPreparation = {
     notesFromInterviewer: string[]
 }
     
+export type AnswerFeedback = {
+    userAnswerScore: number | null;
+    reasonForScore: string | null;
+    aiAnswerAudioUrl: string | null;
+}
+
 export type CompleteProfileForm = {
     title: string;
     city: string;

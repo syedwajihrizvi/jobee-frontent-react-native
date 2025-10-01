@@ -71,7 +71,6 @@ export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: num
         }
     })
     const data = await response.json()
-    console.log(data)
     return data as {questionAudioUrl: string}
 }
 
