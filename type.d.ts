@@ -360,6 +360,7 @@ export type InterviewPreparation = {
 export type AnswerFeedback = {
     userAnswerScore: number | null;
     reasonForScore: string | null;
+    aiAnswer: string | null;
     aiAnswerAudioUrl: string | null;
 }
 

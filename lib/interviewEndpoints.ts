@@ -96,3 +96,26 @@ export const generateInterviewQuestionSpeechToText = async (
     const data = await response.json()
     return data as InterviewPrepQuestion
 }
+
+export const getFeedbackForAnswer = async (
+    intervieId: number, questionId: number, uri: string) : Promise<InterviewPrepQuestion | null> => {
+        console.log("Getting feedback for interview id: ", intervieId, " questionId: ", questionId)
+        const token = await AsyncStorage.getItem('x-auth-token');
+        if (token == null) return null
+        const formData = new FormData();
+        formData.append('audioFile', {
+            uri,
+            type: 'audio/m4a',
+            name: `answer-feedback-${questionId}.m4a`
+        } as any)
+        const response = await fetch(`${INTERVIEWS_API_URL}/${intervieId}/prepare/questions/${questionId}/answer/feedback`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'x-auth-token': `Bearer ${token}`
+            },
+            body: formData
+        })
+        const data = await response.json()
+        return data as InterviewPrepQuestion
+}

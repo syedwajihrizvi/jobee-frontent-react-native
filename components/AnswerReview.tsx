@@ -1,8 +1,8 @@
-import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
+import { getS3InterviewQuestionAudioUrlUsingFileName } from "@/lib/s3Urls";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { useAudioPlayer } from "expo-audio";
-import React from "react";
-import { ActivityIndicator, Dimensions, Modal, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Dimensions, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 const { height, width } = Dimensions.get("window");
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   questionId: number;
   score: number | null;
   feedback: string | null;
+  answerText: string | null;
   answerAudioUrl: string | null;
   setShowModal: (value: boolean) => void;
   submittingAnswer: boolean;
@@ -18,24 +19,55 @@ type Props = {
 
 const AnswerReview = ({
   showModal,
-  interviewId,
-  questionId,
   setShowModal,
+  interviewId,
   score,
   feedback,
+  answerText,
   answerAudioUrl,
   submittingAnswer,
 }: Props) => {
-  const player = useAudioPlayer({ uri: getS3InterviewQuestionAudioUrl(interviewId, questionId, "ai-answer") });
+  const player = useAudioPlayer();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [transcriptVisible, setTranscriptVisible] = useState(false);
+
+  useEffect(() => {
+    if (answerAudioUrl) {
+      const s3Url = getS3InterviewQuestionAudioUrlUsingFileName(`${interviewId}/${answerAudioUrl}`);
+      console.log("Loading answer audio from S3 URL: ", s3Url);
+      player.replace({ uri: s3Url });
+    }
+  }, [player, answerAudioUrl]);
 
   const handlePlayAnswer = () => {
     player.volume = 1.0;
-    player.seekTo(0);
     if (player.playing) {
+      console.log("Paused");
       player.pause();
+      setIsPlaying(false);
     } else {
+      if (player.currentTime >= player.duration) {
+        player.seekTo(0);
+      }
+      console.log("Playing");
+      setIsPlaying(true);
       player.play();
     }
+  };
+
+  const renderColor = (score: number | null) => {
+    if (score === null) return "gray";
+    if (score >= 8) return "green";
+    if (score >= 5) return "orange";
+    return "red";
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setIsPlaying(false);
+    player.pause();
+    player.seekTo(0);
+    setTranscriptVisible(false);
   };
 
   return (
@@ -66,60 +98,88 @@ const AnswerReview = ({
             <View className="flex-1">
               <View className="flex-row justify-between items-center px-6 py-2 border-b border-gray-200">
                 <Text className="font-quicksand-bold text-lg text-gray-800">Answer Analysis</Text>
-                <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
+                <TouchableOpacity onPress={handleCloseModal} className="p-2">
                   <Entypo name="cross" size={20} color="#6b7280" />
                 </TouchableOpacity>
               </View>
-              <View className="px-6 py-4">
-                <View className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-6 items-center">
-                  <Text className="font-quicksand-medium text-gray-600 mb-2">Your Score</Text>
-                  <View className="flex-row items-baseline">
-                    <Text className={`font-quicksand-bold text-3xl text-green-600"`}>{score !== null ? score : 0}</Text>
-                    <Text className="font-quicksand-semibold text-xl text-gray-500 ml-1">/10</Text>
-                  </View>
-                  <View className="w-full bg-gray-200 rounded-full h-2 mt-3">
-                    <View
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${(score !== null ? score : 0) * 10}%` }}
-                    />
-                  </View>
-                </View>
-              </View>
-              <View className="px-6 flex-1">
-                <Text className="font-quicksand-bold text-lg text-gray-800 mb-3">Feedback</Text>
-                <View className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
-                  <Text className="font-quicksand-medium text-sm text-gray-700 leading-5">
-                    {feedback ? feedback : "No feedback available."}
-                  </Text>
-                </View>
-                <View className="bg-blue-50 rounded-2xl p-4">
-                  <View className="flex-row items-center justify-between mb-3">
-                    <Text className="font-quicksand-bold text-lg text-blue-800">Jobee&apos;s Model Answer</Text>
-                    <View className="bg-blue-100 px-3 py-1 rounded-full">
-                      <Text className="font-quicksand-semibold text-xs text-blue-700">REFERENCE</Text>
+              {transcriptVisible ? (
+                <>
+                  <ScrollView className="px-6 py-4" showsVerticalScrollIndicator={false}>
+                    <TouchableOpacity
+                      onPress={() => setTranscriptVisible(false)}
+                      className="bg-blue-100 px-3 py-1 rounded-full self-start mb-4"
+                    >
+                      <Text className="font-quicksand-semibold text-xs text-blue-700">Close Transcript</Text>
+                    </TouchableOpacity>
+                    <Text className="font-quicksand-semibold text-md leading-6">
+                      {answerText ? answerText : "No transcript available."}
+                    </Text>
+                  </ScrollView>
+                </>
+              ) : (
+                <ScrollView>
+                  <View className="px-6 py-4">
+                    <View className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-6 items-center">
+                      <Text className="font-quicksand-medium text-gray-600 mb-2">Your Score</Text>
+                      <View className="flex-row items-baseline">
+                        <Text className={`font-quicksand-bold text-3xl text-${renderColor(score)}-600`}>
+                          {score !== null ? score : 0}
+                        </Text>
+                        <Text className="font-quicksand-semibold text-xl text-gray-500 ml-1">/10</Text>
+                      </View>
+                      <View className="w-full bg-gray-200 rounded-full h-2 mt-3">
+                        <View
+                          className={`bg-${renderColor(score)}-500 h-2 rounded-full`}
+                          style={{ width: `${(score !== null ? score : 0) * 10}%` }}
+                        />
+                      </View>
                     </View>
                   </View>
-                  <Text className="font-quicksand-medium text-sm text-blue-700 mb-4 leading-5">
-                    Listen to our AI-generated model answer to see how you can improve your response.
-                  </Text>
-                  <View className="flex-row items-center justify-center gap-3 bg-white rounded-xl p-4">
-                    <TouchableOpacity
-                      onPress={handlePlayAnswer}
-                      className="flex-row items-center gap-2 bg-blue-500 px-4 py-2 rounded-full"
-                    >
-                      <Feather name="play" size={16} color="white" />
-                      <Text className="font-quicksand-semibold text-white text-sm">Play Model Answer</Text>
-                    </TouchableOpacity>
+                  <View className="px-6 flex-1">
+                    <Text className="font-quicksand-bold text-lg text-gray-800 mb-3">Feedback</Text>
+                    <View className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
+                      <Text className="font-quicksand-medium text-sm text-gray-700 leading-5">
+                        {feedback ? feedback : "No feedback available."}
+                      </Text>
+                    </View>
+                    <View className="bg-blue-50 rounded-2xl p-4">
+                      <View className="flex-row items-center justify-between mb-3">
+                        <Text className="font-quicksand-bold text-lg text-blue-800">Jobee&apos;s Answer</Text>
+                        <TouchableOpacity
+                          onPress={() => setTranscriptVisible(true)}
+                          className="bg-blue-100 px-3 py-1 rounded-full"
+                        >
+                          <Text className="font-quicksand-semibold text-xs text-blue-700">View Transcript</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <Text className="font-quicksand-medium text-sm text-blue-700 mb-4 leading-5">
+                        Listen to our AI-generated model answer to see how you can improve your response.
+                      </Text>
+                      <View className="flex-row items-center justify-center gap-3 bg-white rounded-xl p-4 w-full">
+                        <TouchableOpacity
+                          onPress={handlePlayAnswer}
+                          className="flex-row items-center gap-2 bg-blue-500 px-4 py-2 rounded-full"
+                        >
+                          <Feather name={isPlaying ? "pause" : "play"} size={16} color="white" />
+                          <Text className="font-quicksand-semibold text-white text-sm">
+                            {isPlaying ? "Pause" : "Play"} Model Answer
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </View>
-              <View className="px-6 py-4 border-t border-gray-200">
-                <View className="flex-row gap-3">
-                  <TouchableOpacity onPress={() => setShowModal(false)} className="flex-1 bg-green-500 py-3 rounded-xl">
-                    <Text className="font-quicksand-semibold text-white text-center">Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                  <View className="px-6 py-4 border-t border-gray-200">
+                    <View className="flex-row gap-3">
+                      <TouchableOpacity
+                        onPress={() => setShowModal(false)}
+                        className="flex-1 bg-green-500 py-3 rounded-xl"
+                      >
+                        <Text className="font-quicksand-semibold text-white text-center">Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </ScrollView>
+              )}
             </View>
           )}
         </View>

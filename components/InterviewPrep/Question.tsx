@@ -49,7 +49,7 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
       <View className="flex-1 justify-center">
         <PrepQuestion
           interviewId={Number(interviewId)}
-          questionInfo={interviewPrep?.questions[currentQuestionIndex]!}
+          questionId={interviewPrep?.questions[currentQuestionIndex]!.id}
         />
       </View>
     </View>

@@ -20,3 +20,6 @@ export const getS3InterviewQuestionAudioUrl = (
     return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${interviewId}/${prepQuestion}-${type}.mp3`;
 }
 
+export const getS3InterviewQuestionAudioUrlUsingFileName = (fileName: string) => {
+    return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${fileName}`;
+};
