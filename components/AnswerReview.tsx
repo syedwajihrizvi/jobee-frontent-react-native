@@ -34,9 +34,17 @@ const AnswerReview = ({
   useEffect(() => {
     if (answerAudioUrl) {
       const s3Url = getS3InterviewQuestionAudioUrlUsingFileName(`${interviewId}/${answerAudioUrl}`);
-      console.log("Loading answer audio from S3 URL: ", s3Url);
       player.replace({ uri: s3Url });
     }
+    const playerSub = player.addListener("playbackStatusUpdate", () => {
+      if (player.currentTime >= player.duration) {
+        setIsPlaying(false);
+        player.seekTo(0);
+      }
+    });
+    return () => {
+      playerSub.remove();
+    };
   }, [player, answerAudioUrl]);
 
   const handlePlayAnswer = () => {
@@ -170,10 +178,7 @@ const AnswerReview = ({
                   </View>
                   <View className="px-6 py-4 border-t border-gray-200">
                     <View className="flex-row gap-3">
-                      <TouchableOpacity
-                        onPress={() => setShowModal(false)}
-                        className="flex-1 bg-green-500 py-3 rounded-xl"
-                      >
+                      <TouchableOpacity onPress={handleCloseModal} className="flex-1 bg-green-500 py-3 rounded-xl">
                         <Text className="font-quicksand-semibold text-white text-center">Done</Text>
                       </TouchableOpacity>
                     </View>

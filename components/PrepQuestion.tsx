@@ -4,11 +4,9 @@ import {
   generateInterviewQuestionSpeechToText,
   getFeedbackForAnswer,
 } from "@/lib/interviewEndpoints";
-import { getS3InterviewQuestionAudioUrl, getS3InterviewQuestionAudioUrlUsingFileName } from "@/lib/s3Urls";
-import { useInterviewQuestion } from "@/lib/services/useInterviewQuestions";
-import { AnswerFeedback } from "@/type";
+import { getS3InterviewQuestionAudioUrl } from "@/lib/s3Urls";
+import { AnswerFeedback, InterviewPrepQuestion } from "@/type";
 import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   getRecordingPermissionsAsync,
   RecordingPresets,
@@ -30,9 +28,15 @@ import Animated, {
 import AnswerReview from "./AnswerReview";
 import PulsatingButton from "./PulsatingButton";
 
-const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questionId: number }) => {
-  const queryClient = useQueryClient();
-  const { data: questionInfo, isLoading } = useInterviewQuestion({ interviewId, questionId });
+type Props = {
+  interviewId: number;
+  questionInfo: InterviewPrepQuestion;
+  onQuestionUpdate: (question: InterviewPrepQuestion) => void;
+};
+
+const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedbackUpdate }: Props) => {
+  const { id, questionAudioUrl, answerAudioUrl, aiAnswerAudioUrl, userAnswerScore, reasonForScore, aiAnswer } =
+    questionInfo;
   const [pulsating, setPulsating] = useState({
     volume: false,
     mic: false,
@@ -43,20 +47,28 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
   const [listeningToAnswer, setListeningToAnswer] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [answerPlayStartTime, setAnswerPlayStartTime] = useState(0);
-  const [questionAudioUrl, setQuestionAudioUrl] = useState<string | null>();
-  const [answereAudioUrl, setAnswerAudioUrl] = useState<string | null>();
+  const [audioUrl, setAudioUrl] = useState<string | null>(questionAudioUrl);
+  const [questionAnswerAudioUrl, setQuestionAnswerAudioUrl] = useState<string | null>(answerAudioUrl);
   const [feedback, setFeedback] = useState<AnswerFeedback>({
-    userAnswerScore: null,
-    reasonForScore: "",
+    userAnswerScore: userAnswerScore !== null ? Number(userAnswerScore) : null,
+    reasonForScore,
     aiAnswer: null,
-    aiAnswerAudioUrl: "",
+    aiAnswerAudioUrl,
   });
 
   const progress = useSharedValue(0);
-  const questionPlayer = useAudioPlayer();
+  const questionPlayer = useAudioPlayer({
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
+  });
   questionPlayer.volume = 1.0;
-  const answerPlayer = useAudioPlayer();
+  const answerPlayer = useAudioPlayer({
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "answer"),
+  });
   answerPlayer.volume = 1.0;
+  const aiAnswerPlayer = useAudioPlayer({
+    uri: getS3InterviewQuestionAudioUrl(interviewId, id, "ai-answer"),
+  });
+  aiAnswerPlayer.volume = 1.0;
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const beepSound = useAudioPlayer(sounds.beepSound);
   const animatedStyle = useAnimatedStyle(() => {
@@ -71,30 +83,49 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
     setCountdown(null);
     setAnswerPlayStartTime(0);
     progress.value = 0;
-    const answerSub = answerPlayer.addListener("playbackStatusUpdate", () => {
-      if (answerPlayer.currentTime >= answerPlayer.duration) {
-        setListeningToAnswer(false);
-        setAnswerPlayStartTime(0);
-        progress.value = 0;
-        answerPlayer.seekTo(0);
-      }
-    });
-    const questionSub = questionPlayer.addListener("playbackStatusUpdate", () => {
-      if (questionPlayer.currentTime >= questionPlayer.duration) {
+  }, [id]);
+
+  useEffect(() => {
+    const localUri = getLocalRecordingPath(id.toString());
+    if (localUri) {
+      setQuestionAnswerAudioUrl(localUri);
+      answerPlayer.replace({ uri: localUri });
+    } else {
+      setQuestionAnswerAudioUrl(answerAudioUrl);
+    }
+  }, [id, answerAudioUrl]);
+
+  useEffect(() => {
+    setAudioUrl(questionAudioUrl);
+  }, [id, questionAudioUrl]);
+
+  useEffect(() => {
+    const questionPlayerEnd = questionPlayer.addListener("playbackStatusUpdate", () => {
+      if (questionPlayer.playing === false && questionPlayer.currentTime >= questionPlayer.duration) {
         setPulsating((prev) => ({ ...prev, volume: false }));
         questionPlayer.seekTo(0);
       }
     });
     return () => {
-      answerSub.remove();
-      questionSub.remove();
+      questionPlayerEnd.remove();
     };
-  }, [questionId]);
+  }, [questionPlayer, questionPlayer.playing]);
 
   useEffect(() => {
-    if (!questionInfo) return;
-    const { questionAudioUrl, answerAudioUrl, aiAnswerAudioUrl, reasonForScore, aiAnswer, userAnswerScore } =
-      questionInfo;
+    const onEnd = answerPlayer.addListener("playbackStatusUpdate", () => {
+      if (answerPlayer.playing === false && answerPlayer.currentTime >= answerPlayer.duration) {
+        setListeningToAnswer(false);
+        setAnswerPlayStartTime(0);
+        answerPlayer.seekTo(0);
+        progress.value = 0;
+      }
+    });
+    return () => {
+      onEnd.remove();
+    };
+  }, [answerPlayer, answerPlayer.playing, progress]);
+
+  useEffect(() => {
     setFeedback((prev) => ({
       ...prev,
       aiAnswerAudioUrl,
@@ -102,36 +133,7 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
       aiAnswer,
       userAnswerScore: userAnswerScore !== null ? Number(userAnswerScore) : null,
     }));
-    if (questionAudioUrl) {
-      setQuestionAudioUrl(questionAudioUrl);
-      questionPlayer.replace({
-        uri: getS3InterviewQuestionAudioUrlUsingFileName(`${interviewId}/${questionAudioUrl}`),
-      });
-    } else {
-      setQuestionAudioUrl(null);
-      questionPlayer.remove();
-    }
-    questionPlayer.seekTo(0);
-    questionPlayer.pause();
-    if (answerAudioUrl) {
-      setAnswerAudioUrl(answerAudioUrl);
-      answerPlayer.replace({
-        uri: getS3InterviewQuestionAudioUrlUsingFileName(`${interviewId}/${answerAudioUrl}`),
-      });
-    } else {
-      // Check if there's existing answer audio saved locally
-      const localFile = getLocalRecordingPath(questionInfo.id.toString());
-      if (localFile) {
-        setAnswerAudioUrl(localFile);
-        answerPlayer.replace({ uri: localFile });
-      } else {
-        setAnswerAudioUrl(null);
-        answerPlayer.remove();
-      }
-      answerPlayer.seekTo(0);
-      answerPlayer.pause();
-    }
-  }, [questionInfo, isLoading]);
+  }, [id, aiAnswerAudioUrl, userAnswerScore, reasonForScore, aiAnswer]);
 
   const getLocalRecordingPath = (questionId: string) => {
     const destination = new Directory(Paths.document, `interview-prep/questions/answers/audio`);
@@ -142,6 +144,7 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
     return null;
   };
 
+  getLocalRecordingPath(id.toString());
   const saveRecordingLocally = async (uri: string, questionId: string) => {
     try {
       const destination = new Directory(Paths.document, `interview-prep/questions/answers/audio`);
@@ -176,7 +179,8 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
       await recorder.prepareToRecordAsync();
       answerPlayer.pause();
       setListeningToAnswer(false);
-      setAnswerAudioUrl(null);
+      // start recording
+      setQuestionAnswerAudioUrl(null);
       progress.value = 0;
       let counter = 3;
       beepSound.volume = 1.0;
@@ -203,15 +207,17 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
       await recorder.stop();
       // Get the recorded uri
       const uri = recorder.uri;
-      setAnswerAudioUrl(uri);
-      if (questionInfo && questionInfo.id) saveRecordingLocally(uri!, questionInfo.id.toString());
+      setQuestionAnswerAudioUrl(uri);
+      saveRecordingLocally(uri!, id.toString());
+      console.log("Updated local answer uri: ", uri);
       if (uri) answerPlayer.replace({ uri: uri });
       setPulsating((prev) => ({ ...prev, mic: false }));
     }
   };
 
   const handlePlaybackAnswer = () => {
-    if (answereAudioUrl == null) return;
+    console.log("Playing back answer from URL: ", questionAnswerAudioUrl);
+    if (questionAnswerAudioUrl == null) return;
     if (!answerPlayer.playing) {
       answerPlayer.play();
       setListeningToAnswer(true);
@@ -229,29 +235,21 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
   };
 
   const handleListenToQuestion = async () => {
-    if (answerPlayer.playing) answerPlayer.pause();
-    setListeningToAnswer(false);
-    answerPlayer.seekTo(0);
-    cancelAnimation(progress);
-    progress.value = 0;
-
     if (!pulsating.volume) {
-      if (!questionAudioUrl) {
-        const res = await generateInterviewQuestionPrepTextToSpeech(interviewId, questionInfo?.id!);
+      if (!audioUrl) {
+        const res = await generateInterviewQuestionPrepTextToSpeech(interviewId, id);
         if (res == null) return;
         const { questionAudioUrl } = res;
-        setQuestionAudioUrl(questionAudioUrl);
+        setAudioUrl(questionAudioUrl);
         questionPlayer.replace({
-          uri: getS3InterviewQuestionAudioUrl(interviewId, questionInfo?.id!, "question"),
+          uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
         });
       } else {
         // play from S3 url
-        console.log("Using existing audio URL: ", questionAudioUrl);
+        console.log("Using existing audio URL: ", audioUrl);
       }
-      setTimeout(() => {
-        questionPlayer.seekTo(0);
-        questionPlayer.play();
-      }, 300);
+      questionPlayer.seekTo(0);
+      questionPlayer.play();
     } else {
       questionPlayer.pause();
     }
@@ -263,7 +261,7 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
   };
 
   const handleSubmitAnswer = () => {
-    if (answereAudioUrl == null) {
+    if (questionAnswerAudioUrl == null) {
       Alert.alert("No Answer Recorded", "Please record your answer first.");
       return;
     }
@@ -271,7 +269,7 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
       {
         text: "Yes",
         onPress: async () => {
-          const uri = answereAudioUrl;
+          const uri = recorder.uri;
           if (!uri) {
             Alert.alert("No Answer Recorded", "Please record your answer first.");
             return;
@@ -282,23 +280,26 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
             const hasFeedback = feedback.userAnswerScore !== null || feedback.reasonForScore;
             let response;
             if (hasFeedback) {
-              response = await getFeedbackForAnswer(interviewId, questionInfo?.id!, uri);
+              console.log("Fetching updated feedback for existing answer");
+              response = await getFeedbackForAnswer(interviewId, id, uri);
             } else {
-              response = await generateInterviewQuestionSpeechToText(interviewId, questionInfo?.id!, uri);
+              response = await generateInterviewQuestionSpeechToText(interviewId, id, uri);
             }
             if (response == null) {
               Alert.alert("Submission Failed", "There was an error submitting your answer. Please try again.");
               setShowModal(false);
               return;
             }
+            console.log("Received STT and feedback response: ", response);
             const { aiAnswerAudioUrl, userAnswerScore, reasonForScore } = response;
+            // Save the question locally w/o refetching
+            handleFeedbackUpdate(response);
             setFeedback((prev) => ({
               ...prev,
               aiAnswerAudioUrl,
               reasonForScore,
               userAnswerScore: parseInt(userAnswerScore!),
             }));
-            queryClient.invalidateQueries({ queryKey: ["interview-question", interviewId, questionId] });
           } catch (error) {
             console.log("Error submitting answer: ", error);
             setShowModal(false);
@@ -327,7 +328,7 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
   return (
     <View className="h-full items-center">
       <View className="flex flex-col items-center gap-2 ">
-        {answereAudioUrl ? (
+        {questionAnswerAudioUrl ? (
           <Text className="font-quicksand-bold text-sm text-center">
             Press <Entypo name="check" size={16} color="#21c55e" /> to submit your answer.
           </Text>
@@ -342,8 +343,8 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
             <Feather
               name={listeningToAnswer ? `pause-circle` : `play-circle`}
               size={24}
-              color={answereAudioUrl == null ? `gray` : `black`}
-              disabled={answereAudioUrl == null}
+              color={questionAnswerAudioUrl == null ? `gray` : `black`}
+              disabled={questionAnswerAudioUrl == null}
             />
           </TouchableOpacity>
           <View className="w-3/4">
@@ -391,19 +392,17 @@ const PrepQuestion = ({ interviewId, questionId }: { interviewId: number; questi
           <Entypo name="check" size={20} color="black" />
         </PulsatingButton>
       </View>
-      {questionInfo && (
-        <AnswerReview
-          showModal={showModal}
-          interviewId={interviewId}
-          questionId={questionInfo.id}
-          setShowModal={setShowModal}
-          answerText={questionInfo.aiAnswer}
-          submittingAnswer={submittingAnswer}
-          score={feedback.userAnswerScore || null}
-          feedback={feedback.reasonForScore || ""}
-          answerAudioUrl={feedback.aiAnswerAudioUrl || questionInfo.aiAnswerAudioUrl}
-        />
-      )}
+      <AnswerReview
+        showModal={showModal}
+        interviewId={interviewId}
+        questionId={id}
+        setShowModal={setShowModal}
+        answerText={aiAnswer}
+        submittingAnswer={submittingAnswer}
+        score={feedback.userAnswerScore || null}
+        feedback={feedback.reasonForScore || ""}
+        answerAudioUrl={feedback.aiAnswerAudioUrl || aiAnswerAudioUrl}
+      />
     </View>
   );
 };
