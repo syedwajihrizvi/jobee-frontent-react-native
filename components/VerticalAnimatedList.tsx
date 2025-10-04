@@ -22,7 +22,7 @@ const VerticalAnimatedList = ({ strengths }: { strengths: string[] }) => {
               elevation: 4, // Android shadow
             }}
           >
-            <View className="flex flex-row items-start gap-2">
+            <View className="flex flex-row items-start gap-2 px-1">
               <Feather name="check-circle" size={18} color="black" />
               <Text className="font-quicksand-bold text-sm">{item}</Text>
             </View>

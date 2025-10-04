@@ -160,6 +160,15 @@ export type BusinessUser = {
     lastName: string;
 }
 
+export type InterviewerProfileSummary = {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    title: string;
+    summary: string;
+}
+
 export type EditUserProfileForm = {
     firstName: string;
     lastName: string;
