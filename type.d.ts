@@ -167,6 +167,8 @@ export type InterviewerProfileSummary = {
     email: string;
     title: string;
     summary: string;
+    verified: boolean;
+    socialLinks?: {platform: string, url: string}[];
 }
 
 export type EditUserProfileForm = {
@@ -321,8 +323,8 @@ export type InterviewDetails = {
     endTime: string;
     interviewType: string;
     timezone: string;
-    interviewers: {name: string; email: string}[];
-    otherInterviewers: {name: string; email: string}[];
+    interviewers: {name: string; email: string, title: string}[];
+    otherInterviewers: {name: string; email: string, title: string}[];
     preparationTipsFromInterviewer: string[];
     location: string;
     meetingLink: string;

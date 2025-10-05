@@ -125,7 +125,8 @@ export const getWorkArrangement = (arrangement?: string) => {
   }
 }
 
-export const convert10DigitNumberToPhoneFormat = (num: string) => {
+export const convert10DigitNumberToPhoneFormat = (num: string | undefined) => {
+  if (!num) return "";
   if (num.length !== 10) return num;
   const areaCode = num.slice(0, 3);
   const centralOfficeCode = num.slice(3, 6);
@@ -170,3 +171,48 @@ export const renderQuestionSteps = [
   "If you are satisfied with your response, select the checkmark icon to submit. Otherwise, you can re-record your answer by pressing the microphone icon again.",
   "Once the answer is submitted, I will give you feedback and you can re-record if you'd like to improve it.",
 ]
+
+export const editProfileSections: { label: string; subtitle: string; route: string; icon: string }[] = [
+  {
+    label: "General Information",
+    subtitle: "Update your personal details such as name, email, etc.",
+    route: "general",
+    icon: "user",
+  },
+  {
+    label: "Profile Summary",
+    subtitle: "Write a brief summary about yourself to showcase your skills and experience.",
+    route: "summary",
+    icon: "file-text",
+  },
+  {
+    label: "Skills",
+    subtitle: "Add or remove skills that highlight your expertise and qualifications.",
+    route: "skills",
+    icon: "award",
+  },
+  {
+    label: "Video Introduction",
+    subtitle: "Record or upload a video introduction to give employers a better sense of who you are.",
+    route: "video-intro",
+    icon: "video",
+  },
+  {
+    label: "Work Experience",
+    subtitle: "Detail your previous job roles, responsibilities, and achievements.",
+    route: "experiences",
+    icon: "briefcase",
+  },
+  {
+    label: "Education",
+    subtitle: "List your educational background, degrees, and certifications.",
+    route: "education",
+    icon: "book-open",
+  },
+  {
+    label: "Projects",
+    subtitle: "Showcase projects you have worked on to demonstrate your skills in action.",
+    route: "projects",
+    icon: "folder",
+  },
+];

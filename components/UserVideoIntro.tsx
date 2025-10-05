@@ -1,13 +1,12 @@
-import { VideoView, useVideoPlayer } from 'expo-video';
-import React from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { VideoView, useVideoPlayer } from "expo-video";
+import React from "react";
+import { TouchableOpacity, View } from "react-native";
 
 const UserVideoIntro = ({ videoSource }: { videoSource: string }) => {
-  const player = useVideoPlayer(videoSource, player => {
+  const player = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
     player.pause();
   });
-  
 
   return (
     <View className="w-fullpx-4 mb-6">

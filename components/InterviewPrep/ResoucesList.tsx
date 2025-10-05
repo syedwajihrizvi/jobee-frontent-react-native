@@ -1,12 +1,18 @@
 import { InterviewPreparation } from "@/type";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import React from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Linking, Text, TouchableOpacity, View } from "react-native";
 
 const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) => {
-  const handleResourceClick = (resource: { link: string }) => {
+  const handleResourceClick = async (resource: { link: string }) => {
     // Handle resource click, e.g., open link in browser
     console.log("Resource clicked:", resource.link);
+    const supported = await Linking.canOpenURL(resource.link);
+    if (!supported) {
+      Alert.alert(`Cannot open URL: ${resource.link}`);
+    } else {
+      await Linking.openURL(resource.link);
+    }
   };
 
   const emailAllResources = () => {
