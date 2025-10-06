@@ -216,3 +216,20 @@ export const editProfileSections: { label: string; subtitle: string; route: stri
     icon: "folder",
   },
 ];
+
+export const getCustomProfilePlaceholderForField = (field: string) => {
+  switch(field) {
+    case 'First Name':
+      return "e.g. John";
+    case 'Last Name':
+      return "e.g. Doe";
+    case 'Email':
+      return "e.g. john.doe@example.com";
+    case 'Phone Number':
+      return "e.g. 1234567890";
+    case 'Location':
+      return "e.g. New York, NY";
+    default:
+      return "e.g. Value";
+  }
+}

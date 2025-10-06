@@ -6,7 +6,7 @@ type Props = {
   label: string;
   subtitle?: string;
   icon?: React.ReactNode;
-  handleEditPress: () => void;
+  handleEditPress: (field: string) => void;
 };
 
 const ProfileCard = ({ label, subtitle, icon, handleEditPress }: Props) => {
@@ -31,8 +31,8 @@ const ProfileCard = ({ label, subtitle, icon, handleEditPress }: Props) => {
             </Text>
           </View>
         </View>
-        <TouchableOpacity className="ml-3" onPress={handleEditPress}>
-          <Feather name="edit" size={20} color="#9ca3af" />
+        <TouchableOpacity className="ml-3" onPress={() => handleEditPress(label)}>
+          <Feather name="edit" size={20} color="#22c55e" />
         </TouchableOpacity>
       </View>
     </View>

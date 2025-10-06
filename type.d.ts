@@ -26,6 +26,7 @@ export type CustomInputProps = {
     label: string?;
     value: string;
     multiline?: boolean;
+    style?: object;
     customClass?: string;
     returnKeyType?: string;
     autoCapitalize?: string;
@@ -222,6 +223,16 @@ export type Education = {
 export type ProfileImageUpdate = {
     profileImageUrl: string;}
 
+export type UpdateProfileForm = {
+    firstName?: string;
+    lastName?: string;
+    title?: string;
+    company?: string;
+    email?: string;
+    phoneNumber?: string;
+    location?: string;
+}
+
 export type AddUserSkillForm = {
     skill: string;
     experience: string;
@@ -242,6 +253,13 @@ export type AddExperienceForm = {
     country: string;
     from: string;
     to: string;
+}
+
+export type AddProjectForm = {
+    name: string;
+    description: string;
+    link: string;
+    yearCompleted: string;
 }
 
 export type CreateApplication = {
