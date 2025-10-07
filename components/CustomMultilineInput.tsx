@@ -1,5 +1,5 @@
 import React from "react";
-import { TextInput } from "react-native";
+import { Keyboard, TextInput } from "react-native";
 
 type Props = {
   value: string;
@@ -8,12 +8,23 @@ type Props = {
 };
 
 const CustomMultilineInput = ({ value, placeholder, onChangeText }: Props) => {
+  const handleKeyPress = (e: any) => {
+    console.log(e.nativeEvent.key);
+    if (e.nativeEvent.key === "Enter") {
+      Keyboard.dismiss();
+    }
+  };
+
+  const handleSubmitEditing = () => Keyboard.dismiss();
+
   return (
     <TextInput
       multiline
       numberOfLines={8}
       placeholder={placeholder}
       value={value}
+      onKeyPress={handleKeyPress}
+      onSubmitEditing={handleSubmitEditing}
       onChangeText={onChangeText}
       maxLength={500}
       textAlignVertical="top"

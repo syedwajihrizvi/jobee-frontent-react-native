@@ -3,6 +3,8 @@ import CustomInput from "@/components/CustomInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import ProfileCard from "@/components/ProfileCard";
+import SuccessfulUpdate from "@/components/SuccessfulUpdate";
+import { mapGeneralInfoFieldToAPIField, updateGeneralInfo, updateUserLocation } from "@/lib/updateUserProfile";
 import { convert10DigitNumberToPhoneFormat, getCustomProfilePlaceholderForField } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { User } from "@/type";
@@ -24,8 +26,14 @@ const getFieldMaxLength = (field: string) => {
       return 100;
     case "Phone Number":
       return 15;
-    case "Location":
+    case "City":
       return 100;
+    case "County":
+      return 100;
+    case "State":
+      return 100;
+    case "Province":
+      return 2;
     default:
       return 100;
   }
@@ -51,19 +59,37 @@ const getFieldInfo = (field: string) => {
   }
 };
 const General = () => {
-  const { user: authUser, isLoading } = useAuthStore();
+  const { user: authUser, setUser, isLoading } = useAuthStore();
   const user = authUser as User | null;
   const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({
     value: "",
   });
+  const [locationForm, setLocationForm] = useState({
+    city: "",
+    country: "",
+    state: "",
+    province: "",
+  });
 
   const handleEditPress = (field: string) => {
+    setUpdateSuccess(false);
     setEditingField(field);
     // Pre-fill the form with current value
-    const currentValue = getCurrentFieldValue(field);
-    setProfileForm({ value: currentValue || "" });
+    if (field !== "Location") {
+      const currentValue = getCurrentFieldValue(field);
+      setProfileForm({ value: currentValue || "" });
+    } else {
+      setLocationForm({
+        city: user?.city || "",
+        country: user?.country || "",
+        state: user?.state || "",
+        province: user?.province || "",
+      });
+    }
     setShowModal(true);
   };
 
@@ -88,9 +114,36 @@ const General = () => {
     }
   };
 
-  const submitProfileUpdate = () => {
+  const submitProfileUpdate = async () => {
+    if (!editingField) return;
+    const fieldName = mapGeneralInfoFieldToAPIField(editingField);
     console.log("Submitting profile update for", editingField, "with value:", profileForm.value);
-    setShowModal(false);
+    setIsSubmitting(true);
+    try {
+      if (editingField !== "Location") {
+        const res = await updateGeneralInfo({ field: fieldName, value: profileForm.value });
+        if (res) setUser({ ...user, [fieldName]: profileForm.value } as User);
+      } else {
+        const res = await updateUserLocation({
+          city: locationForm.city,
+          country: locationForm.country,
+          state: locationForm.state,
+        });
+        if (res)
+          setUser({
+            ...user,
+            location: `${locationForm.city}, ${locationForm.state}, ${locationForm.country}`,
+            city: locationForm.city,
+            country: locationForm.country,
+            state: locationForm.state,
+          } as User);
+      }
+      setUpdateSuccess(true);
+    } catch (error) {
+      console.log("Error updating profile:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -171,7 +224,7 @@ const General = () => {
         </View>
       </ScrollView>
 
-      <ModalWithBg visible={showModal} customHeight={0.6} customWidth={0.9}>
+      <ModalWithBg visible={showModal} customHeight={editingField === "Location" ? 0.55 : 0.5} customWidth={0.75}>
         <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">Update {editingField || ""}</Text>
@@ -179,80 +232,185 @@ const General = () => {
               <Feather name="x" size={20} color="#6b7280" />
             </TouchableOpacity>
           </View>
-          <View className="flex-1 gap-4 pt-4">
-            <View className="px-6">
-              <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <View className="flex-row items-start gap-2">
-                  <Feather name="info" size={14} color="#3b82f6" />
-                  <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
-                    {getFieldInfo(editingField || "")}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View className="px-6">
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="font-quicksand-medium text-sm text-gray-600">{editingField}</Text>
-                <Text className="font-quicksand-medium text-xs text-gray-500">
-                  {profileForm.value.length}/{getFieldMaxLength(editingField || "")} characters
-                </Text>
-              </View>
-              <CustomInput
-                placeholder={getCustomProfilePlaceholderForField(editingField || "")}
-                label=""
-                onChangeText={(text) => setProfileForm({ value: text })}
-                value={profileForm.value}
-                customClass="border border-gray-300 rounded-xl p-4 w-full font-quicksand-medium"
-                style={{
-                  fontSize: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                  elevation: 1,
-                }}
-              />
-            </View>
-            {editingField === "Email" && profileForm.value && (
-              <View className="px-6">
-                <View
-                  className={`p-3 rounded-lg border ${
-                    profileForm.value.includes("@") && profileForm.value.includes(".")
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
-                  }`}
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Feather
-                      name={profileForm.value.includes("@") && profileForm.value.includes(".") ? "check" : "x"}
-                      size={14}
-                      color={profileForm.value.includes("@") && profileForm.value.includes(".") ? "#22c55e" : "#ef4444"}
-                    />
-                    <Text
-                      className={`font-quicksand-medium text-xs ${
-                        profileForm.value.includes("@") && profileForm.value.includes(".")
-                          ? "text-green-700"
-                          : "text-red-700"
-                      }`}
-                    >
-                      {profileForm.value.includes("@") && profileForm.value.includes(".")
-                        ? "Valid email format"
-                        : "Please enter a valid email address"}
-                    </Text>
+          {!isSubmitting ? (
+            <View className="flex-1 gap-4 pt-4">
+              {updateSuccess ? (
+                <SuccessfulUpdate
+                  editingField={editingField}
+                  handleConfirm={() => setShowModal(false)}
+                  handleReedit={() => setUpdateSuccess(false)}
+                />
+              ) : (
+                <>
+                  <View className="px-6">
+                    <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <View className="flex-row items-start gap-2">
+                        <Feather name="info" size={14} color="#3b82f6" />
+                        <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
+                          {getFieldInfo(editingField || "")}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </View>
-            )}
-            <View className="flex-1" />
-            <View className="px-6 pb-4">
-              <ProfileButton
-                color="green-500"
-                buttonText="Update Information"
-                handlePress={submitProfileUpdate}
-                disabled={!profileForm.value.trim()}
-              />
+                  {editingField !== "Location" ? (
+                    <>
+                      <View className="px-6">
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">{editingField}</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {profileForm.value.length}/{getFieldMaxLength(editingField || "")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          label=""
+                          autoCapitalize="words"
+                          onChangeText={(text) => setProfileForm({ value: text })}
+                          value={profileForm.value}
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                      </View>
+                      {editingField === "Email" && profileForm.value && (
+                        <View className="px-6">
+                          <View
+                            className={`p-3 rounded-lg border ${
+                              profileForm.value.includes("@") && profileForm.value.includes(".")
+                                ? "bg-green-50 border-green-200"
+                                : "bg-red-50 border-red-200"
+                            }`}
+                          >
+                            <View className="flex-row items-center gap-2">
+                              <Feather
+                                name={
+                                  profileForm.value.includes("@") && profileForm.value.includes(".") ? "check" : "x"
+                                }
+                                size={14}
+                                color={
+                                  profileForm.value.includes("@") && profileForm.value.includes(".")
+                                    ? "#22c55e"
+                                    : "#ef4444"
+                                }
+                              />
+                              <Text
+                                className={`font-quicksand-medium text-xs ${
+                                  profileForm.value.includes("@") && profileForm.value.includes(".")
+                                    ? "text-green-700"
+                                    : "text-red-700"
+                                }`}
+                              >
+                                {profileForm.value.includes("@") && profileForm.value.includes(".")
+                                  ? "Valid email format"
+                                  : "Please enter a valid email address"}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <View className="px-6">
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">City</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {locationForm.city.length}/{getFieldMaxLength("City")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          label=""
+                          onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
+                          value={locationForm.city}
+                          autoCapitalize="words"
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {locationForm.country.length}/{getFieldMaxLength("Country")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          label=""
+                          autoCapitalize="words"
+                          onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
+                          value={locationForm.country}
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">State/Province</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {locationForm.state.length}/{getFieldMaxLength("State")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          label=""
+                          onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
+                          autoCapitalize="characters"
+                          autocorrect={false}
+                          value={locationForm.state}
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                      </View>
+                    </>
+                  )}
+                  <View className="flex-1" />
+                  <View className="px-6 pb-4">
+                    <ProfileButton
+                      color="green-500"
+                      buttonText="Update Information"
+                      handlePress={submitProfileUpdate}
+                      disabled={
+                        !profileForm.value.trim() &&
+                        !locationForm.city.trim() &&
+                        !locationForm.state.trim() &&
+                        !locationForm.country.trim()
+                      }
+                    />
+                  </View>
+                </>
+              )}
             </View>
-          </View>
+          ) : (
+            <View className="flex-1 items-center justify-center gap-4 pt-4">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="font-quicksand-semibold text-lg">Updating Profile Information...</Text>
+            </View>
+          )}
         </View>
       </ModalWithBg>
     </SafeAreaView>

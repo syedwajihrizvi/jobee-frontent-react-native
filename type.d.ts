@@ -27,8 +27,10 @@ export type CustomInputProps = {
     value: string;
     multiline?: boolean;
     style?: object;
+    autocorrect?: boolean;
     customClass?: string;
     returnKeyType?: string;
+    keyboardType?: string;
     autoCapitalize?: string;
     onChangeText: (text: string) => void;
 }
@@ -134,6 +136,10 @@ export type User = {
     lastName: string;
     age: number;
     email: string;
+    state: string;
+    province: string;
+    city: string;
+    country: string;
     location: string;
     company: string;
     phoneNumber: string;
@@ -234,8 +240,10 @@ export type UpdateProfileForm = {
 }
 
 export type AddUserSkillForm = {
+    id: number;
     skill: string;
     experience: string;
+    skillId: number;
 }
 
 export type AddUserEducationForm = {
@@ -246,6 +254,7 @@ export type AddUserEducationForm = {
 }
 
 export type AddExperienceForm = {
+    id: number;
     title: string;
     company: string;
     description: string;

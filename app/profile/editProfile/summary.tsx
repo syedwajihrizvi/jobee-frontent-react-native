@@ -1,21 +1,43 @@
 import BackBar from "@/components/BackBar";
+import CustomMultilineInput from "@/components/CustomMultilineInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
+import SuccessfulUpdate from "@/components/SuccessfulUpdate";
+import { updateProfileSummary } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
 import { User } from "@/type";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Summary = () => {
-  const { user: authUser } = useAuthStore();
+  const { user: authUser, setUser } = useAuthStore();
   const user = authUser as User | null;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   const [summaryText, setSummaryText] = useState(user?.summary || "");
   const [showModal, setShowModal] = useState(false);
 
-  const submitUpdatedProfile = () => {
+  const handleEditSummary = () => {
+    setUpdateSuccess(false);
+    setSummaryText(user?.summary || "");
+    setShowModal(true);
+  };
+
+  const submitUpdatedProfile = async () => {
+    if (summaryText.trim().length === 0) return;
+    setIsSubmitting(true);
+    try {
+      const res = await updateProfileSummary(summaryText);
+      if (res) {
+        setUser({ ...user, summary: summaryText } as User);
+      }
+      setUpdateSuccess(true);
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false);
+    }
     console.log("Submitting updated profile summary:");
   };
 
@@ -48,7 +70,7 @@ const Summary = () => {
             <View className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="font-quicksand-bold text-lg text-gray-800">Profile Summary</Text>
-                <TouchableOpacity onPress={() => setShowModal(true)}>
+                <TouchableOpacity onPress={handleEditSummary}>
                   <Feather name="edit" size={20} color="#22c55e" />
                 </TouchableOpacity>
               </View>
@@ -85,54 +107,58 @@ const Summary = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <View className="flex-1 gap-4 pt-4">
-          <View className="px-6">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="font-quicksand-medium text-sm text-gray-600">Professional Summary</Text>
-              <Text className="font-quicksand-medium text-xs text-gray-500">{summaryText.length}/500 characters</Text>
-            </View>
-            <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <View className="flex-row items-start gap-2">
-                <Feather name="info" size={14} color="#3b82f6" />
-                <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
-                  Include your key skills, experience highlights, and career objectives. Keep it concise and impactful.
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View className="flex-1 px-6">
-            <TextInput
-              multiline
-              numberOfLines={8}
-              placeholder="Write your professional summary here...
+        {!isSubmitting ? (
+          <View className="flex-1 gap-4 pt-4">
+            {updateSuccess ? (
+              <SuccessfulUpdate
+                editingField="Summary"
+                handleConfirm={() => setShowModal(false)}
+                handleReedit={() => setUpdateSuccess(false)}
+              />
+            ) : (
+              <>
+                <View className="px-6">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className="font-quicksand-medium text-sm text-gray-600">Professional Summary</Text>
+                    <Text className="font-quicksand-medium text-xs text-gray-500">
+                      {summaryText.length}/500 characters
+                    </Text>
+                  </View>
+                  <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <View className="flex-row items-start gap-2">
+                      <Feather name="info" size={14} color="#3b82f6" />
+                      <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
+                        Include your key skills, experience highlights, and career objectives. Keep it concise and
+                        impactful.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View className="flex-1 px-6">
+                  <CustomMultilineInput
+                    value={summaryText}
+                    placeholder="Write your professional summary here...
 Example: Experienced software developer with 5+ years in mobile app development. Skilled in React Native, TypeScript, and API integration. Passionate about creating user-friendly applications and solving complex technical challenges..."
-              value={summaryText}
-              onChangeText={setSummaryText}
-              maxLength={500}
-              textAlignVertical="top"
-              className="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-gray-800 bg-white"
-              style={{
-                minHeight: 200,
-                fontSize: 12,
-                lineHeight: 24,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-              placeholderTextColor="#9ca3af"
-            />
+                    onChangeText={setSummaryText}
+                  />
+                </View>
+                <View className="px-6 pb-4">
+                  <ProfileButton
+                    color="green-500"
+                    buttonText="Update Summary"
+                    handlePress={submitUpdatedProfile}
+                    disabled={summaryText.trim().length === 0}
+                  />
+                </View>
+              </>
+            )}
           </View>
-          <View className="px-6 pb-4">
-            <ProfileButton
-              color="green-500"
-              buttonText="Update Summary"
-              handlePress={submitUpdatedProfile}
-              disabled={summaryText.trim().length === 0}
-            />
+        ) : (
+          <View className="flex-1 items-center justify-center gap-4 pt-4">
+            <ActivityIndicator size="large" color="#22c55e" />
+            <Text className="font-quicksand-semibold text-lg">Updating Your Summary..</Text>
           </View>
-        </View>
+        )}
       </ModalWithBg>
     </SafeAreaView>
   );

@@ -7,9 +7,11 @@ const CustomInput = ({
   label,
   value,
   returnKeyType = "default",
+  keyboardType = "default",
   style,
   autoCapitalize = "none",
   multiline = false,
+  autocorrect = true,
   customClass,
   onChangeText,
 }: CustomInputProps) => {
@@ -20,10 +22,11 @@ const CustomInput = ({
         placeholder={placeholder}
         autoCapitalize={autoCapitalize as "none" | "sentences" | "words" | "characters"}
         value={value}
+        keyboardType={keyboardType as "default" | "email-address" | "numeric" | "phone-pad"}
         multiline={multiline}
+        autoCorrect={autocorrect}
         onChangeText={onChangeText}
         className={customClass ? customClass : "form-input__input"}
-        blurOnSubmit={true}
         returnKeyType={returnKeyType as ReturnKeyTypeOptions}
         style={style}
       />

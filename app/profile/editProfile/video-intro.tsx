@@ -4,8 +4,9 @@ import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import useAuthStore from "@/store/auth.store";
 import { User } from "@/type";
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const VideoIntro = () => {
@@ -17,9 +18,61 @@ const VideoIntro = () => {
     console.log("Delete video");
   };
 
-  const handleUploadNewVideo = () => {
+  const handleUploadNewVideo = async () => {
     // Handle new video upload
-    console.log("Upload new video");
+    const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert(
+        "Permission Denied",
+        "Please allow Jobee to access your media library in settings to upload a video introduction.",
+        [
+          {
+            text: "Go to Settings",
+            onPress: () => {
+              if (Platform.OS === "ios") {
+                Linking.openURL("app-settings:");
+              } else {
+                Linking.openSettings();
+              }
+            },
+          },
+          { text: "Cancel", style: "cancel" },
+        ]
+      );
+    }
+    Alert.alert("Upload Video Intro", "Upload a video intro for your profile", [
+      {
+        text: "Choose from Library",
+        onPress: async () => {
+          const pickerResult = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: "videos",
+            allowsEditing: true,
+            videoMaxDuration: 90,
+            aspect: [4, 3],
+            quality: 1,
+          });
+          if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+            console.log("Selected video:", pickerResult.assets[0].uri);
+          }
+        },
+      },
+      {
+        text: "Record Video",
+        onPress: async () => {
+          const cameraResult = await ImagePicker.launchCameraAsync({
+            mediaTypes: "videos",
+            allowsEditing: true,
+            videoMaxDuration: 90,
+            aspect: [4, 3],
+            quality: 1,
+          });
+          if (!cameraResult.canceled && cameraResult.assets.length > 0) {
+            console.log("Recorded video:", cameraResult.assets[0].uri);
+          }
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   return (

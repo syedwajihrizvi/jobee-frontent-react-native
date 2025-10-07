@@ -1,4 +1,4 @@
-import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate, UserSkill } from "@/type";
+import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
@@ -89,11 +89,9 @@ export const favoriteJob = async (jobId: number) => {
 };
 
 export const addSkill = async (newSkill: AddUserSkillForm) => {
-    return new Promise<UserSkill | null>(async (resolve) => {
-        setTimeout(async () => {
-            const token = await AsyncStorage.getItem('x-auth-token');
-            if (token == null) return null;
-            const result = await fetch(`${PROFILES_API_URL}/skills`, {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const res = await fetch(`${PROFILES_API_URL}/skills`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -101,11 +99,12 @@ export const addSkill = async (newSkill: AddUserSkillForm) => {
             },
             body: JSON.stringify(newSkill)
         })
-        const response = await result.json();
-        if (result.status === 201 || result.status === 200) 
-                return resolve(response as UserSkill)
-        return resolve(null);
-    }, 3000)})
+    if (res.status === 201 || res.status === 200) {
+        const data = await res.json();
+        console.log("Add skill response data:", data);
+        return data;
+    }
+    return null;
 }
 
 export const addEducation = async (newEducation: AddUserEducationForm) => {
@@ -152,10 +151,9 @@ export const editEducation = async (educationId: number, updatedEducation: AddUs
 }
 
 export const addExperience = async (newExperience: AddExperienceForm) => {
-    return await new Promise<Experience | null>((resolve, reject) => {
-        setTimeout(async () => {
-            const token = await AsyncStorage.getItem('x-auth-token');
-            const result = await fetch(`${PROFILES_API_URL}/experiences`, {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/experiences`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,11 +163,9 @@ export const addExperience = async (newExperience: AddExperienceForm) => {
             })
             if (result.status === 201) {
                 const response = await result.json()
-                return resolve(response as Experience)
+                return response as Experience
             }
-            return resolve(null)
-        }, 3000)
-    })
+            return null
 }
 
 export const editExperience = async (experienceId: number, updatedExperience: AddExperienceForm) => {
@@ -290,4 +286,78 @@ export const completeProfile = async (
     } catch (error) {
         return null;
     }
+}
+
+export const mapGeneralInfoFieldToAPIField = (field: string) : string => {
+    switch (field) {
+        case 'First Name':
+            return 'firstName';
+        case 'Last Name':
+            return 'lastName';
+        case 'Phone Number':
+            return 'phoneNumber';
+        case 'Title':
+            return 'title';
+        case 'City':
+            return 'city';
+        case 'Country':
+            return 'country';
+        case 'State':
+            return 'state';
+        case 'Company':
+            return 'company';
+        default:
+            return '';  
+    }
+}
+export const updateGeneralInfo = async ({field, value}: {field: string, value: string}) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    if (!field) return null;
+    const body = {
+        [field]: value
+    }
+    const response = await fetch(`${PROFILES_API_URL}/update-general-info`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    return response.status === 200;
+}
+
+export const updateUserLocation = async ({city, country, state }: {city: string, country: string, state: string}) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const body = {
+        city,
+        country,
+        state
+    }
+    const response = await fetch(`${PROFILES_API_URL}/update-general-info`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    return response.status === 200;
+}
+
+export const updateProfileSummary = async (summary: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const body = { summary };
+    const response = await fetch(`${PROFILES_API_URL}/update-summary`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    return response.status === 200;
 }

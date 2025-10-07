@@ -53,6 +53,10 @@ const Educations = () => {
     console.log("Submitting edited education:", educationForm);
   };
 
+  const submitDeleteEducation = () => {
+    console.log("Deleting education:", educationForm);
+  };
+
   return (
     <SafeAreaView>
       <BackBar label="Education" />
@@ -161,7 +165,7 @@ const Educations = () => {
             </View>
           )}
         </View>
-        <ModalWithBg visible={showModal} customHeight={0.8} customWidth={0.9}>
+        <ModalWithBg visible={showModal} customHeight={0.55} customWidth={0.9}>
           <ScrollView className="flex-1">
             <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
               <Text className="font-quicksand-bold text-lg text-gray-800">
@@ -191,7 +195,7 @@ const Educations = () => {
                   <View className="flex-row items-center justify-between mb-2">
                     <Text className="font-quicksand-medium text-sm text-gray-600">Institution</Text>
                     <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {educationForm.institution}/75 characters
+                      {educationForm.institution.length}/75 characters
                     </Text>
                   </View>
                   <CustomInput
@@ -216,7 +220,7 @@ const Educations = () => {
                   <View className="flex-row items-center justify-between mb-2">
                     <Text className="font-quicksand-medium text-sm text-gray-600">Degree</Text>
                     <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {educationForm.degree}/75 characters
+                      {educationForm.degree.length}/75 characters
                     </Text>
                   </View>
                   <CustomInput
@@ -278,14 +282,16 @@ const Educations = () => {
                   />
                 </View>
               </View>
+              <View className="flex-1" />
               <View className="px-6 gap-2 mt-2">
                 {isAdding ? (
-                  <ProfileButton color="green-500" buttonText="Submit" handlePress={submitNewEducation} />
+                  <ProfileButton color="green-500" buttonText="Add Experience" handlePress={submitNewEducation} />
                 ) : (
-                  <ProfileButton color="green-500" buttonText="Update" handlePress={submitEditEducation} />
+                  <View className="gap-3">
+                    <ProfileButton color="green-500" buttonText="Update Experience" handlePress={submitEditEducation} />
+                    <ProfileButton color="red-400" buttonText="Delete Experience" handlePress={submitDeleteEducation} />
+                  </View>
                 )}
-
-                <ProfileButton color="red-400" buttonText="Cancel" handlePress={() => setShowModal(false)} />
               </View>
             </View>
           </ScrollView>

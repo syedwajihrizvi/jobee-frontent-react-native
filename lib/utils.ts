@@ -229,6 +229,10 @@ export const getCustomProfilePlaceholderForField = (field: string) => {
       return "e.g. 1234567890";
     case 'Location':
       return "e.g. New York, NY";
+    case 'Company':
+      return "e.g. Amazon.";
+    case 'Title':
+      return "e.g. Software Engineer";
     default:
       return "e.g. Value";
   }
