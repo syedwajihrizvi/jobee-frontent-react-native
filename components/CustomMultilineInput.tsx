@@ -9,13 +9,28 @@ type Props = {
 
 const CustomMultilineInput = ({ value, placeholder, onChangeText }: Props) => {
   const handleKeyPress = (e: any) => {
-    console.log(e.nativeEvent.key);
     if (e.nativeEvent.key === "Enter") {
+      e.preventDefault();
       Keyboard.dismiss();
     }
   };
 
-  const handleSubmitEditing = () => Keyboard.dismiss();
+  const handleSubmitEditing = () => {
+    console.log("Submitted:", value);
+    Keyboard.dismiss();
+  };
+
+  const handleChangeText = (text: string) => {
+    // If text ends with newline and previous text was empty,
+    // it means user pressed Enter on empty field
+    if (text === "\n" && value === "") {
+      Keyboard.dismiss();
+      return; // Don't update the text
+    }
+
+    console.log("Text changed:", text, text.length);
+    onChangeText(text);
+  };
 
   return (
     <TextInput
@@ -25,9 +40,10 @@ const CustomMultilineInput = ({ value, placeholder, onChangeText }: Props) => {
       value={value}
       onKeyPress={handleKeyPress}
       onSubmitEditing={handleSubmitEditing}
-      onChangeText={onChangeText}
+      onChangeText={handleChangeText}
       maxLength={500}
       textAlignVertical="top"
+      returnKeyType="done"
       className="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-gray-800 bg-white"
       style={{
         minHeight: 200,

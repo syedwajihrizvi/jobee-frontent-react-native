@@ -3,41 +3,51 @@ import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
+import SuccessfulUpdate from "@/components/SuccessfulUpdate";
+import UpdatingProfileView from "@/components/UpdatingProfileView";
 import { useProjects } from "@/lib/services/useProjects";
+import { addProject, deleteProject, editProject } from "@/lib/updateUserProfile";
 import { AddProjectForm, Project } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Projects = () => {
-  const { data: projects, isLoading } = useProjects();
+  const { data: userProjects, isLoading } = useProjects();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [projects, setProjects] = useState<Project[]>(userProjects || []);
   const [projectForm, setProjectForm] = useState<AddProjectForm>({
+    id: 0,
     name: "",
     description: "",
     link: "",
     yearCompleted: "",
   });
 
+  useEffect(() => {
+    if (!isLoading && userProjects) {
+      setProjects(userProjects);
+    }
+  }, [userProjects, isLoading]);
+
   const handleAddProject = () => {
+    resetStates();
     setIsAdding(true);
-    setIsEditing(false);
-    setProjectForm({
-      name: "",
-      description: "",
-      link: "",
-      yearCompleted: "",
-    });
     setShowModal(true);
   };
 
   const handleEditProject = (project: Project) => {
+    resetStates();
     setIsEditing(true);
-    setIsAdding(false);
     setProjectForm({
+      id: project.id,
       name: project.name,
       description: project.description,
       link: project.link,
@@ -46,12 +56,82 @@ const Projects = () => {
     setShowModal(true);
   };
 
-  const submitNewProject = () => {
-    console.log("Submitting new project:", projectForm);
+  const resetStates = () => {
+    setIsSubmitting(false);
+    setAddSuccess(false);
+    setEditSuccess(false);
+    setDeleteSuccess(false);
+    setIsEditing(false);
+    setIsAdding(false);
+    setProjectForm({
+      id: 0,
+      name: "",
+      description: "",
+      link: "",
+      yearCompleted: "",
+    });
+    setShowModal(false);
   };
 
-  const submitEditProject = () => {
-    console.log("Submitting edited project:", projectForm);
+  const submitNewProject = async () => {
+    setIsSubmitting(true);
+    try {
+      const res = await addProject(projectForm);
+      if (res) {
+        setProjects([res, ...(projects || [])]);
+        setAddSuccess(true);
+      }
+    } catch (error) {
+      console.log("Error adding project:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitEditProject = async () => {
+    console.log("Submitting edited project:", projectForm.id);
+    setIsSubmitting(true);
+    try {
+      const res = await editProject(projectForm.id, projectForm);
+      if (res) {
+        const index = projects.findIndex((proj) => proj.id === projectForm.id);
+        if (typeof index === "number" && index >= 0) {
+          const updatedProjects = [...projects];
+          updatedProjects[index] = res;
+          setProjects(updatedProjects);
+          setEditSuccess(true);
+        }
+      }
+    } catch (error) {
+      console.log("Error editing project:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitDeleteProject = async () => {
+    Alert.alert("Delete Project", "Are you sure you want to delete this project? This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          setIsSubmitting(true);
+          try {
+            const res = await deleteProject(projectForm.id);
+            if (res) {
+              const updatedProjects = projects.filter((proj) => proj.id !== projectForm.id);
+              setProjects(updatedProjects);
+              setDeleteSuccess(true);
+            }
+          } catch (error) {
+            console.log("Error deleting project:", error);
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -166,7 +246,7 @@ const Projects = () => {
         </View>
       </ScrollView>
       <ModalWithBg visible={showModal} customHeight={0.8} customWidth={0.9}>
-        <ScrollView className="flex-1">
+        <ScrollView className="flex-1 h-full">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">
               {isAdding ? "Add New Project" : "Edit Project"}
@@ -176,119 +256,180 @@ const Projects = () => {
             </TouchableOpacity>
           </View>
           <View className="flex-1 gap-4 pt-4">
-            <View className="px-6">
-              <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <View className="flex-row items-start gap-2">
-                  <Feather name="info" size={14} color="#3b82f6" />
-                  <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
-                    {isAdding
-                      ? "Add details about your projects to showcase your skills."
-                      : "Update the details of your current projects."}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View className="flex-1 gap-2">
-              <View className="px-6">
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Title</Text>
-                    <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {projectForm.name.length}/50 characters
-                    </Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. Stock Trading App"
-                    label=""
-                    onChangeText={(text) => setProjectForm({ ...projectForm, name: text })}
-                    value={projectForm.name}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
+            {!isSubmitting ? (
+              <View className="flex-1 gap-4 pb-6">
+                {addSuccess && (
+                  <SuccessfulUpdate
+                    editingField="Project"
+                    type="add"
+                    handleConfirm={() => setShowModal(false)}
+                    handleReedit={() => setAddSuccess(false)}
                   />
-                </View>
-              </View>
-              <View className="px-6">
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Description</Text>
-                    <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {projectForm.description.length}/150 characters
-                    </Text>
-                  </View>
-                  <CustomMultilineInput
-                    placeholder="e.g. A stock trading app built with React"
-                    onChangeText={(text) => setProjectForm({ ...projectForm, description: text })}
-                    value={projectForm.description}
-                  />
-                </View>
-              </View>
-              <View className="px-6">
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Link</Text>
-                    <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {projectForm.link.length}/50 characters
-                    </Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. https://github.com/yourusername/yourproject"
-                    label=""
-                    onChangeText={(text) => setProjectForm({ ...projectForm, link: text })}
-                    value={projectForm.link}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
-                </View>
-              </View>
-              <View className="px-6">
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Year Completed</Text>
-                    <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {projectForm.name.length}/50 characters
-                    </Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. 2023"
-                    label=""
-                    onChangeText={(text) => setProjectForm({ ...projectForm, yearCompleted: text })}
-                    value={projectForm.yearCompleted}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
-                </View>
-              </View>
-              <View className="px-6 gap-2 mt-2">
-                {isAdding ? (
-                  <ProfileButton color="green-500" buttonText="Submit" handlePress={submitNewProject} />
-                ) : (
-                  <ProfileButton color="green-500" buttonText="Update" handlePress={submitEditProject} />
                 )}
-
-                <ProfileButton color="red-400" buttonText="Cancel" handlePress={() => setShowModal(false)} />
+                {editSuccess && (
+                  <SuccessfulUpdate
+                    editingField="Project"
+                    type="edit"
+                    handleConfirm={() => setShowModal(false)}
+                    handleReedit={() => setEditSuccess(false)}
+                  />
+                )}
+                {deleteSuccess && (
+                  <SuccessfulUpdate
+                    editingField="Project"
+                    type="delete"
+                    handleConfirm={() => setShowModal(false)}
+                    handleReedit={() => setDeleteSuccess(false)}
+                  />
+                )}
+                {!addSuccess && !editSuccess && !deleteSuccess && (
+                  <>
+                    <View className="px-6">
+                      <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <View className="flex-row items-start gap-2">
+                          <Feather name="info" size={14} color="#3b82f6" />
+                          <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
+                            {isAdding
+                              ? "Add details about your projects to showcase your skills."
+                              : "Update the details of your current projects."}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View className="flex-1 gap-2">
+                      <View className="px-6">
+                        <View>
+                          <View className="flex-row items-center justify-between mb-2">
+                            <Text className="font-quicksand-medium text-sm text-gray-600">Title</Text>
+                            <Text className="font-quicksand-medium text-xs text-gray-500">
+                              {projectForm.name.length}/50 characters
+                            </Text>
+                          </View>
+                          <CustomInput
+                            placeholder="e.g. Stock Trading App"
+                            autoCapitalize="words"
+                            label=""
+                            onChangeText={(text) => setProjectForm({ ...projectForm, name: text })}
+                            value={projectForm.name}
+                            customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                            style={{
+                              fontSize: 12,
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 2,
+                              elevation: 1,
+                            }}
+                          />
+                        </View>
+                      </View>
+                      <View className="px-6">
+                        <View>
+                          <View className="flex-row items-center justify-between mb-2">
+                            <Text className="font-quicksand-medium text-sm text-gray-600">Description</Text>
+                            <Text className="font-quicksand-medium text-xs text-gray-500">
+                              {projectForm.description.length}/150 characters
+                            </Text>
+                          </View>
+                          <CustomMultilineInput
+                            placeholder="e.g. A stock trading app built with React"
+                            onChangeText={(text) => setProjectForm({ ...projectForm, description: text })}
+                            value={projectForm.description}
+                          />
+                        </View>
+                      </View>
+                      <View className="px-6">
+                        <View>
+                          <View className="flex-row items-center justify-between mb-2">
+                            <Text className="font-quicksand-medium text-sm text-gray-600">Link</Text>
+                            <Text className="font-quicksand-medium text-xs text-gray-500">
+                              {projectForm.link.length}/50 characters
+                            </Text>
+                          </View>
+                          <CustomInput
+                            placeholder="e.g. https://github.com/yourusername/yourproject"
+                            label=""
+                            onChangeText={(text) => setProjectForm({ ...projectForm, link: text })}
+                            value={projectForm.link}
+                            customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                            style={{
+                              fontSize: 12,
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 2,
+                              elevation: 1,
+                            }}
+                          />
+                        </View>
+                      </View>
+                      <View className="px-6">
+                        <View>
+                          <View className="flex-row items-center justify-between mb-2">
+                            <Text className="font-quicksand-medium text-sm text-gray-600">Year Completed</Text>
+                            <Text className="font-quicksand-medium text-xs text-gray-500">
+                              {projectForm.name.length}/4 characters
+                            </Text>
+                          </View>
+                          <CustomInput
+                            placeholder="e.g. 2023"
+                            label=""
+                            onChangeText={(text) => setProjectForm({ ...projectForm, yearCompleted: text })}
+                            value={projectForm.yearCompleted}
+                            customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                            style={{
+                              fontSize: 12,
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 2,
+                              elevation: 1,
+                            }}
+                          />
+                        </View>
+                      </View>
+                      <View className="px-6 gap-2 mt-2">
+                        {isAdding ? (
+                          <View className="gap-2">
+                            <ProfileButton
+                              color="green-500"
+                              buttonText="Add Project"
+                              handlePress={submitNewProject}
+                              disabled={isSubmitting}
+                            />
+                            <ProfileButton
+                              color="red-400"
+                              buttonText="Cancel"
+                              handlePress={() => setShowModal(false)}
+                              disabled={isSubmitting}
+                            />
+                          </View>
+                        ) : (
+                          <View className="gap-3">
+                            <ProfileButton
+                              color="green-500"
+                              buttonText="Update Project"
+                              handlePress={submitEditProject}
+                              disabled={isSubmitting}
+                            />
+                            <ProfileButton
+                              color="red-400"
+                              buttonText="Delete Project"
+                              handlePress={submitDeleteProject}
+                              disabled={isSubmitting}
+                            />
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </>
+                )}
               </View>
-            </View>
+            ) : (
+              <View className="h-[300px] items-center justify-center">
+                <UpdatingProfileView />
+              </View>
+            )}
           </View>
         </ScrollView>
       </ModalWithBg>

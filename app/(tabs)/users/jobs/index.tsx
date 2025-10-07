@@ -3,18 +3,9 @@ import JobListing from "@/components/JobListing";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
 import SearchBar from "@/components/SearchBar";
-import {
-  employmentTypes,
-  experienceLevels,
-  sounds,
-  workArrangements,
-} from "@/constants";
+import { employmentTypes, experienceLevels, sounds, workArrangements } from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
-import {
-  useJobs,
-  useRecommendedJobs,
-  useUserAppliedJobs,
-} from "@/lib/services/useJobs";
+import { useJobs, useRecommendedJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
 import { hasUserAppliedToJob, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { JobFilters, User } from "@/type";
@@ -36,12 +27,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
@@ -71,30 +57,17 @@ const Index = () => {
   const [quickApplyLabel, setQuickApplyLabel] = useState("");
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
-  const {
-    data: jobs,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-  } = useJobs(filters);
-  const { data: recommendedJobs, isLoading: isLoadingRecommended } =
-    useRecommendedJobs();
-  const { data: appliedJobs, isLoading: isAppliedJobsLoading } =
-    useUserAppliedJobs();
+  const { data: jobs, isLoading, fetchNextPage, hasNextPage } = useJobs(filters);
+  const { data: recommendedJobs, isLoading: isLoadingRecommended } = useRecommendedJobs();
+  const { data: appliedJobs, isLoading: isAppliedJobsLoading } = useUserAppliedJobs();
   const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    user: authUser,
-    isLoading: isAuthLoading,
-    userType,
-    isAuthenticated,
-  } = useAuthStore();
+  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated } = useAuthStore();
   const user = authUser as User | null;
-  const [showProfileCompleteReminder, setShowProfileCompleteReminder] =
-    useState(!user?.profileComplete && isAuthenticated);
-  const [localApplyJobs, setLocalApplyJobs] = useState<number[]>(
-    appliedJobs || []
+  const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(
+    !user?.profileComplete && isAuthenticated
   );
+  const [localApplyJobs, setLocalApplyJobs] = useState<number[]>(appliedJobs || []);
   const slideX = useSharedValue(screenWidth);
   const locationInputRef = useRef<TextInput>(null);
   const animatedStyle = useAnimatedStyle(() => {
@@ -202,9 +175,7 @@ const Index = () => {
       setTempFilterCount((prev) => prev - 1);
       setTempFilters({
         ...tempFilters,
-        workArrangements: tempFilters.workArrangements.filter(
-          (t) => t !== type
-        ),
+        workArrangements: tempFilters.workArrangements.filter((t) => t !== type),
       });
     }
   };
@@ -236,10 +207,7 @@ const Index = () => {
       return;
     }
     if (tempFilters.minSalary && salary < tempFilters.minSalary) {
-      Alert.alert(
-        "Invalid Input",
-        "Max salary cannot be less than min salary."
-      );
+      Alert.alert("Invalid Input", "Max salary cannot be less than min salary.");
       return;
     }
     setTempFilterCount((prev) => prev + 1);
@@ -250,11 +218,7 @@ const Index = () => {
     return <Redirect href="/(tabs)/business/jobs" />;
   }
 
-  const handleQuickApply = (
-    jobId: number,
-    jobTitle: string,
-    companyName: string
-  ) => {
+  const handleQuickApply = (jobId: number, jobTitle: string, companyName: string) => {
     setQuickApplyJob(jobId);
     setQuickApplyLabel(`Quick Apply for ${jobTitle} at ${companyName}`);
     setShowQuickApplyModal(true);
@@ -290,16 +254,11 @@ const Index = () => {
     <SafeAreaView className="relative flex-1 bg-white pb-20">
       <StatusBar hidden={true} />
       <View className="w-full flex-row items-center justify-center gap-4">
-        <SearchBar
-          placeholder="Search for Jobs..."
-          onSubmit={handleSearchSubmit}
-        />
+        <SearchBar placeholder="Search for Jobs..." onSubmit={handleSearchSubmit} />
         <TouchableOpacity onPress={openFilters} className="relative">
           <Ionicons name="filter-circle-outline" size={30} color="black" />
           <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center">
-            <Text className="text-white font-quicksand-bold">
-              {filterCount}
-            </Text>
+            <Text className="text-white font-quicksand-bold">{filterCount}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -313,26 +272,19 @@ const Index = () => {
           />
         </View>
       )}
-      {!isAuthLoading && showProfileCompleteReminder && (
+      {/* {!isAuthLoading && showProfileCompleteReminder && (
         <CompleteProfileReminder
           onComplete={handleProfileComplete}
           onLater={handleProfileLater}
         />
-      )}
+      )} */}
+      <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater} />
       {isLoading ? (
-        <ActivityIndicator
-          size="large"
-          color="#0000ff"
-          className="flex-1 justify-center items-center"
-        />
+        <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
         <FlatList
           className="w-full p-2"
-          data={
-            isViewingRecommended
-              ? recommendedJobs
-              : jobs?.pages.flatMap((page) => page.jobs) || []
-          } // Simulating multiple job listings
+          data={isViewingRecommended ? recommendedJobs : jobs?.pages.flatMap((page) => page.jobs) || []} // Simulating multiple job listings
           renderItem={({ item, index }) => {
             let userApplication = hasUserAppliedToJob(user, item.id);
             let showFavorite = userApplication ? false : true;
@@ -344,9 +296,7 @@ const Index = () => {
                 showStatus={!showFavorite}
                 status={userApplication && userApplication.status}
                 canQuickApply={canQuickApply(item.id)}
-                handleQuickApply={() =>
-                  handleQuickApply(item.id, item.title, item.businessName)
-                }
+                handleQuickApply={() => handleQuickApply(item.id, item.title, item.businessName)}
               />
             );
           }}
@@ -356,9 +306,7 @@ const Index = () => {
             }
           }}
           ListFooterComponent={() => {
-            return isLoading ? (
-              <ActivityIndicator size="small" color="green" />
-            ) : null;
+            return isLoading ? <ActivityIndicator size="small" color="green" /> : null;
           }}
           ItemSeparatorComponent={() => <View className="divider" />}
         />
@@ -394,29 +342,21 @@ const Index = () => {
             ]}
           >
             <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
-              <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-2">
-                Filter Jobs
-              </Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-2">Filter Jobs</Text>
               <View>
-                <Text className="font-quicksand-medium text-md text-gray-900">
-                  Location
-                </Text>
+                <Text className="font-quicksand-medium text-md text-gray-900">Location</Text>
                 <TextInput
                   ref={locationInputRef}
                   className="border border-black rounded-lg p-3 mt-2"
                   placeholder="e.g. New York, San Francisco"
                   returnKeyType="done"
-                  onSubmitEditing={(event) =>
-                    addLocation(event.nativeEvent.text.trim())
-                  }
+                  onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
                 />
                 <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.locations.map((location, index) => (
                     <TouchableOpacity key={index}>
                       <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-800 font-quicksand-medium">
-                          {location}
-                        </Text>
+                        <Text className="text-green-800 font-quicksand-medium">{location}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -424,25 +364,19 @@ const Index = () => {
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-md text-gray-900">
-                  Companies
-                </Text>
+                <Text className="font-quicksand-medium text-md text-gray-900">Companies</Text>
                 <TextInput
                   ref={locationInputRef}
                   className="border border-black rounded-lg p-3 mt-2"
                   placeholder="e.g. Google, Microsoft"
                   returnKeyType="done"
-                  onSubmitEditing={(event) =>
-                    addCompany(event.nativeEvent.text.trim())
-                  }
+                  onSubmitEditing={(event) => addCompany(event.nativeEvent.text.trim())}
                 />
                 <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.companies?.map((company, index) => (
                     <TouchableOpacity key={index}>
                       <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-800 font-quicksand-medium">
-                          {company}
-                        </Text>
+                        <Text className="text-green-800 font-quicksand-medium">{company}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -450,9 +384,7 @@ const Index = () => {
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-md text-gray-900">
-                  Employment Type
-                </Text>
+                <Text className="font-quicksand-medium text-md text-gray-900">Employment Type</Text>
                 <View className="flex flex-row flex-wrap gap-2 mt-2">
                   {employmentTypes.map((type) => (
                     <TouchableOpacity
@@ -461,18 +393,14 @@ const Index = () => {
                       activeOpacity={1}
                       key={type.value}
                     >
-                      <Text className="font-quicksand-medium text-green-800 text-sm">
-                        {type.label}
-                      </Text>
+                      <Text className="font-quicksand-medium text-green-800 text-sm">{type.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-md text-gray-900">
-                  Work Arrangement
-                </Text>
+                <Text className="font-quicksand-medium text-md text-gray-900">Work Arrangement</Text>
                 <View className="flex flex-row flex-wrap gap-2 mt-2">
                   {workArrangements.map((type) => (
                     <TouchableOpacity
@@ -481,18 +409,14 @@ const Index = () => {
                       activeOpacity={1}
                       key={type.value}
                     >
-                      <Text className="font-quicksand-medium text-green-800 text-sm">
-                        {type.label}
-                      </Text>
+                      <Text className="font-quicksand-medium text-green-800 text-sm">{type.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-md text-gray-900">
-                  Experience (Years)
-                </Text>
+                <Text className="font-quicksand-medium text-md text-gray-900">Experience (Years)</Text>
                 <View className="flex flex-row flex-wrap gap-2 mt-2">
                   {experienceLevels.map((type) => (
                     <TouchableOpacity
@@ -501,34 +425,26 @@ const Index = () => {
                       activeOpacity={1}
                       key={type.value}
                     >
-                      <Text className="font-quicksand-medium text-green-800 text-sm">
-                        {type.label}
-                      </Text>
+                      <Text className="font-quicksand-medium text-green-800 text-sm">{type.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
               <View className="divider" />
               <View>
-                <Text className="font-quicksand-medium text-md text-gray-900">
-                  Skills
-                </Text>
+                <Text className="font-quicksand-medium text-md text-gray-900">Skills</Text>
                 <TextInput
                   ref={locationInputRef}
                   className="border border-black rounded-lg p-3 mt-2"
                   placeholder="e.g. JavaScript, Python"
                   returnKeyType="done"
-                  onSubmitEditing={(event) =>
-                    addTag(event.nativeEvent.text.trim())
-                  }
+                  onSubmitEditing={(event) => addTag(event.nativeEvent.text.trim())}
                 />
                 <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.tags.map((tag, index) => (
                     <TouchableOpacity key={index}>
                       <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-800 font-quicksand-medium">
-                          {tag}
-                        </Text>
+                        <Text className="text-green-800 font-quicksand-medium">{tag}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -543,9 +459,7 @@ const Index = () => {
                     className="border border-black rounded-lg p-3 mt-2"
                     returnKeyType="done"
                     placeholder="e.g. 50000"
-                    onSubmitEditing={(event) =>
-                      handleMinSalary(event.nativeEvent.text)
-                    }
+                    onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
                   />
                 </View>
                 <View className="w-1/2">
@@ -555,9 +469,7 @@ const Index = () => {
                     className="border border-black rounded-lg p-3 mt-2"
                     placeholder="e.g. 150000"
                     returnKeyType="done"
-                    onSubmitEditing={(event) =>
-                      handleMaxSalary(event.nativeEvent.text)
-                    }
+                    onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
                   />
                 </View>
               </View>

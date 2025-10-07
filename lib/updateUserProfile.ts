@@ -1,4 +1,4 @@
-import { AddExperienceForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate } from "@/type";
+import { AddExperienceForm, AddProjectForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate, Project } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
@@ -111,22 +111,21 @@ export const addEducation = async (newEducation: AddUserEducationForm) => {
     if (!newEducation.toYear) {
         newEducation.toYear = 'Present';
     }
-    return await new Promise<Education | null>((resolve, reject) => {
-        setTimeout(async () => {
-            const token = await AsyncStorage.getItem('x-auth-token');
-            const result = await fetch(`${PROFILES_API_URL}/education`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': `Bearer ${token}`
-                },
-                body: JSON.stringify(newEducation)
-            })
-            const response = await result.json();
-            if (result.status === 201) 
-                return resolve(response as Education)
-            return resolve(null);
-        }, 3000)});
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/education`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(newEducation)
+    });
+    if (result.status === 201) {
+        const response = await result.json();
+        return response as Education;
+    }
+    return null;
 }
 
 export const editEducation = async (educationId: number, updatedEducation: AddUserEducationForm) => {
@@ -168,6 +167,22 @@ export const addExperience = async (newExperience: AddExperienceForm) => {
             return null
 }
 
+export const addProject = async (newProject: AddProjectForm) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/projects`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(newProject)
+    });
+    const response = await result.json();
+    if (result.status === 201) return response as Project;
+    return null;
+}
+
 export const editExperience = async (experienceId: number, updatedExperience: AddExperienceForm) => {
     return await new Promise<Experience | null>((resolve, reject) => {
         setTimeout(async () => {
@@ -186,6 +201,22 @@ export const editExperience = async (experienceId: number, updatedExperience: Ad
             return resolve(null)
         }, 3000)
     })   
+}
+
+export const editProject = async (projectId: number, updatedProject: AddProjectForm) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedProject)
+    });
+    const response = await result.json();
+    if (result.status === 200) return response as Project;
+    return null;
 }
 
 export const deleteSkill = async (skillId: number) => {
@@ -216,6 +247,18 @@ export const deleteExperience = async (experienceId: number) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
     const result = await fetch(`${PROFILES_API_URL}/experiences/${experienceId}`, {
+        method: 'DELETE',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        }
+    });
+    return result.status === 204;
+}
+
+export const deleteProject = async (projectId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/projects/${projectId}`, {
         method: 'DELETE',
         headers: {
             'x-auth-token': `Bearer ${token}`,

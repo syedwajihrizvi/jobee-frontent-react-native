@@ -504,6 +504,7 @@ const Experiences = () => {
                           color="green-500"
                           buttonText="Add Experience"
                           handlePress={submitNewExperience}
+                          disabled={isSubmitting}
                         />
                       ) : (
                         <View className="gap-3">
@@ -511,11 +512,13 @@ const Experiences = () => {
                             color="green-500"
                             buttonText="Update Experience"
                             handlePress={submitEditExperience}
+                            disabled={isSubmitting}
                           />
                           <ProfileButton
                             color="red-400"
                             buttonText="Delete Experience"
                             handlePress={submitDeleteExperience}
+                            disabled={isSubmitting}
                           />
                         </View>
                       )}

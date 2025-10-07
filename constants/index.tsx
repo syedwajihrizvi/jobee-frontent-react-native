@@ -30,26 +30,31 @@ export enum UserDocumentType {
 export const profileLinkInfo: {
   label: string;
   icon: ReactNode;
+  subtitle?: string;
   href: string;
 }[] = [
   {
     label: "Edit Profile",
-    icon: <Feather name="user" size={28} color="black" />,
+    subtitle: "Update your personal information, experience, and more.",
+    icon: <Feather name="user" size={20} color="black" />,
     href: "/profile/editProfile",
   },
   {
     label: "Job Applied To",
-    icon: <Feather name="briefcase" size={28} color="black" />,
+    subtitle: "View the jobs you have applied to.",
+    icon: <Feather name="briefcase" size={20} color="black" />,
     href: "/profile/appliedJobs",
   },
   {
     label: "Favorite Jobs",
-    icon: <Feather name="star" size={28} color="black" />,
+    subtitle: "View and manage your favorite job listings.",
+    icon: <Feather name="star" size={20} color="black" />,
     href: "/profile/favoriteJobs",
   },
   {
     label: "Manage Documents",
-    icon: <Entypo name="documents" size={28} color="black" />,
+    subtitle: "Upload and manage your resumes, cover letters, and other documents.",
+    icon: <Entypo name="documents" size={20} color="black" />,
     href: "/profile/manageDocs",
   },
 ];

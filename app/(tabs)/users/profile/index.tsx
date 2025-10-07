@@ -12,33 +12,19 @@ import Entypo from "@expo/vector-icons/Entypo";
 import * as ImagePicker from "expo-image-picker";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Profile = () => {
-  const { isAuthenticated, isLoading, user, removeUser, setUserType } =
-    useAuthStore();
-  const [uploadingUserProfileImage, setUploadingUserProfileImage] =
-    useState(false);
-  const [uploadedProfileImage, setUploadedProfileImage] = useState<
-    string | null
-  >(null);
+  const { isAuthenticated, isLoading, user, removeUser, setUserType } = useAuthStore();
+  const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
+  const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
   const handleProfileImagePicker = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
-      Alert.alert(
-        "Permission Denied",
-        "You need to allow camera access to change profile picture."
-      );
+      Alert.alert("Permission Denied", "You need to allow camera access to change profile picture.");
       return;
     }
     Alert.alert("Change Profile Picture", "Choose an option", [
@@ -51,11 +37,7 @@ const Profile = () => {
             aspect: [4, 3],
             quality: 1,
           });
-          if (
-            !cameraResult.canceled &&
-            cameraResult.assets &&
-            cameraResult.assets.length > 0
-          ) {
+          if (!cameraResult.canceled && cameraResult.assets && cameraResult.assets.length > 0) {
             await uploadUserProfileImage(cameraResult);
           }
           return;
@@ -70,11 +52,7 @@ const Profile = () => {
             aspect: [4, 3],
             quality: 1,
           });
-          if (
-            !galleryResult.canceled &&
-            galleryResult.assets &&
-            galleryResult.assets.length > 0
-          ) {
+          if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
             await uploadUserProfileImage(galleryResult);
           }
           return;
@@ -84,9 +62,7 @@ const Profile = () => {
     ]);
   };
 
-  const uploadUserProfileImage = async (
-    image: ImagePicker.ImagePickerResult
-  ) => {
+  const uploadUserProfileImage = async (image: ImagePicker.ImagePickerResult) => {
     if (!image || !image.assets || image.assets.length === 0) {
       Alert.alert("No Image Selected", "Please select an image to upload.");
       return;
@@ -98,37 +74,34 @@ const Profile = () => {
         Alert.alert("Success", "Profile image updated successfully.");
         setUploadedProfileImage(response.profileImageUrl);
       } else {
-        Alert.alert(
-          "Error",
-          "Failed to update profile image. Please try again."
-        );
+        Alert.alert("Error", "Failed to update profile image. Please try again.");
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "An error occurred while uploading the profile image. Please try again."
-      );
+      Alert.alert("Error", "An error occurred while uploading the profile image. Please try again.");
     } finally {
       setUploadingUserProfileImage(false);
     }
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    removeUser();
-    setUserType("user");
-    router.push("/(auth)/sign-in");
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await signOut();
+          removeUser();
+          setUserType("user");
+          router.push("/(auth)/sign-in");
+        },
+      },
+    ]);
   };
 
   const renderProfileImage = () => {
     if (!user || !(user as User).profileImageUrl) {
-      return (
-        <Image
-          source={{ uri: images.companyLogo }}
-          className="size-14 rounded-full"
-          resizeMode="contain"
-        />
-      );
+      return <Image source={{ uri: images.companyLogo }} className="size-14 rounded-full" resizeMode="contain" />;
     } else if (uploadedProfileImage) {
       return (
         <Image
@@ -139,13 +112,7 @@ const Profile = () => {
       );
     }
     const uri = getS3ProfileImage((user as User).profileImageUrl);
-    return (
-      <Image
-        source={{ uri }}
-        className="size-14 rounded-full"
-        resizeMode="contain"
-      />
-    );
+    return <Image source={{ uri }} className="size-14 rounded-full" resizeMode="contain" />;
   };
 
   return (
@@ -156,10 +123,7 @@ const Profile = () => {
       ) : (
         <View className="p-4">
           <View className="flex flex-row items-start">
-            <TouchableOpacity
-              className="relative"
-              onPress={handleProfileImagePicker}
-            >
+            <TouchableOpacity className="relative" onPress={handleProfileImagePicker}>
               {uploadingUserProfileImage ? (
                 <ActivityIndicator size="small" color="#0000ff" />
               ) : (
@@ -178,42 +142,47 @@ const Profile = () => {
               <Text className="font-quicksand-bold text-xl ml-2">
                 {(user as User)?.firstName} {(user as User)?.lastName}
               </Text>
-              <Text className="font-quicksand-semibold text-md ml-2">
-                {(user as User)?.title}
-              </Text>
+              <Text className="font-quicksand-semibold text-md ml-2">{(user as User)?.title}</Text>
             </View>
           </View>
           <View className="divider" />
-          <View className="flex-col gap-2 mt-4">
-            {profileLinkInfo.map((link, index) => (
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 100 }}
+            className="mt-4"
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="flex flex-col gap-4 pb-20">
+              {profileLinkInfo.map((link, index) => (
+                <ProfileLink
+                  key={index}
+                  icon={link.icon}
+                  label={link.label}
+                  subtitle={link.subtitle}
+                  onPress={() => router.push(link.href as any)}
+                />
+              ))}
               <ProfileLink
-                key={index}
-                icon={link.icon}
-                label={link.label}
-                onPress={() => router.push(link.href as any)}
+                icon={<Feather name="calendar" size={20} />}
+                label="Upcoming Interviews"
+                subtitle="View and manage your scheduled interviews"
+                onPress={() => router.push(`/profile/interviews?userId=${(user as User)?.id}`)}
+                rightIcon={true}
               />
-            ))}
-            <ProfileLink
-              icon={<Feather name="calendar" size={28} />}
-              label="Upcoming Interviews"
-              onPress={() =>
-                router.push(`/profile/interviews?userId=${(user as User)?.id}`)
-              }
-              rightIcon={true}
-            />
-            <ProfileLink
-              icon={<Feather name="settings" size={28} />}
-              label="Account Settings"
-              onPress={() => console.log("Account Settings Pressed")}
-              rightIcon={true}
-            />
-            <ProfileLink
-              icon={<AntDesign name="logout" size={24} />}
-              label="Sign Out"
-              onPress={handleSignOut}
-              rightIcon={false}
-            />
-          </View>
+              <ProfileLink
+                icon={<Feather name="settings" size={20} />}
+                label="Account Settings"
+                subtitle="Manage your account settings and preferences"
+                onPress={() => console.log("Account Settings Pressed")}
+                rightIcon={true}
+              />
+              <ProfileLink
+                icon={<AntDesign name="logout" size={20} />}
+                label="Sign Out"
+                onPress={handleSignOut}
+                rightIcon={false}
+              />
+            </View>
+          </ScrollView>
         </View>
       )}
     </SafeAreaView>

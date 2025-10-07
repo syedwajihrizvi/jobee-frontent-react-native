@@ -9,7 +9,7 @@ import { addSkill, deleteSkill } from "@/lib/updateUserProfile";
 import { AddUserSkillForm, UserSkill } from "@/type";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -135,25 +135,34 @@ const Skills = () => {
   };
 
   const submitDeletedSkill = async () => {
-    setIsSubmitting(true);
-    try {
-      const res = await deleteSkill(skillForm.id);
-      console.log("Delete skill response:", res);
-      console.log(skillForm.skillId);
-      if (res) {
-        console.log("Skill deleted successfully");
-        console.log("Current skills before deletion:", skills);
-        const index = skills?.findIndex((s) => s.id === skillForm.id);
-        console.log("Deleted skill index:", index);
-        const updatedSkills = skills?.filter((s) => s.id !== skillForm.id);
-        setSkills(updatedSkills);
-        setDeleteSuccess(true);
-      }
-    } catch (error) {
-      console.error("Error deleting skill:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    Alert.alert("Delete Skill", "Are you sure you want to delete this skill?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          setIsSubmitting(true);
+          try {
+            const res = await deleteSkill(skillForm.id);
+            console.log("Delete skill response:", res);
+            console.log(skillForm.skillId);
+            if (res) {
+              console.log("Skill deleted successfully");
+              console.log("Current skills before deletion:", skills);
+              const index = skills?.findIndex((s) => s.id === skillForm.id);
+              console.log("Deleted skill index:", index);
+              const updatedSkills = skills?.filter((s) => s.id !== skillForm.id);
+              setSkills(updatedSkills);
+              setDeleteSuccess(true);
+            }
+          } catch (error) {
+            console.error("Error deleting skill:", error);
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (

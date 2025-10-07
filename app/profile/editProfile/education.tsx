@@ -2,59 +2,137 @@ import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
+import SuccessfulUpdate from "@/components/SuccessfulUpdate";
+import UpdatingProfileView from "@/components/UpdatingProfileView";
 import { useEducations } from "@/lib/services/useEducations";
+import { addEducation, deleteEducation, editEducation } from "@/lib/updateUserProfile";
 import { AddUserEducationForm, Education } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Educations = () => {
-  const { data: educations, isLoading } = useEducations();
+  const { data: userEducations, isLoading } = useEducations();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [educations, setEducations] = useState<Education[]>(userEducations || []);
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [educationForm, setEducationForm] = useState<AddUserEducationForm>({
+    id: 0,
     institution: "",
     degree: "",
     fromYear: "",
     toYear: "",
   });
 
-  const handleAddNewEducation = () => {
+  useEffect(() => {
+    if (!isLoading && userEducations) {
+      setEducations(userEducations);
+    }
+  }, [userEducations, isLoading]);
+
+  const resetStates = () => {
+    setIsSubmitting(false);
+    setIsEditing(false);
+    setIsAdding(false);
+    setShowModal(false);
     setEducationForm({
+      id: 0,
       institution: "",
       degree: "",
       fromYear: "",
       toYear: "",
     });
-    setIsEditing(false);
+    setAddSuccess(false);
+    setEditSuccess(false);
+    setDeleteSuccess(false);
+  };
+
+  const handleAddNewEducation = () => {
+    resetStates();
     setIsAdding(true);
     setShowModal(true);
   };
 
   const handleEditEducation = (education: Education) => {
+    resetStates();
     setEducationForm({
+      id: education.id,
       institution: education.institution,
       degree: education.degree,
       fromYear: education.fromYear,
       toYear: education.toYear || "Present",
     });
-    setIsEditing(true);
-    setIsAdding(false);
     setShowModal(true);
   };
 
-  const submitNewEducation = () => {
+  const submitNewEducation = async () => {
+    setIsSubmitting(true);
     console.log("Submitting new education:", educationForm);
+    try {
+      const res = await addEducation(educationForm);
+      if (res) {
+        const updatedEducations = [res, ...(educations || [])];
+        setEducations(updatedEducations);
+        setAddSuccess(true);
+      }
+    } catch (error) {
+      console.log("Error adding education:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const submitEditEducation = () => {
-    console.log("Submitting edited education:", educationForm);
+  const submitEditEducation = async () => {
+    setIsSubmitting(true);
+    console.log("Editing education:", educationForm);
+    try {
+      const res = await editEducation(educationForm.id, educationForm);
+      if (res) {
+        const index = educations.findIndex((edu) => edu.id === educationForm.id);
+        if (typeof index === "number" && index >= 0) {
+          const updatedEducations = [...educations];
+          updatedEducations[index] = res;
+          setEducations(updatedEducations);
+          setEditSuccess(true);
+        }
+      }
+    } catch (error) {
+      console.log("Error editing education:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const submitDeleteEducation = () => {
-    console.log("Deleting education:", educationForm);
+  const submitDeleteEducation = async () => {
+    Alert.alert("Delete Education", "Are you sure you want to delete this education? This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          setIsSubmitting(true);
+          console.log("Deleting education:", educationForm);
+          try {
+            const res = await deleteEducation(educationForm.id);
+            if (res) {
+              const updatedEducations = educations.filter((edu) => edu.id !== educationForm.id);
+              setEducations(updatedEducations);
+              setDeleteSuccess(true);
+            }
+          } catch (error) {
+            console.log("Error deleting education:", error);
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -165,138 +243,188 @@ const Educations = () => {
             </View>
           )}
         </View>
-        <ModalWithBg visible={showModal} customHeight={0.55} customWidth={0.9}>
-          <ScrollView className="flex-1">
-            <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
-              <Text className="font-quicksand-bold text-lg text-gray-800">
-                {isAdding ? "Add New Eductation" : "Edit Education"}
-              </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
-                <Feather name="x" size={20} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-            <View className="flex-1 gap-4 pt-4">
-              <View className="px-6">
-                <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <View className="flex-row items-start gap-2">
-                    <Feather name="info" size={14} color="#3b82f6" />
-                    <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
-                      {isAdding
-                        ? "Add details about your previous or present educations."
-                        : "Update the details of your education to keep your profile current."}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <View className="flex-1 gap-2">
-              <View className="px-6">
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Institution</Text>
-                    <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {educationForm.institution.length}/75 characters
-                    </Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. Harvard University"
-                    label=""
-                    onChangeText={(text) => setEducationForm({ ...educationForm, institution: text })}
-                    value={educationForm.institution}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
-                </View>
-              </View>
-              <View className="px-6">
-                <View>
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Degree</Text>
-                    <Text className="font-quicksand-medium text-xs text-gray-500">
-                      {educationForm.degree.length}/75 characters
-                    </Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. Bachelor of Science in Computer Science"
-                    label=""
-                    onChangeText={(text) => setEducationForm({ ...educationForm, degree: text })}
-                    value={educationForm.degree}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
-                </View>
-              </View>
-              <View className="px-6 flex-row justify-between gap-1">
-                <View className="w-1/3">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">From (Year)</Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. 2018"
-                    label=""
-                    onChangeText={(text) => setEducationForm({ ...educationForm, fromYear: text })}
-                    value={educationForm.fromYear}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
-                </View>
-                <View className="w-1/3">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="font-quicksand-medium text-sm text-gray-600">To (Year)</Text>
-                  </View>
-                  <CustomInput
-                    placeholder="e.g. 2023"
-                    label=""
-                    onChangeText={(text) => setEducationForm({ ...educationForm, toYear: text })}
-                    value={educationForm.toYear}
-                    customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                    style={{
-                      fontSize: 12,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
-                </View>
-              </View>
-              <View className="flex-1" />
-              <View className="px-6 gap-2 mt-2">
-                {isAdding ? (
-                  <ProfileButton color="green-500" buttonText="Add Experience" handlePress={submitNewEducation} />
-                ) : (
-                  <View className="gap-3">
-                    <ProfileButton color="green-500" buttonText="Update Experience" handlePress={submitEditEducation} />
-                    <ProfileButton color="red-400" buttonText="Delete Experience" handlePress={submitDeleteEducation} />
-                  </View>
-                )}
-              </View>
-            </View>
-          </ScrollView>
-        </ModalWithBg>
       </ScrollView>
+      <ModalWithBg visible={showModal} customHeight={0.55} customWidth={0.9}>
+        <ScrollView className="flex-1">
+          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
+            <Text className="font-quicksand-bold text-lg text-gray-800">
+              {isAdding ? "Add New Eductation" : "Edit Education"}
+            </Text>
+            <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
+              <Feather name="x" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+          <View className="flex-1 gap-4 pt-4">
+            <View className="px-6">
+              <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <View className="flex-row items-start gap-2">
+                  <Feather name="info" size={14} color="#3b82f6" />
+                  <Text className="font-quicksand-medium text-xs text-blue-700 leading-4 flex-1">
+                    {isAdding
+                      ? "Add details about your previous or present educations."
+                      : "Update the details of your education to keep your profile current."}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View className="flex-1 gap-2">
+            {!isSubmitting ? (
+              <>
+                {addSuccess && (
+                  <SuccessfulUpdate
+                    editingField="Education"
+                    handleConfirm={() => setShowModal(false)}
+                    handleReedit={() => setAddSuccess(false)}
+                  />
+                )}
+                {editSuccess && (
+                  <SuccessfulUpdate
+                    editingField="Education"
+                    type="edit"
+                    handleConfirm={() => setShowModal(false)}
+                    handleReedit={() => setEditSuccess(false)}
+                  />
+                )}
+                {deleteSuccess && (
+                  <SuccessfulUpdate
+                    editingField="Education"
+                    type="delete"
+                    handleConfirm={() => setShowModal(false)}
+                    handleReedit={() => setDeleteSuccess(false)}
+                  />
+                )}
+                {!addSuccess && !editSuccess && !deleteSuccess && (
+                  <>
+                    <View className="px-6">
+                      <View>
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">Institution</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {educationForm.institution.length}/75 characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g. Harvard University"
+                          autoCapitalize="words"
+                          label=""
+                          onChangeText={(text) => setEducationForm({ ...educationForm, institution: text })}
+                          value={educationForm.institution}
+                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                      </View>
+                    </View>
+                    <View className="px-6">
+                      <View>
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">Degree</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {educationForm.degree.length}/75 characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g. Bachelor of Science in Computer Science"
+                          autoCapitalize="words"
+                          label=""
+                          onChangeText={(text) => setEducationForm({ ...educationForm, degree: text })}
+                          value={educationForm.degree}
+                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                      </View>
+                    </View>
+                    <View className="px-6 flex-row justify-between gap-1">
+                      <View className="w-1/3">
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">From (Year)</Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g. 2018"
+                          label=""
+                          onChangeText={(text) => setEducationForm({ ...educationForm, fromYear: text })}
+                          value={educationForm.fromYear}
+                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                      </View>
+                      <View className="w-1/3">
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">To (Year)</Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g. 2023"
+                          label=""
+                          onChangeText={(text) => setEducationForm({ ...educationForm, toYear: text })}
+                          value={educationForm.toYear}
+                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                      </View>
+                    </View>
+                    <View className="flex-1" />
+                    <View className="px-6 gap-2 mt-2">
+                      {isAdding ? (
+                        <ProfileButton
+                          color="green-500"
+                          buttonText="Add Experience"
+                          handlePress={submitNewEducation}
+                          disabled={isSubmitting}
+                        />
+                      ) : (
+                        <View className="gap-3">
+                          <ProfileButton
+                            color="green-500"
+                            buttonText="Update Experience"
+                            handlePress={submitEditEducation}
+                            disabled={isSubmitting}
+                          />
+                          <ProfileButton
+                            color="red-400"
+                            buttonText="Delete Experience"
+                            handlePress={submitDeleteEducation}
+                            disabled={isSubmitting}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </>
+                )}
+              </>
+            ) : (
+              <UpdatingProfileView />
+            )}
+          </View>
+        </ScrollView>
+      </ModalWithBg>
     </SafeAreaView>
   );
 };

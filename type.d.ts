@@ -247,6 +247,7 @@ export type AddUserSkillForm = {
 }
 
 export type AddUserEducationForm = {
+    id: number;
     institution: string;
     degree: string;
     fromYear: string;
@@ -265,6 +266,7 @@ export type AddExperienceForm = {
 }
 
 export type AddProjectForm = {
+    id: number;
     name: string;
     description: string;
     link: string;
