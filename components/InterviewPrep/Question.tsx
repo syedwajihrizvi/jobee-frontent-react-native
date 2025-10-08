@@ -42,16 +42,25 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
             </Text>
           </View>
         ) : (
-          <View className="items-center justify-center h-[350px]">
+          <View className="items-center justify-center h-[400px]">
             <Text className="font-quicksand-bold text-2xl text-center mb-4">
               Question {currentQuestionIndex + 1} of {fetchedQuestions?.length}
             </Text>
-            <View className="bg-green-500 dark:bg-[#1e1e1e] rounded-2xl shadow-md p-4 mb-4 h-[150px] items-center justify-center">
-              <Text className="font-quicksand-semibold text-lg text-center">
+            <View
+              className="bg-white rounded-2xl shadow-lg p-6 mb-4 h-[180px] items-center justify-center"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.15,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <Text className="font-quicksand-semibold text-lg text-gray-800 text-center leading-6">
                 {interviewQuestions && interviewQuestions![currentQuestionIndex]?.question}
               </Text>
             </View>
-            <View className="flex-row items-center justify-center gap-4">
+            <View className="flex-row items-center justify-center gap-4 mb-2">
               <TouchableOpacity
                 disabled={currentQuestionIndex === 0}
                 onPress={() => setCurrentQuestionIndex((prev) => Math.max(prev - 1, 0))}

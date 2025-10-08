@@ -11,7 +11,6 @@ interface UserSignUpParams {
     confirmPassword: string;
     firstName: string,
     lastName: string,
-    age: number
 }
 
 interface BusinessSignUpParams {

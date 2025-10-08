@@ -2,9 +2,14 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
 
-const CheckList = ({ items }: { items: string[] }) => {
+type Props = {
+  items: string[];
+  withBorder?: boolean;
+};
+
+const CheckList = ({ items, withBorder = true }: Props) => {
   return (
-    <View className="p-4 border border-gray-300 rounded-lg mt-2">
+    <View className={`p-4 rounded-lg mt-2 ${withBorder ? "border border-gray-300" : ""}`}>
       {items.map((note, index) => (
         <View key={index} className="flex flex-row items-start mb-2">
           <Feather name="check-square" size={12} color="green" className="mt-1 mr-2" />

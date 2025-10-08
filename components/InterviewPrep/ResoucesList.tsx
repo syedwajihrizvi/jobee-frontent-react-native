@@ -1,12 +1,11 @@
 import { InterviewPreparation } from "@/type";
-import { AntDesign, Feather } from "@expo/vector-icons";
-import React from "react";
-import { Alert, FlatList, Linking, Text, TouchableOpacity, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { Alert, Linking, Text, TouchableOpacity, View } from "react-native";
 
 const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) => {
+  const [currIndex, setCurrIndex] = useState(0);
   const handleResourceClick = async (resource: { link: string }) => {
-    // Handle resource click, e.g., open link in browser
-    console.log("Resource clicked:", resource.link);
     const supported = await Linking.canOpenURL(resource.link);
     if (!supported) {
       Alert.alert(`Cannot open URL: ${resource.link}`);
@@ -23,49 +22,168 @@ const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation 
     console.log("Share resources");
   };
 
+  const getColor = (index: number) => {
+    return getResourceColor(interviewPrep?.resources?.[index]?.type || "");
+  };
+
+  const getResourceColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "article":
+        return { bg: "bg-blue-50", border: "border-blue-200", icon: "#3b82f6", accent: "bg-blue-500" };
+      case "video":
+        return { bg: "bg-red-50", border: "border-red-200", icon: "#ef4444", accent: "bg-red-500" };
+      case "website":
+        return { bg: "bg-green-50", border: "border-green-200", icon: "#22c55e", accent: "bg-green-500" };
+      case "pdf":
+        return { bg: "bg-orange-50", border: "border-orange-200", icon: "#f97316", accent: "bg-orange-500" };
+      case "course":
+        return { bg: "bg-purple-50", border: "border-purple-200", icon: "#8b5cf6", accent: "bg-purple-500" };
+      default:
+        return { bg: "bg-gray-50", border: "border-gray-200", icon: "#6b7280", accent: "bg-gray-500" };
+    }
+  };
+
   return (
-    <View key={12} className="w-full h-full items-start gap-4 p-4">
-      <View className="w-full h-[550px] mt-2 overflow-hidden flex-col gap-4">
-        <Text className="font-quicksand-bold text-lg text-center">
-          Check out these resources below. Simply click them to view. I can also email these or provide other options to
-          share them.
+    <View className="w-full h-full px-3 py-4">
+      <View className="items-center mb-4">
+        <View
+          className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-2"
+          style={{
+            shadowColor: "#6366f1",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 6,
+          }}
+        >
+          <Feather name="book-open" size={20} color="#6366f1" />
+        </View>
+        <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-7 mb-2">
+          Curated Resources for You
         </Text>
-        <FlatList
-          data={interviewPrep?.resources || []}
-          keyExtractor={(_, index) => index.toString()}
-          contentContainerStyle={{ paddingVertical: 4, paddingHorizontal: 8 }}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => handleResourceClick(item)}
-              className="bg-green-500 dark:bg-[#1e1e1e] rounded-2xl shadow-md mb-4 p-6"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 6,
-                elevation: 4, // Android shadow
-              }}
-            >
-              <View className="flex flex-row items-start gap-2">
-                <AntDesign name="link" size={18} color="black" />
-                <View className="flex flex-col px-2">
-                  <Text className="font-quicksand-bold text-md">{item.title}</Text>
-                  <Text className="font-quicksand-bold text-sm">{item.type[0].toUpperCase() + item.type.slice(1)}</Text>
-                  <Text className="font-quicksand-regular text-xs">{item.description}</Text>
-                </View>
+        <Text className="font-quicksand-medium text-sm text-center text-gray-600 leading-6 px-4">
+          Click on any resource below to open it. You can also email or share the entire collection.
+        </Text>
+      </View>
+      <View
+        className="bg-white rounded-xl p-4 border border-gray-100 mb-3"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 3,
+        }}
+      >
+        <View className="flex-row items-center justify-center gap-3">
+          <View className="w-8 h-8 bg-indigo-100 rounded-full items-center justify-center">
+            <Text className="font-quicksand-bold text-indigo-600 text-sm">{interviewPrep?.resources?.length || 0}</Text>
+          </View>
+          <Text className="font-quicksand-semibold text-gray-700 text-base">
+            Resource{(interviewPrep?.resources?.length || 0) > 1 ? "s" : ""} Available
+          </Text>
+        </View>
+      </View>
+      <View className="gap-2 mb-3">
+        <TouchableOpacity
+          onPress={() => handleResourceClick(interviewPrep?.resources?.[currIndex] || { link: "" })}
+          className={`bg-white rounded-2xl p-3 h-[190px] border ${getColor(currIndex).border}`}
+          style={{
+            shadowColor: getColor(currIndex).icon,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
+          activeOpacity={0.7}
+        >
+          <View className="flex-row items-start gap-4 px-3 py-2">
+            <View className="flex-1">
+              <View className={`self-start px-3 py-1 ${getColor(currIndex).bg} rounded-full mb-1`}>
+                <Text
+                  className="font-quicksand-bold text-xs uppercase tracking-wide"
+                  style={{ color: getColor(currIndex).icon }}
+                >
+                  {interviewPrep?.resources?.[currIndex]?.type}
+                </Text>
               </View>
-            </TouchableOpacity>
-          )}
-        />
-        <View className="w-full flex-row items-center justify-center gap-4 mb-2 px-2">
-          <TouchableOpacity className="bg-black p-2 rounded-full flex-row gap-2 px-4" onPress={emailAllResources}>
-            <Feather name="mail" size={18} color="#22c55e" />
-            <Text className="font-quicksand-semibold text-green-500">Email</Text>
+              <Text className="font-quicksand-bold text-gray-800 text-base leading-6 mb-2">
+                {interviewPrep?.resources?.[currIndex]?.title}
+              </Text>
+              <Text className="font-quicksand-medium text-gray-600 text-sm leading-5 mb-2">
+                {interviewPrep?.resources?.[currIndex]?.description}
+              </Text>
+              <View className="flex-row items-center gap-2">
+                <View className={`w-2 h-2 ${getColor(currIndex).accent} rounded-full`} />
+                <Text className="font-quicksand-semibold text-xs" style={{ color: getColor(currIndex).icon }}>
+                  Tap to open
+                </Text>
+              </View>
+            </View>
+            <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center">
+              <Feather name="external-link" size={14} color="#6b7280" />
+            </View>
+          </View>
+        </TouchableOpacity>
+        <Text className="text-center font-quicksand-semibold text-gray-600 mb-1">
+          {currIndex + 1} of {interviewPrep?.resources?.length}
+        </Text>
+        <View className="flex-row items-center justify-center gap-4">
+          <TouchableOpacity disabled={currIndex === 0} onPress={() => setCurrIndex((prev) => Math.max(prev - 1, 0))}>
+            <Feather name="arrow-left-circle" size={24} color={currIndex === 0 ? "gray" : "black"} />
           </TouchableOpacity>
-          <TouchableOpacity className="bg-black p-2 rounded-full flex-row gap-2 px-4" onPress={shareResources}>
-            <Feather name="share" size={18} color="#22c55e" />
-            <Text className="font-quicksand-semibold text-green-500">Share</Text>
+          <TouchableOpacity
+            disabled={currIndex === (interviewPrep?.resources?.length || 1) - 1}
+            onPress={() => setCurrIndex((prev) => Math.min(prev + 1, (interviewPrep?.resources?.length || 1) - 1))}
+          >
+            <Feather
+              name="arrow-right-circle"
+              size={24}
+              color={currIndex === (interviewPrep?.resources?.length || 1) - 1 ? "gray" : "black"}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View className="bg-blue-50 rounded-xl p-3 border border-blue-200 mb-3">
+        <View className="flex-row items-center gap-2">
+          <Feather name="info" size={14} color="#3b82f6" />
+          <Text className="font-quicksand-medium text-blue-700 text-xs">
+            Resources will open in your default browser or app
+          </Text>
+        </View>
+      </View>
+      <View className="gap-4">
+        <View className="flex-row items-center justify-center gap-4">
+          <TouchableOpacity
+            className="bg-indigo-500 py-3 px-6 rounded-xl flex-row items-center justify-center gap-3 flex-1"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            onPress={emailAllResources}
+            activeOpacity={0.8}
+          >
+            <Feather name="mail" size={18} color="white" />
+            <Text className="font-quicksand-bold text-white text-sm">Email All</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="bg-gray-600 py-3 px-6 rounded-xl flex-row items-center justify-center gap-3 flex-1"
+            style={{
+              shadowColor: "#4b5563",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            onPress={shareResources}
+            activeOpacity={0.8}
+          >
+            <Feather name="share" size={18} color="white" />
+            <Text className="font-quicksand-bold text-white text-sm">Share</Text>
           </TouchableOpacity>
         </View>
       </View>

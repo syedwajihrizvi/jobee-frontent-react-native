@@ -1,10 +1,7 @@
-import {
-  getApplicationStatus,
-  getEmploymentType,
-  getWorkArrangement,
-} from "@/lib/utils";
+import { getApplicationStatus, getEmploymentType, getWorkArrangement } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { Job } from "@/type";
+import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -29,23 +26,44 @@ const JobListing = ({
   handleQuickApply?: () => void;
 }) => {
   const { isAuthenticated } = useAuthStore();
+
   const renderQuickApply = () => {
     if (isAuthenticated && !canQuickApply) {
       return (
-        <View className="mt-4 w-1/4">
-          <Text className="text-center font-quicksand-semibold text-sm text-white bg-green-500 rounded-full px-3 py-1">
-            Applied
-          </Text>
+        <View
+          className="bg-emerald-100 rounded-xl px-4 py-2 border border-emerald-200"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <View className="flex-row items-center gap-2">
+            <Feather name="check-circle" size={14} color="#059669" />
+            <Text className="font-quicksand-bold text-sm text-emerald-700">Applied</Text>
+          </View>
         </View>
       );
     }
     if (canQuickApply) {
       return (
-        <TouchableOpacity onPress={handleQuickApply}>
-          <View className="mt-4 w-1/3">
-            <Text className="text-center font-quicksand-semibold text-sm text-white bg-black rounded-full px-3 py-1">
-              Quick Apply
-            </Text>
+        <TouchableOpacity
+          onPress={handleQuickApply}
+          className="bg-green-500 rounded-xl px-4 py-2"
+          style={{
+            shadowColor: "#6366f1",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+          activeOpacity={0.8}
+        >
+          <View className="flex-row items-center gap-2">
+            <Feather name="zap" size={14} color="white" />
+            <Text className="font-quicksand-bold text-sm text-white">Quick Apply</Text>
           </View>
         </TouchableOpacity>
       );
@@ -53,44 +71,109 @@ const JobListing = ({
     return null;
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "applied":
+        return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" };
+      case "interviewed":
+        return { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200" };
+      case "offered":
+        return { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" };
+      case "rejected":
+        return { bg: "bg-red-100", text: "text-red-800", border: "border-red-200" };
+      default:
+        return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
+    }
+  };
+
   return (
-    <View className="w-full px-4 py-1 rounded-full">
-      <TouchableOpacity
-        activeOpacity={0.2}
-        onPress={() => router.push(`/jobs/${job.id}`)}
-      >
-        <View className="flex-row items-center justify-between">
-          <CompanyInformation company={job.businessName} />
-          {showFavorite && <FavoriteJob jobId={job.id} />}
-          {showStatus && status && (
-            <View className="absolute top-0 right-0 bg-green-100 px-2 py-1 rounded-full">
-              <Text className="font-quicksand-bold text-sm color-green-800">
-                {getApplicationStatus(status)}
-              </Text>
-            </View>
-          )}
+    <View
+      className="w-full bg-white rounded-2xl p-5 my-2 border border-gray-100"
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 6,
+      }}
+    >
+      <TouchableOpacity activeOpacity={0.7} onPress={() => router.push(`/jobs/${job.id}`)}>
+        <View className="flex-row items-center justify-between mb-1">
+          <View className="flex-1 mr-3">
+            <CompanyInformation company={job.businessName} />
+          </View>
+          <View className="flex-row items-center gap-3">
+            {showStatus && status && (
+              <View
+                className={`${getStatusColor(status).bg} ${getStatusColor(status).border} border px-3 py-1 rounded-full`}
+              >
+                <Text className={`font-quicksand-bold text-xs ${getStatusColor(status).text}`}>
+                  {getApplicationStatus(status)}
+                </Text>
+              </View>
+            )}
+            {showFavorite && <FavoriteJob jobId={job.id} />}
+          </View>
         </View>
-        <Text className="font-quicksand-bold text-xl">{job.title}</Text>
-        <Text className="font-quicksand-medium text-md">
-          {job.location} · {getEmploymentType(job.employmentType)} ·{" "}
-          {getWorkArrangement(job.setting)}
-        </Text>
-        <Text className="font-quicksand-semibold text-sm">
-          ${job.minSalary} - ${job.maxSalary}
-        </Text>
-      </TouchableOpacity>
-      <ScrollView
-        className="flex-row flex-wrap gap-2 mt-2"
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        {job.tags?.map((tag, index) => (
-          <Text key={index} className="badge badge--green text-sm mx-1">
-            {tag.name}
+
+        <Text className="font-quicksand-bold text-xl text-gray-900 mb-1">{job.title}</Text>
+        <View className="flex-row items-center gap-2 mb-1 flex-wrap">
+          <View className="flex-row items-center gap-1">
+            <Feather name="map-pin" size={14} color="#6b7280" />
+            <Text className="font-quicksand-medium text-sm text-gray-600">{job.location}</Text>
+          </View>
+          <View className="w-1 h-1 bg-gray-400 rounded-full" />
+          <View className="flex-row items-center gap-1">
+            <Feather name="clock" size={14} color="#6b7280" />
+            <Text className="font-quicksand-medium text-sm text-gray-600">{getEmploymentType(job.employmentType)}</Text>
+          </View>
+          <View className="w-1 h-1 bg-gray-400 rounded-full" />
+          <View className="flex-row items-center gap-1">
+            <Feather name="home" size={14} color="#6b7280" />
+            <Text className="font-quicksand-medium text-sm text-gray-600">{getWorkArrangement(job.setting)}</Text>
+          </View>
+        </View>
+        <View className="flex-row items-center gap-2 mb-4">
+          <Text className="font-quicksand-bold text-base text-emerald-600">
+            ${job.minSalary?.toLocaleString()} - ${job.maxSalary?.toLocaleString()}
           </Text>
-        ))}
-      </ScrollView>
-      {showQuickApply && renderQuickApply()}
+        </View>
+      </TouchableOpacity>
+
+      {job.tags && job.tags.length > 0 && (
+        <ScrollView
+          className="flex-row gap-2 mb-2"
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 20 }}
+        >
+          {job.tags.map((tag, index) => (
+            <View key={index} className="bg-green-50 border border-green-200 px-3 py-1 mr-1 rounded-full">
+              <Text className="font-quicksand-medium text-xs text-green-700">{tag.name}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+      <View className="flex-row items-center justify-between">
+        {showQuickApply ? renderQuickApply() : <View />}
+        <TouchableOpacity
+          onPress={() => router.push(`/jobs/${job.id}`)}
+          className="bg-gray-100 rounded-xl px-4 py-2 border border-gray-200"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+          activeOpacity={0.7}
+        >
+          <View className="flex-row items-center gap-2">
+            <Feather name="eye" size={14} color="#6b7280" />
+            <Text className="font-quicksand-semibold text-sm text-gray-700">View Details</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

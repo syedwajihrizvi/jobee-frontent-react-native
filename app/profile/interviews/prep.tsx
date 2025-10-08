@@ -9,6 +9,7 @@ import Animated, {
 import BackBar from "@/components/BackBar";
 import AnalyzeCandidate from "@/components/InterviewPrep/AnalyzeCandidate";
 import Calendar from "@/components/InterviewPrep/Calendar";
+import Conclusion from "@/components/InterviewPrep/Conclusion";
 import Conducted from "@/components/InterviewPrep/Conducted";
 import Details from "@/components/InterviewPrep/Details";
 import Interviewers from "@/components/InterviewPrep/Interviewers";
@@ -47,7 +48,7 @@ const PrepForInterview = () => {
 
   const screens: ReactNode[] = [
     <Introduction key={1} interviewDetails={interviewDetails} />,
-    <Details key={2} />,
+    <Details key={2} interviewDetails={interviewDetails} />,
     <Calendar key={3} interviewDetails={interviewDetails} />,
     <Conducted key={4} interviewDetails={interviewDetails} />,
     <Interviewers key={5} />,
@@ -60,6 +61,7 @@ const PrepForInterview = () => {
     <ResourcesList key={12} interviewPrep={interviewPrep!} />,
     <QuestionsIntro key={13} />,
     <Question key={14} interviewId={Number(interviewId)} interviewPrep={interviewPrep!} />,
+    <Conclusion key={15} interviewDetails={interviewDetails} />,
   ];
 
   const panGesture = Gesture.Pan()
@@ -126,7 +128,12 @@ const PrepForInterview = () => {
             </GestureDetector>
             <View className="absolute bottom-20 w-full flex-row items-center justify-center gap-2">
               {screens.map((_, idx) => (
-                <View key={idx} className={`h-2 ${idx === step ? "w-8" : "w-2"} bg-gray-500 rounded-full`} />
+                <View
+                  key={idx}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    idx === step ? "w-8 bg-green-500" : idx < step ? "w-2 bg-green-300" : "w-2 bg-gray-300"
+                  }`}
+                />
               ))}
             </View>
           </>

@@ -28,7 +28,14 @@ const CustomInput = ({
         onChangeText={onChangeText}
         className={customClass ? customClass : "form-input__input"}
         returnKeyType={returnKeyType as ReturnKeyTypeOptions}
-        style={style}
+        style={{
+          fontSize: 12,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 2,
+          elevation: 1,
+        }}
       />
     </View>
   );

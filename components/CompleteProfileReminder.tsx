@@ -111,16 +111,6 @@ const CompleteProfileReminder = ({ onComplete, onLater }: { onComplete: () => vo
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Progress Indicator */}
-          <View className="px-6 pb-4">
-            <View className="flex-row items-center justify-center gap-2">
-              <View className="w-2 h-2 bg-green-500 rounded-full" />
-              <View className="w-2 h-2 bg-gray-300 rounded-full" />
-              <View className="w-2 h-2 bg-gray-300 rounded-full" />
-              <Text className="text-gray-500 font-quicksand-medium text-xs ml-2">Step 1 of 3</Text>
-            </View>
-          </View>
         </View>
       </View>
     </Modal>

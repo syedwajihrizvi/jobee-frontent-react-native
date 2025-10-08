@@ -327,7 +327,7 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
 
   return (
     <View className="h-full items-center">
-      <View className="flex flex-col items-center gap-2 ">
+      <View className="flex flex-col items-center gap-4 ">
         {questionAnswerAudioUrl ? (
           <Text className="font-quicksand-bold text-sm text-center">
             Press <Entypo name="check" size={16} color="#21c55e" /> to submit your answer.

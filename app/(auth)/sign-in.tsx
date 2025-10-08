@@ -1,17 +1,15 @@
 import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
-import {
-  registerForPushNotifications,
-  signInBusiness,
-  signInUser,
-} from "@/lib/auth";
+import { registerForPushNotifications, signInBusiness, signInUser } from "@/lib/auth";
 import useAuthStore from "@/store/auth.store";
 import useUserStore from "@/store/user.store";
 import { SignInParams } from "@/type";
+import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const SignIn = () => {
   const [form, setForm] = useState<SignInParams>({ email: "", password: "" });
@@ -69,88 +67,158 @@ const SignIn = () => {
       }
     }
   };
-  const renderAccountTypeClass = (buttonType: "user" | "business") => {
-    if (type === buttonType) {
-      return "border-b-2 border-green-500 pb-1";
-    }
-    return "pb-1";
-  };
+
   return (
-    <View className="gap-2 bg-white px-4">
-      <View className="flex-row items-center justify-center gap-4">
-        <TouchableOpacity
-          className={renderAccountTypeClass("user")}
-          onPress={() => setType("user")}
-        >
-          <Text className="font-quicksand-bold">User</Text>
+    <KeyboardAwareScrollView
+      className="flex-1"
+      showsVerticalScrollIndicator={false}
+      enableOnAndroid
+      extraScrollHeight={150}
+      keyboardShouldPersistTaps="handled"
+      enableAutomaticScroll
+    >
+      <View
+        className="bg-white rounded-2xl px-8 pt-1 pb-10"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.1,
+          shadowRadius: 24,
+          elevation: 12,
+        }}
+      >
+        <View className="mb-8">
+          <Text className="font-quicksand-semibold text-lg text-gray-800 mb-4 text-center">Choose Account Type</Text>
+
+          <View
+            className="bg-gray-100 rounded-xl p-1 flex-row"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <TouchableOpacity
+              className={`flex-1 py-3 rounded-lg items-center ${type === "user" ? "bg-green-500" : "bg-transparent"}`}
+              style={{
+                shadowColor: type === "user" ? "#6366f1" : "transparent",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: type === "user" ? 0.2 : 0,
+                shadowRadius: 4,
+                elevation: type === "user" ? 3 : 0,
+              }}
+              onPress={() => setType("user")}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="user" size={16} color={type === "user" ? "white" : "#6b7280"} />
+                <Text className={`font-quicksand-bold text-sm ${type === "user" ? "text-white" : "text-gray-600"}`}>
+                  Job Seeker
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className={`flex-1 py-3 rounded-lg items-center ${
+                type === "business" ? "bg-green-500" : "bg-transparent"
+              }`}
+              style={{
+                shadowColor: type === "business" ? "#6366f1" : "transparent",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: type === "business" ? 0.2 : 0,
+                shadowRadius: 4,
+                elevation: type === "business" ? 3 : 0,
+              }}
+              onPress={() => setType("business")}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="briefcase" size={16} color={type === "business" ? "white" : "#6b7280"} />
+                <Text className={`font-quicksand-bold text-sm ${type === "business" ? "text-white" : "text-gray-600"}`}>
+                  Employer
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View className="gap-6 mb-8">
+          <CustomInput
+            placeholder="Enter your email"
+            label="Email Address"
+            value={form.email}
+            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
+            onChangeText={(text) => setForm({ ...form, email: text })}
+            style={{
+              fontSize: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          />
+          <CustomInput
+            placeholder="Enter your password"
+            label="Password"
+            value={form.password}
+            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
+            onChangeText={(text) => setForm({ ...form, password: text })}
+            style={{
+              fontSize: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          />
+        </View>
+        <TouchableOpacity className="mb-4" activeOpacity={0.7}>
+          <Text className="font-quicksand-medium text-sm text-green-600 text-right">Forgot Password?</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          className={renderAccountTypeClass("business")}
-          onPress={() => setType("business")}
-        >
-          <Text className="font-quicksand-bold">Enterprise</Text>
-        </TouchableOpacity>
+
+        <CustomButton
+          text={type === "user" ? "Sign In" : "Sign In to Dashboard"}
+          customClass="bg-green-500 py-4 rounded-xl"
+          onClick={type === "user" ? handleSignInForUser : handleSignInForBusiness}
+          isLoading={isLoading}
+        />
+        <View className="flex-row items-center my-4">
+          <View className="flex-1 h-px bg-gray-200" />
+          <Text className="font-quicksand-medium text-sm text-gray-500 px-4">or continue with</Text>
+          <View className="flex-1 h-px bg-gray-200" />
+        </View>
+        <View className="flex-row gap-4 mb-4">
+          <TouchableOpacity
+            className="flex-1 bg-white border border-gray-200 rounded-xl py-3 items-center"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center gap-2">
+              <Feather name="mail" size={18} color="#374151" />
+              <Text className="font-quicksand-semibold text-sm text-gray-700">Google</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <View className="items-center">
+          <Text className="font-quicksand-medium text-sm text-gray-600">
+            {type === "user" ? "Don't have an account?" : "Business not registered?"}{" "}
+            <Text className="text-green-600 font-quicksand-bold" onPress={() => router.navigate("/(auth)/sign-up")}>
+              {type === "user" ? "Sign Up" : "Register Now"}
+            </Text>
+          </Text>
+        </View>
       </View>
-      {type === "user" ? (
-        <>
-          <CustomInput
-            placeholder="Enter your email"
-            label="Email"
-            value={form.email}
-            onChangeText={(text) => setForm({ ...form, email: text })}
-          />
-          <CustomInput
-            placeholder="Enter your password"
-            label="Password"
-            value={form.password}
-            onChangeText={(text) => setForm({ ...form, password: text })}
-          />
-          <CustomButton
-            text="Login"
-            customClass="apply-button py-4"
-            onClick={handleSignInForUser}
-            isLoading={isLoading}
-          />
-          <View className="items-center">
-            <Text>
-              Dont have an account?{" "}
-              <Text onPress={() => router.navigate("/(auth)/sign-up")}>
-                Sign Up
-              </Text>
-            </Text>
-          </View>
-        </>
-      ) : (
-        <>
-          <CustomInput
-            placeholder="Enter your email"
-            label="Email"
-            value={form.email}
-            onChangeText={(text) => setForm({ ...form, email: text })}
-          />
-          <CustomInput
-            placeholder="Enter your password"
-            label="Password"
-            value={form.password}
-            onChangeText={(text) => setForm({ ...form, password: text })}
-          />
-          <CustomButton
-            text="Login"
-            customClass="apply-button py-4"
-            onClick={handleSignInForBusiness}
-            isLoading={isLoading}
-          />
-          <View className="items-center">
-            <Text>
-              Business not registered?{" "}
-              <Text onPress={() => router.navigate("/(auth)/sign-up")}>
-                Register Now
-              </Text>
-            </Text>
-          </View>
-        </>
-      )}
-    </View>
+      <View className="flex-1" />
+    </KeyboardAwareScrollView>
   );
 };
 

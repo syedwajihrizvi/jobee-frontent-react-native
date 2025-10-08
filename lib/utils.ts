@@ -96,6 +96,8 @@ export const getInterviewStyle = (status: string) => {
       return "In Person";
     case 'PHONE':
       return "Phone";
+    default:
+      return "Not Specified";
   }
 }
 
