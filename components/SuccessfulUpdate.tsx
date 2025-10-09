@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   editingField: string | null;
-  type?: "add" | "edit" | "delete";
+  type?: "add" | "edit" | "delete" | "uploadDocument";
   handleConfirm: () => void;
   handleReedit: () => void;
 };
@@ -18,14 +18,29 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
         return `Your ${editingField?.toLowerCase()} has been successfully updated and saved to your profile.`;
       case "delete":
         return `Your ${editingField?.toLowerCase()} has been successfully deleted from your profile.`;
+      case "uploadDocument":
+        return `Your document has been successfully uploaded and saved to your profile.`;
       default:
         return `Your ${editingField?.toLowerCase()} has been successfully updated and saved to your profile.`;
     }
   };
 
+  const renderReeditText = () => {
+    switch (type) {
+      case "add":
+        return `Add Again`;
+      case "edit":
+        return `Edit Again`;
+      case "delete":
+        return `Restore`;
+      case "uploadDocument":
+        return `Upload Again`;
+      default:
+        return `Edit Again`;
+    }
+  };
   return (
     <View className="flex-1 items-center justify-center gap-6 px-6 pb-10">
-      {/* Success Animation Container */}
       <View
         className="w-20 h-20 bg-green-100 rounded-full items-center justify-center"
         style={{
@@ -69,7 +84,7 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
           onPress={handleReedit}
         >
           <Feather name="edit-2" size={16} color="#6b7280" />
-          <Text className="font-quicksand-semibold text-gray-600 text-sm ml-2">Edit Again</Text>
+          <Text className="font-quicksand-semibold text-gray-600 text-sm ml-2">{renderReeditText()}</Text>
         </TouchableOpacity>
       </View>
     </View>

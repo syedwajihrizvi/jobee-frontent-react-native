@@ -118,7 +118,7 @@ const JobDetails = () => {
   };
 
   const calculateApplyButtonSnapPoints = () => {
-    if (!isAuthenticated) return ["20%"];
+    if (!isAuthenticated) return ["30%"];
     if (!userHasResume) return ["32%"];
     return ["50%"];
   };
@@ -129,7 +129,7 @@ const JobDetails = () => {
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
-            className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-4"
+            className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 4 },
@@ -314,12 +314,12 @@ const JobDetails = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["20%", "30%"]} enablePanDownToClose>
+      <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["25%", "35%"]} enablePanDownToClose>
         <BottomSheetView className="flex-1 bg-white">
           {isLoading ? <ActivityIndicator /> : job ? <JobInfo job={job} /> : null}
         </BottomSheetView>
       </BottomSheet>
-      <BottomSheet ref={companyBottomRef} index={-1} snapPoints={["20%", "30%"]} enablePanDownToClose>
+      <BottomSheet ref={companyBottomRef} index={-1} snapPoints={["25%", "35%"]} enablePanDownToClose>
         <BottomSheetView className="flex-1 bg-white">
           {isLoadingCompany ? <ActivityIndicator /> : company ? <CompanyInfo company={company} /> : null}
         </BottomSheetView>
@@ -352,7 +352,7 @@ const JobDetails = () => {
           ) : (
             <View className="flex-1 justify-center items-center px-6">
               <View
-                className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-6"
+                className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-6"
                 style={{
                   shadowColor: "#6366f1",
                   shadowOffset: { width: 0, height: 4 },
@@ -361,7 +361,7 @@ const JobDetails = () => {
                   elevation: 4,
                 }}
               >
-                <Feather name="user-plus" size={24} color="#6366f1" />
+                <Feather name="user-plus" size={24} color="#21c48c" />
               </View>
 
               <Text className="font-quicksand-bold text-xl text-gray-800 text-center mb-2">
@@ -373,7 +373,7 @@ const JobDetails = () => {
 
               <View className="flex-row gap-3 w-full">
                 <TouchableOpacity
-                  className="flex-1 bg-indigo-500 rounded-xl py-3 items-center"
+                  className="flex-1 bg-green-500 rounded-xl py-3 items-center"
                   style={{
                     shadowColor: "#6366f1",
                     shadowOffset: { width: 0, height: 2 },
@@ -388,11 +388,11 @@ const JobDetails = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  className="flex-1 bg-white border-2 border-indigo-500 rounded-xl py-3 items-center"
+                  className="flex-1 bg-white border-2 border-green-500 rounded-xl py-3 items-center"
                   onPress={() => router.push("/(auth)/sign-in")}
                   activeOpacity={0.7}
                 >
-                  <Text className="font-quicksand-bold text-indigo-500">Sign In</Text>
+                  <Text className="font-quicksand-bold text-green-500">Sign In</Text>
                 </TouchableOpacity>
               </View>
             </View>

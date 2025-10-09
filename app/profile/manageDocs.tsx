@@ -1,64 +1,43 @@
 import BackBar from "@/components/BackBar";
 import DocumentItem from "@/components/DocumentItem";
-import LinkInput from "@/components/LinkInput";
 import { UserDocumentType } from "@/constants";
-import { uploadUserDocument } from "@/lib/manageUserDocs";
 import { useDocuments } from "@/lib/services/useDocuments";
 import useAuthStore from "@/store/auth.store";
 import { AllUserDocuments, User, UserDocument } from "@/type";
 import { Feather } from "@expo/vector-icons";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useQueryClient } from "@tanstack/react-query";
-import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const documentTypes = [
-  { label: "Resume", value: UserDocumentType.RESUME },
-  { label: "Cover Letter", value: UserDocumentType.COVER_LETTER },
-  { label: "Certificate", value: UserDocumentType.CERTIFICATE },
-  { label: "Transcript", value: UserDocumentType.TRANSCRIPT },
-  { label: "Recommendation", value: UserDocumentType.RECOMMENDATION },
+  { label: "Resume", value: UserDocumentType.RESUME, icon: "file-text", color: "#3b82f6" },
+  { label: "Cover Letter", value: UserDocumentType.COVER_LETTER, icon: "mail", color: "#8b5cf6" },
+  { label: "Certificate", value: UserDocumentType.CERTIFICATE, icon: "award", color: "#f59e0b" },
+  { label: "Transcript", value: UserDocumentType.TRANSCRIPT, icon: "book", color: "#10b981" },
+  { label: "Recommendation", value: UserDocumentType.RECOMMENDATION, icon: "star", color: "#ef4444" },
 ];
 
 const ManageDocuments = () => {
   const { isLoading, user: authUser } = useAuthStore();
   const { data: userDocs, isLoading: isLoadingDocs } = useDocuments();
-  const queryClient = useQueryClient();
-  const [resumeLink, setResumeLink] = useState("");
-  const [coverLetterLink, setCoverLetterLink] = useState("");
-  const [selectedDocumentType, setSelectedDocumentType] = useState("RESUME");
-  const [open, setOpen] = useState(false);
-  const [documentTitle, setDocumentTitle] = useState("");
-  const [uploadingDocument, setUploadingDocument] = useState(false);
-  const [uploadedDocument, setUploadedDocument] =
-    useState<DocumentPicker.DocumentPickerResult | null>(null);
   const addDocumentRef = useRef<BottomSheet>(null);
-  const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(
-    null
-  );
-  const user = authUser as User | null; // Cast once at the top
+  const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(null);
+  const user = authUser as User | null;
+
   useEffect(() => {
     if (userDocs && !isLoadingDocs) {
-      // Fetch user documents from the server or local storage
-      // This is a placeholder, replace with actual API call
-      const resumeDocuments: UserDocument[] = userDocs.filter(
-        (doc) => doc.documentType === UserDocumentType.RESUME
-      );
+      const resumeDocuments: UserDocument[] = userDocs.filter((doc) => doc.documentType === UserDocumentType.RESUME);
       const coverLetterDocuments: UserDocument[] = userDocs.filter(
         (doc) => doc.documentType === UserDocumentType.COVER_LETTER
       );
@@ -81,146 +60,120 @@ const ManageDocuments = () => {
     }
   }, [userDocs, isLoadingDocs]);
 
-  const handleUpload = async (documentType: string) => {
-    setUploadingDocument(true);
-    try {
-      const document = await DocumentPicker.getDocumentAsync({
-        type: [
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ],
-      });
-      if (!document.canceled) {
-        setUploadedDocument(document);
-      }
-    } catch (error) {
-      console.error("Error picking document: ", error);
-      Alert.alert("Error", "Failed to upload document. Please try again.");
-    } finally {
-      setUploadingDocument(false);
-    }
-  };
-
-  const handleDocumentUploadSubmit = async () => {
-    if (!uploadedDocument) {
-      Alert.alert("Error", "Please select a document to upload");
-      return;
-    }
-    setUploadingDocument(true);
-    try {
-      await uploadUserDocument(
-        uploadedDocument,
-        selectedDocumentType,
-        documentTitle
-      );
-      Alert.alert("Success", "Document uploaded successfully");
-      setUploadedDocument(null);
-      setDocumentTitle("");
-      addDocumentRef.current?.close();
-      queryClient.invalidateQueries({ queryKey: ["documents", "user"] });
-      // Incase of update to skills, educations or experiences
-      queryClient.invalidateQueries({ queryKey: ["skills", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["education", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["experience", "user"] });
-    } catch (error) {
-      console.error("Error uploading document:", error);
-      Alert.alert("Error", "Failed to upload document. Please try again.");
-    } finally {
-      setUploadingDocument(false);
-    }
+  const getDocumentTypeInfo = (type: string) => {
+    return documentTypes.find((doc) => doc.value === type) || documentTypes[0];
   };
 
   const renderDocumentFlatList = ({
     title,
     documents,
+    type,
   }: {
     title: string;
     documents: UserDocument[];
-  }) => (
-    <View className="p-4 bg-white">
-      <Text className="font-quicksand-bold text-md">{title}</Text>
-      <FlatList
-        data={documents}
-        renderItem={({ item }) => (
-          <DocumentItem
-            document={item}
-            actionIcon="edit"
-            customAction={() => {}}
-            outline={item.id === user?.primaryResume?.id}
+    type: string;
+  }) => {
+    const docInfo = getDocumentTypeInfo(type);
+
+    return (
+      <View
+        className="mx-4 mb-4 bg-white rounded-2xl p-5 border border-gray-100"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 6,
+        }}
+      >
+        <View className="flex-row items-center gap-3 mb-4">
+          <View
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: `${docInfo.color}20` }}
+          >
+            <Feather name={docInfo.icon as any} size={20} color={docInfo.color} />
+          </View>
+          <View className="flex-1">
+            <Text className="font-quicksand-bold text-lg text-gray-900">{title}</Text>
+            <Text className="font-quicksand-medium text-sm text-gray-600">
+              {documents.length} document{documents.length !== 1 ? "s" : ""}
+            </Text>
+          </View>
+        </View>
+
+        {documents.length === 0 ? (
+          <View className="items-center py-8">
+            <View
+              className="w-16 h-16 rounded-full items-center justify-center mb-4"
+              style={{ backgroundColor: `${docInfo.color}10` }}
+            >
+              <Feather name={docInfo.icon as any} size={24} color={docInfo.color} />
+            </View>
+            <Text className="font-quicksand-semibold text-gray-700 mb-2">No documents yet</Text>
+            <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
+              Upload your first {title.toLowerCase()} to get started
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={documents}
+            renderItem={({ item }) => (
+              <DocumentItem
+                document={item}
+                actionIcon="edit"
+                customAction={() => {}}
+                outline={item.id === user?.primaryResume?.id}
+              />
+            )}
+            horizontal
+            keyExtractor={(item) => item.id.toString()}
+            showsHorizontalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View className="w-4" />}
+            contentContainerStyle={{ paddingHorizontal: 2 }}
           />
         )}
-        horizontal
-        keyExtractor={(item) => item.id.toString()}
-        showsHorizontalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View className="w-5" />}
-        contentContainerStyle={{ marginTop: 8 }}
-      />
-    </View>
-  );
-  const handleDocImagePicker = async (
-    noAccessMsg: string,
-    accessMsg: string,
-    uploadByPhotoMsg: string,
-    uploadByGalleryMsg: string
-  ) => {
-    const result = await ImagePicker.requestCameraPermissionsAsync();
-    if (result.granted === false) {
-      Alert.alert(noAccessMsg);
-      return;
-    }
-    Alert.alert("Add new Resume", "Choose an option", [
-      {
-        text: uploadByPhotoMsg,
-        onPress: async () => {
-          await ImagePicker.launchCameraAsync({
-            mediaTypes: "images",
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-          });
-        },
-      },
-      {
-        text: uploadByGalleryMsg,
-        onPress: async () => {
-          await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: "images",
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-          });
-        },
-      },
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-    ]);
-  };
-
-  const sendDocumentUriToServer = async () => {
-    console.log("Sending document URI to server...");
+      </View>
+    );
   };
 
   return (
-    <SafeAreaView className="bg-white flex-1">
+    <SafeAreaView className="bg-gray-50 flex-1">
       <BackBar
         label="Manage Documents"
         optionalThirdItem={
           <TouchableOpacity
-            className="rounded-full bg-green-500 p-1"
-            onPress={() => addDocumentRef.current?.expand()}
+            className="w-10 h-10 rounded-full bg-green-500 items-center justify-center"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+            onPress={() => router.push("/profile/uploadNewDoc")}
+            activeOpacity={0.8}
           >
-            <Feather name="plus" size={14} color="black" />
+            <Feather name="plus" size={18} color="white" />
           </TouchableOpacity>
         }
       />
+
       {isLoading ? (
-        <ActivityIndicator
-          size="large"
-          className="flex-1 justify-center items-center"
-        />
+        <View className="flex-1 justify-center items-center">
+          <View
+            className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <ActivityIndicator size="large" color="#6366f1" />
+          </View>
+          <Text className="font-quicksand-semibold text-lg text-gray-700">Loading documents...</Text>
+        </View>
       ) : (
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -228,144 +181,79 @@ const ManageDocuments = () => {
           keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
         >
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 10, height: "100%" }}
+            contentContainerStyle={{ paddingBottom: 20, paddingTop: 16 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <View
+              className="mx-4 mb-6 bg-white rounded-2xl p-5 border border-gray-100"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+                elevation: 6,
+              }}
+            >
+              <View className="flex-row items-center gap-3 mb-4">
+                <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                  <Feather name="folder" size={24} color="#6366f1" />
+                </View>
+                <View>
+                  <Text className="font-quicksand-bold text-xl text-gray-900">Document Library</Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                    Manage all your professional documents
+                  </Text>
+                </View>
+              </View>
+
+              <View className="flex-row gap-4">
+                <View className="flex-1 bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <Text className="font-quicksand-bold text-2xl text-blue-600">
+                    {(userDocuments?.resumeDocuments?.length || 0) + (userDocuments?.coverLetterDocuments?.length || 0)}
+                  </Text>
+                  <Text className="font-quicksand-medium text-sm text-blue-700">Job Applications</Text>
+                </View>
+
+                <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                  <Text className="font-quicksand-bold text-2xl text-emerald-600">
+                    {(userDocuments?.certificateDocuments?.length || 0) +
+                      (userDocuments?.transcriptDocuments?.length || 0)}
+                  </Text>
+                  <Text className="font-quicksand-medium text-sm text-emerald-700">Credentials</Text>
+                </View>
+              </View>
+            </View>
+
             {renderDocumentFlatList({
               title: "My Resumes",
               documents: userDocuments?.resumeDocuments || [],
+              type: UserDocumentType.RESUME,
             })}
-            <View className="divider" />
+
             {renderDocumentFlatList({
               title: "My Cover Letters",
               documents: userDocuments?.coverLetterDocuments || [],
+              type: UserDocumentType.COVER_LETTER,
             })}
-            <View className="divider" />
+
             {renderDocumentFlatList({
               title: "My Certificates",
               documents: userDocuments?.certificateDocuments || [],
+              type: UserDocumentType.CERTIFICATE,
             })}
-            <View className="divider" />
+
             {renderDocumentFlatList({
               title: "My Transcripts",
               documents: userDocuments?.transcriptDocuments || [],
+              type: UserDocumentType.TRANSCRIPT,
             })}
-            <View className="divider" />
+
             {renderDocumentFlatList({
               title: "My Recommendations",
               documents: userDocuments?.recommendationDocuments || [],
+              type: UserDocumentType.RECOMMENDATION,
             })}
-            <BottomSheet
-              ref={addDocumentRef}
-              index={-1}
-              snapPoints={["30%", "40%"]}
-              enablePanDownToClose
-            >
-              <BottomSheetView className="flex-1 p-4 gap-2 w-full justify-center items-center">
-                <View>
-                  <Text className="font-quicksand-bold text-lg mb-1">
-                    Choose Document Type
-                  </Text>
-                  <View className="flex flex-row flex-wrap gap-1">
-                    {documentTypes.map((doc) => (
-                      <TouchableOpacity
-                        key={doc.value}
-                        className={`${selectedDocumentType === doc.value ? "bg-green-200" : ""} px-3 py-1 rounded-full`}
-                        onPress={() => setSelectedDocumentType(doc.value)}
-                      >
-                        <View>
-                          <Text className="text-green-800 font-quicksand-medium">
-                            {doc.label}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-                {uploadedDocument?.assets &&
-                  uploadedDocument.assets[0]?.name &&
-                  uploadedDocument.assets[0].name && (
-                    <Text className="font-quicksand-medium underline w-full">
-                      {uploadedDocument.assets[0].name}
-                    </Text>
-                  )}
-                <TextInput
-                  className="border border-gray-300 rounded-md p-2 w-full"
-                  placeholder="Provide an Optional Title for document..."
-                  value={documentTitle}
-                  onChangeText={(text) => setDocumentTitle(text)}
-                />
-                <View className="flex flex-row gap-2">
-                  {!uploadedDocument ? (
-                    <TouchableOpacity
-                      className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2"
-                      onPress={() => handleUpload(selectedDocumentType)}
-                    >
-                      <Text className="font-quicksand-semibold text-md">
-                        Upload
-                      </Text>
-                      <AntDesign name="upload" size={20} color="black" />
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      className="action-button flex flex-row items-center justify-center w-1/2 gap-2 px-4 py-2 bg-red-500"
-                      onPress={() => setUploadedDocument(null)}
-                    >
-                      <Text className="font-quicksand-semibold text-md">
-                        Remove
-                      </Text>
-                      <AntDesign name="delete" size={20} color="black" />
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    className="apply-button flex flex-row items-center justify-center w-1/2 gap-2 gap-2 px-4 py-2"
-                    onPress={() =>
-                      handleDocImagePicker(
-                        "Need to access camera!",
-                        "Upload document by taking a photo",
-                        "Choose an option",
-                        "Upload from Gallery"
-                      )
-                    }
-                  >
-                    <Text className="font-quicksand-semibold text-md">
-                      Take Photo
-                    </Text>
-                    <AntDesign name="camera" size={20} color="black" />
-                  </TouchableOpacity>
-                </View>
-                <Text className="font-quicksand-bold text-md">OR</Text>
-                <LinkInput
-                  value={resumeLink}
-                  onChangeText={setResumeLink}
-                  onIconPress={sendDocumentUriToServer}
-                />
-                <View className="w-full p-4 flex-row gap-2 items-center justify-center">
-                  <TouchableOpacity
-                    className="apply-button w-3/6 items-center justify-center h-14"
-                    onPress={handleDocumentUploadSubmit}
-                    disabled={uploadingDocument}
-                  >
-                    {uploadingDocument ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <Text className="font-quicksand-semibold text-md">
-                        Done
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="favorite-button h-14 w-3/6 items-center justify-center"
-                    onPress={() => addDocumentRef.current?.close()}
-                  >
-                    <Text className="font-quicksand-semibold text-md">
-                      Close
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </BottomSheetView>
-            </BottomSheet>
           </ScrollView>
         </KeyboardAvoidingView>
       )}

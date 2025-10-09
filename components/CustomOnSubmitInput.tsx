@@ -2,17 +2,16 @@ import { CustomInputProps } from "@/type";
 import React from "react";
 import { ReturnKeyTypeOptions, Text, TextInput, View } from "react-native";
 
-const CustomInput = ({
+const CustomOnSubmitInput = ({
   placeholder,
   label,
-  value,
   returnKeyType = "default",
   keyboardType = "default",
   autoCapitalize = "none",
   multiline = false,
   autocorrect = true,
   customClass,
-  onChangeText,
+  onSubmitEditing = () => {},
 }: CustomInputProps) => {
   return (
     <View className="form-input">
@@ -20,11 +19,10 @@ const CustomInput = ({
       <TextInput
         placeholder={placeholder}
         autoCapitalize={autoCapitalize as "none" | "sentences" | "words" | "characters"}
-        value={value}
         keyboardType={keyboardType as "default" | "email-address" | "numeric" | "phone-pad"}
         multiline={multiline}
         autoCorrect={autocorrect}
-        onChangeText={onChangeText}
+        onSubmitEditing={(event) => onSubmitEditing(event.nativeEvent.text)}
         className={customClass ? customClass : "form-input__input"}
         returnKeyType={returnKeyType as ReturnKeyTypeOptions}
         style={{
@@ -40,4 +38,4 @@ const CustomInput = ({
   );
 };
 
-export default CustomInput;
+export default CustomOnSubmitInput;

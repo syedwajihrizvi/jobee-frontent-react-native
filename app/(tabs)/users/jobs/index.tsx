@@ -2,6 +2,7 @@ import CompleteProfileReminder from "@/components/CompleteProfileReminder";
 import JobListing from "@/components/JobListing";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
+import RemovableBadge from "@/components/RemovableBadge";
 import SearchBar from "@/components/SearchBar";
 import { employmentTypes, experienceLevels, sounds, workArrangements } from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
@@ -19,7 +20,6 @@ import {
   Alert,
   Dimensions,
   FlatList,
-  ScrollView,
   StatusBar,
   Text,
   TextInput,
@@ -27,6 +27,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -337,7 +338,7 @@ const Index = () => {
               animatedStyle,
             ]}
           >
-            <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
+            <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
               <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-2">Filter Jobs</Text>
               <View>
                 <Text className="font-quicksand-medium text-md text-gray-900">Location</Text>
@@ -370,11 +371,17 @@ const Index = () => {
                 />
                 <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.companies?.map((company, index) => (
-                    <TouchableOpacity key={index}>
-                      <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-800 font-quicksand-medium">{company}</Text>
-                      </View>
-                    </TouchableOpacity>
+                    <RemovableBadge
+                      key={index}
+                      text={company}
+                      handlePress={() => {
+                        setTempFilterCount((prev) => prev - 1);
+                        setTempFilters({
+                          ...tempFilters,
+                          companies: tempFilters.companies?.filter((c) => c !== company) || [],
+                        });
+                      }}
+                    />
                   ))}
                 </View>
               </View>
@@ -438,52 +445,57 @@ const Index = () => {
                 />
                 <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.tags.map((tag, index) => (
-                    <TouchableOpacity key={index}>
-                      <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-800 font-quicksand-medium">{tag}</Text>
-                      </View>
-                    </TouchableOpacity>
+                    <RemovableBadge
+                      key={index}
+                      text={tag}
+                      handlePress={() => {
+                        setTempFilterCount((prev) => prev - 1);
+                        setTempFilters({
+                          ...tempFilters,
+                          tags: tempFilters.tags?.filter((t) => t !== tag) || [],
+                        });
+                      }}
+                    />
                   ))}
                 </View>
               </View>
               <View className="divider" />
-              <View className="flex flex-row justify-between items-center gap-2">
-                <View className="w-1/2">
-                  <Text>Min Salary</Text>
-                  <TextInput
-                    ref={locationInputRef}
-                    className="border border-black rounded-lg p-3 mt-2"
-                    returnKeyType="done"
-                    placeholder="e.g. 50000"
-                    onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
-                  />
-                </View>
-                <View className="w-1/2">
-                  <Text>Max Salary</Text>
-                  <TextInput
-                    ref={locationInputRef}
-                    className="border border-black rounded-lg p-3 mt-2"
-                    placeholder="e.g. 150000"
-                    returnKeyType="done"
-                    onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
-                  />
-                </View>
+              <View>
+                <Text>Min Salary</Text>
+                <TextInput
+                  ref={locationInputRef}
+                  className="border border-black rounded-lg p-3 mt-2"
+                  returnKeyType="done"
+                  placeholder="e.g. 50000"
+                  onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
+                />
               </View>
-              <View className="flex-row justify-center items-center gap-2 mb-20">
+              <View className="divider" />
+              <View>
+                <Text>Max Salary</Text>
+                <TextInput
+                  ref={locationInputRef}
+                  className="border border-black rounded-lg p-3 mt-2"
+                  placeholder="e.g. 150000"
+                  returnKeyType="done"
+                  onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
+                />
+              </View>
+              <View className="flex-col justify-center items-center gap-2 mb-20 mt-2">
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
+                  className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
                   onPress={handleFilterApply}
                 >
                   <Text className="font-quicksand-semibold text-md">Apply</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
+                  className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
                   onPress={handleClearFilters}
                 >
                   <Text className="font-quicksand-semibold text-md">Clear</Text>
                 </TouchableOpacity>
               </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </Animated.View>
         </>
       )}

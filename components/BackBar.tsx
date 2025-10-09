@@ -1,19 +1,28 @@
-import AntDesign from '@expo/vector-icons/AntDesign'
-import { router } from 'expo-router'
-import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { router } from "expo-router";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
-const BackBar = (
-  {label, optionalThirdItem}: {label:string, optionalThirdItem?: React.ReactNode}) => {
+type Props = {
+  label: string;
+  optionalThirdItem?: React.ReactNode;
+  optionalCallback?: () => void;
+};
+
+const BackBar = ({ label, optionalThirdItem, optionalCallback = () => {} }: Props) => {
+  const handlePress = () => {
+    optionalCallback();
+    router.back();
+  };
   return (
-      <View className='flex-row w-full justify-between items-center px-4'>
-        <TouchableOpacity onPress={() => router.back()} >
-          <AntDesign name="arrow-left" size={20} color="black"/>
-        </TouchableOpacity>
-        <Text className='text-lg font-semibold '>{label}</Text>
-        {optionalThirdItem ? optionalThirdItem : <View style={{width:24}}/>}
-      </View> 
-  )
-}
+    <View className="flex-row w-full justify-between items-center px-4">
+      <TouchableOpacity onPress={handlePress}>
+        <AntDesign name="arrow-left" size={20} color="black" />
+      </TouchableOpacity>
+      <Text className="text-lg font-semibold ">{label}</Text>
+      {optionalThirdItem ? optionalThirdItem : <View style={{ width: 24 }} />}
+    </View>
+  );
+};
 
-export default BackBar
+export default BackBar;

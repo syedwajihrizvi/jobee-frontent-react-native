@@ -23,7 +23,7 @@ interface BusinessSignUpParams {
 export type CustomInputProps = {
     placeholder: string;
     label: string?;
-    value: string;
+    value?: string;
     multiline?: boolean;
     style?: object;
     autocorrect?: boolean;
@@ -31,7 +31,8 @@ export type CustomInputProps = {
     returnKeyType?: string;
     keyboardType?: string;
     autoCapitalize?: string;
-    onChangeText: (text: string) => void;
+    onChangeText?: (text: string) => void;
+    onSubmitEditing?: (text: string) => void
 }
 
 export type CustomButtonProps = {
