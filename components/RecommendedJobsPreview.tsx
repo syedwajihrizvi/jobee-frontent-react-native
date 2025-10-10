@@ -5,7 +5,7 @@ import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const RecommendedJobsPreview = ({
@@ -69,6 +69,7 @@ const RecommendedJobsPreview = ({
           console.log(`RESULT OF QUICK APPLY: ${res}`);
           queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
           queryClient.invalidateQueries({ queryKey: ["jobs", "appliedJobs"] });
+          setAppliedToRecommended(true);
           handleBatchQuickApplySuccess(res || []);
         },
       },
@@ -128,7 +129,7 @@ const RecommendedJobsPreview = ({
       </TouchableOpacity>
 
       <Animated.View style={animatedStyle} className="overflow-hidden">
-        <View className="p-5">
+        <View className="px-5 py-5">
           {isLoadingRecommended ? (
             <View className="items-center py-8">
               <View
@@ -210,6 +211,7 @@ const RecommendedJobsPreview = ({
                     elevation: 4,
                   }}
                   onPress={handleQuickApplyToAll}
+                  disabled={appliedToRecommended}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center gap-2">
@@ -248,7 +250,7 @@ const RecommendedJobsPreview = ({
               ItemSeparatorComponent={() => <View className="h-2" />}
             />
           ) : (
-            <View className="items-center py-8">
+            <ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
               <View
                 className="w-16 h-16 bg-blue-100 rounded-full items-center justify-center mb-4"
                 style={{
@@ -284,7 +286,7 @@ const RecommendedJobsPreview = ({
                   <Text className="font-quicksand-bold text-white text-sm">Upload Resume</Text>
                 </View>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           )}
         </View>
       </Animated.View>
