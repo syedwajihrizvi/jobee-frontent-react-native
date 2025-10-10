@@ -67,6 +67,7 @@ export type Job = {
     description: string,
     businessName: string,
     companyId: number,
+    views: number,
     businessAccountId: number,
     experience: number,
     location: string,

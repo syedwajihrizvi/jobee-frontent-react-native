@@ -115,3 +115,15 @@ export const getUserAppliedJobs = async () => {
     const data = await result.json();
     return data;
 }
+
+export const addViewToJobs = async (jobId: number) => {
+
+    try {
+        const result = await fetch(`${JOBS_API_URL}/${jobId}/views`, {
+            method: 'PATCH'
+        })
+        console.log("Status of View: " + result.status)
+    } catch (error) {
+        console.error("Error adding view to job:", error)
+    }
+}    

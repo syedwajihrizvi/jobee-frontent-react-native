@@ -1,11 +1,11 @@
-import { EvilIcons } from "@expo/vector-icons";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import { EvilIcons, Feather } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import { TextInput, TouchableOpacity, View } from "react-native";
 
 const SearchBar = ({ placeholder, onSubmit }: { placeholder: string; onSubmit: (text: string) => void }) => {
   const [value, setValue] = useState("");
   const inputRef = useRef<TextInput>(null);
+
   return (
     <View
       className="search-bar-container"
@@ -29,17 +29,32 @@ const SearchBar = ({ placeholder, onSubmit }: { placeholder: string; onSubmit: (
       />
       {value.length > 0 && (
         <TouchableOpacity
-          className="absolute right-4"
+          className="absolute right-3"
+          style={{
+            width: 24,
+            height: 24,
+            backgroundColor: "#f3f4f6",
+            borderRadius: 12,
+            justifyContent: "center",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: 2,
+          }}
           onPress={() => {
             setValue("");
             inputRef.current?.blur();
             onSubmit("");
           }}
+          activeOpacity={0.7}
         >
-          <AntDesign name="close" size={18} color="red" />
+          <Feather name="x" size={16} color="#6b7280" />
         </TouchableOpacity>
       )}
     </View>
   );
 };
+
 export default SearchBar;

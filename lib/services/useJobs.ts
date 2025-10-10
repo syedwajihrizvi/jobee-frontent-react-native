@@ -132,10 +132,11 @@ export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
       },
     })
     const data : PagedResponse<Job> = await response.json()
-    return { jobs: data.content, nextPage: page + 1, hasMore: data.hasMore}
+    console.log("Fetched company jobs:", data);
+    return { jobs: data.content, nextPage: page + 1, hasMore: data.hasMore, totalJobs: data.totalElements}
   }
 
-  return useInfiniteQuery<{jobs: Job[]; nextPage: number; hasMore: boolean}, Error>({
+  return useInfiniteQuery<{jobs: Job[]; nextPage: number; hasMore: boolean; totalJobs: number}, Error>({
     queryKey: ['jobs', 'company', companyId, filters],
     queryFn: fetchCompanyJobs,
     initialPageParam: 0,

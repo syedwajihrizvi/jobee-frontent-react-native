@@ -8,7 +8,7 @@ import FavoriteJob from "@/components/FavoriteJob";
 import JobInfo from "@/components/JobInfo";
 import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
-import { applyToJob } from "@/lib/jobEndpoints";
+import { addViewToJobs, applyToJob } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob, useJobApplication } from "@/lib/services/useJobs";
 import { getEmploymentType, getWorkArrangement, onActionSuccess } from "@/lib/utils";
@@ -46,6 +46,13 @@ const JobDetails = () => {
   const userHasResume = user && user.documents && user.documents.some((doc) => doc.documentType === "RESUME");
   const queryClient = useQueryClient();
   const player = useAudioPlayer(sounds.popSound);
+
+  useEffect(() => {
+    const addView = async () => {
+      await addViewToJobs(Number(jobId));
+    };
+    addView();
+  }, [jobId]);
 
   useEffect(() => {
     if (user && (user as User).documents) {

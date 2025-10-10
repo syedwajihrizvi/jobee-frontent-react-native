@@ -261,7 +261,6 @@ const Index = () => {
     );
   };
 
-  console.log(showRecommendedJobsModalSuccess);
   return (
     <SafeAreaView className="relative flex-1 bg-white pb-20">
       <StatusBar hidden={true} />
