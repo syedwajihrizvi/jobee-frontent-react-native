@@ -1,12 +1,11 @@
 import BackBar from "@/components/BackBar";
+import FilterStatus from "@/components/FilterStatus";
 import { images } from "@/constants";
-import {
-  useApplicantsForJob,
-  useShortListedCandidatesForJob,
-} from "@/lib/services/useJobs";
+import { getS3ProfileImage } from "@/lib/s3Urls";
+import { useApplicantsForJob, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { getApplicationStatus } from "@/lib/utils";
-import { ApplicationSummary } from "@/type";
-import { Ionicons } from "@expo/vector-icons";
+import { ApplicantFilters, ApplicationSummary } from "@/type";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -21,12 +20,7 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
@@ -36,27 +30,12 @@ const Applications = () => {
   const { id, shortListed } = useLocalSearchParams();
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
-  const [filters, setFilters] = useState<{
-    locations: string[];
-    skills: string[];
-    education: string;
-  }>({ locations: [], skills: [], education: "Any" });
-  const { data: applicants, isLoading } = useApplicantsForJob(
-    Number(id),
-    filters
-  );
-  const { data: shortListedApplicants } = useShortListedCandidatesForJob(
-    Number(id)
-  );
-  const applicantList = shortListed
-    ? applicants?.filter((app) => shortListedApplicants?.includes(app.id))
-    : applicants;
+  const [filters, setFilters] = useState<ApplicantFilters>({ locations: [], skills: [], educations: "Any" });
+  const { data: applicants, isLoading } = useApplicantsForJob(Number(id), filters);
+  const { data: shortListedApplicants } = useShortListedCandidatesForJob(Number(id));
+  const applicantList = shortListed ? applicants?.filter((app) => shortListedApplicants?.includes(app.id)) : applicants;
   const [isOpen, setIsOpen] = useState(false);
-  const [tempFilters, setTempFilters] = useState<{
-    locations: string[];
-    skills: string[];
-    education: string;
-  }>({ locations: [], skills: [], education: "Any" });
+  const [tempFilters, setTempFilters] = useState<ApplicantFilters>({ locations: [], skills: [], educations: "Any" });
   const skillInputRef = useRef<TextInput>(null);
   const locationInputRef = useRef<TextInput>(null);
   const slideX = useSharedValue(panelWidth);
@@ -87,8 +66,9 @@ const Applications = () => {
   };
 
   const clearFilters = () => {
-    setTempFilters({ locations: [], skills: [], education: "Any" });
-    setFilters({ locations: [], skills: [], education: "Any" });
+    setTempFilters({ locations: [], skills: [], educations: "Any" });
+    setFilters({ locations: [], skills: [], educations: "Any" });
+    setFilterCount(0);
     setTempFilterCount(0);
   };
 
@@ -114,152 +94,294 @@ const Applications = () => {
     locationInputRef.current?.clear();
   };
 
+  const removeSkill = (skillToRemove: string) => {
+    setTempFilterCount((prev) => prev - 1);
+    setTempFilters({
+      ...tempFilters,
+      skills: tempFilters.skills.filter((skill) => skill !== skillToRemove),
+    });
+  };
+
+  const removeLocation = (locationToRemove: string) => {
+    setTempFilterCount((prev) => prev - 1);
+    setTempFilters({
+      ...tempFilters,
+      locations: tempFilters.locations.filter((location) => location !== locationToRemove),
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return { bg: "bg-amber-100", text: "text-amber-800", border: "border-amber-200" };
+      case "SHORTLISTED":
+        return { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" };
+      case "INTERVIEWED":
+        return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" };
+      default:
+        return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
+    }
+  };
+
+  const isShortListed = (applicantId: number) => {
+    return shortListedApplicants?.includes(applicantId);
+  };
+
   if (shortListed && applicantList?.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-white relative">
+      <SafeAreaView className="flex-1 bg-gray-50">
         <BackBar label="Shortlisted Applications" />
-        <View className="p-4 flex-1 justify-center items-center">
-          <Ionicons name="document-outline" size={64} color="#9CA3AF" />
-          <Text className="font-quicksand-bold text-xl text-gray-600 mt-4">
+        <View className="flex-1 justify-center items-center p-6">
+          <View
+            className="w-20 h-20 bg-amber-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="star" size={32} color="#f59e0b" />
+          </View>
+          <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">
             No Shortlisted Applications
           </Text>
-          <Text className="font-quicksand-regular text-gray-500 text-center mt-2">
-            Shortlisted applications will appear here when you shortlist
-            candidates for this job.
+          <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
+            Shortlisted applications will appear here when you shortlist candidates for this job.
           </Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const isShortListed = (applicantId: number) => {
-    return shortListedApplicants?.includes(applicantId);
+  const renderApplicantCard = ({ item }: { item: ApplicationSummary }) => {
+    const statusColors = getStatusColor(item.status);
+
+    return (
+      <TouchableOpacity
+        className="bg-white mx-4 mb-4 rounded-2xl p-5 border border-gray-100"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 6,
+        }}
+        activeOpacity={0.7}
+        onPress={() => router.push(`/businessJobs/applications/applicant/${item.id}`)}
+      >
+        <View className="flex-row items-start justify-between mb-4">
+          <View className="flex-row items-start gap-4 flex-1">
+            <View
+              className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
+              <Image
+                source={{
+                  uri: item.profileImageUrl ? getS3ProfileImage(item.profileImageUrl) : images.companyLogo,
+                }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            </View>
+            <View className="flex-1 mr-3">
+              <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">{item.fullName}</Text>
+              <Text className="font-quicksand-semibold text-base text-gray-700 mb-2">{item.title}</Text>
+              <View className="flex-row items-center gap-1">
+                <Feather name="map-pin" size={14} color="#6b7280" />
+                <Text className="font-quicksand-medium text-sm text-gray-600">{item.location}</Text>
+              </View>
+            </View>
+          </View>
+          <View className="items-end gap-2">
+            {isShortListed(item.id) && (
+              <View className="bg-amber-100 border border-amber-200 px-3 py-1 rounded-full">
+                <View className="flex-row items-center gap-1">
+                  <Feather name="star" size={12} color="#f59e0b" />
+                  <Text className="font-quicksand-bold text-xs text-amber-800">Shortlisted</Text>
+                </View>
+              </View>
+            )}
+            <View className={`${statusColors.bg} ${statusColors.border} border px-3 py-1 rounded-full`}>
+              <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
+                {getApplicationStatus(item.status)}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View className="flex-row gap-4 mb-4">
+          <View className="flex-1 bg-blue-50 border border-blue-200 rounded-xl p-3">
+            <View className="flex-row items-center gap-2">
+              <Feather name="mail" size={14} color="#3b82f6" />
+              <Text className="font-quicksand-medium text-sm text-blue-800 flex-1" numberOfLines={1}>
+                {item.email}
+              </Text>
+            </View>
+          </View>
+          <View className="flex-1 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+            <View className="flex-row items-center gap-2">
+              <Feather name="phone" size={14} color="#10b981" />
+              <Text className="font-quicksand-medium text-sm text-emerald-800">{item.phoneNumber}</Text>
+            </View>
+          </View>
+        </View>
+        <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+          <Text className="font-quicksand-bold text-sm text-gray-900 mb-2">Professional Summary</Text>
+          <Text className="font-quicksand-medium text-sm text-gray-700 leading-5" numberOfLines={3}>
+            {item.profileSummary || "No summary provided by the applicant."}
+          </Text>
+        </View>
+        <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
+          <View className="flex-row items-center gap-2">
+            <Feather name="calendar" size={14} color="#6b7280" />
+            <Text className="font-quicksand-medium text-sm text-gray-600">Applied recently</Text>
+          </View>
+          <View
+            className="w-8 h-8 bg-green-100 rounded-full items-center justify-center"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <Feather name="chevron-right" size={16} color="#6366f1" />
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
-  const renderApplicantCard = ({ item }: { item: ApplicationSummary }) => (
-    <TouchableOpacity
-      className="bg-white border border-gray-200 rounded-xl p-4 mb-3 shadow-sm"
-      activeOpacity={0.7}
-      onPress={() =>
-        router.push(`/businessJobs/applications/applicant/${item.id}`)
-      }
-    >
-      <View className="relative flex-row items-start justify-between mb-3">
-        {isShortListed(item.id) ? (
-          <View className="absolute top-0 right-0 bg-yellow-100 px-2 py-1 rounded-full">
-            <Text className="font-quicksand-bold text-sm">Shortlisted</Text>
-          </View>
-        ) : (
-          <View className="absolute top-0 right-0 bg-green-100 px-2 py-1 rounded-full">
-            <Text className="font-quicksand-bold text-sm color-green-800">
-              {getApplicationStatus(item.status)}
-            </Text>
-          </View>
-        )}
-        <View className="flex-row items-center gap-3">
-          <Image
-            source={{ uri: images.companyLogo }}
-            className="w-12 h-12 rounded-full border border-gray-200"
-            resizeMode="cover"
-          />
-          <View className="flex-1">
-            <Text className="font-quicksand-bold text-lg text-gray-900 w-2/3">
-              {item.fullName}
-            </Text>
-            <Text className="font-quicksand-medium text-sm text-gray-600">
-              {item.title} | {item.location}
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View className="flex-row">
-        <View className="flex-row items-center gap-2 flex-1">
-          <Ionicons name="mail-outline" size={16} color="#6B7280" />
-          <Text
-            className="font-quicksand-medium text-sm text-gray-700 flex-1"
-            numberOfLines={1}
-          >
-            {item.email}
-          </Text>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <Ionicons name="call-outline" size={16} color="#6B7280" />
-          <Text className="font-quicksand-medium text-sm text-gray-700">
-            {item.phoneNumber}
-          </Text>
-        </View>
-      </View>
-      <View>
-        <Text
-          className="font-quicksand-regular text-sm text-gray-800 leading-5"
-          numberOfLines={3}
-        >
-          {item.profileSummary || "No summary provided by the applicant."}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
   return (
-    <SafeAreaView className="flex-1 relative">
-      <BackBar label="Applications" />
-      <View className="p-4 flex-1">
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="font-quicksand-bold text-lg text-gray-900">
-            {applicantList?.length}{" "}
-            {applicantList?.length === 1 ? "Application" : "Applications"}
-          </Text>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <BackBar label={shortListed ? "Shortlisted Applications" : "All Applications"} />
+      <View
+        className="bg-white mx-4 mt-4 rounded-2xl p-5 border border-gray-100 mb-4"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 6,
+        }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View>
+            <Text className="font-quicksand-bold text-2xl text-gray-900">{applicantList?.length || 0}</Text>
+            <Text className="font-quicksand-medium text-base text-gray-600">
+              {applicantList?.length === 1 ? "Application" : "Applications"}
+            </Text>
+          </View>
+
           <TouchableOpacity
-            className="px-3 py-1 border border-blue-600 rounded-full"
+            className={`rounded-xl px-4 py-3 flex-row items-center gap-2 ${
+              filterCount > 0 ? "bg-green-500" : "bg-gray-100 border border-gray-200"
+            }`}
+            style={{
+              shadowColor: filterCount > 0 ? "#6366f1" : "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: filterCount > 0 ? 0.2 : 0.05,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
             onPress={openFilters}
+            activeOpacity={0.8}
           >
-            <Text className="font-quicksand-medium text-blue-600">
-              {filterCount > 0
-                ? filterCount > 1
-                  ? `${filterCount} Filters`
-                  : `${filterCount} Filter`
-                : "Filters"}
+            <Feather name="filter" size={16} color={filterCount > 0 ? "white" : "#6b7280"} />
+            <Text className={`font-quicksand-bold text-sm ${filterCount > 0 ? "text-white" : "text-gray-700"}`}>
+              {filterCount > 0 ? `${filterCount} Filter${filterCount > 1 ? "s" : ""}` : "Filters"}
             </Text>
           </TouchableOpacity>
         </View>
+      </View>
+      <FilterStatus
+        filterCount={filterCount}
+        filters={filters as ApplicantFilters}
+        openFilters={openFilters}
+        handleClearFilters={clearFilters}
+        filterType="applicant"
+      />
+      <View className="flex-1 mt-4">
         {isLoading ? (
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#3B82F6" />
-            <Text className="font-quicksand-medium text-gray-600 mt-2">
-              Loading applications...
-            </Text>
+            <View
+              className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+              style={{
+                shadowColor: "#6366f1",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <ActivityIndicator size="large" color="#6366f1" />
+            </View>
+            <Text className="font-quicksand-semibold text-lg text-gray-700">Loading applications...</Text>
           </View>
         ) : applicants?.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
-            <Ionicons name="document-outline" size={64} color="#9CA3AF" />
-            <Text className="font-quicksand-bold text-xl text-gray-600 mt-4">
-              No Applications Yet
-            </Text>
-            <Text className="font-quicksand-regular text-gray-500 text-center mt-2">
+          <View className="flex-1 justify-center items-center p-6">
+            <View
+              className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
+              style={{
+                shadowColor: "#3b82f6",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <Feather name="users" size={32} color="#3b82f6" />
+            </View>
+            <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Applications Yet</Text>
+            <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
               Applications will appear here when candidates apply for this job.
             </Text>
           </View>
         ) : (
-          <>
-            <FlatList
-              data={applicantList}
-              renderItem={renderApplicantCard}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            />
-          </>
+          <FlatList
+            data={applicantList}
+            renderItem={renderApplicantCard}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 120 }}
+          />
         )}
       </View>
       {!isOpen && (
-        <View className="w-full absolute bottom-0 bg-slate-100 p-4 pb-10 flex-row gap-2 items-center justify-center">
+        <View
+          className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-6"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 10,
+          }}
+        >
           <TouchableOpacity
-            className="flex flex-row  gap-4 apply-button w-4/6 items-center justify-center h-14"
+            className="bg-emerald-500 rounded-xl py-4 items-center justify-center"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
             onPress={() => console.log("Find Applicants")}
+            activeOpacity={0.8}
           >
-            <Text className="font-quicksand-semibold text-md">
-              Find Applicants
-            </Text>
-            <Ionicons name="sparkles" size={20} color="gold" />
+            <View className="flex-row items-center gap-2">
+              <Feather name="search" size={18} color="white" />
+              <Text className="font-quicksand-bold text-white text-base">Find More Applicants</Text>
+              <MaterialIcons name="auto-awesome" size={18} color="#fbbf24" />
+            </View>
           </TouchableOpacity>
         </View>
       )}
@@ -273,89 +395,89 @@ const Applications = () => {
                 left: 0,
                 bottom: 0,
                 width: "100%",
+                height: "200%",
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
                 zIndex: 9,
               }}
             />
           </TouchableWithoutFeedback>
           <Animated.View
-            className="animated-view"
             style={[
               {
                 position: "absolute",
                 top: 0,
                 right: 0,
                 width: panelWidth,
-                height: "150%",
+                height: "120%",
                 backgroundColor: "white",
                 zIndex: 100,
               },
               animatedStyle,
             ]}
           >
-            <View>
-              <Text className="font-quicksand-bold text-2xl text-gray-900 text-center my-4">
-                Filter Applicants
-              </Text>
-              <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
-                  Location
-                </Text>
+            <View className="px-6 py-20">
+              <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-6">Filter Applicants</Text>
+              <View className="mb-6">
+                <Text className="font-quicksand-bold text-lg text-gray-900 mb-3">Location</Text>
                 <TextInput
                   ref={locationInputRef}
-                  className="border border-black rounded-lg p-3 mt-2"
+                  className="border border-gray-300 rounded-xl p-4 mb-3"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                   placeholder="e.g. New York, San Francisco"
                   returnKeyType="done"
-                  onSubmitEditing={(event) =>
-                    addLocation(event.nativeEvent.text)
-                  }
+                  onSubmitEditing={(event) => addLocation(event.nativeEvent.text)}
                 />
-                <View className="flex-row flex-wrap gap-2 mt-3">
+                <View className="flex-row flex-wrap gap-2">
                   {tempFilters.locations.map((location, index) => (
-                    <TouchableOpacity key={index}>
-                      <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-800 font-quicksand-medium">
-                          {location}
-                        </Text>
+                    <TouchableOpacity key={index} onPress={() => removeLocation(location)} activeOpacity={0.7}>
+                      <View className="bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl flex-row items-center gap-1">
+                        <Text className="text-emerald-800 font-quicksand-medium text-sm">{location}</Text>
+                        <Feather name="x" size={12} color="#059669" />
                       </View>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
-              <View className="divider" />
-              <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
-                  Desired Skills
-                </Text>
+              <View className="mb-6">
+                <Text className="font-quicksand-bold text-lg text-gray-900 mb-3">Desired Skills</Text>
                 <TextInput
                   ref={skillInputRef}
-                  className="border border-black rounded-lg p-3 mt-2"
+                  className="border border-gray-300 rounded-xl p-4 mb-3"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                   placeholder="e.g. Python, React, SQL"
                   returnKeyType="done"
                   onSubmitEditing={(event) => {
                     addSkill(event.nativeEvent.text);
                   }}
                 />
-                <View className="flex-row flex-wrap gap-2 mt-3">
+                <View className="flex-row flex-wrap gap-2">
                   {tempFilters.skills.map((skill, index) => (
-                    <TouchableOpacity key={index}>
-                      <View className="bg-blue-100 px-3 py-1 rounded-full">
-                        <Text className="text-blue-800 font-quicksand-medium">
-                          {skill}
-                        </Text>
+                    <TouchableOpacity key={index} onPress={() => removeSkill(skill)} activeOpacity={0.7}>
+                      <View className="bg-blue-100 border border-blue-200 px-3 py-2 rounded-xl flex-row items-center gap-1">
+                        <Text className="text-blue-800 font-quicksand-medium text-sm">{skill}</Text>
+                        <Feather name="x" size={12} color="#2563eb" />
                       </View>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
-              <View className="divider" />
-              <View>
-                <Text className="font-quicksand-medium text-lg text-gray-900">
-                  Desired Education
-                </Text>
+              <View className="mb-8">
+                <Text className="font-quicksand-bold text-lg text-gray-900 mb-3">Education Level</Text>
                 <DropDownPicker
                   open={open}
-                  value={tempFilters.education}
+                  value={tempFilters.educations}
                   items={[
                     { label: "Any", value: "Any" },
                     { label: "High School", value: "High School" },
@@ -368,38 +490,56 @@ const Applications = () => {
                   ]}
                   setOpen={setOpen}
                   setValue={(callback) => {
-                    const value =
-                      typeof callback === "function"
-                        ? callback(tempFilters.education)
-                        : callback;
+                    const value = typeof callback === "function" ? callback(tempFilters.educations) : callback;
                     if (value !== "Any") setTempFilterCount((prev) => prev + 1);
                     else setTempFilterCount((prev) => prev - 1);
-                    setTempFilters({ ...tempFilters, education: value });
+                    setTempFilters({ ...tempFilters, educations: value });
                   }}
                   setItems={() => {}}
-                  containerStyle={{ width: "100%" }}
+                  style={{
+                    borderColor: "#d1d5db",
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                  }}
+                  dropDownContainerStyle={{
+                    borderColor: "#d1d5db",
+                    borderRadius: 12,
+                  }}
                   placeholder="Any"
                 />
               </View>
-              <View className="flex-row justify-center items-center gap-2">
+              <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                  className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+                  style={{
+                    shadowColor: "#6366f1",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 6,
+                    elevation: 4,
+                  }}
                   onPress={() => {
                     applyFilters();
                     closeFilters();
                   }}
+                  activeOpacity={0.8}
                 >
-                  <Text className="font-quicksand-semibold text-md text-white">
-                    Apply
-                  </Text>
+                  <Text className="font-quicksand-bold text-white text-base">Apply Filters</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                  className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 4,
+                    elevation: 2,
+                  }}
                   onPress={clearFilters}
+                  activeOpacity={0.7}
                 >
-                  <Text className="font-quicksand-semibold text-md text-white">
-                    Clear
-                  </Text>
+                  <Text className="font-quicksand-bold text-gray-700 text-base">Clear All</Text>
                 </TouchableOpacity>
               </View>
             </View>

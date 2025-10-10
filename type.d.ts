@@ -97,6 +97,12 @@ export type JobFilters = {
     workArrangements?: string[];
 }
 
+export type ApplicantFilters = {
+    locations: string[];
+    skills: string[];
+    educations: string
+}
+
 export type ProfileLinks = {
     icon: React.ReactNode;
     label: string;

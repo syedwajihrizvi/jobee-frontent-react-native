@@ -1,4 +1,4 @@
-import { Application, ApplicationSummary, Job, JobFilters, PagedResponse } from '@/type';
+import { ApplicantFilters, Application, ApplicationSummary, Job, JobFilters, PagedResponse } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getEducationLevel } from '../utils';
@@ -132,7 +132,6 @@ export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
       },
     })
     const data : PagedResponse<Job> = await response.json()
-    console.log("Fetched company jobs:", data);
     return { jobs: data.content, nextPage: page + 1, hasMore: data.hasMore, totalJobs: data.totalElements}
   }
 
@@ -167,14 +166,15 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
   })
 }
 
-export const useApplicantsForJob = (jobId?: number, filters?: { locations: string[], skills: string[], education: string }) => {
+export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) => {
   const queryParams = new URLSearchParams()
   const locations = filters?.locations || []
-  locations.forEach(location => queryParams.append('locations', location))
   const skills = filters?.skills || []
+  const educations = filters?.educations
+  locations.forEach(location => queryParams.append('locations', location))
   skills.forEach(skill => queryParams.append('skills', skill))
-  if (filters?.education && filters.education !== 'Any') 
-    queryParams.append('educationLevel', getEducationLevel(filters.education) ?? '')
+  if (educations && educations !== 'Any') 
+    queryParams.append('educationLevel', getEducationLevel(educations) ?? '')
   const params = queryParams.toString()
   const fetchApplicantsForJob = async () => {
     const response = await fetch(`${APPLICATIONS_API_URL}/job/${jobId}?${params}`, {
