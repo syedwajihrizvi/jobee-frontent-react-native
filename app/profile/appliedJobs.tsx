@@ -9,37 +9,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const AppliedJobs = () => {
   const { user } = useAuthStore();
-  const { data: jobs, isLoading: isLoadingJobs } = useJobsByUserApplications(
-    user?.id
-  );
+  const { data: jobs, isLoading: isLoadingJobs } = useJobsByUserApplications(user?.id);
   return (
     <SafeAreaView className="relative flex-1 bg-white">
       <BackBar label="Jobs I've Applied To" />
       {isLoadingJobs ? (
-        <ActivityIndicator
-          size="large"
-          color="#0000ff"
-          className="flex-1 justify-center items-center"
-        />
+        <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
         <FlatList
           className="w-full p-2"
           data={jobs || []}
-          renderItem={({
-            item,
-            index,
-          }: {
-            item: { job: Job; status: string };
-            index: number;
-          }) => (
+          renderItem={({ item, index }: { item: { job: Job; status: string; appliedAt: string }; index: number }) => (
             <JobListing
               key={index}
               job={item.job}
               showFavorite={false}
               showStatus={true}
-              showQuickApply={false}
+              showQuickApply={true}
               canQuickApply={false}
               status={item.status}
+              appliedAt={item.appliedAt}
             />
           )}
           ItemSeparatorComponent={() => <View className="divider" />}

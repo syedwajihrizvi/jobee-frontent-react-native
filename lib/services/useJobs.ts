@@ -105,7 +105,7 @@ export const useJobsByUserApplications = (userId?: number) => {
     return data
   }
 
-  return useQuery<{job: Job, status: string}[], Error>({
+  return useQuery<{job: Job, status: string, appliedAt: string}[], Error>({
     queryKey: ['jobs', 'applications', userId],
     queryFn: fetchAppliedJobs,
     staleTime: 1000 * 60 * 5,

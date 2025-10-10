@@ -1,6 +1,7 @@
 import CompleteProfileReminder from "@/components/CompleteProfileReminder";
 import JobListing from "@/components/JobListing";
 import QuickApplyModal from "@/components/QuickApplyModal";
+import RecommededJobApplySuccessModal from "@/components/RecommededJobApplySuccessModal";
 import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
 import RemovableBadge from "@/components/RemovableBadge";
 import SearchBar from "@/components/SearchBar";
@@ -9,8 +10,8 @@ import { quickApplyToJob } from "@/lib/jobEndpoints";
 import { useJobs, useRecommendedJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
 import { hasUserAppliedToJob, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import { JobFilters, User } from "@/type";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Application, JobFilters, User } from "@/type";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
 import { Redirect, router } from "expo-router";
@@ -54,6 +55,7 @@ const Index = () => {
   });
 
   const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
+  const [showRecommendedJobsModalSuccess, setShowRecommendedJobsModalSuccess] = useState(false);
   const [quickApplyJob, setQuickApplyJob] = useState<number | null>(null);
   const [quickApplyLabel, setQuickApplyLabel] = useState("");
   const [tempFilterCount, setTempFilterCount] = useState(0);
@@ -63,7 +65,7 @@ const Index = () => {
   const { data: appliedJobs, isLoading: isAppliedJobsLoading } = useUserAppliedJobs();
   const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated } = useAuthStore();
+  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated, setUser } = useAuthStore();
   const user = authUser as User | null;
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(
     !user?.profileComplete && isAuthenticated
@@ -225,6 +227,11 @@ const Index = () => {
     setShowQuickApplyModal(true);
   };
 
+  const updateUserApplications = (newApplications: Application[]) => {
+    const updatedApplications = [...newApplications, ...(user?.applications || [])];
+    setUser(user ? { ...user, applications: updatedApplications } : user);
+  };
+
   const handleQuickApplyClose = async (apply: boolean) => {
     if (apply && quickApplyJob) {
       const res = await quickApplyToJob(quickApplyJob);
@@ -234,9 +241,11 @@ const Index = () => {
         });
         queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
         setLocalApplyJobs((prev) => [...prev, quickApplyJob]);
+        updateUserApplications([res]);
         player.seekTo(0);
         player.play();
         await onActionSuccess();
+        setShowRecommendedJobsModalSuccess(true);
       }
     }
     setQuickApplyJob(null);
@@ -251,28 +260,146 @@ const Index = () => {
       !hasUserAppliedToJob(user, jobId)
     );
   };
+
+  console.log(showRecommendedJobsModalSuccess);
   return (
     <SafeAreaView className="relative flex-1 bg-white pb-20">
       <StatusBar hidden={true} />
-      <View className="w-full flex-row items-center justify-center gap-4">
+      <View className="w-full items-center justify-center mb-4">
         <SearchBar placeholder="Search for Jobs..." onSubmit={handleSearchSubmit} />
-        <TouchableOpacity onPress={openFilters} className="relative">
-          <Ionicons name="filter-circle-outline" size={30} color="black" />
-          <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center">
-            <Text className="text-white font-quicksand-bold">{filterCount}</Text>
-          </View>
-        </TouchableOpacity>
       </View>
       {isAuthenticated && (
-        <View className="px-3 my-1">
+        <View className="m-4 my-2">
           <RecommendedJobsPreview
             recommendedJobs={recommendedJobs}
             isLoadingRecommended={isLoadingRecommended}
             isViewingRecommended={isViewingRecommended}
             handleViewAll={() => setIsViewRecommended(!isViewingRecommended)}
+            handleBatchQuickApplySuccess={async (newApplications: Application[]) => {
+              const newJobIds = newApplications.map((app) => app.jobId);
+              setLocalApplyJobs((prev) => [...prev, ...newJobIds]);
+              updateUserApplications(newApplications);
+              player.seekTo(0);
+              player.play();
+              await onActionSuccess();
+              setShowRecommendedJobsModalSuccess(true);
+            }}
           />
         </View>
       )}
+      <View
+        className="mx-4 mb-2 bg-white rounded-xl p-3 border border-gray-200"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 4,
+        }}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
+            <View className="w-6 h-6 bg-indigo-100 rounded-full items-center justify-center">
+              <Feather name="filter" size={12} color="#6366f1" />
+            </View>
+            <Text className="font-quicksand-bold text-sm text-gray-800">Active Filters ({filterCount})</Text>
+          </View>
+          <View className="flex-row gap-1">
+            <TouchableOpacity
+              onPress={openFilters}
+              className="bg-green-50 border border-green-200 px-3 py-1 rounded-full"
+              activeOpacity={0.7}
+            >
+              <Text className="font-quicksand-semibold text-xs text-green-600">Open Filters</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleClearFilters}
+              className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
+              activeOpacity={0.7}
+            >
+              <Text className="font-quicksand-semibold text-xs text-red-600">Clear All</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {filterCount > 0 && <View className="h-2" />}
+        <View className="flex-row flex-wrap gap-2">
+          {filters.search && (
+            <View className="bg-blue-50 border border-blue-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+              <Feather name="search" size={10} color="#3b82f6" />
+              <Text className="font-quicksand-medium text-xs text-blue-800" numberOfLines={1}>
+                {filters.search}
+              </Text>
+            </View>
+          )}
+          {filters.locations.map((location, index) => (
+            <View
+              key={index}
+              className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+            >
+              <Feather name="map-pin" size={10} color="#10b981" />
+              <Text className="font-quicksand-medium text-xs text-emerald-800">{location}</Text>
+            </View>
+          ))}
+          {filters.companies?.map((company, index) => (
+            <View
+              key={index}
+              className="bg-purple-50 border border-purple-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+            >
+              <FontAwesome5 name="building" size={10} color="#8b5cf6" />
+              <Text className="font-quicksand-medium text-xs text-purple-800">{company}</Text>
+            </View>
+          ))}
+          {filters.employmentTypes?.map((type, index) => (
+            <View
+              key={index}
+              className="bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+            >
+              <Feather name="clock" size={10} color="#6366f1" />
+              <Text className="font-quicksand-medium text-xs text-indigo-800">
+                {employmentTypes.find((et) => et.value === type)?.label || type}
+              </Text>
+            </View>
+          ))}
+          {filters.workArrangements?.map((arrangement, index) => (
+            <View
+              key={index}
+              className="bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+            >
+              <Feather name="home" size={10} color="#f59e0b" />
+              <Text className="font-quicksand-medium text-xs text-amber-800">
+                {workArrangements.find((wa) => wa.value === arrangement)?.label || arrangement}
+              </Text>
+            </View>
+          ))}
+          {filters.experience && (
+            <View className="bg-green-50 border border-green-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+              <Feather name="trending-up" size={10} color="#22c55e" />
+              <Text className="font-quicksand-medium text-xs text-green-800">
+                {experienceLevels.find((el) => el.value === filters.experience)?.label || filters.experience} years
+              </Text>
+            </View>
+          )}
+          {filters.tags.map((tag, index) => (
+            <View
+              key={index}
+              className="bg-orange-50 border border-orange-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+            >
+              <Feather name="code" size={10} color="#f97316" />
+              <Text className="font-quicksand-medium text-xs text-orange-800">{tag}</Text>
+            </View>
+          ))}
+          {(filters.minSalary || filters.maxSalary) && (
+            <View className="bg-teal-50 border border-teal-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+              <Feather name="dollar-sign" size={10} color="#14b8a6" />
+              <Text className="font-quicksand-medium text-xs text-teal-800">
+                {filters.minSalary ? `$${filters.minSalary.toLocaleString()}` : "$0"}
+                {" - "}
+                {filters.maxSalary ? `$${filters.maxSalary.toLocaleString()}` : "∞"}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
       {!isAuthLoading && showProfileCompleteReminder && (
         <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater} />
       )}
@@ -280,7 +407,7 @@ const Index = () => {
         <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
         <FlatList
-          className="w-full p-2"
+          className="w-full px-2"
           data={isViewingRecommended ? recommendedJobs : jobs?.pages.flatMap((page) => page.jobs) || []} // Simulating multiple job listings
           renderItem={({ item, index }) => {
             let userApplication = hasUserAppliedToJob(user, item.id);
@@ -291,6 +418,7 @@ const Index = () => {
                 job={item}
                 showFavorite={showFavorite}
                 showStatus={!showFavorite}
+                appliedAt={userApplication && userApplication.appliedAt}
                 status={userApplication && userApplication.status}
                 canQuickApply={canQuickApply(item.id)}
                 handleQuickApply={() => handleQuickApply(item.id, item.title, item.businessName)}
@@ -499,6 +627,12 @@ const Index = () => {
           </Animated.View>
         </>
       )}
+      <RecommededJobApplySuccessModal
+        showRecommendedJobsModalSuccess={showRecommendedJobsModalSuccess}
+        setShowRecommendedJobsModalSuccess={setShowRecommendedJobsModalSuccess}
+        recommendedJobs={recommendedJobs || []}
+      />
+
       <QuickApplyModal
         visible={showQuickApplyModal}
         label={quickApplyLabel}

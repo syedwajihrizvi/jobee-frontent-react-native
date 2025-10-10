@@ -116,13 +116,13 @@ const Profile = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white h-full">
+    <SafeAreaView className="flex-1 bg-white h-full pb-20">
       <BackBar label="Profile" />
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" className="mt-20" />
       ) : (
         <View className="p-4">
-          <View className="flex flex-row items-start">
+          <View className="flex flex-col items-center">
             <TouchableOpacity className="relative" onPress={handleProfileImagePicker}>
               {uploadingUserProfileImage ? (
                 <ActivityIndicator size="small" color="#0000ff" />

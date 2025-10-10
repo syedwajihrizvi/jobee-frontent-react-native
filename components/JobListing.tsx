@@ -1,4 +1,4 @@
-import { getApplicationStatus, getEmploymentType, getWorkArrangement } from "@/lib/utils";
+import { formatDate, getApplicationStatus, getEmploymentType, getWorkArrangement } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -15,12 +15,14 @@ const JobListing = ({
   status,
   showQuickApply = true,
   canQuickApply = true,
+  appliedAt,
   handleQuickApply,
 }: {
   job: Job;
   showFavorite?: boolean;
   showStatus?: boolean;
   status?: string;
+  appliedAt?: string;
   showQuickApply?: boolean;
   canQuickApply?: boolean;
   handleQuickApply?: () => void;
@@ -28,7 +30,7 @@ const JobListing = ({
   const { isAuthenticated } = useAuthStore();
 
   const renderQuickApply = () => {
-    if (isAuthenticated && !canQuickApply) {
+    if (appliedAt && isAuthenticated) {
       return (
         <View
           className="bg-emerald-100 rounded-xl px-4 py-2 border border-emerald-200"
@@ -42,7 +44,9 @@ const JobListing = ({
         >
           <View className="flex-row items-center gap-2">
             <Feather name="check-circle" size={14} color="#059669" />
-            <Text className="font-quicksand-bold text-sm text-emerald-700">Applied</Text>
+            <Text className="font-quicksand-bold text-sm text-emerald-700">
+              Applied on {appliedAt ? formatDate(appliedAt) : ""}
+            </Text>
           </View>
         </View>
       );
@@ -155,7 +159,7 @@ const JobListing = ({
         </ScrollView>
       )}
       <View className="flex-row items-center justify-between">
-        {showQuickApply ? renderQuickApply() : <View />}
+        {showQuickApply && renderQuickApply()}
         <TouchableOpacity
           onPress={() => router.push(`/jobs/${job.id}`)}
           className="bg-gray-100 rounded-xl px-4 py-2 border border-gray-200"

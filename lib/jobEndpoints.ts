@@ -39,7 +39,23 @@ export const quickApplyToJob = async (jobId: number) => {
     })
     if (result.status !== 201) return null;
     const data = await result.json();
-    return data;
+    return data as Application;
+}
+
+export const quickApplyBatch = async (jobIds: number[]) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const result = await fetch(`${APPLICATION_API_URL}/quickApplyBatch`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ jobIds })
+    })
+    if (result.status !== 200) return null;
+    const data = await result.json();
+    return data.applications as Application[];
 }
 
 export const shortListCandidate = async ({applicationId}: {applicationId: number}) => {

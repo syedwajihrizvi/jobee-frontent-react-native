@@ -106,7 +106,7 @@
   }
 
   .search-bar-container {
-    width: 80%;
+    width: 90%;
     flex-direction: row;
     align-items: center;
     gap: 12px;

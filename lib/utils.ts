@@ -138,7 +138,6 @@ export const convert10DigitNumberToPhoneFormat = (num: string | undefined) => {
 
 export const onActionSuccess = async () => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
 }
 
 export const hasUserAppliedToJob = (user: User | null, jobId: number) : Application | undefined => {
