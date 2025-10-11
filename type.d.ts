@@ -345,6 +345,7 @@ export type CreateInterviewForm = {
     location: string;
     meetingLink: string;
     phoneNumber: string;
+    preparationTipsFromInterviewer: string[];
 }
 
 export type InterviewDetails = {

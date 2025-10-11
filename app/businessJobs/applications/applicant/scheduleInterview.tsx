@@ -1,25 +1,15 @@
 import BackBar from "@/components/BackBar";
-import {
-  createInterview,
-  getMostRecentInterviewForJob,
-} from "@/lib/interviewEndpoints";
+import CustomMultilineInput from "@/components/CustomMultilineInput";
+import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, CreateInterviewForm } from "@/type";
-import { AntDesign } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { Feather } from "@expo/vector-icons";
+import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Keyboard, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ScheduleInterview = () => {
@@ -35,21 +25,39 @@ const ScheduleInterview = () => {
     location: "",
     meetingLink: "",
     phoneNumber: "",
+    preparationTipsFromInterviewer: [],
   };
   const { applicantId, jobId, candidateId } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
   const conductorNameRef = useRef<TextInput>(null);
   const conductorEmailRef = useRef<TextInput>(null);
-  const addConductorBottomSheetRef = useRef<BottomSheet>(null);
-  const [interviewDetails, setInterviewDetails] = useState<CreateInterviewForm>(
-    { ...defaultInterviewForm }
-  );
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const notesFooterRef = useRef<View>(null);
+  const interviewerConductorsRef = useRef<View>(null);
+  const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
+  const [interviewDetails, setInterviewDetails] = useState<CreateInterviewForm>({ ...defaultInterviewForm });
   const [conductorName, setConductorName] = useState("");
   const [conductorEmail, setConductorEmail] = useState("");
+  const [preparationTip, setPreparationTip] = useState("");
+  const [viewingBottomSheetFor, setViewingBottomSheetFor] = useState<"interviewer" | "note">("interviewer");
   const [loadingNewInterview, setLoadingNewInterview] = useState(false);
   const [addedSelf, setAddedSelf] = useState(false);
+  const [snapPoints, setSnapPoints] = useState<string[]>(["30%", "40%"]);
   const user = authUser as BusinessUser | null;
+
+  useEffect(() => {
+    const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setSnapPoints(["60%", "70%"]);
+    });
+    const keyboardHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setSnapPoints(["30%", "40%"]);
+    });
+    return () => {
+      keyboardShowListener.remove();
+      keyboardHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -57,13 +65,7 @@ const ScheduleInterview = () => {
       try {
         const interview = await getMostRecentInterviewForJob(Number(jobId));
         if (isMounted && interview) {
-          const {
-            title,
-            description,
-            interviewType,
-            interviewers,
-            otherInterviewers,
-          } = interview;
+          const { title, description, interviewType, interviewers, otherInterviewers } = interview;
           const conductors = [
             ...interviewers.map((interviewer) => ({
               name: interviewer.name,
@@ -71,11 +73,7 @@ const ScheduleInterview = () => {
             })),
             ...otherInterviewers,
           ];
-          if (
-            conductors.findIndex(
-              (conductor) => conductor.email === user?.email
-            ) > -1
-          ) {
+          if (conductors.findIndex((conductor) => conductor.email === user?.email) > -1) {
             setAddedSelf(true);
           }
           setInterviewDetails((prev) => ({
@@ -96,7 +94,6 @@ const ScheduleInterview = () => {
     return () => {
       isMounted = false;
     };
-    // Check if an interview for this job already exists. If it does, prefill the form
   }, [user, jobId]);
 
   const handleInterviewFormSubmit = async () => {
@@ -152,12 +149,7 @@ const ScheduleInterview = () => {
     }
     setLoadingNewInterview(true);
     try {
-      const res = await createInterview(
-        interviewDetails,
-        Number(jobId),
-        Number(candidateId),
-        Number(applicantId)
-      );
+      const res = await createInterview(interviewDetails, Number(jobId), Number(candidateId), Number(applicantId));
       if (res) {
         Alert.alert("Success", "Interview created successfully.");
         queryClient.invalidateQueries({
@@ -215,8 +207,7 @@ const ScheduleInterview = () => {
   const addConductorToConductors = () => {
     const currInterviewConductors = interviewDetails?.conductors || [];
     const index = currInterviewConductors.findIndex(
-      (conductor) =>
-        conductor.email === conductorEmail && conductor.name === conductorName
+      (conductor) => conductor.email === conductorEmail && conductor.name === conductorName
     );
     if (index > -1) {
       Alert.alert("Error", "This conductor is already added.");
@@ -232,9 +223,14 @@ const ScheduleInterview = () => {
     }));
     setConductorEmail("");
     setConductorName("");
-    conductorEmailRef.current?.clear();
     conductorNameRef.current?.clear();
-    addConductorBottomSheetRef.current?.close();
+    conductorEmailRef.current?.clear();
+    bottomSheetRef.current?.close();
+    setTimeout(() => {
+      interviewerConductorsRef.current?.measure((x, y, width, height, pageX, pageY) => {
+        scrollViewRef.current?.scrollToPosition(0, pageY - 150, true);
+      });
+    }, 300);
   };
 
   const removeConductor = (index: number) => {
@@ -244,142 +240,399 @@ const ScheduleInterview = () => {
       ...prev,
       conductors: currInterviewConductors,
     }));
-    if (
-      user &&
-      currInterviewConductors.findIndex(
-        (conductor) => conductor.email === user.email
-      ) === -1
-    ) {
+    if (user && currInterviewConductors.findIndex((conductor) => conductor.email === user.email) === -1) {
       setAddedSelf(false);
     }
+  };
+
+  const addNoteToPrepatationTips = () => {
+    const currPreparationTips = interviewDetails?.preparationTipsFromInterviewer || [];
+    const index = currPreparationTips.findIndex(
+      (tip) => tip.replace(" ", "").trim() === preparationTip.replace(" ", "").trim()
+    );
+    if (index > -1) {
+      Alert.alert("Error", "This note is already added.");
+    }
+    currPreparationTips.push(preparationTip.trim());
+    setInterviewDetails((prev) => ({
+      ...prev,
+      preparationTipsFromInterviewer: currPreparationTips,
+    }));
+    setPreparationTip("");
+    bottomSheetRef.current?.close();
+
+    setTimeout(() => {
+      notesFooterRef.current?.measure((x, y, width, height, pageX, pageY) => {
+        scrollViewRef.current?.scrollToPosition(0, pageY - 150, true);
+      });
+    }, 300);
+  };
+
+  const removeNote = (index: number) => {
+    const currPreparationTips = interviewDetails?.preparationTipsFromInterviewer || [];
+    currPreparationTips.splice(index, 1);
+    setInterviewDetails((prev) => ({
+      ...prev,
+      preparationTipsFromInterviewer: currPreparationTips,
+    }));
   };
 
   const closeAddConductorBottomSheet = () => {
     setConductorEmail("");
     setConductorName("");
+    setPreparationTip("");
     conductorEmailRef.current?.clear();
     conductorNameRef.current?.clear();
-    addConductorBottomSheetRef.current?.close();
+    Keyboard.dismiss();
+    bottomSheetRef.current?.close();
   };
 
-  const renderInterviewTypeButtonClass = (type: string) => {
-    const baseColor =
-      interviewDetails.interviewType === type
-        ? "bg-green-100"
-        : "border border-black";
-    return `${baseColor} px-4 py-2 rounded-full flex-row items-center gap-1`;
+  const getInterviewTypeButtonStyle = (type: string) => {
+    const isSelected = interviewDetails.interviewType === type;
+    return {
+      container: `px-4 py-3 rounded-xl flex-row items-center gap-2 border ${
+        isSelected ? "bg-green-500 border-green-500" : "bg-white border-gray-300"
+      }`,
+      text: `font-quicksand-semibold text-sm ${isSelected ? "text-white" : "text-gray-700"}`,
+      shadow: isSelected
+        ? {
+            shadowColor: "#6366f1",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 3,
+          }
+        : {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 2,
+            elevation: 1,
+          },
+    };
   };
+
+  const handleBottomSheetExpand = (type: "interviewer" | "note") => {
+    setViewingBottomSheetFor(type);
+    bottomSheetRef.current?.expand();
+  };
+
+  const getInterviewTypeIcon = (type: string) => {
+    const isSelected = interviewDetails.interviewType === type;
+    const color = isSelected ? "white" : "#6b7280";
+
+    switch (type) {
+      case "IN_PERSON":
+        return <Feather name="users" size={16} color={color} />;
+      case "ONLINE":
+        return <Feather name="video" size={16} color={color} />;
+      case "PHONE":
+        return <Feather name="phone" size={16} color={color} />;
+      default:
+        return null;
+    }
+  };
+
+  function renderInterviewTypeText(interviewType: string): string {
+    if (interviewType === "IN_PERSON") return "Location";
+    if (interviewType === "ONLINE") return "Meeting Link";
+    if (interviewType === "PHONE") return "Phone Number";
+    return "";
+  }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-50 relative">
       <BackBar label="Schedule Interview" />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+      <KeyboardAwareScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        className="flex-1"
+        enableResetScrollToCoords={false}
       >
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 10 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <View
+          className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 12,
+            elevation: 6,
+          }}
         >
-          <View className="flex flex-col gap-4 mt-4 p-4">
-            <View className="form-input">
-              <Text className="form-input__label">Title</Text>
-              <TextInput
-                placeholder="eg. Technical Interview"
-                value={interviewDetails?.title}
-                onFocus={() => addConductorBottomSheetRef.current?.close()}
-                onChangeText={(text) =>
-                  setInterviewDetails((prev) => ({ ...prev, title: text }))
-                }
-                className="form-input__input"
-              />
+          <View className="flex-row items-center gap-3 mb-3">
+            <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+              <Feather name="calendar" size={20} color="#6366f1" />
             </View>
-            <View className="form-input">
-              <Text className="form-input__label">Interview Description</Text>
-              <TextInput
-                placeholder="eg. Discuss project experience and technical skills"
-                className="form-input__input"
-                onFocus={() => addConductorBottomSheetRef.current?.close()}
-                value={interviewDetails?.description}
-                onChangeText={(text) =>
-                  setInterviewDetails((prev) => ({
-                    ...prev,
-                    description: text,
-                  }))
-                }
-                multiline={true}
-                blurOnSubmit={true}
-                textAlignVertical="top"
-              />
-            </View>
-            <View className="form-input">
-              <Text className="form-input__label">Conducted By</Text>
-              <View className="flex-row items-center gap-2">
-                {!addedSelf ? (
-                  <TouchableOpacity
-                    className="bg-green-100 px-4 py-2 rounded-full flex-row items-center gap-1"
-                    onPress={addBusinessUserToConductors}
-                  >
-                    <Text className="font-quicksand-medium text-black text-sm">
-                      Add Yourself
-                    </Text>
-                    <AntDesign name="plus" size={12} color="black" />
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    className="bg-red-100 px-4 py-2 rounded-full flex-row items-center gap-1"
-                    onPress={removeBusinessUserFromConductors}
-                  >
-                    <Text className="font-quicksand-medium text-black text-sm">
-                      Remove Yourself
-                    </Text>
-                    <AntDesign name="minus" size={12} color="black" />
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  className="bg-green-100 px-4 py-2 rounded-full flex-row items-center gap-1"
-                  onPress={() => addConductorBottomSheetRef.current?.expand()}
-                >
-                  <Text className="font-quicksand-medium text-black text-sm">
-                    Add Conductor
-                  </Text>
-                  <AntDesign name="plus" size={12} color="black" />
-                </TouchableOpacity>
-              </View>
-              {interviewDetails.conductors &&
-                interviewDetails.conductors.length > 0 && (
-                  <View>
-                    {interviewDetails.conductors.map((conductor, index) => {
-                      return (
-                        <View
-                          key={index}
-                          className="flex flex-row gap-1 items-center"
-                        >
-                          <Text className="font-quicksand-bold text-md">
-                            {conductor.name} | {conductor.email}
-                          </Text>
-                          <TouchableOpacity>
-                            <AntDesign
-                              name="minus"
-                              size={12}
-                              color="black"
-                              onPress={() => removeConductor(index)}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-            </View>
-            <View className="flex-row gap-2 items-center justify-between">
-              <View className="form-input w-1/2">
-                <Text className="form-input__label">Date</Text>
+            <Text className="font-quicksand-bold text-xl text-gray-900">Interview Details</Text>
+          </View>
+          <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
+            Fill in the details below to schedule an interview with the candidate.
+          </Text>
+        </View>
+
+        <View className="px-4 mt-6 gap-6">
+          {/* Basic Information */}
+          <View
+            className="bg-white rounded-2xl p-5 border border-gray-100"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Basic Information</Text>
+
+            <View className="gap-4">
+              <View>
+                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Interview Title *</Text>
                 <TextInput
-                  placeholder="eg. YYYY-MM-DD"
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
+                  placeholder="e.g. Technical Interview"
+                  value={interviewDetails?.title}
+                  autoCapitalize="words"
+                  onFocus={() => bottomSheetRef.current?.close()}
+                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, title: text }))}
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                />
+              </View>
+
+              <View>
+                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Description *</Text>
+                <CustomMultilineInput
+                  numberOfLines={4}
+                  placeholder="Discuss project experience and technical skills..."
+                  value={interviewDetails?.description}
+                  customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900 min-h-[100px]"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                  onChangeText={(text) =>
+                    setInterviewDetails((prev) => ({
+                      ...prev,
+                      description: text,
+                    }))
+                  }
+                />
+              </View>
+            </View>
+          </View>
+
+          <View
+            className="bg-white rounded-2xl p-5 border border-gray-100"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Interview Panel *</Text>
+            <View className="flex-row gap-3 mb-4">
+              {!addedSelf ? (
+                <TouchableOpacity
+                  className="bg-emerald-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                  style={{
+                    shadowColor: "#10b981",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  }}
+                  onPress={addBusinessUserToConductors}
+                  activeOpacity={0.8}
+                >
+                  <Feather name="user-plus" size={14} color="white" />
+                  <Text className="font-quicksand-semibold text-white text-sm">Add Yourself</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  className="bg-red-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                  style={{
+                    shadowColor: "#ef4444",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  }}
+                  onPress={removeBusinessUserFromConductors}
+                  activeOpacity={0.8}
+                >
+                  <Feather name="user-minus" size={14} color="white" />
+                  <Text className="font-quicksand-semibold text-white text-sm">Remove Yourself</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                className="bg-blue-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                style={{
+                  shadowColor: "#3b82f6",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+                onPress={() => handleBottomSheetExpand("interviewer")}
+                activeOpacity={0.8}
+              >
+                <Feather name="plus" size={14} color="white" />
+                <Text className="font-quicksand-semibold text-white text-sm">Add Interviewer</Text>
+              </TouchableOpacity>
+            </View>
+
+            {interviewDetails.conductors && interviewDetails.conductors.length > 0 && (
+              <View className="gap-3">
+                <Text className="font-quicksand-semibold text-sm text-gray-700">
+                  Interview Panel ({interviewDetails.conductors.length})
+                </Text>
+                {interviewDetails.conductors.map((conductor, index) => (
+                  <View
+                    key={index}
+                    className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  >
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-base text-gray-900">{conductor.name}</Text>
+                      <Text className="font-quicksand-medium text-sm text-gray-600">{conductor.email}</Text>
+                    </View>
+                    <TouchableOpacity
+                      className="w-8 h-8 bg-red-100 rounded-full items-center justify-center"
+                      onPress={() => removeConductor(index)}
+                      activeOpacity={0.7}
+                    >
+                      <Feather name="trash-2" size={14} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            <View ref={interviewerConductorsRef} />
+          </View>
+
+          <View
+            className="bg-white rounded-2xl p-5 border border-gray-100"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">Interview Notes for Candidate</Text>
+            <Text className="font-quicksand-medium text-base text-gray-600 leading-6 mb-3">
+              These notes will be shared with the candidate to help them prepare for the interview.
+            </Text>
+            <View className="flex-row gap-3 mb-4">
+              <TouchableOpacity
+                className="bg-blue-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                style={{
+                  shadowColor: "#3b82f6",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+                onPress={() => handleBottomSheetExpand("note")}
+                activeOpacity={0.8}
+              >
+                <Feather name="plus" size={14} color="white" />
+                <Text className="font-quicksand-semibold text-white text-sm">Add Note</Text>
+              </TouchableOpacity>
+            </View>
+
+            {interviewDetails.preparationTipsFromInterviewer &&
+              interviewDetails.preparationTipsFromInterviewer.length > 0 && (
+                <View className="gap-3">
+                  <Text className="font-quicksand-semibold text-sm text-gray-700">
+                    Interview Notes ({interviewDetails.preparationTipsFromInterviewer.length})
+                  </Text>
+                  {interviewDetails.preparationTipsFromInterviewer.map((tip, index) => (
+                    <View
+                      key={index}
+                      className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex-row items-start gap-3"
+                      style={{
+                        shadowColor: "#f59e0b",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 2,
+                      }}
+                    >
+                      <View
+                        className="w-6 h-6 bg-emerald-500 rounded border-2 border-emerald-600 items-center justify-center mt-0.5"
+                        style={{
+                          shadowColor: "#10b981",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      >
+                        <Feather name="check" size={12} color="white" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="font-quicksand-medium text-base text-gray-800 leading-6">{tip}</Text>
+                      </View>
+                      <TouchableOpacity
+                        className="w-7 h-7 bg-red-100 rounded-full items-center justify-center ml-2"
+                        onPress={() => removeNote(index)}
+                        activeOpacity={0.7}
+                        style={{
+                          shadowColor: "#ef4444",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      >
+                        <Feather name="x" size={12} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  <View ref={notesFooterRef} />
+                </View>
+              )}
+          </View>
+
+          <View
+            className="bg-white rounded-2xl p-5 border border-gray-100"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Schedule</Text>
+
+            <View className="gap-4">
+              <View>
+                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Date *</Text>
+                <TextInput
+                  placeholder="YYYY-MM-DD"
+                  onFocus={() => bottomSheetRef.current?.close()}
                   value={interviewDetails?.interviewDate}
                   onChangeText={(text) =>
                     setInterviewDetails((prev) => ({
@@ -387,202 +640,437 @@ const ScheduleInterview = () => {
                       interviewDate: text,
                     }))
                   }
-                  className="form-input__input"
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                 />
               </View>
-              <View className="form-input w-1/2">
-                <Text className="form-input__label">Start Time</Text>
-                <TextInput
-                  value={interviewDetails?.startTime}
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
-                  placeholder="eg. 10:00 AM"
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      startTime: text,
-                    }))
-                  }
-                  className="form-input__input"
-                />
+
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Start Time *</Text>
+                  <TextInput
+                    value={interviewDetails?.startTime}
+                    onFocus={() => bottomSheetRef.current?.close()}
+                    placeholder="10:00 AM"
+                    onChangeText={(text) =>
+                      setInterviewDetails((prev) => ({
+                        ...prev,
+                        startTime: text.toUpperCase(),
+                      }))
+                    }
+                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                </View>
+
+                <View className="flex-1">
+                  <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">End Time *</Text>
+                  <TextInput
+                    value={interviewDetails?.endTime}
+                    onFocus={() => bottomSheetRef.current?.close()}
+                    placeholder="12:00 PM"
+                    onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, endTime: text.toUpperCase() }))}
+                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                </View>
               </View>
-            </View>
-            <View className="flex-row gap-2 items-center justify-between">
-              <View className="form-input w-1/2">
-                <Text className="form-input__label">End Time</Text>
-                <TextInput
-                  value={interviewDetails?.endTime}
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
-                  placeholder="eg. 12:00 PM"
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({ ...prev, endTime: text }))
-                  }
-                  className="form-input__input"
-                />
-              </View>
-              <View className="form-input w-1/2">
-                <Text className="form-input__label">Timezone</Text>
+
+              <View>
+                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Timezone *</Text>
                 <TextInput
                   value={interviewDetails?.timezone}
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
-                  placeholder="eg. EST, PST"
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({ ...prev, timezone: text }))
-                  }
-                  className="form-input__input"
+                  onFocus={() => bottomSheetRef.current?.close()}
+                  placeholder="EST, PST, GMT"
+                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, timezone: text }))}
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                 />
               </View>
             </View>
-            <View className="form-input">
-              <Text className="form-input__label">Interview Type</Text>
-              <View className="flex-row flex-wrap gap-2">
-                <TouchableOpacity
-                  className={renderInterviewTypeButtonClass("IN_PERSON")}
-                  onPress={() =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      interviewType: "IN_PERSON",
-                    }))
-                  }
-                >
-                  <Text className="font-quicksand-medium text-sm">
-                    In-Person
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className={renderInterviewTypeButtonClass("ONLINE")}
-                  onPress={() =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      interviewType: "ONLINE",
-                    }))
-                  }
-                >
-                  <Text className="font-quicksand-medium text-sm">Online</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className={renderInterviewTypeButtonClass("PHONE")}
-                  onPress={() =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      interviewType: "PHONE",
-                    }))
-                  }
-                >
-                  <Text className="font-quicksand-medium text-sm">Phone</Text>
-                </TouchableOpacity>
-              </View>
-              <Text className="form-input__label mt-4">Additional Details</Text>
+          </View>
+
+          <View
+            className="bg-white rounded-2xl p-5 border border-gray-100"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Interview Format</Text>
+
+            <View className="gap-3">
+              {["IN_PERSON", "ONLINE", "PHONE"].map((type) => {
+                const style = getInterviewTypeButtonStyle(type);
+                const labels = {
+                  IN_PERSON: "In-Person",
+                  ONLINE: "Online",
+                  PHONE: "Phone Call",
+                };
+
+                return (
+                  <TouchableOpacity
+                    key={type}
+                    className={style.container}
+                    style={style.shadow}
+                    onPress={() =>
+                      setInterviewDetails((prev) => ({
+                        ...prev,
+                        interviewType: type as any,
+                      }))
+                    }
+                    activeOpacity={0.8}
+                  >
+                    {getInterviewTypeIcon(type)}
+                    <Text className={style.text}>{labels[type as keyof typeof labels]}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View className="mt-6">
+              <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">
+                {renderInterviewTypeText(interviewDetails.interviewType)}
+              </Text>
               {interviewDetails.interviewType === "IN_PERSON" && (
                 <TextInput
                   value={interviewDetails?.location}
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
-                  placeholder="eg. 123 Main St, City, State"
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({ ...prev, location: text }))
-                  }
-                  className="form-input__input mt-2"
+                  onFocus={() => bottomSheetRef.current?.close()}
+                  placeholder="123 Main St, City, State"
+                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, location: text }))}
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                 />
               )}
               {interviewDetails.interviewType === "PHONE" && (
                 <TextInput
-                  value={interviewDetails?.location}
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
-                  placeholder="eg. +1 234 567 8901"
+                  value={interviewDetails?.phoneNumber}
+                  onFocus={() => bottomSheetRef.current?.close()}
+                  placeholder="+1 234 567 8901"
                   onChangeText={(text) =>
                     setInterviewDetails((prev) => ({
                       ...prev,
                       phoneNumber: text,
                     }))
                   }
-                  className="form-input__input mt-2"
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                 />
               )}
               {interviewDetails.interviewType === "ONLINE" && (
                 <TextInput
                   value={interviewDetails?.meetingLink}
-                  onFocus={() => addConductorBottomSheetRef.current?.close()}
-                  placeholder="eg. https://zoom.us/j/1234567890"
+                  onFocus={() => bottomSheetRef.current?.close()}
+                  placeholder="https://zoom.us/j/1234567890"
                   onChangeText={(text) =>
                     setInterviewDetails((prev) => ({
                       ...prev,
                       meetingLink: text,
                     }))
                   }
-                  className="form-input__input mt-2"
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
                   autoCapitalize="none"
                 />
               )}
             </View>
-            <View className="flex-row justify-center items-center gap-2 pt-6">
-              <TouchableOpacity
-                className="apply-button w-1/2 items-center justify-center h-14"
-                onPress={handleInterviewFormSubmit}
-                disabled={loadingNewInterview}
-              >
-                <Text className="font-quicksand-semibold text-lg">Done</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="apply-button w-1/2 items-center justify-center h-14"
-                onPress={() => router.back()}
-                disabled={loadingNewInterview}
-              >
-                <Text className="font-quicksand-semibold text-lg">Cancel</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-          <BottomSheet
-            ref={addConductorBottomSheetRef}
-            index={-1}
-            snapPoints={["60%", "70%"]}
-            enablePanDownToClose
+        </View>
+      </KeyboardAwareScrollView>
+      <View
+        className="bg-white border-t border-gray-200 px-4 py-6 absolute bottom-0 left-0 right-0"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+        }}
+      >
+        <View className="flex-row gap-3">
+          <TouchableOpacity
+            className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            onPress={handleInterviewFormSubmit}
+            disabled={loadingNewInterview}
+            activeOpacity={0.8}
           >
-            <BottomSheetView className="flex-1 bg-white p-4">
-              <View className="flex flex-col gap-4">
-                <View className="form-input">
-                  <Text>Full Name</Text>
-                  <TextInput
-                    ref={conductorNameRef}
+            {loadingNewInterview ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <View className="flex-row items-center gap-2">
+                <Feather name="check" size={18} color="white" />
+                <Text className="font-quicksand-bold text-white text-base">Schedule Interview</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            onPress={() => router.back()}
+            disabled={loadingNewInterview}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center gap-2">
+              <Feather name="x" size={18} color="#6b7280" />
+              <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        keyboardBehavior="extend"
+        android_keyboardInputMode="adjustResize"
+        backgroundStyle={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 12,
+        }}
+      >
+        <BottomSheetScrollView
+          className="flex-1 bg-white p-6"
+          contentContainerStyle={{ paddingBottom: 50 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {viewingBottomSheetFor === "interviewer" ? (
+            <>
+              <View className="flex-row items-center gap-3 mb-6">
+                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                  <Feather name="user-plus" size={20} color="#3b82f6" />
+                </View>
+                <Text className="font-quicksand-bold text-xl text-gray-900">Add Interviewer</Text>
+              </View>
+
+              <View className="gap-6">
+                <View>
+                  <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Full Name *</Text>
+                  <BottomSheetTextInput
                     value={conductorName}
                     autoCapitalize="words"
                     onChangeText={(text) => setConductorName(text)}
-                    placeholder="eg. Mike Wilson, Emma Johnson"
-                    className="form-input__input"
+                    placeholder="Mike Wilson, Emma Johnson"
+                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
                   />
                 </View>
-                <View className="form-input">
-                  <Text>Email</Text>
-                  <TextInput
-                    ref={conductorEmailRef}
+
+                <View>
+                  <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Email Address *</Text>
+                  <BottomSheetTextInput
                     value={conductorEmail}
                     autoCapitalize="none"
                     onChangeText={(text) => setConductorEmail(text)}
-                    placeholder="eg. mike.wilson@example.com"
-                    className="form-input__input"
+                    placeholder="mike.wilson@example.com"
+                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
                   />
                 </View>
-                <View className="flex-row justify-center items-center px-2 gap-2">
+
+                <View className="flex-row gap-3 mt-6">
                   <TouchableOpacity
-                    className="apply-button w-1/2 items-center justify-center h-14 mt-2"
+                    className="flex-1 bg-blue-500 rounded-xl py-4 items-center justify-center"
+                    style={{
+                      shadowColor: "#3b82f6",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 6,
+                      elevation: 4,
+                    }}
                     onPress={addConductorToConductors}
+                    activeOpacity={0.8}
                   >
-                    <Text className="font-quicksand-medium text-black text-lg">
-                      Done
-                    </Text>
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="plus" size={16} color="white" />
+                      <Text className="font-quicksand-bold text-white text-base">Add Interviewer</Text>
+                    </View>
                   </TouchableOpacity>
+
                   <TouchableOpacity
-                    className="apply-button w-1/2 items-center justify-center h-14 mt-2"
+                    className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
                     onPress={closeAddConductorBottomSheet}
+                    activeOpacity={0.7}
                   >
-                    <Text className="font-quicksand-medium text-black text-lg">
-                      Cancel
-                    </Text>
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="x" size={16} color="#6b7280" />
+                      <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
-            </BottomSheetView>
-          </BottomSheet>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            </>
+          ) : (
+            <>
+              <View className="flex-row items-center gap-3 mb-6">
+                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                  <Feather name="user-plus" size={20} color="#3b82f6" />
+                </View>
+                <Text className="font-quicksand-bold text-xl text-gray-900">Add Note For Candidate</Text>
+              </View>
+
+              <View className="gap-6">
+                <View>
+                  <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Preparation Note</Text>
+                  <BottomSheetTextInput
+                    value={preparationTip}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    autoCapitalize="sentences"
+                    onChangeText={(text) => {
+                      // Handle the case where Enter was pressed
+                      if (text.endsWith("\n") && text.trim() !== "") {
+                        // Remove the newline and trim the text
+                        const cleanText = text.replace(/\n$/, "").trim();
+                        setPreparationTip(cleanText);
+                        Keyboard.dismiss();
+                        return;
+                      }
+
+                      // Handle empty input with just newline
+                      if (text === "\n" && preparationTip === "") {
+                        Keyboard.dismiss();
+                        return;
+                      }
+
+                      setPreparationTip(text);
+                    }}
+                    placeholder="e.g. Please be prepared to discuss your previous projects and technical skills."
+                    returnKeyType="done"
+                    maxLength={100}
+                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                </View>
+
+                <View className="flex-row gap-3 mt-6">
+                  <TouchableOpacity
+                    className="flex-1 bg-blue-500 rounded-xl py-4 items-center justify-center"
+                    style={{
+                      shadowColor: "#3b82f6",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 6,
+                      elevation: 4,
+                    }}
+                    onPress={addNoteToPrepatationTips}
+                    activeOpacity={0.8}
+                  >
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="plus" size={16} color="white" />
+                      <Text className="font-quicksand-bold text-white text-base">Add Note</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                    onPress={closeAddConductorBottomSheet}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="x" size={16} color="#6b7280" />
+                      <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
+          )}
+        </BottomSheetScrollView>
+      </BottomSheet>
     </SafeAreaView>
   );
 };

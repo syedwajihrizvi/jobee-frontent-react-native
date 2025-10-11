@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const UpcomingInterviews = () => {
   const { userId } = useLocalSearchParams();
   const { data: interviews, isLoading } = useProfileInterviews(Number(userId));
+  console.log("Interviews Data:", interviews);
   return (
     <SafeAreaView>
       <BackBar label="Upcoming Interviews" />
@@ -21,34 +22,117 @@ const UpcomingInterviews = () => {
           className="p-2"
           data={interviews}
           renderItem={({ item }) => (
-            <View key={item.id} className="w-full px-4 py-2 rounded-full">
-              <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/profile/interviews/${item.id}`)}>
-                <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              className="mx-4 mb-4 bg-white rounded-2xl p-5 border border-gray-100"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+                elevation: 6,
+              }}
+              activeOpacity={0.7}
+              onPress={() => router.push(`/profile/interviews/${item.id}`)}
+            >
+              {/* Header Section */}
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-1">
                   <CompanyInformation company={item.companyName} />
                 </View>
-                <View>
-                  <View className="flex flex-row items-center justify-between">
-                    <Text className="font-quicksand-bold text-xl">{item.jobTitle}</Text>
-                    <Text className="font-quicksand-semibold text-sm">{item.interviewDate}</Text>
-                  </View>
-                  <View>
-                    <Text className="font-quicksand-bold text-lg">{item.title}</Text>
-                    <Text className="font-quicksand-medium text-md">{item.description}</Text>
-                  </View>
+                <View
+                  className="bg-indigo-100 px-3 py-1 rounded-full"
+                  style={{
+                    shadowColor: "#6366f1",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                >
+                  <Text className="font-quicksand-bold text-xs text-indigo-700">{item.interviewDate}</Text>
                 </View>
-                <View className="flex flex-row gap-2 mt-2">
-                  <Text className="font-quicksand-semibold text-sm text-green-800 bg-green-200 px-2 py-1 rounded-full">
+              </View>
+
+              {/* Job Information */}
+              <View className="mb-4">
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">{item.jobTitle}</Text>
+                <View className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                  <Text className="font-quicksand-bold text-base text-gray-800 mb-1">{item.title}</Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600 leading-5" numberOfLines={2}>
+                    {item.description}
+                  </Text>
+                </View>
+              </View>
+              <View className="flex-row flex-wrap gap-2 mb-3">
+                <View
+                  className="bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl flex-row items-center gap-1"
+                  style={{
+                    shadowColor: "#10b981",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                >
+                  <Feather name="clock" size={12} color="#059669" />
+                  <Text className="font-quicksand-semibold text-xs text-emerald-800">
                     {convertTo12Hour(item.startTime)} - {convertTo12Hour(item.endTime)}
                   </Text>
-                  <Text className="font-quicksand-semibold text-sm text-blue-800 bg-blue-100 px-2 py-1 rounded-full">
-                    {item.timezone}
-                  </Text>
-                  <Text className="font-quicksand-semibold text-sm text-black border border-black px-2 py-1 rounded-full">
+                </View>
+                <View
+                  className="bg-blue-100 border border-blue-200 px-3 py-2 rounded-xl flex-row items-center gap-1"
+                  style={{
+                    shadowColor: "#3b82f6",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                >
+                  <Feather name="globe" size={12} color="#2563eb" />
+                  <Text className="font-quicksand-semibold text-xs text-blue-800">{item.timezone}</Text>
+                </View>
+                <View
+                  className="bg-purple-100 border border-purple-200 px-3 py-2 rounded-xl flex-row items-center gap-1"
+                  style={{
+                    shadowColor: "#8b5cf6",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                >
+                  <Feather
+                    name={
+                      item.interviewType === "ONLINE" ? "video" : item.interviewType === "PHONE" ? "phone" : "users"
+                    }
+                    size={12}
+                    color="#7c3aed"
+                  />
+                  <Text className="font-quicksand-semibold text-xs text-purple-800">
                     {getInterviewStyle(item.interviewType)}
                   </Text>
                 </View>
-              </TouchableOpacity>
-            </View>
+              </View>
+              <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
+                <View className="flex-row items-center gap-2">
+                  <View className="w-2 h-2 bg-emerald-500 rounded-full"></View>
+                  <Text className="font-quicksand-medium text-sm text-gray-600">Interview scheduled</Text>
+                </View>
+                <View
+                  className="w-8 h-8 bg-indigo-100 rounded-full items-center justify-center"
+                  style={{
+                    shadowColor: "#6366f1",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    elevation: 2,
+                  }}
+                >
+                  <Feather name="chevron-right" size={16} color="#6366f1" />
+                </View>
+              </View>
+            </TouchableOpacity>
           )}
           ListHeaderComponent={() =>
             interviews && interviews.length > 0 ? (
