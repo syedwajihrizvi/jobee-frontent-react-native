@@ -4,19 +4,35 @@ import { useQuery } from "@tanstack/react-query";
 const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
 
-export const useApplicant = (applicantId?: number) => {
+export const useApplicant = (applicantId?: number, jobId?: number, candidateId?: number) => {
     const fetchApplicant = async () => {
-        const response = await fetch(`${APPLICATIONS_API_URL}/${applicantId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        const data = await response.json()
-        return data
+        if (!jobId && !candidateId) {
+            const response = await fetch(`${APPLICATIONS_API_URL}/${applicantId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            const data = await response.json()
+            return data
+        } else {
+            const response = await fetch(`${APPLICATIONS_API_URL}?jobId=${jobId}&userId=${candidateId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            const data = await response.json()
+            if (data.length === 0) {
+                return null;
+            }
+            const res = data[0]
+            console.log("Fetched applicant data:", res); // Debugging log
+            return data[0]     
+        }
     }
     return useQuery<ApplicationDetailsForBusiness, Error>({
-        queryKey: ['applicant', applicantId],
+        queryKey: ['applicant', applicantId, jobId, candidateId],
         queryFn: fetchApplicant,
         staleTime: 1000 * 60 * 5,
         enabled: !!applicantId,

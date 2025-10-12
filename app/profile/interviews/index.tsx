@@ -8,10 +8,11 @@ import React from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// TODO: Use InterivewCard instead
 const UpcomingInterviews = () => {
   const { userId } = useLocalSearchParams();
   const { data: interviews, isLoading } = useProfileInterviews(Number(userId));
-  console.log("Interviews Data:", interviews);
+
   return (
     <SafeAreaView>
       <BackBar label="Upcoming Interviews" />
@@ -34,7 +35,6 @@ const UpcomingInterviews = () => {
               activeOpacity={0.7}
               onPress={() => router.push(`/profile/interviews/${item.id}`)}
             >
-              {/* Header Section */}
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-1">
                   <CompanyInformation company={item.companyName} />
@@ -52,8 +52,6 @@ const UpcomingInterviews = () => {
                   <Text className="font-quicksand-bold text-xs text-indigo-700">{item.interviewDate}</Text>
                 </View>
               </View>
-
-              {/* Job Information */}
               <View className="mb-4">
                 <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">{item.jobTitle}</Text>
                 <View className="bg-gray-50 border border-gray-200 rounded-xl p-3">

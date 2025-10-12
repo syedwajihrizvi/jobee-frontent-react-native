@@ -1,10 +1,11 @@
-import { ApplicantFilters, Application, ApplicationSummary, Job, JobFilters, PagedResponse } from '@/type';
+import { ApplicantFilters, Application, ApplicationSummary, InterviewDetails, Job, JobFilters, PagedResponse } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getEducationLevel } from '../utils';
 
 const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
 const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
+const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
 const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
 
 export const useJobs = (jobFilters: JobFilters) => {
@@ -190,6 +191,26 @@ export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) 
   return useQuery<ApplicationSummary[], Error>({
     queryKey: ['applications', 'job', jobId, filters],
     queryFn: fetchApplicantsForJob,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!jobId,
+  })
+}
+
+export const useInterviewsForJob = (jobId?: number) => {
+  const fetchInterviewsForJob = async () => {
+    const response = await fetch(`${INTERVIEWS_API_URL}/job/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await response.json()
+    return data
+  }
+
+  return useQuery<InterviewDetails[], Error>({
+    queryKey: ['interviews', 'job', jobId],
+    queryFn: fetchInterviewsForJob,
     staleTime: 1000 * 60 * 5,
     enabled: !!jobId,
   })

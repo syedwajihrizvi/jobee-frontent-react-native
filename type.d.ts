@@ -76,6 +76,7 @@ export type Job = {
     maxSalary: number,
     tags: Tag[],
     applicants: number,
+    interviews: number
     createdAt: string,
     employmentType: string,
     setting: string
@@ -358,6 +359,9 @@ export type InterviewDetails = {
     interviewDate: string;
     startTime: string;
     endTime: string;
+    candidateId: number;
+    candidateName: string;
+    candidateProfileImageUrl: string;
     interviewType: string;
     timezone: string;
     interviewers: {name: string; email: string, title: string}[];

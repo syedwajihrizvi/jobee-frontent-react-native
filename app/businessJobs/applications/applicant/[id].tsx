@@ -17,8 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const ApplicantForBusiness = () => {
   const queryClient = useQueryClient();
-  const { id } = useLocalSearchParams();
-  const { data: application, isLoading } = useApplicant(Number(id));
+  const { id, jobId, candidateId } = useLocalSearchParams();
+  const { data: application, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
   const { data: shortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId));
   const { userProfile } = application || {};
   const [showSkills, setShowSkills] = useState(false);
@@ -162,7 +162,7 @@ const ApplicantForBusiness = () => {
                       resizeMode="cover"
                     />
                   </View>
-                  <View className="flex-1 gap-1">
+                  <View className="flex-1">
                     <Text className="font-quicksand-bold text-xl text-gray-900">
                       {userProfile?.firstName} {userProfile?.lastName}
                     </Text>
@@ -172,9 +172,6 @@ const ApplicantForBusiness = () => {
                       <Text className="font-quicksand-medium text-sm text-gray-600">{userProfile?.location}</Text>
                     </View>
                   </View>
-                </View>
-                <View className={`${statusColors.bg} ${statusColors.border} border px-3 py-1 rounded-full`}>
-                  <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>{application?.status}</Text>
                 </View>
               </View>
               <View className="mb-2">

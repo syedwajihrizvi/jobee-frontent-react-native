@@ -1,3 +1,4 @@
+import ActionButton from "@/components/ActionButton";
 import BackBar from "@/components/BackBar";
 import { useJobsForBusiness, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
@@ -17,7 +18,7 @@ const BusinessJobDetails = () => {
     if (!job?.views || job.views === 0) return 0;
     return Math.round((job.applicants / job.views) * 100);
   };
-
+  console.log(job?.interviews);
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <BackBar label="Job Management" />
@@ -97,41 +98,30 @@ const BusinessJobDetails = () => {
                 </View>
               </View>
 
-              {/* Action Buttons */}
               <View className="gap-3">
-                <TouchableOpacity
-                  className="bg-blue-500 rounded-xl px-4 py-3 items-center min-w-[100px]"
-                  style={{
-                    shadowColor: "#3b82f6",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                  onPress={() => router.push(`/businessJobs/applications/${jobId}`)}
-                  activeOpacity={0.8}
-                >
-                  <Text className="font-quicksand-bold text-xs text-white">{job.applicants}</Text>
-                  <Text className="font-quicksand-semibold text-xs text-white">Applicants</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="bg-emerald-500 rounded-xl px-4 py-3 items-center min-w-[100px]"
-                  style={{
-                    shadowColor: "#10b981",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                  onPress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}
-                  activeOpacity={0.8}
-                >
-                  <Text className="font-quicksand-bold text-xs text-white">
-                    {loadingShortListedCandidates ? "..." : shortListedCandidates?.length || 0}
-                  </Text>
-                  <Text className="font-quicksand-semibold text-xs text-white">Shortlisted</Text>
-                </TouchableOpacity>
+                <ActionButton
+                  color="bg-blue-500"
+                  shadowColor="#3b82f6"
+                  handlePress={() => router.push(`/businessJobs/applications/${jobId}`)}
+                  count={job.applicants}
+                  label={job.applicants === 1 ? "Applicant" : "Applicants"}
+                />
+                {!loadingShortListedCandidates && (
+                  <ActionButton
+                    color="bg-emerald-500"
+                    shadowColor="#10b981"
+                    handlePress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}
+                    count={shortListedCandidates ? shortListedCandidates.length : 0}
+                    label="Shortlisted"
+                  />
+                )}
+                <ActionButton
+                  color="bg-gray-500"
+                  shadowColor="#6b7280"
+                  handlePress={() => router.push(`/businessJobs/interviews/${jobId}`)}
+                  count={job.interviews}
+                  label={job.interviews === 1 ? "Interview" : "Interviews"}
+                />
               </View>
             </View>
           </View>

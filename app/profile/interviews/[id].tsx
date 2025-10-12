@@ -337,6 +337,7 @@ const InterviewDetails = () => {
               shadowRadius: 6,
               elevation: 4,
             }}
+            disabled={isSendingInterviewPrepRequest}
             onPress={handlePrepareWithJobee}
             activeOpacity={0.8}
           >
