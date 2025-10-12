@@ -25,7 +25,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
     >
       <View className="flex-row items-center justify-between mb-4">
         <View
-          className="bg-indigo-100 px-3 py-1 rounded-full"
+          className="bg-emerald-100 px-3 py-1 rounded-full"
           style={{
             shadowColor: "#6366f1",
             shadowOffset: { width: 0, height: 1 },
@@ -34,7 +34,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
             elevation: 1,
           }}
         >
-          <Text className="font-quicksand-bold text-xs text-indigo-700">{interview.interviewDate}</Text>
+          <Text className="font-quicksand-bold text-xs text-emerald-700">{interview.interviewDate}</Text>
         </View>
       </View>
       <View className="mb-4">
@@ -103,7 +103,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
           <Text className="font-quicksand-medium text-sm text-gray-600">Interview scheduled</Text>
         </View>
         <View
-          className="w-8 h-8 bg-indigo-100 rounded-full items-center justify-center"
+          className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center"
           style={{
             shadowColor: "#6366f1",
             shadowOffset: { width: 0, height: 2 },
