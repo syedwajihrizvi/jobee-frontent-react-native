@@ -359,6 +359,7 @@ export type InterviewDetails = {
     interviewDate: string;
     startTime: string;
     endTime: string;
+    applicationId: number;
     candidateId: number;
     candidateName: string;
     candidateProfileImageUrl: string;

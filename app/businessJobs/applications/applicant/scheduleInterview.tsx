@@ -28,6 +28,7 @@ const ScheduleInterview = () => {
     preparationTipsFromInterviewer: [],
   };
   const { applicantId, jobId, candidateId } = useLocalSearchParams();
+  console.log("Params:", { applicantId, jobId, candidateId });
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
   const conductorNameRef = useRef<TextInput>(null);
@@ -66,6 +67,7 @@ const ScheduleInterview = () => {
         const interview = await getMostRecentInterviewForJob(Number(jobId));
         if (isMounted && interview) {
           const { title, description, interviewType, interviewers, otherInterviewers } = interview;
+          console.log("Fetched interview:", interview);
           const conductors = [
             ...interviewers.map((interviewer) => ({
               name: interviewer.name,

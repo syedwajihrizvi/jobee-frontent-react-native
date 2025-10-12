@@ -1,8 +1,10 @@
+import { images } from "@/constants";
+import { getS3ProfileImage } from "@/lib/s3Urls";
 import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   interview: InterviewDetails;
@@ -35,6 +37,37 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
           }}
         >
           <Text className="font-quicksand-bold text-xs text-emerald-700">{interview.interviewDate}</Text>
+        </View>
+      </View>
+      <View className="flex-row items-start gap-4">
+        <View
+          className="w-8 h-8 rounded-full overflow-hidden border-3 border-white"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <Image
+            source={{
+              uri: interview?.candidateProfileImageUrl
+                ? getS3ProfileImage(interview.candidateProfileImageUrl)
+                : images.companyLogo,
+            }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        </View>
+        <View className="flex-1 -top-1">
+          <Text className="font-quicksand-bold text-lg text-gray-900">
+            {interview?.candidateName || "Candidate Name"}
+          </Text>
+          <View className="flex-row items-center gap-1">
+            <Feather name="briefcase" size={12} color="#6b7280" />
+            <Text className="font-quicksand-medium text-sm text-gray-600">Job Applicant</Text>
+          </View>
         </View>
       </View>
       <View className="mb-4">

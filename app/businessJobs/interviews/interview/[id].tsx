@@ -1,10 +1,11 @@
 import BackBar from "@/components/BackBar";
+import CheckList from "@/components/CheckList";
 import InterviewersFlatList from "@/components/InterviewersFlatList";
 import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -13,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const InterviewDetailsForBusiness = () => {
   const { id } = useLocalSearchParams();
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(id));
+  console.log("Interview ApplicatonId", interviewDetails?.applicationId); // Debugging log
   const totalInterviewers = [...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])]
     .length;
   return (
@@ -45,6 +47,30 @@ const InterviewDetailsForBusiness = () => {
               </View>
             </View>
             <View>
+              <TouchableOpacity
+                className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
+                style={{
+                  shadowColor: "#10b981",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={() =>
+                  router.push(
+                    `/businessJobs/interviews/interview/interviewDecision/${id}?candidateName=${interviewDetails?.candidateName}&candidateProfileImage=${interviewDetails?.candidateProfileImageUrl}&jobTitle=${interviewDetails?.jobTitle}&candidateId=${interviewDetails?.candidateId}&applicantId=${interviewDetails?.applicationId}&jobId=${interviewDetails?.jobId}`
+                  )
+                }
+                activeOpacity={0.8}
+              >
+                <View className="flex-row items-center gap-3">
+                  <Feather name="check-circle" size={16} color="white" />
+                  <Text className="font-quicksand-semibold text-white text-base">Click to make decision</Text>
+                </View>
+                <Feather name="arrow-right" size={16} color="white" />
+              </TouchableOpacity>
+            </View>
+            <View>
               <Text className="font-quicksand-bold text-2xl text-gray-900 mb-2">{interviewDetails?.jobTitle}</Text>
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                 <Text className="font-quicksand-bold text-lg text-gray-800 mb-2">{interviewDetails?.title}</Text>
@@ -63,13 +89,6 @@ const InterviewDetailsForBusiness = () => {
                 elevation: 6,
               }}
             >
-              <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
-                  <Feather name="user" size={16} color="#6366f1" />
-                </View>
-                <Text className="font-quicksand-bold text-lg text-gray-900">Candidate Information</Text>
-              </View>
-
               <View className="flex-row items-start gap-4">
                 <View
                   className="w-12 h-12 rounded-full overflow-hidden border-3 border-white"
@@ -197,6 +216,30 @@ const InterviewDetailsForBusiness = () => {
                 handleInterviewerPress={() => {}}
               />
             </View>
+            {interviewDetails?.preparationTipsFromInterviewer &&
+              interviewDetails.preparationTipsFromInterviewer.length > 0 && (
+                <View
+                  className="bg-white mt-4 rounded-2xl p-6 border border-gray-100"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
+                >
+                  <View className="flex-row items-center gap-3 mb-4">
+                    <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
+                      <FontAwesome5 name="lightbulb" size={20} color="#f59e0b" />
+                    </View>
+                    <Text className="font-quicksand-bold text-lg text-gray-900">Preparation Tips for Candidate</Text>
+                  </View>
+
+                  <View className="bg-amber-50 border border-amber-200 rounded-xl p-2">
+                    <CheckList items={interviewDetails?.preparationTipsFromInterviewer || []} withBorder={false} />
+                  </View>
+                </View>
+              )}
             <View
               className="bg-white mt-2 mb-6 rounded-2xl p-6 border border-gray-100"
               style={{
@@ -212,65 +255,6 @@ const InterviewDetailsForBusiness = () => {
                   <MaterialIcons name="how-to-vote" size={20} color="#8b5cf6" />
                 </View>
                 <Text className="font-quicksand-bold text-lg text-gray-900">What is your decision?</Text>
-              </View>
-
-              <View className="gap-3">
-                <TouchableOpacity
-                  className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
-                  style={{
-                    shadowColor: "#10b981",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
-                  onPress={() => {}}
-                  activeOpacity={0.8}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <Feather name="check-circle" size={18} color="white" />
-                    <Text className="font-quicksand-bold text-white text-base">Hire Candidate</Text>
-                  </View>
-                  <Feather name="arrow-right" size={16} color="white" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="bg-blue-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
-                  style={{
-                    shadowColor: "#3b82f6",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
-                  onPress={() => {}}
-                  activeOpacity={0.8}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <Feather name="refresh-cw" size={18} color="white" />
-                    <Text className="font-quicksand-bold text-white text-base">Schedule Second Round</Text>
-                  </View>
-                  <Feather name="arrow-right" size={16} color="white" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="bg-red-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
-                  style={{
-                    shadowColor: "#ef4444",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
-                  onPress={() => {}}
-                  activeOpacity={0.8}
-                >
-                  <View className="flex-row items-center gap-3">
-                    <Feather name="x-circle" size={18} color="white" />
-                    <Text className="font-quicksand-bold text-white text-base">Reject Candidate</Text>
-                  </View>
-                  <Feather name="arrow-right" size={16} color="white" />
-                </TouchableOpacity>
               </View>
             </View>
           </View>

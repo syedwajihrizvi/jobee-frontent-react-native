@@ -42,8 +42,10 @@ export const getMostRecentInterviewForJob = async (jobId: number) : Promise<Inte
             'Content-Type': 'application/json',
         }
     })
+    console.log("Fetch most recent interview for job response status: ", result.status)
     if (result.status !== 200) return null
     const interview = await result.json()
+    console.log("Fetched interviews for job:", interview)
     // get the first one as it is the most recent one
     return interview[0] as InterviewDetails
 }
