@@ -39,13 +39,15 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
           >
             <Text className="font-quicksand-semibold text-xs text-green-600">Open Filters</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleClearFilters}
-            className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
-            activeOpacity={0.7}
-          >
-            <Text className="font-quicksand-semibold text-xs text-red-600">Clear All</Text>
-          </TouchableOpacity>
+          {filterCount > 0 && (
+            <TouchableOpacity
+              onPress={handleClearFilters}
+              className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
+              activeOpacity={0.7}
+            >
+              <Text className="font-quicksand-semibold text-xs text-red-600">Clear All</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       {filterCount > 0 && <View className="h-2" />}

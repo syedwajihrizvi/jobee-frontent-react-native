@@ -5,7 +5,7 @@ import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
-import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -14,9 +14,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const InterviewDetailsForBusiness = () => {
   const { id } = useLocalSearchParams();
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(id));
-  console.log("Interview ApplicatonId", interviewDetails?.applicationId); // Debugging log
   const totalInterviewers = [...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])]
     .length;
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Details" />
@@ -240,23 +240,6 @@ const InterviewDetailsForBusiness = () => {
                   </View>
                 </View>
               )}
-            <View
-              className="bg-white mt-2 mb-6 rounded-2xl p-6 border border-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-purple-100 rounded-full items-center justify-center">
-                  <MaterialIcons name="how-to-vote" size={20} color="#8b5cf6" />
-                </View>
-                <Text className="font-quicksand-bold text-lg text-gray-900">What is your decision?</Text>
-              </View>
-            </View>
           </View>
         )}
       </ScrollView>

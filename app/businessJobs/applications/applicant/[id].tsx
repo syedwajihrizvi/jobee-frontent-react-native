@@ -112,7 +112,7 @@ const ApplicantForBusiness = () => {
           <BackBar label="Back" />
           <View className="flex-1 justify-center items-center">
             <View
-              className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-4"
+              className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
               style={{
                 shadowColor: "#6366f1",
                 shadowOffset: { width: 0, height: 4 },
@@ -416,7 +416,7 @@ const ApplicantForBusiness = () => {
                   }}
                 >
                   <View className="flex-row items-center gap-3 mb-4">
-                    <View className="w-8 h-8 bg-indigo-100 rounded-full items-center justify-center">
+                    <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
                       <Feather name="video" size={16} color="#6366f1" />
                     </View>
                     <Text className="font-quicksand-bold text-lg text-gray-900">Video Introduction</Text>
@@ -439,7 +439,7 @@ const ApplicantForBusiness = () => {
           >
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-indigo-500 rounded-xl py-4 items-center justify-center"
+                className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
                 style={{
                   shadowColor: "#6366f1",
                   shadowOffset: { width: 0, height: 3 },

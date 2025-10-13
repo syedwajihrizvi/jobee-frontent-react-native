@@ -18,11 +18,9 @@ const BusinessJobDetails = () => {
     if (!job?.views || job.views === 0) return 0;
     return Math.round((job.applicants / job.views) * 100);
   };
-  console.log(job?.interviews);
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <BackBar label="Job Management" />
-
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
@@ -236,7 +234,7 @@ const BusinessJobDetails = () => {
               <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
                 <Feather name="user-check" size={20} color="#22c55e" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Chosen Candidates</Text>
+              <Text className="font-quicksand-bold text-xl text-gray-900">Candidates Under Consideration</Text>
             </View>
 
             <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">

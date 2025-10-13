@@ -1,4 +1,5 @@
 import BackBar from "@/components/BackBar";
+import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
 import useAuthStore from "@/store/auth.store";
@@ -27,8 +28,7 @@ const ScheduleInterview = () => {
     phoneNumber: "",
     preparationTipsFromInterviewer: [],
   };
-  const { applicantId, jobId, candidateId } = useLocalSearchParams();
-  console.log("Params:", { applicantId, jobId, candidateId });
+  const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
   const conductorNameRef = useRef<TextInput>(null);
@@ -151,16 +151,25 @@ const ScheduleInterview = () => {
     }
     setLoadingNewInterview(true);
     try {
-      const res = await createInterview(interviewDetails, Number(jobId), Number(candidateId), Number(applicantId));
+      const res = await createInterview(
+        interviewDetails,
+        Number(jobId),
+        Number(candidateId),
+        Number(applicantId),
+        Number(previousInterviewId)
+      );
       if (res) {
-        Alert.alert("Success", "Interview created successfully.");
         queryClient.invalidateQueries({
           queryKey: ["applicant", Number(applicantId)],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["interviews", "job", Number(jobId)],
+        });
+        Alert.alert("Success", "Interview created successfully.");
         setTimeout(() => {
           setInterviewDetails({ ...defaultInterviewForm });
           router.back();
-        }, 2000);
+        }, 3000);
         return;
       }
       Alert.alert("Error", "Error creating interview. Please try again.");
@@ -262,6 +271,7 @@ const ScheduleInterview = () => {
     }));
     setPreparationTip("");
     bottomSheetRef.current?.close();
+    Keyboard.dismiss();
 
     setTimeout(() => {
       notesFooterRef.current?.measure((x, y, width, height, pageX, pageY) => {
@@ -342,6 +352,15 @@ const ScheduleInterview = () => {
     return "";
   }
 
+  const updateTimeValue = (text: string) => {
+    const lowercase = text.toLowerCase();
+    if (lowercase.includes("am") || lowercase.includes("pm")) {
+      const index = lowercase.indexOf("am") > -1 ? lowercase.indexOf("am") : lowercase.indexOf("pm");
+      return text.slice(0, index) + " " + text.slice(index).toUpperCase();
+    }
+    return text.toUpperCase();
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 relative">
       <BackBar label="Schedule Interview" />
@@ -375,7 +394,6 @@ const ScheduleInterview = () => {
         </View>
 
         <View className="px-4 mt-6 gap-6">
-          {/* Basic Information */}
           <View
             className="bg-white rounded-2xl p-5 border border-gray-100"
             style={{
@@ -389,47 +407,41 @@ const ScheduleInterview = () => {
             <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Basic Information</Text>
 
             <View className="gap-4">
-              <View>
-                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Interview Title *</Text>
-                <TextInput
-                  placeholder="e.g. Technical Interview"
-                  value={interviewDetails?.title}
-                  autoCapitalize="words"
-                  onFocus={() => bottomSheetRef.current?.close()}
-                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, title: text }))}
-                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                />
-              </View>
-
-              <View>
-                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Description *</Text>
-                <CustomMultilineInput
-                  numberOfLines={4}
-                  placeholder="Discuss project experience and technical skills..."
-                  value={interviewDetails?.description}
-                  customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900 min-h-[100px]"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      description: text,
-                    }))
-                  }
-                />
-              </View>
+              <CustomInput
+                placeholder="e.g. Technical Interview"
+                label="Interview Title *"
+                autoCapitalize="words"
+                value={interviewDetails?.title}
+                onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, title: text }))}
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              />
+              <CustomMultilineInput
+                label="Description *"
+                numberOfLines={4}
+                placeholder="Discuss project experience and technical skills..."
+                value={interviewDetails?.description}
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900 min-h-[100px]"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+                onChangeText={(text) =>
+                  setInterviewDetails((prev) => ({
+                    ...prev,
+                    description: text,
+                  }))
+                }
+              />
             </View>
           </View>
 
@@ -661,10 +673,13 @@ const ScheduleInterview = () => {
                     onFocus={() => bottomSheetRef.current?.close()}
                     placeholder="10:00 AM"
                     onChangeText={(text) =>
-                      setInterviewDetails((prev) => ({
-                        ...prev,
-                        startTime: text.toUpperCase(),
-                      }))
+                      setInterviewDetails((prev) => {
+                        const updatedText = updateTimeValue(text);
+                        return {
+                          ...prev,
+                          startTime: updatedText,
+                        };
+                      })
                     }
                     className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
                     style={{
@@ -683,7 +698,15 @@ const ScheduleInterview = () => {
                     value={interviewDetails?.endTime}
                     onFocus={() => bottomSheetRef.current?.close()}
                     placeholder="12:00 PM"
-                    onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, endTime: text.toUpperCase() }))}
+                    onChangeText={(text) =>
+                      setInterviewDetails((prev) => {
+                        const updatedText = updateTimeValue(text);
+                        return {
+                          ...prev,
+                          endTime: updatedText,
+                        };
+                      })
+                    }
                     className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
                     style={{
                       shadowColor: "#000",

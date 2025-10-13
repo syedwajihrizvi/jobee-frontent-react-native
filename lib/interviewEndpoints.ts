@@ -8,7 +8,9 @@ const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles'
 export const createInterview = async (
         interview: CreateInterviewForm, jobId: number, 
         candidateId: number,
-        applicationId: number) => {
+        applicationId: number,
+        previousInterviewId: number
+    ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null
     const startTime = extract24HourTime(interview.startTime)
@@ -22,6 +24,7 @@ export const createInterview = async (
         startTime,
         endTime,
         timezone,
+        previousInterviewId
     }
     const result = await fetch(`${INTERVIEWS_API_URL}`, {
         method: 'POST',

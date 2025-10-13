@@ -2,7 +2,7 @@ import BackBar from "@/components/BackBar";
 import RejectCandidateModal from "@/components/RejectCandidateModal";
 import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const InterviewDecision = () => {
   const { id, candidateName, candidateId, candidateProfileImage, jobId, applicantId } = useLocalSearchParams();
   const [showRejectModal, setShowRejectModal] = useState(false);
+  console.log(candidateProfileImage);
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Decision" />
@@ -26,9 +27,6 @@ const InterviewDecision = () => {
           }}
         >
           <View className="flex-row items-center gap-3 mb-4">
-            <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
-              <MaterialIcons name="how-to-vote" size={24} color="#21c55e" />
-            </View>
             <View className="flex-1">
               <Text className="font-quicksand-bold text-xl text-gray-900">Make Your Decision</Text>
               <Text className="font-quicksand-medium text-sm text-gray-600">
@@ -36,7 +34,7 @@ const InterviewDecision = () => {
               </Text>
             </View>
           </View>
-          <View className="flex-row items-start gap-4">
+          <View className="flex-row items-start gap-2">
             <View
               className="w-12 h-12 rounded-full overflow-hidden border-3 border-white"
               style={{
@@ -127,7 +125,7 @@ const InterviewDecision = () => {
             }}
             onPress={() =>
               router.push(
-                `/businessJobs/applications/applicant/scheduleInterview?applicantId=${applicantId}&jobId=${jobId}&candidateId=${candidateId}`
+                `/businessJobs/applications/applicant/scheduleInterview?applicantId=${applicantId}&jobId=${jobId}&candidateId=${candidateId}&previousInterviewId=${id}`
               )
             }
             activeOpacity={0.8}
