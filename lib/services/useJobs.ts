@@ -150,7 +150,7 @@ export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
 
 export const useJobsForBusiness = (companyId: number, jobId: number) => {
   const fetchJobForBusiness = async () => {
-    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs/${jobId}`, {
+    const response = await fetch(`${JOBS_API_URL}/companies/jobs/${jobId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
     return data
   }
   return useQuery<Job, Error>({
-    queryKey: ['job', 'business', companyId, jobId],
+    queryKey: ['job', 'business', jobId],
     queryFn: fetchJobForBusiness,
     staleTime: 1000 * 60 * 5,
     enabled: !!companyId && !!jobId,

@@ -104,6 +104,8 @@ export type ApplicantFilters = {
     educations: string
 }
 
+export type InterviewFilter = 'Upcoming' | 'Completed' | 'Pending Decision' | 'Hired' | 'Next Round' | 'Rejected'
+
 export type ProfileLinks = {
     icon: React.ReactNode;
     label: string;
@@ -363,6 +365,9 @@ export type InterviewDetails = {
     candidateId: number;
     candidateName: string;
     candidateProfileImageUrl: string;
+    decisionDate: string;
+    decisionResult: string;
+    status: string;
     interviewType: string;
     timezone: string;
     interviewers: {name: string; email: string, title: string}[];

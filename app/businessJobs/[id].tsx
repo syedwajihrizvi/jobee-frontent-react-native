@@ -78,8 +78,6 @@ const BusinessJobDetails = () => {
                     ${job.minSalary?.toLocaleString()} - ${job.maxSalary?.toLocaleString()}
                   </Text>
                 </View>
-
-                {/* Dates */}
                 <View className="gap-2">
                   <View className="flex-row items-center gap-2">
                     <Feather name="calendar" size={14} color="#6b7280" />

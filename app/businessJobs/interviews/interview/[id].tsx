@@ -17,6 +17,52 @@ const InterviewDetailsForBusiness = () => {
   const totalInterviewers = [...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])]
     .length;
 
+  const renderDecisionButton = (result: string) => {
+    if (result === "PENDING") {
+      return (
+        <TouchableOpacity
+          className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+          onPress={() =>
+            router.push(
+              `/businessJobs/interviews/interview/interviewDecision/${id}?candidateName=${interviewDetails?.candidateName}&candidateProfileImage=${interviewDetails?.candidateProfileImageUrl}&jobTitle=${interviewDetails?.jobTitle}&candidateId=${interviewDetails?.candidateId}&applicantId=${interviewDetails?.applicationId}&jobId=${interviewDetails?.jobId}`
+            )
+          }
+          activeOpacity={0.8}
+        >
+          <View className="flex-row items-center gap-3">
+            <Feather name="check-circle" size={16} color="white" />
+            <Text className="font-quicksand-semibold text-white text-base">Click to make decision</Text>
+          </View>
+          <Feather name="arrow-right" size={16} color="white" />
+        </TouchableOpacity>
+      );
+    } else if (result === "NEXT_ROUND") {
+      return (
+        <View
+          className="bg-blue-500 rounded-xl py-4 px-5 flex-row items-center justify-center"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <View className="flex-row items-center gap-3">
+            <Feather name="check-circle" size={16} color="white" />
+            <Text className="font-quicksand-semibold text-white text-base">Candidate Moving to Next Round</Text>
+          </View>
+        </View>
+      );
+    }
+  };
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Details" />
@@ -46,30 +92,7 @@ const InterviewDetailsForBusiness = () => {
                 <Text className="font-quicksand-bold text-xs text-emerald-700">{interviewDetails?.interviewDate}</Text>
               </View>
             </View>
-            <View>
-              <TouchableOpacity
-                className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
-                style={{
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={() =>
-                  router.push(
-                    `/businessJobs/interviews/interview/interviewDecision/${id}?candidateName=${interviewDetails?.candidateName}&candidateProfileImage=${interviewDetails?.candidateProfileImageUrl}&jobTitle=${interviewDetails?.jobTitle}&candidateId=${interviewDetails?.candidateId}&applicantId=${interviewDetails?.applicationId}&jobId=${interviewDetails?.jobId}`
-                  )
-                }
-                activeOpacity={0.8}
-              >
-                <View className="flex-row items-center gap-3">
-                  <Feather name="check-circle" size={16} color="white" />
-                  <Text className="font-quicksand-semibold text-white text-base">Click to make decision</Text>
-                </View>
-                <Feather name="arrow-right" size={16} color="white" />
-              </TouchableOpacity>
-            </View>
+            <View>{renderDecisionButton(interviewDetails?.decisionResult!)}</View>
             <View>
               <Text className="font-quicksand-bold text-2xl text-gray-900 mb-2">{interviewDetails?.jobTitle}</Text>
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">

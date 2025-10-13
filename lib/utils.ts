@@ -238,3 +238,32 @@ export const getCustomProfilePlaceholderForField = (field: string) => {
       return "e.g. Value";
   }
 }
+
+export const interviewStatusStyles = {
+    SCHEDULED: {
+      bgColor: "bg-emerald-500",
+      chevronColor: "bg-emerald-100",
+      chevronShadowColor: "#6366f1",
+      text: "Interview Scheduled"
+    },
+    COMPLETED: {
+      bgColor: "bg-blue-500",
+      chevronColor: "bg-blue-100",
+      chevronShadowColor: "#3b82f6",
+      text: "Interview Completed"
+    },
+  };
+
+export const getDecisionString = (decision: string) => {
+  switch(decision) {
+    case 'NEXT_ROUND':
+      return "Candidate moved to next round";
+    case 'REJECTED':
+      return "Candidate has been rejected";
+    case 'PENDING':
+      return "Decision is still pending";
+    case 'HIRED':
+      return "Candidate has received an offer";
+  }
+
+}

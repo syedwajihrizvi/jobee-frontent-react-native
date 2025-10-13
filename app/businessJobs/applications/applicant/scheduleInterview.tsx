@@ -165,6 +165,9 @@ const ScheduleInterview = () => {
         queryClient.invalidateQueries({
           queryKey: ["interviews", "job", Number(jobId)],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["job", "business", Number(jobId)],
+        });
         Alert.alert("Success", "Interview created successfully.");
         setTimeout(() => {
           setInterviewDetails({ ...defaultInterviewForm });

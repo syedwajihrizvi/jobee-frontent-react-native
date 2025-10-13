@@ -1,6 +1,6 @@
 import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
-import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
+import { convertTo12Hour, getDecisionString, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
@@ -12,6 +12,49 @@ type Props = {
 };
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
+  const renderInterviewDecision = (decision: string) => {
+    const decisionString = getDecisionString(decision);
+    return (
+      <View
+        className="bg-emerald-100 px-3 py-1 rounded-full"
+        style={{
+          shadowColor: "#6366f1",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.2,
+          shadowRadius: 2,
+          elevation: 1,
+        }}
+      >
+        <Text className="font-quicksand-bold text-xs text-emerald-700">{decisionString}</Text>
+      </View>
+    );
+  };
+
+  const renderInterviewStatus = (status: string) => {
+    const style =
+      interviewStatusStyles[status as keyof typeof interviewStatusStyles] || interviewStatusStyles["SCHEDULED"];
+    return (
+      <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
+        <View className="flex-row items-center gap-2">
+          <View className={`w-2 h-2 ${style.bgColor} rounded-full`}></View>
+          <Text className="font-quicksand-medium text-sm text-gray-600">{style.text}</Text>
+        </View>
+        <View
+          className={`w-8 h-8 ${style.chevronColor} rounded-full items-center justify-center`}
+          style={{
+            shadowColor: style.chevronShadowColor,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <Feather name="chevron-right" size={16} color="#6366f1" />
+        </View>
+      </View>
+    );
+  };
+
   return (
     <TouchableOpacity
       className="mx-4 mb-4 bg-white rounded-2xl p-5 border border-gray-100"
@@ -38,6 +81,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
         >
           <Text className="font-quicksand-bold text-xs text-emerald-700">{interview.interviewDate}</Text>
         </View>
+        {renderInterviewDecision(interview.decisionResult)}
       </View>
       <View className="flex-row items-start gap-4">
         <View
@@ -130,24 +174,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
           </Text>
         </View>
       </View>
-      <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
-        <View className="flex-row items-center gap-2">
-          <View className="w-2 h-2 bg-emerald-500 rounded-full"></View>
-          <Text className="font-quicksand-medium text-sm text-gray-600">Interview scheduled</Text>
-        </View>
-        <View
-          className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center"
-          style={{
-            shadowColor: "#6366f1",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          <Feather name="chevron-right" size={16} color="#6366f1" />
-        </View>
-      </View>
+      {renderInterviewStatus(interview.status)}
     </TouchableOpacity>
   );
 };
