@@ -14,8 +14,8 @@ import { Application, JobFilters, User } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
-import { Redirect, router } from "expo-router";
-import React, { useRef, useState } from "react";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -34,7 +34,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
 
-const Index = () => {
+const Jobs = () => {
+  const { companyName } = useLocalSearchParams();
   const defaultFilters: JobFilters = {
     search: "",
     locations: [],
@@ -78,6 +79,15 @@ const Index = () => {
       transform: [{ translateX: slideX.value }],
     };
   });
+
+  useEffect(() => {
+    if (companyName) {
+      setFilters((prev) => ({ ...prev, companies: [companyName as string] }));
+      setFilterCount(1);
+      setTempFilters({ ...filters });
+      setTempFilterCount(1);
+    }
+  }, [companyName]);
 
   const openFilters = () => {
     slideX.value = withTiming(0, { duration: 300 });
@@ -311,13 +321,15 @@ const Index = () => {
             >
               <Text className="font-quicksand-semibold text-xs text-green-600">Open Filters</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleClearFilters}
-              className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
-              activeOpacity={0.7}
-            >
-              <Text className="font-quicksand-semibold text-xs text-red-600">Clear All</Text>
-            </TouchableOpacity>
+            {filterCount > 0 && (
+              <TouchableOpacity
+                onPress={handleClearFilters}
+                className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
+                activeOpacity={0.7}
+              >
+                <Text className="font-quicksand-semibold text-xs text-red-600">Clear All</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         {filterCount > 0 && <View className="h-2" />}
@@ -642,4 +654,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Jobs;

@@ -262,6 +262,7 @@ export const useJobApplication = (jobId: number) => {
   const fetchJobApplication = async () => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null;
+    console.log("Fetching application for job", jobId);
     const response = await fetch(`${USER_PROFILE_API_URL}/appliedJobs/${jobId}`, {
       method: 'GET',
       headers: {
@@ -276,7 +277,8 @@ export const useJobApplication = (jobId: number) => {
   return useQuery<Application | Error>({
     queryKey: ['job', jobId, 'application'],
     queryFn: fetchJobApplication,
-    staleTime: 1000 * 60 * 5,
-    enabled: !!jobId,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    enabled: !!jobId && !isNaN(jobId)
   })
 }

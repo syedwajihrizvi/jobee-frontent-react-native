@@ -42,13 +42,13 @@ export const signInBusiness= async (request: SignInParams) => {
 }
 
 export const signUpUser = async (request: UserSignUpParams) => {
-    const { email, password, firstName, lastName, age } = request
+    const { email, password, firstName, lastName } = request
     const result = await fetch(`${USER_ACCOUNTS_API_URL}/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({email,password,firstName,lastName,age})
+        body: JSON.stringify({email,password,firstName,lastName})
     })
     return result.status === 201
 }
@@ -90,6 +90,23 @@ export const getCurrentUser = async () => {
         return data
     }
     return null
+}
+
+export const getUserProfileDashboardSummary = async () => {
+    const token = await Asyncstorage.getItem('x-auth-token')
+    if (!token) return null
+    const targetUrl = `${PROFILES_API_URL}/dashboard`;
+    const response = await fetch(targetUrl, {
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    console.log(response)
+    if (response.status === 200) {
+        const data = await response.json()
+        console.log(data)
+        return data
+    }
 }
 
 export const registerForPushNotifications = async () => {

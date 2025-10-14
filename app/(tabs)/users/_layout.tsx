@@ -1,5 +1,5 @@
 import useAuthStore from "@/store/auth.store";
-import { Feather } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
@@ -38,35 +38,33 @@ const TabsLayout = () => {
       }}
     >
       <Tabs.Screen
+        name="dashboard/index"
+        options={{
+          tabBarIcon: ({ color, size }) => <AntDesign name="dashboard" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="jobs/index"
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages/index"
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="message-circle" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="calendar/index"
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="calendar" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="calendar" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile/index"
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
         }}
       />
     </Tabs>

@@ -42,6 +42,23 @@ export type CustomButtonProps = {
     onClick: () => void;
 }
 
+export type UserProfileSummary = {
+    fullName: string;
+    profileViews: number;
+    interviewsScheduled: number;
+    profileViews: number;
+    lastApplicationDate: string;
+    totalInConsideration: number;
+    totalRejections: number;
+    totalApplications: number;
+    lastApplication: Application| null;
+    favoriteCompanies: Company[];
+}
+
+export type BusinessProfileSummary = {
+
+}
+
 export type AuthState = {
     isAuthenticated: boolean;
     user: User | BusinessUser | null;
@@ -53,6 +70,14 @@ export type AuthState = {
     setIsLoading: (isLoading: boolean) => void;
     fetchAuthenticatedUser: () => Promise<void>;
     removeUser: () => void
+}
+
+export type ProfileSummaryState = {
+    profileSummary: UserProfileSummary | null;
+    setProfileSummary: (summary: UserProfileSummary) => void;
+    isLoading: boolean;
+    setIsLoading: (isLoading: boolean) => void;
+    fetchProfileSummary: () => Promise<void>
 }
 
 export type Tag = {
@@ -292,6 +317,8 @@ export type CreateApplication = {
 export type Application = {
     id: number,
     jobId: number,
+    companyName: string,
+    jobTitle: string,
     status: string,
     appliedAt: string;
     interviewId: number | null

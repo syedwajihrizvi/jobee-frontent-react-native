@@ -404,3 +404,15 @@ export const updateProfileSummary = async (summary: string) => {
     });
     return response.status === 200;
 }
+
+export const addViewToProfile = async (id: number) => {
+
+    try {
+        const result = await fetch(`${PROFILES_API_URL}/${id}/views`, {
+            method: 'PATCH'
+        })
+        console.log("Status of View: " + result.status)
+    } catch (error) {
+        console.error("Error adding view to job:", error)
+    }
+}  

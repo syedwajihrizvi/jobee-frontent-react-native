@@ -135,7 +135,11 @@ const JobListing = ({
               <Feather name="users" size={12} color="#10b981" />
             </View>
             <Text className="font-quicksand-semibold text-sm text-emerald-700">
-              {job.applicants || 0} {(job.applicants || 0) === 1 ? "applicant" : "applicants"}
+              {job.applicants === 0
+                ? "Be the first to apply"
+                : job.applicants === 1
+                  ? "1 applicant"
+                  : `${job.applicants} applications`}
             </Text>
           </View>
         </View>

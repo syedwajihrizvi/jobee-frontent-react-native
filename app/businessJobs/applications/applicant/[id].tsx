@@ -8,6 +8,7 @@ import { shortListCandidate, unshortListCandidate } from "@/lib/jobEndpoints";
 import { getS3ProfileImage, getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { useApplicant } from "@/lib/services/useProfile";
+import { addViewToProfile } from "@/lib/updateUserProfile";
 import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -35,6 +36,14 @@ const ApplicantForBusiness = () => {
       setIsShortListed(shortListedCandidates?.includes(application?.id) || false);
     }
   }, [shortListedCandidates, application]);
+
+  useEffect(() => {
+    const addProfileView = async () => {
+      await addViewToProfile(Number(candidateId));
+      console.log("Profile view added");
+    };
+    addProfileView();
+  }, [candidateId]);
 
   const handleShortList = async () => {
     if (!application) return;
