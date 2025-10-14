@@ -50,6 +50,7 @@ const JobDetails = () => {
   useEffect(() => {
     const addView = async () => {
       await addViewToJobs(Number(jobId));
+      console.log("Added view to job", jobId);
     };
     addView();
   }, [jobId]);
@@ -170,6 +171,25 @@ const JobDetails = () => {
             <View className="flex-row items-start justify-between mb-1">
               <View className="flex-1 mr-4">
                 <Text className="font-quicksand-bold text-lg text-gray-900 leading-8 mb-2">{job?.title}</Text>
+                <View className="flex-row items-center gap-4 mb-3">
+                  <View className="flex-row items-center gap-1">
+                    <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center">
+                      <Feather name="eye" size={12} color="#3b82f6" />
+                    </View>
+                    <Text className="font-quicksand-semibold text-sm text-blue-700">
+                      {job?.views || 0} {(job?.views || 0) === 1 ? "view" : "views"}
+                    </Text>
+                  </View>
+
+                  <View className="flex-row items-center gap-1">
+                    <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
+                      <Feather name="users" size={12} color="#10b981" />
+                    </View>
+                    <Text className="font-quicksand-semibold text-sm text-emerald-700">
+                      {job?.applicants || 0} {(job?.applicants || 0) === 1 ? "applicant" : "applicants"}
+                    </Text>
+                  </View>
+                </View>
                 <View className="flex-row items-center gap-2 mb-2 flex-wrap">
                   <View className="flex-row items-center gap-1">
                     <Feather name="map-pin" size={14} color="#6b7280" />

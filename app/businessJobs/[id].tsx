@@ -51,8 +51,8 @@ const BusinessJobDetails = () => {
           >
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1 mr-4">
-                <Text className="font-quicksand-bold text-2xl text-gray-900 leading-8 mb-2">{job.title}</Text>
-                <View className="flex-row items-center gap-2 mb-3 flex-wrap">
+                <Text className="font-quicksand-bold text-2xl text-gray-900 leading-8 mb-1">{job.title}</Text>
+                <View className="flex-row items-center gap-2 mb-1 flex-wrap">
                   <View className="flex-row items-center gap-1">
                     <Feather name="map-pin" size={14} color="#6b7280" />
                     <Text className="font-quicksand-medium text-sm text-gray-600">{job.location}</Text>
@@ -72,13 +72,12 @@ const BusinessJobDetails = () => {
                     </Text>
                   </View>
                 </View>
-                <View className="flex-row items-center gap-2 mb-3">
-                  <Feather name="dollar-sign" size={16} color="#059669" />
+                <View className="flex-row items-center gap-2 mb-1">
                   <Text className="font-quicksand-bold text-base text-emerald-600">
                     ${job.minSalary?.toLocaleString()} - ${job.maxSalary?.toLocaleString()}
                   </Text>
                 </View>
-                <View className="gap-2">
+                <View className="gap-1">
                   <View className="flex-row items-center gap-2">
                     <Feather name="calendar" size={14} color="#6b7280" />
                     <Text className="font-quicksand-medium text-sm text-gray-600">
@@ -93,32 +92,31 @@ const BusinessJobDetails = () => {
                   </View>
                 </View>
               </View>
-
-              <View className="gap-3">
+            </View>
+            <View className="flex-row flex-wrap gap-3">
+              <ActionButton
+                icon={<Feather name="users" size={16} color="white" />}
+                color="bg-blue-500"
+                shadowColor="#3b82f6"
+                handlePress={() => router.push(`/businessJobs/applications/${jobId}`)}
+                label={job.applicants === 1 ? "Applicant" : "Applicants"}
+              />
+              {!loadingShortListedCandidates && (
                 <ActionButton
-                  color="bg-blue-500"
-                  shadowColor="#3b82f6"
-                  handlePress={() => router.push(`/businessJobs/applications/${jobId}`)}
-                  count={job.applicants}
-                  label={job.applicants === 1 ? "Applicant" : "Applicants"}
+                  color="bg-emerald-500"
+                  shadowColor="#10b981"
+                  handlePress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}
+                  icon={<Feather name="star" size={16} color="white" />}
+                  label="Shortlisted"
                 />
-                {!loadingShortListedCandidates && (
-                  <ActionButton
-                    color="bg-emerald-500"
-                    shadowColor="#10b981"
-                    handlePress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}
-                    count={shortListedCandidates ? shortListedCandidates.length : 0}
-                    label="Shortlisted"
-                  />
-                )}
-                <ActionButton
-                  color="bg-gray-500"
-                  shadowColor="#6b7280"
-                  handlePress={() => router.push(`/businessJobs/interviews/${jobId}`)}
-                  count={job.interviews}
-                  label={job.interviews === 1 ? "Interview" : "Interviews"}
-                />
-              </View>
+              )}
+              <ActionButton
+                color="bg-gray-500"
+                shadowColor="#6b7280"
+                handlePress={() => router.push(`/businessJobs/interviews/${jobId}`)}
+                icon={<Feather name="calendar" size={16} color="white" />}
+                label={job.interviews === 1 ? "Interview" : "Interviews"}
+              />
             </View>
           </View>
           <View
@@ -216,50 +214,6 @@ const BusinessJobDetails = () => {
                   <Text className="text-orange-800 font-quicksand-semibold text-sm">{tag.name}</Text>
                 </View>
               ))}
-            </View>
-          </View>
-          <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 12,
-              elevation: 6,
-            }}
-          >
-            <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
-                <Feather name="user-check" size={20} color="#22c55e" />
-              </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Candidates Under Consideration</Text>
-            </View>
-
-            <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">
-              <Feather name="users" size={24} color="#6b7280" />
-              <Text className="font-quicksand-medium text-gray-600 mt-2">No candidates chosen yet</Text>
-            </View>
-          </View>
-          <View
-            className="bg-white mx-4 mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 12,
-              elevation: 6,
-            }}
-          >
-            <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
-                <Feather name="calendar" size={20} color="#f59e0b" />
-              </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Upcoming Interviews</Text>
-            </View>
-
-            <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">
-              <Feather name="calendar" size={24} color="#6b7280" />
-              <Text className="font-quicksand-medium text-gray-600 mt-2">No interviews scheduled</Text>
             </View>
           </View>
           <View className="flex-1" />

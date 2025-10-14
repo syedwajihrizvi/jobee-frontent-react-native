@@ -90,21 +90,6 @@ const ApplicantForBusiness = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return { bg: "bg-amber-100", text: "text-amber-800", border: "border-amber-200" };
-      case "SHORTLISTED":
-        return { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" };
-      case "INTERVIEWED":
-        return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" };
-      default:
-        return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
-    }
-  };
-
-  const statusColors = getStatusColor(application?.status || "PENDING");
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50 relative pb-20">
       {isLoading ? (
