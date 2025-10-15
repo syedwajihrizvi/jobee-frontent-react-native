@@ -1,7 +1,7 @@
 import resumeImage from "@/assets/images/sampleResume.jpg";
 import beepSound from "@/assets/sounds/beep.mp3";
 import popSound from "@/assets/sounds/pop.mp3";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 
 import { ReactNode } from "react";
@@ -50,6 +50,12 @@ export const profileLinkInfo: {
     subtitle: "View and manage your favorite job listings.",
     icon: <Feather name="star" size={20} color="black" />,
     href: "/profile/favoriteJobs",
+  },
+  {
+    label: "Favorite Companies",
+    subtitle: "View and manage your favorite companies.",
+    icon: <FontAwesome5 name="building" size={20} color="black" />,
+    href: "/profile/favoriteCompanies",
   },
   {
     label: "Manage Documents",

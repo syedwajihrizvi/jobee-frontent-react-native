@@ -56,12 +56,6 @@ const TabsLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="calendar/index"
-        options={{
-          tabBarIcon: ({ color, size }) => <Feather name="calendar" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="profile/index"
         options={{
           tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,

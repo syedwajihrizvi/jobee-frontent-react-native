@@ -1,8 +1,10 @@
 import Piechart from "@/components/Piechart";
+import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
+import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useProfileSummaryStore from "@/store/profile-summary.store";
-import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -10,8 +12,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Dashboard = () => {
   const { isLoading, profileSummary } = useProfileSummaryStore();
+  const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
-  const profileCompletion = 75;
+
+  const handleFavoriteCompany = async (companyId: number) => {
+    try {
+      const result = await toggleFavoriteCompany(Number(companyId));
+      if (result) {
+        const currFavorites = profileSummary?.favoriteCompanies || [];
+        const index = currFavorites.findIndex((c) => c.id === Number(companyId));
+        if (index > -1) {
+          const newFavorites = currFavorites.filter((c) => c.id !== Number(companyId));
+          useProfileSummaryStore.getState().setProfileSummary({
+            ...profileSummary!,
+            favoriteCompanies: newFavorites,
+          });
+        }
+        console.log("Successfully toggled favorite company");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite company:", error);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -77,13 +100,29 @@ const Dashboard = () => {
                 </View>
               </View>
               <View className="mb-3">
-                <View className="flex-row justify-between mb-2">
-                  <Text className="font-quicksand-medium text-sm text-gray-600">Complete your profile</Text>
-                  <Text className="font-quicksand-bold text-sm text-blue-600">{profileCompletion}%</Text>
-                </View>
-                <View className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <View className="h-full bg-blue-500 rounded-full" style={{ width: `${profileCompletion}%` }} />
-                </View>
+                {isLoadingProfileCompleteness ? (
+                  <ActivityIndicator size="small" color="#3b82f6" className="my-2" />
+                ) : (
+                  <>
+                    <View className="flex-row justify-between mb-2">
+                      {completeness?.completeness === 100 ? (
+                        <View className="flex-row items-center gap-2">
+                          <Feather name="check-circle" size={16} color="green" />
+                          <Text className="font-quicksand-medium text-sm text-gray-600">Good Job!</Text>
+                        </View>
+                      ) : (
+                        <Text className="font-quicksand-medium text-sm text-gray-600">Complete your profile</Text>
+                      )}
+                      <Text className="font-quicksand-bold text-sm text-blue-600">{completeness?.completeness}%</Text>
+                    </View>
+                    <View className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <View
+                        className="h-full bg-blue-500 rounded-full"
+                        style={{ width: `${completeness?.completeness!}%` }}
+                      />
+                    </View>
+                  </>
+                )}
               </View>
 
               <TouchableOpacity
@@ -204,16 +243,17 @@ const Dashboard = () => {
                   </View>
                   <Text className="font-quicksand-bold text-lg text-gray-900">Favorite Companies</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push("/users/jobs")} activeOpacity={0.7}>
+                <TouchableOpacity onPress={() => router.push("/profile/favoriteCompanies")} activeOpacity={0.7}>
                   <Feather name="chevron-right" size={16} color="#6b7280" />
                 </TouchableOpacity>
               </View>
               <View className="gap-3">
-                {profileSummary.favoriteCompanies.slice(0, 4).map((company, index) => (
+                {profileSummary.favoriteCompanies.map((company, index) => (
                   <TouchableOpacity
                     key={index}
                     className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
                     activeOpacity={0.7}
+                    onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
                   >
                     <View className="flex-row items-center gap-3">
                       <View className="w-8 h-8 bg-gray-300 rounded items-center justify-center">
@@ -221,7 +261,9 @@ const Dashboard = () => {
                       </View>
                       <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
                     </View>
-                    <Feather name="heart" size={14} color="#ef4444" />
+                    <TouchableOpacity onPress={() => handleFavoriteCompany(company.id)}>
+                      <AntDesign name="heart" size={14} color="#ef4444" solid />
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 ))}
               </View>

@@ -416,3 +416,16 @@ export const addViewToProfile = async (id: number) => {
         console.error("Error adding view to job:", error)
     }
 }  
+
+export const toggleFavoriteCompany = async (companyId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const result = await fetch(`${PROFILES_API_URL}/favorite-company?companyId=${companyId}`, {
+        method: 'PATCH',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    return result.status === 200;
+}
