@@ -27,7 +27,7 @@ export enum UserDocumentType {
   CERTIFICATE = "CERTIFICATE",
 }
 
-export const profileLinkInfo: {
+export const userProfileLinks: {
   label: string;
   icon: ReactNode;
   subtitle?: string;
@@ -37,31 +37,63 @@ export const profileLinkInfo: {
     label: "Edit Profile",
     subtitle: "Update your personal information, experience, and more.",
     icon: <Feather name="user" size={20} color="black" />,
-    href: "/profile/editProfile",
+    href: "/userProfile/editProfile",
   },
   {
     label: "Job Applied To",
     subtitle: "View the jobs you have applied to.",
     icon: <Feather name="briefcase" size={20} color="black" />,
-    href: "/profile/appliedJobs",
+    href: "/userProfile/appliedJobs",
   },
   {
     label: "Favorite Jobs",
     subtitle: "View and manage your favorite job listings.",
     icon: <Feather name="star" size={20} color="black" />,
-    href: "/profile/favoriteJobs",
+    href: "/userProfile/favoriteJobs",
   },
   {
     label: "Favorite Companies",
     subtitle: "View and manage your favorite companies.",
     icon: <FontAwesome5 name="building" size={20} color="black" />,
-    href: "/profile/favoriteCompanies",
+    href: "/userProfile/favoriteCompanies",
   },
   {
     label: "Manage Documents",
     subtitle: "Upload and manage your resumes, cover letters, and other documents.",
     icon: <Entypo name="documents" size={20} color="black" />,
-    href: "/profile/manageDocs",
+    href: "/userProfile/manageDocs",
+  },
+];
+
+export const businessProfileLinks: {
+  label: string;
+  icon: ReactNode;
+  subtitle?: string;
+  href: string;
+}[] = [
+  {
+    label: "Edit Profile",
+    subtitle: "Update your personal information, social media links, and more.",
+    icon: <Feather name="user" size={20} color="black" />,
+    href: "/businessProfile/editProfile",
+  },
+  {
+    label: "Active Job Postings",
+    subtitle: "View the jobs you have posted.",
+    icon: <Feather name="briefcase" size={20} color="black" />,
+    href: "/businessProfile/myJobPostings",
+  },
+  {
+    label: "Edit Company Profile",
+    subtitle: "View and manage your company details, size, location, media, and more.",
+    icon: <FontAwesome5 name="building" size={20} color="black" />,
+    href: "/businessProfile/companyProfile",
+  },
+  {
+    label: "Upcoming Interviews",
+    subtitle: "View and manage your upcoming interviews with candidates.",
+    icon: <Feather name="calendar" size={20} color="black" />,
+    href: "/businessProfile/interviews",
   },
 ];
 

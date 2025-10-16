@@ -1,4 +1,5 @@
 import Piechart from "@/components/Piechart";
+import { useRecommendedJobs } from "@/lib/services/useJobs";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
@@ -6,7 +7,7 @@ import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import { AntDesign, Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,7 +15,8 @@ const Dashboard = () => {
   const { isLoading, profileSummary } = useProfileSummaryStore();
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
-
+  const { data: recommendedJobs, isLoading: isLoadingRecommended } = useRecommendedJobs();
+  const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const handleFavoriteCompany = async (companyId: number) => {
     try {
       const result = await toggleFavoriteCompany(Number(companyId));
@@ -248,24 +250,28 @@ const Dashboard = () => {
                 </TouchableOpacity>
               </View>
               <View className="gap-3">
-                {profileSummary.favoriteCompanies.map((company, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
-                    activeOpacity={0.7}
-                    onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
-                  >
-                    <View className="flex-row items-center gap-3">
-                      <View className="w-8 h-8 bg-gray-300 rounded items-center justify-center">
-                        <FontAwesome5 name="building" size={14} color="#6b7280" />
+                {profileSummary.favoriteCompanies.length === 0 && (
+                  <Text className="font-quicksand-medium text-sm text-gray-600">No favorite companies yet.</Text>
+                )}
+                {profileSummary.favoriteCompanies.length > 0 &&
+                  profileSummary.favoriteCompanies.map((company, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
+                      activeOpacity={0.7}
+                      onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
+                    >
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-8 h-8 bg-gray-300 rounded items-center justify-center">
+                          <FontAwesome5 name="building" size={14} color="#6b7280" />
+                        </View>
+                        <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
                       </View>
-                      <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => handleFavoriteCompany(company.id)}>
-                      <AntDesign name="heart" size={14} color="#ef4444" solid />
+                      <TouchableOpacity onPress={() => handleFavoriteCompany(company.id)}>
+                        <AntDesign name="heart" size={14} color="#ef4444" solid />
+                      </TouchableOpacity>
                     </TouchableOpacity>
-                  </TouchableOpacity>
-                ))}
+                  ))}
               </View>
             </View>
             <View

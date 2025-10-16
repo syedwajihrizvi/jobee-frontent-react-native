@@ -4,12 +4,13 @@ import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
+  isFavorited: boolean;
   company: Company;
   onPress?: () => void;
   onFavoritePress?: () => void;
 };
 
-const FavoriteCompanyCard = ({ company, onPress, onFavoritePress }: Props) => {
+const FavoriteCompanyCard = ({ isFavorited, company, onPress, onFavoritePress }: Props) => {
   return (
     <TouchableOpacity
       className="bg-white border border-gray-200 rounded-2xl p-5 mb-3"
@@ -41,7 +42,7 @@ const FavoriteCompanyCard = ({ company, onPress, onFavoritePress }: Props) => {
           onPress={onFavoritePress}
           activeOpacity={0.7}
         >
-          <FontAwesome5 name="heart" size={16} color="#ef4444" solid />
+          <FontAwesome5 name="heart" size={16} color="#ef4444" solid={isFavorited} />
         </TouchableOpacity>
       </View>
       <TouchableOpacity

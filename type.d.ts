@@ -163,6 +163,10 @@ export type Company = {
     industry: string;
     description: string;
     location: string;
+    hqCity: string;
+    hqState: string;
+    province: string;
+    hqCountry: string;
 }
     
 export type User = {
@@ -200,6 +204,14 @@ export type BusinessUser = {
     companyId: number;
     firstName: string;
     lastName: string;
+    profileImageUrl: string;
+    title: string;
+    location: string;
+    verified: boolean;
+    city: string;
+    state: string;
+    country: string;
+    phoneNumber: string;
 }
 
 export type InterviewerProfileSummary = {

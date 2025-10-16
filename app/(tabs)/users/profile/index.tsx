@@ -1,6 +1,6 @@
 import BackBar from "@/components/BackBar";
 import ProfileLink from "@/components/ProfileLink";
-import { images, profileLinkInfo } from "@/constants/index";
+import { images, userProfileLinks } from "@/constants/index";
 import { signOut } from "@/lib/auth";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { updateUserProfileImage } from "@/lib/updateUserProfile";
@@ -152,7 +152,7 @@ const Profile = () => {
             showsVerticalScrollIndicator={false}
           >
             <View className="flex flex-col gap-4 pb-20">
-              {profileLinkInfo.map((link, index) => (
+              {userProfileLinks.map((link, index) => (
                 <ProfileLink
                   key={index}
                   icon={link.icon}
@@ -165,7 +165,7 @@ const Profile = () => {
                 icon={<Feather name="calendar" size={20} />}
                 label="Upcoming Interviews"
                 subtitle="View and manage your scheduled interviews"
-                onPress={() => router.push(`/profile/interviews?userId=${(user as User)?.id}`)}
+                onPress={() => router.push(`/userProfile/interviews?userId=${(user as User)?.id}`)}
                 rightIcon={true}
               />
               <ProfileLink

@@ -4,6 +4,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
 
 const PROFILES_API_URL = 'http://192.168.2.29:8080/profiles';
+const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles';
 export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -339,6 +340,8 @@ export const mapGeneralInfoFieldToAPIField = (field: string) : string => {
             return 'lastName';
         case 'Phone Number':
             return 'phoneNumber';
+        case "Email":
+            return 'email';
         case 'Title':
             return 'title';
         case 'City':
@@ -428,4 +431,46 @@ export const toggleFavoriteCompany = async (companyId: number) => {
         }
     });
     return result.status === 200;
+}
+
+export const updateGeneralInfoForBusinessUser = async ({field, value}: {field: string, value: string}) => {
+    console.log("Updating field:", field, "with value:", value);
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    if (!field) return null;
+    const body = {
+        [field]: value
+    }
+
+    const response = await fetch(`${BUSINESS_PROFILES_API_URL}/update-general-info/me`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    console.log("Update response:", response);
+    return response.status === 200;
+}
+
+export const updateBusinessUserLocation = async ({city, country, state }: {city: string, country: string, state: string}) => {
+    console.log("Updating location to:", {city, country, state});
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const body = {
+        city,
+        country,
+        state
+    }
+    const response = await fetch(`${BUSINESS_PROFILES_API_URL}/update-general-info/me`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    console.log("Location update response:", response);
+    return response.status === 200;
 }

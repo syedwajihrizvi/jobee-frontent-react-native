@@ -86,7 +86,7 @@ const Jobs = () => {
             <Image source={{ uri: images.companyLogo }} className="size-12 rounded-full" resizeMode="contain" />
           </View>
           <View>
-            <Text className="font-quicksand-bold text-xl text-gray-900">Job Applications</Text>
+            <Text className="font-quicksand-bold text-xl text-gray-900">Jobs</Text>
             <Text className="font-quicksand-medium text-sm text-gray-600">
               View all your company&apos;s job listings
             </Text>

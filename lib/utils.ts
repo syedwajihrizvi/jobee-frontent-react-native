@@ -218,6 +218,21 @@ export const editProfileSections: { label: string; subtitle: string; route: stri
   },
 ];
 
+export const businessProfileSections: { label: string; subtitle: string; route: string; icon: string }[] = [
+  {
+    label: "General Information",
+    subtitle: "Update your personal details such as name, email, etc.",
+    route: "general",
+    icon: "user",
+  },
+  {
+    label: "Social Media Links",
+    subtitle: "Add or update links to your social media profiles.",
+    route: "social-media",
+    icon: "share-2",
+  }
+];
+
 export const getCustomProfilePlaceholderForField = (field: string) => {
   switch(field) {
     case 'First Name':
@@ -237,6 +252,27 @@ export const getCustomProfilePlaceholderForField = (field: string) => {
     default:
       return "e.g. Value";
   }
+}
+
+export const getCustomCompanyFormPlaceholderField = (field: string) => {
+  switch(field) {
+    case 'Company Name':
+      return "e.g. Amazon";
+    case 'Industry':
+      return "e.g. Information Technology";
+    case 'Description':
+      return "e.g. Amazon is a multinational technology company...";
+    case 'Location':
+      return "e.g. Seattle, WA";
+    case 'Company Size':
+      return "e.g. 10,000+ employees";
+    case 'Website':
+      return "e.g. www.amazon.com";
+    case 'LinkedIn':
+      return "e.g. linkedin.com/company/amazon";
+    default:
+      return "e.g. Value";
+}
 }
 
 export const interviewStatusStyles = {

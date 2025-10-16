@@ -11,9 +11,11 @@ import { sounds, UserDocumentType } from "@/constants";
 import { addViewToJobs, applyToJob } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob, useJobApplication } from "@/lib/services/useJobs";
+import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { getEmploymentType, getWorkArrangement, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import { CreateApplication, User, UserDocument } from "@/type";
+import useProfileSummaryStore from "@/store/profile-summary.store";
+import { Company, CreateApplication, User, UserDocument } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
   const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
+  const { profileSummary, isLoading: isLoadingProfileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
   const { data: jobApplication, isLoading: isLoadingJobApplication } = useJobApplication(Number(jobId));
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
@@ -68,6 +71,36 @@ const JobDetails = () => {
       }
     }
   }, [isLoadingUser, user]);
+
+  const checkIfCompanyIsFavorited = (companyId: number) => {
+    if (!profileSummary) return false;
+    return profileSummary?.favoriteCompanies.some((company) => company.id === companyId);
+  };
+
+  const handleFavoriteCompany = async (company: Company) => {
+    try {
+      const result = await toggleFavoriteCompany(Number(company.id));
+      if (result) {
+        const currFavorites = profileSummary?.favoriteCompanies || [];
+        const index = currFavorites.findIndex((c) => c.id === Number(company.id));
+        if (index > -1) {
+          const newFavorites = currFavorites.filter((c) => c.id !== Number(company.id));
+          useProfileSummaryStore.getState().setProfileSummary({
+            ...profileSummary!,
+            favoriteCompanies: newFavorites,
+          });
+        } else {
+          useProfileSummaryStore.getState().setProfileSummary({
+            ...profileSummary!,
+            favoriteCompanies: [company, ...currFavorites],
+          });
+        }
+        console.log("Successfully toggled favorite company");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite company:", error);
+    }
+  };
 
   const handleJobBottomOpen = () => {
     companyBottomRef.current?.close();
@@ -281,11 +314,21 @@ const JobDetails = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-center gap-2 mb-4">
-              <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center">
-                <FontAwesome5 name="building" size={16} color="#8b5cf6" />
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center gap-2">
+                <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center">
+                  <FontAwesome5 name="building" size={16} color="#8b5cf6" />
+                </View>
+                <Text className="font-quicksand-bold text-xl text-gray-900">Company Overview</Text>
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Company Overview</Text>
+
+              <TouchableOpacity
+                className="w-10 h-10 bg-red-50 rounded-full items-center justify-center border border-red-100"
+                onPress={() => handleFavoriteCompany(company!)}
+                activeOpacity={0.7}
+              >
+                <FontAwesome5 name="heart" size={16} color="#ef4444" solid={checkIfCompanyIsFavorited(company?.id!)} />
+              </TouchableOpacity>
             </View>
             {isLoadingCompany ? (
               <View className="items-center py-4">
