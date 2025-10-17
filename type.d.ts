@@ -56,6 +56,17 @@ export type UserProfileSummary = {
 }
 
 export type BusinessProfileSummary = {
+    totalJobsPosted: number;
+    totalJobsPostedByUser: number;
+    totalApplicationsReceived: number;
+    totalJobViews: number;
+    totalInterviewsScheduled: number
+    totalOffersMade: number;
+    totalHires: number;
+    lastJobPosted: Job | null;
+    upcomingInterviews: InterviewSummary[];
+    mostAppliedJobs: Job[];
+    mostViewedJobs: Job[];
 
 }
 
@@ -75,6 +86,14 @@ export type AuthState = {
 export type ProfileSummaryState = {
     profileSummary: UserProfileSummary | null;
     setProfileSummary: (summary: UserProfileSummary) => void;
+    isLoading: boolean;
+    setIsLoading: (isLoading: boolean) => void;
+    fetchProfileSummary: () => Promise<void>
+}
+
+export type BusinessProfileSummaryState = {
+    profileSummary: BusinessProfileSummary | null;
+    setProfileSummary: (summary: BusinessProfileSummary) => void;
     isLoading: boolean;
     setIsLoading: (isLoading: boolean) => void;
     fetchProfileSummary: () => Promise<void>

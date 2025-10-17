@@ -2,8 +2,8 @@ import BackBar from "@/components/BackBar";
 import ProfileLink from "@/components/ProfileLink";
 import { businessProfileLinks, images } from "@/constants/index";
 import { signOut } from "@/lib/auth";
-import { getS3ProfileImage } from "@/lib/s3Urls";
-import { updateUserProfileImage } from "@/lib/updateUserProfile";
+import { getS3BusinessProfileImage } from "@/lib/s3Urls";
+import { updateBusinessProfileImage } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
@@ -22,7 +22,6 @@ const Profile = () => {
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
   const user = authUser as BusinessUser | null;
-  console.log("Business User:", user);
   const handleProfileImagePicker = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
@@ -71,9 +70,11 @@ const Profile = () => {
     }
     setUploadingUserProfileImage(true);
     try {
-      const response = await updateUserProfileImage(image);
+      const response = await updateBusinessProfileImage(image);
+      console.log("Update Business Profile Image Response:", response);
       if (response) {
         Alert.alert("Success", "Profile image updated successfully.");
+        console.log("Updated Profile Image URL:", response.profileImageUrl);
         setUploadedProfileImage(response.profileImageUrl);
       } else {
         Alert.alert("Error", "Failed to update profile image. Please try again.");
@@ -107,13 +108,13 @@ const Profile = () => {
     } else if (uploadedProfileImage) {
       return (
         <Image
-          source={{ uri: getS3ProfileImage(uploadedProfileImage) }}
+          source={{ uri: getS3BusinessProfileImage(uploadedProfileImage) }}
           className="size-14 rounded-full"
           resizeMode="contain"
         />
       );
     }
-    const uri = getS3ProfileImage(user.profileImageUrl);
+    const uri = getS3BusinessProfileImage(user.profileImageUrl);
     return <Image source={{ uri }} className="size-14 rounded-full" resizeMode="contain" />;
   };
 

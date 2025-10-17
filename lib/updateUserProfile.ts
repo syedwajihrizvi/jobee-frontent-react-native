@@ -5,6 +5,8 @@ import { ImagePickerResult } from "expo-image-picker";
 
 const PROFILES_API_URL = 'http://192.168.2.29:8080/profiles';
 const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles';
+const COMPANIES_API_URL = 'http://192.168.2.29:8080/api/companies';
+
 export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -29,6 +31,31 @@ export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     if (response.status === 200) return data as ProfileImageUpdate;
     return null;
 };
+
+export const updateBusinessProfileImage = async (image: ImagePickerResult) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData();
+    const localUri = image.assets![0].uri;
+    const fileName = image.assets![0].fileName || localUri.split('/').pop() || 'profile.jpg';
+    const type = image.assets![0].type || 'image/jpeg';
+    formData.append('profileImage', {
+        uri: localUri,
+        name: fileName,
+        type
+    } as any);
+    const response = await fetch(
+        `${BUSINESS_PROFILES_API_URL}/update-profile-image/me`, {
+        method: 'PATCH',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+    const data = await response.json();
+    if (response.status === 200) return data as ProfileImageUpdate;
+    return null;
+}
 
 export const updateUserVideoIntro = async (videoIntro: ImagePickerResult) => {
     const token = await AsyncStorage.getItem('x-auth-token');
@@ -356,6 +383,29 @@ export const mapGeneralInfoFieldToAPIField = (field: string) : string => {
             return '';  
     }
 }
+
+export const mapCompanyProfileToAPIField = (field: string) : string => {
+    switch (field) {
+        case 'Company Name':
+            return 'name';
+        case 'Industry':
+            return 'industry';
+        case 'Number of Employees':
+            return 'numEmployees';
+        case "Founded Year":
+            return 'foundedYear';
+        case "City":
+            return 'hqCity';
+        case 'Country':
+            return 'hqCountry';
+        case 'State':
+            return 'hqState';
+        case 'Description':
+            return 'description';
+        default:
+            return '';  
+    }
+}
 export const updateGeneralInfo = async ({field, value}: {field: string, value: string}) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -450,12 +500,10 @@ export const updateGeneralInfoForBusinessUser = async ({field, value}: {field: s
         },
         body: JSON.stringify(body)
     });
-    console.log("Update response:", response);
     return response.status === 200;
 }
 
 export const updateBusinessUserLocation = async ({city, country, state }: {city: string, country: string, state: string}) => {
-    console.log("Updating location to:", {city, country, state});
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
     const body = {
@@ -472,5 +520,42 @@ export const updateBusinessUserLocation = async ({city, country, state }: {city:
         body: JSON.stringify(body)
     });
     console.log("Location update response:", response);
+    return response.status === 200;
+}
+
+export const updateCompanyProfile = async ({field, value, companyId}: {field: string, value: string, companyId: number}) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    if (!field) return null;
+    const body = {
+        [field]: value
+    }
+    const response = await fetch(`${COMPANIES_API_URL}/${companyId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    return response.status === 200;
+}
+
+export const updateCompanyLocation = async ({city, country, state, companyId }: {city: string, country: string, state: string, companyId: number}) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const body = {
+        hqCity: city,
+        hqCountry: country,
+        hqState: state
+    }
+    const response = await fetch(`${COMPANIES_API_URL}/${companyId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
     return response.status === 200;
 }

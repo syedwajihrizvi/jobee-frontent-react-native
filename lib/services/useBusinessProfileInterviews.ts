@@ -12,9 +12,7 @@ export const useBusinessProfileInterviews = () => {
                 'x-auth-token': `Bearer ${token}` || ''
             }
         });
-        console.log(response)
         const data = await response.json();
-        console.log(data)
         return data;
     }
 

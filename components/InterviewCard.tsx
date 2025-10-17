@@ -57,7 +57,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
 
   return (
     <TouchableOpacity
-      className="mx-4 mb-4 bg-white rounded-2xl p-5 border border-gray-100"
+      className="mb-4 bg-white rounded-2xl p-5 border border-gray-100"
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },

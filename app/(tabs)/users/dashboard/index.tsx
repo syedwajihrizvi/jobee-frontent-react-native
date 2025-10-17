@@ -129,7 +129,7 @@ const Dashboard = () => {
 
               <TouchableOpacity
                 className="bg-blue-50 border border-blue-200 rounded-xl p-3"
-                onPress={() => router.push("/profile/editProfile")}
+                onPress={() => router.push("/userProfile/editProfile")}
                 activeOpacity={0.7}
               >
                 <View className="flex-row items-center gap-2">
@@ -164,7 +164,7 @@ const Dashboard = () => {
 
               <TouchableOpacity
                 className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mt-4 items-center"
-                onPress={() => router.push("/profile/appliedJobs")}
+                onPress={() => router.push("/userProfile/appliedJobs")}
                 activeOpacity={0.7}
               >
                 <View className="flex-row items-center gap-2">
@@ -245,7 +245,7 @@ const Dashboard = () => {
                   </View>
                   <Text className="font-quicksand-bold text-lg text-gray-900">Favorite Companies</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push("/profile/favoriteCompanies")} activeOpacity={0.7}>
+                <TouchableOpacity onPress={() => router.push("/userProfile/favoriteCompanies")} activeOpacity={0.7}>
                   <Feather name="chevron-right" size={16} color="#6b7280" />
                 </TouchableOpacity>
               </View>

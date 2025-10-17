@@ -21,7 +21,7 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
 
   return (
     <TouchableOpacity
-      className="mx-4 mb-4 bg-white rounded-2xl p-5 border border-gray-100"
+      className="mb-4 bg-white rounded-2xl p-5 border border-gray-100"
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
@@ -59,15 +59,6 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
             </Text>
           </View>
         </View>
-        <View className={`${statusColors.bg} ${statusColors.border} border rounded-xl px-3 py-2`}>
-          <View className="flex-row items-center gap-1">
-            <Feather name="users" size={14} color={statusColors.text.replace("text-", "#")} />
-            <Text className={`font-quicksand-bold text-sm ${statusColors.text}`}>{job.applicants}</Text>
-          </View>
-          <Text className={`font-quicksand-medium text-xs ${statusColors.text}`}>
-            Applicant{job.applicants !== 1 ? "s" : ""}
-          </Text>
-        </View>
       </View>
       <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
         <View className="flex-row items-center gap-2">
@@ -103,7 +94,7 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
 
         <View className="flex-1 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
           <View className="flex-row items-center gap-2">
-            <Feather name="send" size={14} color="#10b981" />
+            <Feather name="users" size={14} color="#10b981" />
             <Text className="font-quicksand-bold text-sm text-emerald-700">Applied</Text>
           </View>
           <Text className="font-quicksand-bold text-lg text-emerald-800 mt-1">{job.applicants}</Text>

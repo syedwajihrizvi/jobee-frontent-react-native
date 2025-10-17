@@ -25,6 +25,7 @@ const panelWidth = screenWidth * 0.8;
 
 const Applications = () => {
   const { id, shortListed } = useLocalSearchParams();
+  console.log("Job ID:", id, "Shortlisted:", shortListed);
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const [filters, setFilters] = useState<ApplicantFilters>({ locations: [], skills: [], educations: "Any" });

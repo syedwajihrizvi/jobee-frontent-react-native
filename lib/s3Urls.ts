@@ -5,6 +5,10 @@ export const getS3ProfileImage = (key: string) => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/user-profile-images/${key}`;
 };
 
+export const getS3BusinessProfileImage = (key: string) => {
+    return `https://${bucketName}.s3.${region}.amazonaws.com/business-profile-images/${key}`;
+}
+
 export const getS3DocumentUrl = (key: string) => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/user-documents/${key}`;
 };

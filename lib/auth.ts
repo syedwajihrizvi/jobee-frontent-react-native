@@ -6,6 +6,7 @@ import * as Notifications from 'expo-notifications';
 const USER_ACCOUNTS_API_URL = "http://192.168.2.29:8080/accounts";
 const PROFILES_API_URL = "http://192.168.2.29:8080/profiles";
 const BUSINESS_ACCOUNTS_API_URL = "http://192.168.2.29:8080/business-accounts";
+const BUSINESS_PROFILES_API_URL = "http://192.168.2.29:8080/business-profiles";
 
 export const signInUser = async (request: SignInParams) => {
     const response = await fetch(`${USER_ACCOUNTS_API_URL}/login`, {
@@ -105,6 +106,21 @@ export const getUserProfileDashboardSummary = async () => {
     if (response.status === 200) {
         const data = await response.json()
         console.log(data)
+        return data
+    }
+}
+
+export const getBusinessUserProfileDashboardSummary = async () => {
+    const token = await Asyncstorage.getItem('x-auth-token')
+    if (!token) return null
+    const targetUrl = `${BUSINESS_PROFILES_API_URL}/dashboard`;
+    const response = await fetch(targetUrl, {
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    if (response.status === 200) {
+        const data = await response.json()
         return data
     }
 }

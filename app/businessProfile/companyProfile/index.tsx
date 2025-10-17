@@ -1,50 +1,57 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
+import CustomMultilineInput from "@/components/CustomMultilineInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import ProfileCard from "@/components/ProfileCard";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import { useCompany } from "@/lib/services/useCompany";
+import { mapCompanyProfileToAPIField, updateCompanyLocation, updateCompanyProfile } from "@/lib/updateUserProfile";
 import { getCustomCompanyFormPlaceholderField } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import { BusinessUser } from "@/type";
+import { BusinessUser, Company } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const getFieldMaxLength = (field: string) => {
   switch (field) {
-    case "First Name":
-    case "Last Name":
+    case "Company Name":
       return 30;
-    case "Title":
-      return 100;
-    case "Email":
-      return 100;
+    case "Founded Year":
+      return 4;
+    case "Industry":
+      return 55;
+    case "Number of Employees":
+      return 6;
     case "City":
-      return 100;
-    case "County":
-      return 100;
+      return 28;
+    case "Country":
+      return 28;
     case "State":
-      return 100;
-    case "Province":
-      return 2;
+      return 28;
+    case "Description":
+      return 500;
     default:
-      return 100;
+      return 30;
   }
 };
 
 const getFieldInfo = (field: string) => {
   switch (field) {
-    case "Company Title":
-      return "Enter your company's title.";
-    case "Title":
-      return "Your current job title or professional role (e.g., Senior Software Engineer, Marketing Manager).";
-    case "Email":
-      return "Use a professional email address that you check regularly.";
+    case "Company Name":
+      return "Enter the name of your company.";
+    case "Founded Year":
+      return "Enter the year the company was founded.";
+    case "Industry":
+      return "Enter the industry the company is a part of.";
     case "Location":
-      return "Your current city and state/country (e.g., San Francisco, CA or London, UK).";
+      return "Company's current city and state/country (e.g., San Francisco, CA or London, UK).";
+    case "Number of Employees":
+      return "Enter the total number of employees in your company.";
+    case "Description":
+      return "Provide a brief description of your company.";
     default:
       return "Update this field with your current information.";
   }
@@ -52,7 +59,8 @@ const getFieldInfo = (field: string) => {
 const CompanyProfile = () => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
-  const { isLoading, data: company } = useCompany(user?.companyId);
+  const { isLoading, data } = useCompany(user?.companyId);
+  const [company, setCompany] = useState(data);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -66,18 +74,26 @@ const CompanyProfile = () => {
     state: "",
   });
 
+  useEffect(() => {
+    if (data && !isLoading) {
+      setCompany(data);
+    }
+  }, [data, isLoading]);
+
   const getCurrentFieldValue = (field: string) => {
     switch (field) {
-      case "First Name":
-        return user?.firstName || "";
-      case "Last Name":
-        return user?.lastName || "";
-      case "Title":
-        return user?.title || "";
-      case "Email":
-        return user?.email || "";
+      case "Company Name":
+        return company?.name || "";
+      case "Founded Year":
+        return company?.foundedYear ? company.foundedYear.toString() : "";
+      case "Industry":
+        return company?.industry || "";
+      case "Number of Employees":
+        return company?.numEmployees ? company.numEmployees.toString() : "";
       case "Location":
-        return user?.location || "";
+        return company?.location || "";
+      case "Description":
+        return company?.description || "";
       default:
         return "";
     }
@@ -86,7 +102,6 @@ const CompanyProfile = () => {
   const handleEditPress = (field: string) => {
     setUpdateSuccess(false);
     setEditingField(field);
-    // Pre-fill the form with current value
     if (field !== "Location") {
       const currentValue = getCurrentFieldValue(field);
       setCompanyForm({ value: currentValue || "" });
@@ -100,20 +115,53 @@ const CompanyProfile = () => {
     setShowModal(true);
   };
 
-  const submitProfileUpdate = () => {
+  const submitProfileUpdate = async () => {
     setIsSubmitting(true);
-    // Simulate an API call
-    setTimeout(() => {
+    if (!editingField) return;
+    try {
+      if (editingField !== "Location") {
+        const fieldName = mapCompanyProfileToAPIField(editingField);
+        const res = await updateCompanyProfile({
+          field: fieldName,
+          value: companyForm.value.trim(),
+          companyId: user?.companyId as number,
+        });
+        if (res) {
+          setCompanyForm({ value: "" });
+          setEditingField(null);
+          setCompany({ ...company, [fieldName]: companyForm.value.trim() } as Company);
+          setUpdateSuccess(true);
+        }
+      } else {
+        const { city, country, state } = locationForm;
+        const res = await updateCompanyLocation({
+          city: city.trim(),
+          country: country.trim(),
+          state: state.trim(),
+          companyId: user?.companyId as number,
+        });
+        if (res) {
+          setCompany({
+            ...company,
+            location: `${city.trim()}, ${state.trim()}, ${country.trim()}`,
+            hqCity: city.trim(),
+            hqCountry: country.trim(),
+            hqState: state.trim(),
+          } as Company);
+          setUpdateSuccess(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
       setIsSubmitting(false);
-      setUpdateSuccess(true);
-    }, 2000);
+    }
   };
 
-  console.log("Company Data:", company);
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <StatusBar hidden={true} />
-      <BackBar label="My Job Postings" />
+      <BackBar label="Edit Company Profile" />
       <ScrollView>
         <View className="px-6 py-6">
           <View
@@ -149,6 +197,12 @@ const CompanyProfile = () => {
                 handleEditPress={handleEditPress}
               />
               <ProfileCard
+                label="Description"
+                subtitle={company?.description.slice(0, 100) || "Not Provided"}
+                icon={<FontAwesome5 name="building" size={18} color="#22c55e" />}
+                handleEditPress={handleEditPress}
+              />
+              <ProfileCard
                 label="Founded Year"
                 subtitle={company?.foundedYear ? company.foundedYear.toString() : "Not Provided"}
                 icon={<FontAwesome5 name="calendar" size={18} color="#22c55e" />}
@@ -176,7 +230,11 @@ const CompanyProfile = () => {
           )}
         </View>
       </ScrollView>
-      <ModalWithBg visible={showModal} customHeight={editingField === "Location" ? 0.55 : 0.5} customWidth={0.75}>
+      <ModalWithBg
+        visible={showModal}
+        customHeight={editingField === "Location" || editingField === "Description" ? 0.55 : 0.5}
+        customWidth={0.75}
+      >
         <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">Update {editingField || ""}</Text>
@@ -204,105 +262,117 @@ const CompanyProfile = () => {
                       </View>
                     </View>
                   </View>
-                  {editingField !== "Location" ? (
-                    <>
-                      <View className="px-6">
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">{editingField}</Text>
-                          <Text className="font-quicksand-medium text-xs text-gray-500">
-                            {companyForm.value.length}/{getFieldMaxLength(editingField || "")} characters
-                          </Text>
-                        </View>
-                        <CustomInput
-                          placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                          label=""
-                          autoCapitalize="words"
-                          onChangeText={(text) => setCompanyForm({ value: text })}
-                          value={companyForm.value}
-                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
+                  {editingField === "Description" && (
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">{editingField}</Text>
+                        <Text className="font-quicksand-medium text-xs text-gray-500">
+                          {companyForm.value.length}/{getFieldMaxLength(editingField || "")} characters
+                        </Text>
                       </View>
-                    </>
-                  ) : (
-                    <>
-                      <View className="px-6">
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">City</Text>
-                          <Text className="font-quicksand-medium text-xs text-gray-500">
-                            {locationForm.city.length}/{getFieldMaxLength("City")} characters
-                          </Text>
-                        </View>
-                        <CustomInput
-                          placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                          label=""
-                          onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
-                          value={locationForm.city}
-                          autoCapitalize="words"
-                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
-                          <Text className="font-quicksand-medium text-xs text-gray-500">
-                            {locationForm.country.length}/{getFieldMaxLength("Country")} characters
-                          </Text>
-                        </View>
-                        <CustomInput
-                          placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                          label=""
-                          autoCapitalize="words"
-                          onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
-                          value={locationForm.country}
-                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">State/Province</Text>
-                          <Text className="font-quicksand-medium text-xs text-gray-500">
-                            {locationForm.state.length}/{getFieldMaxLength("State")} characters
-                          </Text>
-                        </View>
-                        <CustomInput
-                          placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                          label=""
-                          onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
-                          autoCapitalize="characters"
-                          autocorrect={false}
-                          value={locationForm.state}
-                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
+                      <CustomMultilineInput
+                        value={companyForm.value}
+                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
+                        onChangeText={(text) => setCompanyForm({ value: text })}
+                      />
+                    </View>
+                  )}
+                  {editingField === "Location" && (
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">City</Text>
+                        <Text className="font-quicksand-medium text-xs text-gray-500">
+                          {locationForm.city.length}/{getFieldMaxLength("City")} characters
+                        </Text>
                       </View>
-                    </>
+                      <CustomInput
+                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
+                        label=""
+                        onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
+                        value={locationForm.city}
+                        autoCapitalize="words"
+                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
+                        <Text className="font-quicksand-medium text-xs text-gray-500">
+                          {locationForm.country.length}/{getFieldMaxLength("Country")} characters
+                        </Text>
+                      </View>
+                      <CustomInput
+                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
+                        label=""
+                        autoCapitalize="words"
+                        onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
+                        value={locationForm.country}
+                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">State/Province</Text>
+                        <Text className="font-quicksand-medium text-xs text-gray-500">
+                          {locationForm.state.length}/{getFieldMaxLength("State")} characters
+                        </Text>
+                      </View>
+                      <CustomInput
+                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
+                        label=""
+                        onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
+                        autoCapitalize="characters"
+                        autocorrect={false}
+                        value={locationForm.state}
+                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                    </View>
+                  )}
+                  {editingField !== "Location" && editingField !== "Description" && (
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">{editingField}</Text>
+                        <Text className="font-quicksand-medium text-xs text-gray-500">
+                          {companyForm.value.length}/{getFieldMaxLength(editingField || "")} characters
+                        </Text>
+                      </View>
+                      <CustomInput
+                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
+                        label=""
+                        autoCapitalize="words"
+                        onChangeText={(text) => setCompanyForm({ value: text })}
+                        value={companyForm.value}
+                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                    </View>
                   )}
                   <View className="flex-1" />
                   <View className="px-6 pb-4">

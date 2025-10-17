@@ -52,10 +52,12 @@ const Interviews = () => {
           className="p-2"
           data={filteredInterviews}
           renderItem={({ item }) => (
-            <InterviewCard
-              interview={item}
-              handlePress={() => router.push(`/businessJobs/interviews/interview/${item.id}`)}
-            />
+            <View className="px-2">
+              <InterviewCard
+                interview={item}
+                handlePress={() => router.push(`/businessJobs/interviews/interview/${item.id}`)}
+              />
+            </View>
           )}
           ListEmptyComponent={() => (
             <View className="flex-1 justify-center items-center p-6">
@@ -81,7 +83,7 @@ const Interviews = () => {
             interviews && interviews.length > 0 ? (
               <>
                 <View
-                  className="mx-4 mb-6 bg-white rounded-2xl p-5 border border-gray-100"
+                  className="mx-2 mb-6 bg-white rounded-2xl p-5 border border-gray-100"
                   style={{
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 4 },
@@ -95,7 +97,7 @@ const Interviews = () => {
                       <Feather name="calendar" size={24} color="#6366f1" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-quicksand-bold text-xl text-gray-900">Your upcomig interviews</Text>
+                      <Text className="font-quicksand-bold text-xl text-gray-900">Your Upcoming Interviews</Text>
                       <Text className="font-quicksand-medium text-sm text-gray-600">
                         View and manage all your interviews
                       </Text>
@@ -118,7 +120,7 @@ const Interviews = () => {
                   </View>
                 </View>
                 <View
-                  className="bg-white mx-4 mb-4 rounded-2xl p-4 border border-gray-100"
+                  className="bg-white mx-2 mb-4 rounded-2xl p-4 border border-gray-100"
                   style={{
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 2 },

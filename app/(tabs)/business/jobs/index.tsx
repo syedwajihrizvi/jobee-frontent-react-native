@@ -117,6 +117,7 @@ const Jobs = () => {
           data={jobs?.pages.flatMap((page) => page.jobs) || []}
           renderItem={({ item }) => <BusinessJobListings job={item} />}
           ItemSeparatorComponent={() => <View className="divider" />}
+          style={{ paddingHorizontal: 16 }}
           onEndReached={() => {
             if (hasNextPage) {
               fetchNextPage();
