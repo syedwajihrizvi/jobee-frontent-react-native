@@ -70,6 +70,20 @@ export type BusinessProfileSummary = {
 
 }
 
+export type ApplicationForJobState = {
+    applications: ApplicationSummary[];
+    isLoading: boolean;
+    setIsLoading: (isLoading: boolean) => void;
+    setApplications: (applications: ApplicationSummary[]) => void
+};
+
+export type ApplicationsForBusinessUserState = {
+    applications: ApplicationSummary[];
+    isLoading: boolean;
+    setIsLoading: (isLoading: boolean) => void;
+    setApplications: (applications: ApplicationSummary[]) => void
+};
+
 export type AuthState = {
     isAuthenticated: boolean;
     user: User | BusinessUser | null;
@@ -151,6 +165,7 @@ export type ApplicantFilters = {
     hasVideoIntro?: boolean;
     hasCoverLetter?: boolean;
     applicationDateRange?: number;
+    search?: string;
 }
 
 export type InterviewFilter = 'Upcoming' | 'Completed' | 'Pending Decision' | 'Hired' | 'Next Round' | 'Rejected'
@@ -294,7 +309,8 @@ export type Education = {
     institution: string;
     degree: string;
     fromYear: string;
-    toYear: string | null
+    toYear: string | null;
+    degreeType: string;
 }
 
 export type ProfileImageUpdate = {
@@ -323,6 +339,7 @@ export type AddUserEducationForm = {
     degree: string;
     fromYear: string;
     toYear: string;
+    degreeType: string;
 }
 
 export type AddExperienceForm = {

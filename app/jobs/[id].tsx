@@ -80,6 +80,7 @@ const JobDetails = () => {
   const handleFavoriteCompany = async (company: Company) => {
     try {
       const result = await toggleFavoriteCompany(Number(company.id));
+      console.log("Toggling favorite company:", result);
       if (result) {
         const currFavorites = profileSummary?.favoriteCompanies || [];
         const index = currFavorites.findIndex((c) => c.id === Number(company.id));

@@ -1,7 +1,9 @@
 import ApplicantCard from "@/components/ApplicantCard";
 import BackBar from "@/components/BackBar";
 import FilterStatus from "@/components/FilterStatus";
+import SearchBar from "@/components/SearchBar";
 import { useApplicantsForJob, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
+import useApplicantsForJobStore from "@/store/applicants.store";
 import { ApplicantFilters } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
@@ -36,10 +38,10 @@ const Applications = () => {
     educations: "Any",
     experiences: "Any",
   });
+  const { applications: storeApplications, setApplications: setStoreApplications } = useApplicantsForJobStore();
   const { data: applicantsData, isLoading } = useApplicantsForJob(Number(id), filters);
   const { data: shortListedApplicants } = useShortListedCandidatesForJob(Number(id));
   const [applicants, setApplicants] = useState(applicantsData || []);
-  const applicantList = shortListed ? applicants?.filter((app) => shortListedApplicants?.includes(app.id)) : applicants;
   const [isOpen, setIsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState<ApplicantFilters>({
     locations: [],
@@ -49,6 +51,7 @@ const Applications = () => {
     hasVideoIntro: false,
     hasCoverLetter: false,
     applicationDateRange: undefined,
+    search: "",
   });
   const skillInputRef = useRef<TextInput>(null);
   const locationInputRef = useRef<TextInput>(null);
@@ -57,20 +60,31 @@ const Applications = () => {
   const [isEduDropdownOpen, setIsEduDropdownOpen] = useState(false);
 
   useEffect(() => {
-    if (applicantsData && !isLoading) {
-      let filteredApplicantsData = [...applicantsData];
-      if (applicationStatusFilter) {
-        if (applicationStatusFilter === "reviewed") {
-          filteredApplicantsData = filteredApplicantsData.filter((app) => app.status !== "PENDING");
-        } else if (applicationStatusFilter === "pending") {
-          filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "PENDING");
-        } else if (applicationStatusFilter === "interview_scheduled") {
-          filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "INTERVIEW_SCHEDULED");
-        }
-      }
-      setApplicants(filteredApplicantsData);
+    if (!isLoading) {
+      setStoreApplications(applicantsData || []);
     }
-  }, [isLoading, applicantsData, applicationStatusFilter]);
+  }, [applicantsData, isLoading, setStoreApplications]);
+
+  useEffect(() => {
+    if (!storeApplications || isLoading) return;
+
+    let filteredApplicantsData = [...storeApplications];
+    if (applicationStatusFilter) {
+      if (applicationStatusFilter === "reviewed") {
+        filteredApplicantsData = filteredApplicantsData.filter((app) => app.status !== "PENDING");
+      } else if (applicationStatusFilter === "pending") {
+        filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "PENDING");
+      } else if (applicationStatusFilter === "interview_scheduled") {
+        filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "INTERVIEW_SCHEDULED");
+      } else if (applicationStatusFilter === "rejected") {
+        filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "REJECTED");
+      }
+    }
+    if (shortListed) {
+      filteredApplicantsData = filteredApplicantsData.filter((app) => shortListedApplicants?.includes(app.id));
+    }
+    setApplicants(filteredApplicantsData);
+  }, [setStoreApplications, storeApplications, applicationStatusFilter, isLoading, shortListed, shortListedApplicants]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -188,7 +202,7 @@ const Applications = () => {
     setTempFilterCount((prev) => prev + (oldValue ? -1 : 1));
   };
 
-  if (shortListed && applicantList?.length === 0) {
+  if (shortListed && applicants?.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <BackBar label="Shortlisted Applications" />
@@ -215,10 +229,15 @@ const Applications = () => {
       </SafeAreaView>
     );
   }
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label={shortListed ? "Shortlisted Applications" : "All Applications"} />
+      <View className="justify-center items-center mb-1">
+        <SearchBar
+          placeholder="Search applicants by name, city, or country"
+          onSubmit={(text: string) => setFilters({ ...filters, search: text })}
+        />
+      </View>
       <View
         className="bg-white mx-4 mt-4 rounded-2xl p-5 border border-gray-100 mb-4"
         style={{
@@ -231,9 +250,9 @@ const Applications = () => {
       >
         <View className="flex-row items-center justify-between">
           <View>
-            <Text className="font-quicksand-bold text-2xl text-gray-900">{applicantList?.length || 0}</Text>
+            <Text className="font-quicksand-bold text-2xl text-gray-900">{applicants?.length || 0}</Text>
             <Text className="font-quicksand-medium text-base text-gray-600">
-              {applicantList?.length === 1 ? "Application" : "Applications"}
+              {applicants?.length === 1 ? "Application" : "Applications"}
             </Text>
           </View>
 
@@ -322,7 +341,7 @@ const Applications = () => {
         </TouchableOpacity>
         <TouchableOpacity
           className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
-            applicationStatusFilter === "pending" ? "bg-red-500 border-red-500" : "bg-red-50 border-red-200"
+            applicationStatusFilter === "pending" ? "bg-orange-500 border-orange-500" : "bg-orange-50 border-orange-200"
           }`}
           style={{
             shadowColor: applicationStatusFilter === "pending" ? "#ef4444" : "transparent",
@@ -336,13 +355,13 @@ const Applications = () => {
         >
           <Text
             className={`font-quicksand-semibold text-sm ${
-              applicationStatusFilter === "pending" ? "text-white" : "text-red-800"
+              applicationStatusFilter === "pending" ? "text-white" : "text-orange-800"
             }`}
           >
             Pending
           </Text>
           {applicationStatusFilter === "pending" && (
-            <View className="w-5 h-5 bg-red-400 rounded-full items-center justify-center">
+            <View className="w-5 h-5 bg-orange-400 rounded-full items-center justify-center">
               <Feather name="check" size={12} color="white" />
             </View>
           )}
@@ -376,6 +395,33 @@ const Applications = () => {
             </View>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
+            applicationStatusFilter === "rejected" ? "bg-red-500 border-red-500" : "bg-red-50 border-red-200"
+          }`}
+          style={{
+            shadowColor: applicationStatusFilter === "rejected" ? "#3b82f6" : "transparent",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: applicationStatusFilter === "rejected" ? 0.3 : 0,
+            shadowRadius: 4,
+            elevation: applicationStatusFilter === "rejected" ? 3 : 0,
+          }}
+          onPress={() => setApplicationStatusFilter("rejected")}
+          activeOpacity={0.8}
+        >
+          <Text
+            className={`font-quicksand-semibold text-sm ${
+              applicationStatusFilter === "rejected" ? "text-white" : "text-red-800"
+            }`}
+          >
+            Rejected
+          </Text>
+          {applicationStatusFilter === "rejected" && (
+            <View className="w-5 h-5 bg-red-400 rounded-full items-center justify-center">
+              <Feather name="check" size={12} color="white" />
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
       <View className="flex-1 mt-4">
         {isLoading ? (
@@ -396,7 +442,7 @@ const Applications = () => {
           </View>
         ) : (
           <FlatList
-            data={applicantList}
+            data={applicants}
             renderItem={({ item }) => (
               <ApplicantCard item={item} isShortListed={!!(item.id && isShortListed(item.id))} />
             )}

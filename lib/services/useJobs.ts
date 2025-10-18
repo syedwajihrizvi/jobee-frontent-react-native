@@ -175,6 +175,9 @@ export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) 
   const experiences = filters?.experiences
   locations.forEach(location => queryParams.append('locations', location))
   skills.forEach(skill => queryParams.append('skills', skill))
+  if (filters?.search) {
+    queryParams.append('search', filters.search)
+  }
   if (educations && educations !== 'Any') 
     queryParams.append('educationLevel', getEducationLevel(educations) ?? '')
   if (experiences && experiences !== 'Any')
@@ -187,7 +190,6 @@ export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) 
     queryParams.append('applicationDateRange', filters?.applicationDateRange.toString())
   }
   const params = queryParams.toString()
-  console.log("Applicant Filters Params:", params)
   const fetchApplicantsForJob = async () => {
     const response = await fetch(`${APPLICATIONS_API_URL}/job/${jobId}?${params}`, {
       method: 'GET',
@@ -196,6 +198,7 @@ export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) 
       },
     })
     const data = await response.json()
+    console.log("Fetched applicants for job with filters:", data); // Debugging log
     return data
   }
 

@@ -1,5 +1,4 @@
 import Piechart from "@/components/Piechart";
-import { useRecommendedJobs } from "@/lib/services/useJobs";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
@@ -7,7 +6,7 @@ import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import { AntDesign, Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,8 +14,6 @@ const Dashboard = () => {
   const { isLoading, profileSummary } = useProfileSummaryStore();
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
-  const { data: recommendedJobs, isLoading: isLoadingRecommended } = useRecommendedJobs();
-  const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const handleFavoriteCompany = async (companyId: number) => {
     try {
       const result = await toggleFavoriteCompany(Number(companyId));
@@ -36,7 +33,6 @@ const Dashboard = () => {
       console.error("Error toggling favorite company:", error);
     }
   };
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -128,14 +124,14 @@ const Dashboard = () => {
               </View>
 
               <TouchableOpacity
-                className="bg-blue-50 border border-blue-200 rounded-xl p-3"
+                className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex-row items-center justify-center gap-2"
                 onPress={() => router.push("/userProfile/editProfile")}
                 activeOpacity={0.7}
               >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="edit-3" size={14} color="#3b82f6" />
-                  <Text className="font-quicksand-semibold text-blue-700">Complete Profile</Text>
-                </View>
+                <Text className="font-quicksand-semibold text-blue-700">
+                  {completeness?.completeness === 100 ? "View Profile" : "Complete Profile"}
+                </Text>
+                <Feather name="edit-3" size={14} color="#3b82f6" />
               </TouchableOpacity>
             </View>
             <View
@@ -158,7 +154,7 @@ const Dashboard = () => {
                 data={[
                   { label: "In Consideration", value: profileSummary.totalInConsideration, color: "#3b82f6" },
                   { label: "Rejected", value: profileSummary.totalRejections, color: "#ef4444" },
-                  { label: "Accepted", value: profileSummary.totalApplications, color: "#10b981" },
+                  { label: "Interviews", value: profileSummary.totalApplications, color: "#10b981" },
                 ]}
               />
 

@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditProfile = () => {
   const handleSectionPress = (route: string) => {
-    router.push(`/profile/editProfile/${route}` as any);
+    router.push(`/userProfile/editProfile/${route}` as any);
   };
 
   return (

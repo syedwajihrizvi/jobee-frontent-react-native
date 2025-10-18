@@ -12,7 +12,6 @@ const useProfileSummaryStore = create<ProfileSummaryState>((set) => ({
         set({ isLoading });
     },
     fetchProfileSummary: async () => {
-        console.log("Fetching Profile Summary...");
         try {
             const response = await getUserProfileDashboardSummary();
             if (!response) {

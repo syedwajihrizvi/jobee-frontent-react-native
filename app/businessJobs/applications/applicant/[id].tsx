@@ -11,6 +11,8 @@ import { updateApplicationStatus } from "@/lib/services/applicationEndpoints";
 import { useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { useApplicant } from "@/lib/services/useProfile";
 import { addViewToProfile } from "@/lib/updateUserProfile";
+import useApplicantsForJobStore from "@/store/applicants.store";
+import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
 import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -21,6 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ApplicantForBusiness = () => {
   const queryClient = useQueryClient();
   const { id, jobId, candidateId } = useLocalSearchParams();
+  const { setApplications: setStoreApplications, applications: storeApplications } = useApplicantsForJobStore();
+  const { applications, setApplications } = useApplicantsForUserJobs();
   const { data: applicationData, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
   const [application, setApplication] = useState(applicationData);
   const { data: shortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId));
@@ -71,6 +75,13 @@ const ApplicantForBusiness = () => {
             if (res) {
               Alert.alert("Candidate Rejected", "The candidate has been rejected successfully.");
               setApplication((prev) => (prev ? { ...prev, status: "REJECTED" } : prev));
+              const index = storeApplications.findIndex((app) => app.id === application?.id);
+              if (index > -1) {
+                const updatedApplications = [...storeApplications];
+                setStoreApplications(updatedApplications);
+              }
+              const updatedPendingApplications = applications.filter((app) => app.id !== application?.id);
+              setApplications(updatedPendingApplications);
             }
           } catch (error) {
             console.log("Error rejecting candidate: ", error);

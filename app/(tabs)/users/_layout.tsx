@@ -1,10 +1,8 @@
-import useAuthStore from "@/store/auth.store";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
 const TabsLayout = () => {
-  const { isAuthenticated } = useAuthStore();
   return (
     <Tabs
       screenOptions={{

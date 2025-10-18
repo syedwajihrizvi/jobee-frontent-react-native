@@ -3,7 +3,9 @@ import SearchBar from "@/components/SearchBar";
 import { images } from "@/constants";
 import { useUserJobPostings } from "@/lib/services/useUserJobPostings";
 import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
+import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
 import useAuthStore from "@/store/auth.store";
+import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
 import { BusinessUser } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,21 +17,16 @@ const PendingApplications = () => {
   const { user: authUser } = useAuthStore();
   const [search, setSearch] = useState("");
   const { isLoading, data: jobs } = useUserJobPostings((authUser as BusinessUser).id, search);
+  const { applications, setApplications } = useApplicantsForUserJobs();
+  const { profileSummary } = useBusinessProfileSummaryStore();
   const [totalPendingApplications, setTotalPendingApplications] = useState(0);
   const [totalApplications, setTotalApplications] = useState(0);
 
   useEffect(() => {
-    if (jobs && jobs.length > 0) {
-      let pendingCount = 0;
-      let applicationsCount = 0;
-      jobs.forEach((job) => {
-        pendingCount += job.pendingApplicationsSize;
-        applicationsCount += job.applicants;
-      });
-      setTotalPendingApplications(pendingCount);
-      setTotalApplications(applicationsCount);
-    }
-  }, [jobs, isLoading]);
+    const pendingCount = applications.filter((app) => app.status === "PENDING").length;
+    setTotalPendingApplications(pendingCount);
+    setTotalApplications(profileSummary?.totalApplicationsReceived || 0);
+  }, [setApplications, applications, profileSummary, jobs]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">

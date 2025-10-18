@@ -10,11 +10,13 @@ import { AddUserEducationForm, Education } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Educations = () => {
   const { data: userEducations, isLoading } = useEducations();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openDegreeDropdown, setOpenDegreeDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -28,6 +30,7 @@ const Educations = () => {
     degree: "",
     fromYear: "",
     toYear: "",
+    degreeType: "",
   });
 
   useEffect(() => {
@@ -47,6 +50,7 @@ const Educations = () => {
       degree: "",
       fromYear: "",
       toYear: "",
+      degreeType: "",
     });
     setAddSuccess(false);
     setEditSuccess(false);
@@ -67,6 +71,7 @@ const Educations = () => {
       degree: education.degree,
       fromYear: education.fromYear,
       toYear: education.toYear || "Present",
+      degreeType: education.degreeType,
     });
     setShowModal(true);
   };
@@ -245,15 +250,15 @@ const Educations = () => {
         </View>
       </ScrollView>
       <ModalWithBg visible={showModal} customHeight={0.55} customWidth={0.9}>
-        <ScrollView className="flex-1">
-          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
-            <Text className="font-quicksand-bold text-lg text-gray-800">
-              {isAdding ? "Add New Eductation" : "Edit Education"}
-            </Text>
-            <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
-              <Feather name="x" size={20} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
+        <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
+          <Text className="font-quicksand-bold text-lg text-gray-800">
+            {isAdding ? "Add New Eductation" : "Edit Education"}
+          </Text>
+          <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
+            <Feather name="x" size={20} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+        <KeyboardAwareScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="flex-1 gap-4 pt-4">
             <View className="px-6">
               <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
@@ -323,9 +328,56 @@ const Educations = () => {
                       </View>
                     </View>
                     <View className="px-6">
+                      <Text className="font-quicksand-medium text-sm text-gray-600 mb-3">Degree Type</Text>
+                      <View className="flex-row flex-wrap gap-2">
+                        {[
+                          { label: "High School", value: "HIGH_SCHOOL" },
+                          { label: "Associate's", value: "ASSOCIATES" },
+                          { label: "Bachelor's", value: "BACHELORS" },
+                          { label: "Master's", value: "MASTERS" },
+                          { label: "Doctorate", value: "PHD" },
+                          { label: "Postdoctoral", value: "POSTDOCTORATE" },
+                          { label: "Other", value: "Other" },
+                        ].map((item) => (
+                          <TouchableOpacity
+                            key={item.value}
+                            className={`px-4 py-2 rounded-full border ${
+                              educationForm.degreeType === item.value
+                                ? "bg-blue-500 border-blue-500"
+                                : "bg-gray-50 border-gray-300"
+                            }`}
+                            style={{
+                              shadowColor: educationForm.degreeType === item.value ? "#3b82f6" : "transparent",
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: educationForm.degreeType === item.value ? 0.2 : 0,
+                              shadowRadius: 4,
+                              elevation: educationForm.degreeType === item.value ? 2 : 0,
+                            }}
+                            onPress={() => setEducationForm({ ...educationForm, degreeType: item.value })}
+                            activeOpacity={0.7}
+                          >
+                            <View className="flex-row items-center gap-2">
+                              <Text
+                                className={`font-quicksand-semibold text-sm ${
+                                  educationForm.degreeType === item.value ? "text-white" : "text-gray-700"
+                                }`}
+                              >
+                                {item.label}
+                              </Text>
+                              {educationForm.degreeType === item.value && (
+                                <View className="w-4 h-4 bg-blue-400 rounded-full items-center justify-center">
+                                  <Feather name="check" size={10} color="white" />
+                                </View>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                    <View className="px-6">
                       <View>
                         <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">Degree</Text>
+                          <Text className="font-quicksand-medium text-sm text-gray-600">Degree Title</Text>
                           <Text className="font-quicksand-medium text-xs text-gray-500">
                             {educationForm.degree.length}/75 characters
                           </Text>
@@ -391,7 +443,7 @@ const Educations = () => {
                       </View>
                     </View>
                     <View className="flex-1" />
-                    <View className="px-6 gap-2 mt-2">
+                    <View className="px-6 gap-2 mt-2 mb-10">
                       {isAdding ? (
                         <ProfileButton
                           color="green-500"
@@ -423,7 +475,7 @@ const Educations = () => {
               <UpdatingProfileView />
             )}
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </ModalWithBg>
     </SafeAreaView>
   );

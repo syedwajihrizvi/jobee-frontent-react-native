@@ -2,6 +2,8 @@ import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
 import { registerForPushNotifications, signInBusiness, signInUser } from "@/lib/auth";
 import useAuthStore from "@/store/auth.store";
+import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
+import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
 import { SignInParams } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -15,6 +17,8 @@ const SignIn = () => {
   const [form, setForm] = useState<SignInParams>({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const { fetchAuthenticatedUser, setIsAuthenticated } = useAuthStore();
+  const { fetchProfileSummary } = useProfileSummaryStore();
+  const { fetchProfileSummary: fetchBusinessProfileSummary } = useBusinessProfileSummaryStore();
   const { type, setType } = useUserStore();
 
   const handleSignInForUser = async () => {
@@ -30,6 +34,7 @@ const SignIn = () => {
           return;
         }
         await fetchAuthenticatedUser();
+        await fetchProfileSummary();
         setIsAuthenticated(true);
         setType("user");
         AsyncStorage.setItem("profileReminderShown", "false");
@@ -57,6 +62,7 @@ const SignIn = () => {
           return;
         }
         await fetchAuthenticatedUser();
+        await fetchBusinessProfileSummary();
         setIsAuthenticated(true);
         setType("business");
         router.replace("/(tabs)/business/jobs");

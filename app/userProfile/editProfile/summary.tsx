@@ -38,7 +38,6 @@ const Summary = () => {
     } finally {
       setIsSubmitting(false);
     }
-    console.log("Submitting updated profile summary:");
   };
 
   return (

@@ -479,6 +479,7 @@ export const toggleFavoriteCompany = async (companyId: number) => {
             'Content-Type': 'application/json'
         }
     });
+    console.log("Toggle Favorite Company Status:", result);
     return result.status === 200;
 }
 

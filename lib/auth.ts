@@ -102,7 +102,6 @@ export const getUserProfileDashboardSummary = async () => {
             'x-auth-token': `Bearer ${token}`
         }
     })
-    console.log(response)
     if (response.status === 200) {
         const data = await response.json()
         console.log(data)

@@ -2,6 +2,7 @@ import BusinessJobListings from "@/components/BusinessJobListings";
 import InterviewCard from "@/components/InterviewCard";
 import { useApplicationsForBusinessProfileJobs } from "@/lib/services/useApplicationsForBusinessProfileJobs";
 import { useBusinessProfileInterviews } from "@/lib/services/useBusinessProfileInterviews";
+import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
 import { BusinessUser } from "@/type";
@@ -13,14 +14,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Dashboard = () => {
   const { isLoading: isLoadingUser, user: authUser } = useAuthStore();
-  const { isLoading: isLoadingSummary, profileSummary } = useBusinessProfileSummaryStore();
-  const { data: upcomingInterviews, isLoading } = useBusinessProfileInterviews();
+  const { profileSummary } = useBusinessProfileSummaryStore();
+  const { data: upcomingInterviews } = useBusinessProfileInterviews();
+  const { setApplications, applications: storeApplications } = useApplicantsForUserJobs();
   const { data: applications, isLoading: isLoadingApplications } = useApplicationsForBusinessProfileJobs({
     userId: authUser?.id,
   });
   const [viewingMostApplied, setViewingMostApplied] = useState(true);
   const [popularJobs, setPopularJobs] = useState(profileSummary?.mostAppliedJobs || []);
   const user = authUser as BusinessUser | null;
+
+  useEffect(() => {
+    if (!isLoadingApplications) {
+      setApplications(applications || []);
+    }
+  }, [setApplications, isLoadingApplications, applications]);
 
   useEffect(() => {
     if (viewingMostApplied) {
@@ -31,10 +39,10 @@ const Dashboard = () => {
   }, [viewingMostApplied, profileSummary]);
 
   const getApplicantsInLast7Days = () => {
-    if (!applications) return 0;
+    if (!storeApplications) return 0;
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return applications.filter((app) => new Date(app.appliedAt) >= sevenDaysAgo).length;
+    return storeApplications.filter((app) => new Date(app.appliedAt) >= sevenDaysAgo).length;
   };
 
   return (
@@ -218,7 +226,7 @@ const Dashboard = () => {
                       </View>
                       <Text className="font-quicksand-semibold text-xs text-red-700">Total Pending</Text>
                     </View>
-                    <Text className="font-quicksand-bold text-xl text-red-900">{applications?.length || 0}</Text>
+                    <Text className="font-quicksand-bold text-xl text-red-900">{storeApplications?.length || 0}</Text>
                   </View>
 
                   <View className="flex-1 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-3">
@@ -304,13 +312,13 @@ const Dashboard = () => {
                     className={`px-3 py-1${viewingMostApplied ? " bg-green-100" : ""}  rounded-full`}
                     onPress={() => setViewingMostApplied(true)}
                   >
-                    <Text className="font-quicksand-medium text-sm text-green-700">Most Viewed</Text>
+                    <Text className="font-quicksand-medium text-sm text-green-700">Most Applied</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     className={`px-3 py-1${viewingMostApplied ? "" : " bg-green-100"} rounded-full`}
                     onPress={() => setViewingMostApplied(false)}
                   >
-                    <Text className="font-quicksand-medium text-sm text-green-700">Most Applied</Text>
+                    <Text className="font-quicksand-medium text-sm text-green-700">Most Viewed</Text>
                   </TouchableOpacity>
                 </View>
                 <View className="gap-3">

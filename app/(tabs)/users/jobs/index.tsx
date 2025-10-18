@@ -111,7 +111,7 @@ const Jobs = () => {
 
   const handleProfileComplete = () => {
     setShowProfileCompleteReminder(false);
-    router.push("/profile/completeProfile");
+    router.push("/userProfile/completeProfile");
   };
 
   const handleProfileLater = () => {
