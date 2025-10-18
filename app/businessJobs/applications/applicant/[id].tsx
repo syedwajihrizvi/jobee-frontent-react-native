@@ -2,10 +2,12 @@ import ApplicantSection from "@/components/ApplicantSection";
 import BackBar from "@/components/BackBar";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import DocumentModal from "@/components/DocumentModal";
+import RenderAppStatusButton from "@/components/RenderAppStatusButton";
 import UserVideoIntro from "@/components/UserVideoIntro";
 import { images } from "@/constants";
 import { shortListCandidate, unshortListCandidate } from "@/lib/jobEndpoints";
 import { getS3ProfileImage, getS3VideoIntroUrl } from "@/lib/s3Urls";
+import { updateApplicationStatus } from "@/lib/services/applicationEndpoints";
 import { useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { useApplicant } from "@/lib/services/useProfile";
 import { addViewToProfile } from "@/lib/updateUserProfile";
@@ -19,9 +21,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ApplicantForBusiness = () => {
   const queryClient = useQueryClient();
   const { id, jobId, candidateId } = useLocalSearchParams();
-  const { data: application, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
+  const { data: applicationData, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
+  const [application, setApplication] = useState(applicationData);
   const { data: shortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId));
   const { userProfile } = application || {};
+  const [isUpdatingReject, setIsUpdatingReject] = useState(false);
   const [showSkills, setShowSkills] = useState(false);
   const [showExperience, setShowExperience] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
@@ -32,6 +36,12 @@ const ApplicantForBusiness = () => {
   const [viewingDocument, setViewingDocument] = useState<string | undefined>();
 
   useEffect(() => {
+    if (applicationData && !isLoading) {
+      setApplication(applicationData);
+    }
+  }, [applicationData, isLoading]);
+
+  useEffect(() => {
     if (shortListedCandidates && application) {
       setIsShortListed(shortListedCandidates?.includes(application?.id) || false);
     }
@@ -39,11 +49,79 @@ const ApplicantForBusiness = () => {
 
   useEffect(() => {
     const addProfileView = async () => {
-      await addViewToProfile(Number(candidateId));
+      await addViewToProfile(Number(application?.userProfile.id));
       console.log("Profile view added");
     };
     addProfileView();
-  }, [candidateId]);
+  }, [application]);
+
+  const handleRejectCandidate = async () => {
+    Alert.alert("Confirm Rejection", "Are you sure you want to reject this candidate? This action cannot be undone.", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Reject",
+        style: "destructive",
+        onPress: async () => {
+          setIsUpdatingReject(true);
+          try {
+            const res = await updateApplicationStatus(Number(application?.id), "REJECTED");
+            if (res) {
+              Alert.alert("Candidate Rejected", "The candidate has been rejected successfully.");
+              setApplication((prev) => (prev ? { ...prev, status: "REJECTED" } : prev));
+            }
+          } catch (error) {
+            console.log("Error rejecting candidate: ", error);
+          } finally {
+            setIsUpdatingReject(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  const renderNonPendingStatus = () => {
+    if (!application) return null;
+    switch (application.status) {
+      case "REJECTED":
+        return (
+          <TouchableOpacity
+            className="bg-red-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+            onPress={() => console.log("View interview details via bottom sheet")}
+            activeOpacity={0.8}
+          >
+            <Text className="font-quicksand-bold text-white text-sm">Candidate Already Rejected</Text>
+          </TouchableOpacity>
+        );
+      case "INTERVIEW_SCHEDULED":
+        return (
+          <TouchableOpacity
+            className="bg-amber-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+            onPress={() => console.log("View interview details via bottom sheet")}
+            activeOpacity={0.8}
+          >
+            <Feather name="clock" size={14} color="white" />
+            <Text className="font-quicksand-bold text-white text-sm">Interview Scheduled</Text>
+          </TouchableOpacity>
+        );
+    }
+  };
 
   const handleShortList = async () => {
     if (!application) return;
@@ -169,7 +247,7 @@ const ApplicantForBusiness = () => {
                 </View>
               </View>
               <View className="mb-2">
-                <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">Professional Summary</Text>
+                <Text className="font-quicksand-bold text-lg text-gray-900">Professional Summary</Text>
                 <Text className="font-quicksand-medium text-base text-gray-700">{userProfile?.summary}</Text>
               </View>
               <View className="flex-row flex-wrap gap-3">
@@ -206,43 +284,31 @@ const ApplicantForBusiness = () => {
                     <Text className="font-quicksand-bold text-white text-sm">Cover Letter</Text>
                   </TouchableOpacity>
                 )}
-
                 {application?.status === "PENDING" ? (
-                  <TouchableOpacity
-                    className="bg-emerald-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
-                    style={{
-                      shadowColor: "#10b981",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                    onPress={() =>
-                      router.push(
-                        `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
-                      )
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <Feather name="calendar" size={14} color="white" />
-                    <Text className="font-quicksand-bold text-white text-sm">Schedule Interview</Text>
-                  </TouchableOpacity>
+                  <>
+                    <RenderAppStatusButton
+                      icon={<Feather name="calendar" size={14} color="white" />}
+                      color="emerald"
+                      loading={false}
+                      label="Schedule Interview"
+                      shadowColor="#10b981"
+                      handlePress={() =>
+                        router.push(
+                          `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
+                        )
+                      }
+                    />
+                    <RenderAppStatusButton
+                      icon={<Feather name="x" size={14} color="white" />}
+                      loading={isUpdatingReject}
+                      color="red"
+                      label="Reject Candidate"
+                      shadowColor="#3b82f6"
+                      handlePress={handleRejectCandidate}
+                    />
+                  </>
                 ) : (
-                  <TouchableOpacity
-                    className="bg-amber-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
-                    style={{
-                      shadowColor: "#f59e0b",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                    onPress={() => console.log("View interview details via bottom sheet")}
-                    activeOpacity={0.8}
-                  >
-                    <Feather name="clock" size={14} color="white" />
-                    <Text className="font-quicksand-bold text-white text-sm">Interview Scheduled</Text>
-                  </TouchableOpacity>
+                  renderNonPendingStatus()
                 )}
               </View>
             </View>
@@ -383,8 +449,6 @@ const ApplicantForBusiness = () => {
                   </View>
                 </ApplicantSection>
               </CollapsibleSection>
-
-              {/* Certificates Section */}
               <CollapsibleSection
                 title="Certificates & Awards"
                 icon={<FontAwesome5 name="award" size={16} color="#f97316" />}

@@ -1,7 +1,7 @@
 import { ApplicantFilters, Application, ApplicationSummary, InterviewDetails, Job, JobFilters, PagedResponse } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { getEducationLevel } from '../utils';
+import { getEducationLevel, getExperienceLevel } from '../utils';
 
 const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
 const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
@@ -172,11 +172,22 @@ export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) 
   const locations = filters?.locations || []
   const skills = filters?.skills || []
   const educations = filters?.educations
+  const experiences = filters?.experiences
   locations.forEach(location => queryParams.append('locations', location))
   skills.forEach(skill => queryParams.append('skills', skill))
   if (educations && educations !== 'Any') 
     queryParams.append('educationLevel', getEducationLevel(educations) ?? '')
+  if (experiences && experiences !== 'Any')
+    queryParams.append('experienceLevel', getExperienceLevel(experiences) ?? '')
+  if (filters?.hasVideoIntro)
+    queryParams.append('hasVideoIntro', true.toString())
+  if (filters?.hasCoverLetter)
+    queryParams.append('hasCoverLetter', true.toString())
+  if (filters?.applicationDateRange) {
+    queryParams.append('applicationDateRange', filters?.applicationDateRange.toString())
+  }
   const params = queryParams.toString()
+  console.log("Applicant Filters Params:", params)
   const fetchApplicantsForJob = async () => {
     const response = await fetch(`${APPLICATIONS_API_URL}/job/${jobId}?${params}`, {
       method: 'GET',

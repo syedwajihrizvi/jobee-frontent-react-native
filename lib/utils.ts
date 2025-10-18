@@ -65,6 +65,20 @@ export const getEducationLevel = (level: string) => {
   };
 }
 
+export const getExperienceLevel = (level: string) => {
+  switch(level) {
+    case 'Intern':
+      return 'INTERN';
+    case 'JUNIOR':
+      return "JUNIOR";
+    case 'MID':
+      return "MID";
+    case 'SENIOR':
+      return "SENIOR";
+    case 'LEAD':
+      return "LEAD";
+  }
+}
 export const getApplicationStatus = (status: string) => {
   switch(status) {
     case 'PENDING':

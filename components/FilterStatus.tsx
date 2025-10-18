@@ -146,17 +146,46 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
             {(filters as ApplicantFilters).skills.map((skill, index) => (
               <View
                 key={index}
-                className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+                className="bg-purple-50 border border-purple-200 px-3 py-1 rounded-full flex-row items-center gap-1"
               >
-                <FontAwesome5 name="wrench" size={10} color="#10b981" />
-                <Text className="font-quicksand-medium text-xs text-emerald-800">{skill}</Text>
+                <Feather name="code" size={10} color="#8b5cf6" />
+                <Text className="font-quicksand-medium text-xs text-purple-800">{skill}</Text>
               </View>
             ))}
             {(filters as ApplicantFilters).educations && (filters as ApplicantFilters).educations !== "Any" && (
-              <View className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex-row items-center gap-1">
-                <FontAwesome5 name="university" size={10} color="#10b981" />
-                <Text className="font-quicksand-medium text-xs text-emerald-800">
+              <View className="bg-blue-50 border border-blue-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+                <FontAwesome5 name="graduation-cap" size={10} color="#3b82f6" />
+                <Text className="font-quicksand-medium text-xs text-blue-800">
                   {(filters as ApplicantFilters).educations}
+                </Text>
+              </View>
+            )}
+            {(filters as ApplicantFilters).experiences && (filters as ApplicantFilters).experiences !== "Any" && (
+              <View className="bg-orange-50 border border-orange-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+                <Feather name="briefcase" size={10} color="#f97316" />
+                <Text className="font-quicksand-medium text-xs text-orange-800">
+                  {(filters as ApplicantFilters).experiences}
+                </Text>
+              </View>
+            )}
+            {(filters as ApplicantFilters).hasVideoIntro && (
+              <View className="bg-pink-50 border border-pink-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+                <Feather name="video" size={10} color="#ec4899" />
+                <Text className="font-quicksand-medium text-xs text-pink-800">Video Intro</Text>
+              </View>
+            )}
+            {(filters as ApplicantFilters).hasCoverLetter && (
+              <View className="bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+                <Feather name="file-text" size={10} color="#6366f1" />
+                <Text className="font-quicksand-medium text-xs text-indigo-800">Cover Letter</Text>
+              </View>
+            )}
+            {(filters as ApplicantFilters).applicationDateRange && (
+              <View className="bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full flex-row items-center gap-1">
+                <Feather name="calendar" size={10} color="#6366f1" />
+                <Text className="font-quicksand-medium text-xs text-indigo-800">
+                  {(filters as ApplicantFilters).applicationDateRange} Day
+                  {(filters as ApplicantFilters).applicationDateRange !== 1 ? "s" : ""}
                 </Text>
               </View>
             )}

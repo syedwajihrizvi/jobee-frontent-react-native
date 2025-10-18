@@ -10,15 +10,6 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
 
-  const getStatusColor = (applicantCount: number) => {
-    if (applicantCount === 0) return { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-200" };
-    if (applicantCount < 5) return { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200" };
-    if (applicantCount < 15) return { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-200" };
-    return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" };
-  };
-
-  const statusColors = getStatusColor(job.applicants);
-
   return (
     <TouchableOpacity
       className="mb-4 bg-white rounded-2xl p-5 border border-gray-100"

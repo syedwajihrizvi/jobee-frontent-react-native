@@ -5,7 +5,7 @@ import { useApplicantsForJob, useShortListedCandidatesForJob } from "@/lib/servi
 import { ApplicantFilters } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -24,20 +24,53 @@ const screenWidth = Dimensions.get("window").width;
 const panelWidth = screenWidth * 0.8;
 
 const Applications = () => {
-  const { id, shortListed } = useLocalSearchParams();
-  console.log("Job ID:", id, "Shortlisted:", shortListed);
+  const { id, shortListed, initialFilter } = useLocalSearchParams();
   const [tempFilterCount, setTempFilterCount] = useState(0);
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState<string | null>(
+    (initialFilter as string) || null
+  );
   const [filterCount, setFilterCount] = useState(0);
-  const [filters, setFilters] = useState<ApplicantFilters>({ locations: [], skills: [], educations: "Any" });
-  const { data: applicants, isLoading } = useApplicantsForJob(Number(id), filters);
+  const [filters, setFilters] = useState<ApplicantFilters>({
+    locations: [],
+    skills: [],
+    educations: "Any",
+    experiences: "Any",
+  });
+  const { data: applicantsData, isLoading } = useApplicantsForJob(Number(id), filters);
   const { data: shortListedApplicants } = useShortListedCandidatesForJob(Number(id));
+  const [applicants, setApplicants] = useState(applicantsData || []);
   const applicantList = shortListed ? applicants?.filter((app) => shortListedApplicants?.includes(app.id)) : applicants;
   const [isOpen, setIsOpen] = useState(false);
-  const [tempFilters, setTempFilters] = useState<ApplicantFilters>({ locations: [], skills: [], educations: "Any" });
+  const [tempFilters, setTempFilters] = useState<ApplicantFilters>({
+    locations: [],
+    skills: [],
+    educations: "Any",
+    experiences: "Any",
+    hasVideoIntro: false,
+    hasCoverLetter: false,
+    applicationDateRange: undefined,
+  });
   const skillInputRef = useRef<TextInput>(null);
   const locationInputRef = useRef<TextInput>(null);
   const slideX = useSharedValue(panelWidth);
-  const [open, setOpen] = useState(false);
+  const [isExpDropdownOpen, setIsExpDropdownOpen] = useState(false);
+  const [isEduDropdownOpen, setIsEduDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (applicantsData && !isLoading) {
+      let filteredApplicantsData = [...applicantsData];
+      if (applicationStatusFilter) {
+        if (applicationStatusFilter === "reviewed") {
+          filteredApplicantsData = filteredApplicantsData.filter((app) => app.status !== "PENDING");
+        } else if (applicationStatusFilter === "pending") {
+          filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "PENDING");
+        } else if (applicationStatusFilter === "interview_scheduled") {
+          filteredApplicantsData = filteredApplicantsData.filter((app) => app.status === "INTERVIEW_SCHEDULED");
+        }
+      }
+      setApplicants(filteredApplicantsData);
+    }
+  }, [isLoading, applicantsData, applicationStatusFilter]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -64,8 +97,24 @@ const Applications = () => {
   };
 
   const clearFilters = () => {
-    setTempFilters({ locations: [], skills: [], educations: "Any" });
-    setFilters({ locations: [], skills: [], educations: "Any" });
+    setTempFilters({
+      locations: [],
+      skills: [],
+      educations: "Any",
+      experiences: "Any",
+      applicationDateRange: undefined,
+      hasCoverLetter: false,
+      hasVideoIntro: false,
+    });
+    setFilters({
+      locations: [],
+      skills: [],
+      educations: "Any",
+      experiences: "Any",
+      applicationDateRange: undefined,
+      hasCoverLetter: false,
+      hasVideoIntro: false,
+    });
     setFilterCount(0);
     setTempFilterCount(0);
   };
@@ -92,6 +141,21 @@ const Applications = () => {
     locationInputRef.current?.clear();
   };
 
+  const setApplicationDateRange = (range: number | undefined) => {
+    setTempFilters({ ...tempFilters, applicationDateRange: range });
+    if (!range) {
+      setTempFilterCount((prev) => prev - 1);
+    } else {
+      setTempFilterCount((prev) => prev + 1);
+    }
+  };
+
+  const renderYesClass = (active: boolean) => {
+    return active
+      ? "bg-green-100 border border-green-500 px-3 py-1 rounded-xl items-center justify-center"
+      : "bg-gray-100 border border-gray-300 px-3 py-1 rounded-xl items-center justify-center";
+  };
+
   const removeSkill = (skillToRemove: string) => {
     setTempFilterCount((prev) => prev - 1);
     setTempFilters({
@@ -110,6 +174,18 @@ const Applications = () => {
 
   const isShortListed = (applicantId: number) => {
     return shortListedApplicants?.includes(applicantId);
+  };
+
+  const handleHasVideoIntroToggle = () => {
+    const oldValue = tempFilters.hasVideoIntro;
+    setTempFilters({ ...tempFilters, hasVideoIntro: !oldValue });
+    setTempFilterCount((prev) => prev + (oldValue ? -1 : 1));
+  };
+
+  const handleHasCoverLetterToggle = () => {
+    const oldValue = tempFilters.hasCoverLetter;
+    setTempFilters({ ...tempFilters, hasCoverLetter: !oldValue });
+    setTempFilterCount((prev) => prev + (oldValue ? -1 : 1));
   };
 
   if (shortListed && applicantList?.length === 0) {
@@ -189,6 +265,118 @@ const Applications = () => {
         handleClearFilters={clearFilters}
         filterType="applicant"
       />
+      <View className="flex flex-row flex-wrap gap-2 px-4 mb-2">
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
+            applicationStatusFilter === null ? "bg-yellow-500 border-yellow-500" : "bg-yellow-50 border-yellow-200"
+          }`}
+          style={{
+            shadowColor: applicationStatusFilter === null ? "#eab308" : "transparent",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: applicationStatusFilter === null ? 0.3 : 0,
+            shadowRadius: 4,
+            elevation: applicationStatusFilter === null ? 3 : 0,
+          }}
+          onPress={() => setApplicationStatusFilter(null)}
+          activeOpacity={0.8}
+        >
+          <Text
+            className={`font-quicksand-semibold text-sm ${
+              applicationStatusFilter === null ? "text-white" : "text-yellow-800"
+            }`}
+          >
+            All
+          </Text>
+          {applicationStatusFilter === null && (
+            <View className="w-5 h-5 bg-yellow-400 rounded-full items-center justify-center">
+              <Feather name="check" size={12} color="white" />
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
+            applicationStatusFilter === "reviewed" ? "bg-green-500 border-green-500" : "bg-green-50 border-green-200"
+          }`}
+          style={{
+            shadowColor: applicationStatusFilter === "reviewed" ? "#22c55e" : "transparent",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: applicationStatusFilter === "reviewed" ? 0.3 : 0,
+            shadowRadius: 4,
+            elevation: applicationStatusFilter === "reviewed" ? 3 : 0,
+          }}
+          onPress={() => setApplicationStatusFilter("reviewed")}
+          activeOpacity={0.8}
+        >
+          <Text
+            className={`font-quicksand-semibold text-sm ${
+              applicationStatusFilter === "reviewed" ? "text-white" : "text-green-800"
+            }`}
+          >
+            Reviewed
+          </Text>
+          {applicationStatusFilter === "reviewed" && (
+            <View className="w-5 h-5 bg-green-400 rounded-full items-center justify-center">
+              <Feather name="check" size={12} color="white" />
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
+            applicationStatusFilter === "pending" ? "bg-red-500 border-red-500" : "bg-red-50 border-red-200"
+          }`}
+          style={{
+            shadowColor: applicationStatusFilter === "pending" ? "#ef4444" : "transparent",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: applicationStatusFilter === "pending" ? 0.3 : 0,
+            shadowRadius: 4,
+            elevation: applicationStatusFilter === "pending" ? 3 : 0,
+          }}
+          onPress={() => setApplicationStatusFilter("pending")}
+          activeOpacity={0.8}
+        >
+          <Text
+            className={`font-quicksand-semibold text-sm ${
+              applicationStatusFilter === "pending" ? "text-white" : "text-red-800"
+            }`}
+          >
+            Pending
+          </Text>
+          {applicationStatusFilter === "pending" && (
+            <View className="w-5 h-5 bg-red-400 rounded-full items-center justify-center">
+              <Feather name="check" size={12} color="white" />
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
+            applicationStatusFilter === "interview_scheduled"
+              ? "bg-blue-500 border-blue-500"
+              : "bg-blue-50 border-blue-200"
+          }`}
+          style={{
+            shadowColor: applicationStatusFilter === "interview_scheduled" ? "#3b82f6" : "transparent",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: applicationStatusFilter === "interview_scheduled" ? 0.3 : 0,
+            shadowRadius: 4,
+            elevation: applicationStatusFilter === "interview_scheduled" ? 3 : 0,
+          }}
+          onPress={() => setApplicationStatusFilter("interview_scheduled")}
+          activeOpacity={0.8}
+        >
+          <Text
+            className={`font-quicksand-semibold text-sm ${
+              applicationStatusFilter === "interview_scheduled" ? "text-white" : "text-blue-800"
+            }`}
+          >
+            Interview Scheduled
+          </Text>
+          {applicationStatusFilter === "interview_scheduled" && (
+            <View className="w-5 h-5 bg-blue-400 rounded-full items-center justify-center">
+              <Feather name="check" size={12} color="white" />
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
       <View className="flex-1 mt-4">
         {isLoading ? (
           <View className="flex-1 justify-center items-center">
@@ -300,23 +488,17 @@ const Applications = () => {
           >
             <View className="px-6 py-20">
               <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-6">Filter Applicants</Text>
-              <View className="mb-6">
-                <Text className="font-quicksand-bold text-lg text-gray-900 mb-3">Location</Text>
+              <View className="mb-3">
+                <Text className="font-quicksand-medium text-md text-gray-900">Location</Text>
                 <TextInput
                   ref={locationInputRef}
-                  className="border border-gray-300 rounded-xl p-4 mb-3"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
+                  autoCapitalize="words"
+                  className="border border-black rounded-lg p-3 mt-2"
                   placeholder="e.g. New York, San Francisco"
                   returnKeyType="done"
-                  onSubmitEditing={(event) => addLocation(event.nativeEvent.text)}
+                  onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
                 />
-                <View className="flex-row flex-wrap gap-2">
+                <View className="flex-row flex-wrap gap-2 mt-2">
                   {tempFilters.locations.map((location, index) => (
                     <TouchableOpacity key={index} onPress={() => removeLocation(location)} activeOpacity={0.7}>
                       <View className="bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl flex-row items-center gap-1">
@@ -327,25 +509,16 @@ const Applications = () => {
                   ))}
                 </View>
               </View>
-              <View className="mb-6">
-                <Text className="font-quicksand-bold text-lg text-gray-900 mb-3">Desired Skills</Text>
+              <View className="mb-3">
+                <Text className="font-quicksand-medium text-md text-gray-900">Skills</Text>
                 <TextInput
                   ref={skillInputRef}
-                  className="border border-gray-300 rounded-xl p-4 mb-3"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                  placeholder="e.g. Python, React, SQL"
+                  className="border border-black rounded-lg p-3 mt-2"
+                  placeholder="e.g. JavaScript, Python"
                   returnKeyType="done"
-                  onSubmitEditing={(event) => {
-                    addSkill(event.nativeEvent.text);
-                  }}
+                  onSubmitEditing={(event) => addSkill(event.nativeEvent.text.trim())}
                 />
-                <View className="flex-row flex-wrap gap-2">
+                <View className="flex-row flex-wrap gap-2 mt-2">
                   {tempFilters.skills.map((skill, index) => (
                     <TouchableOpacity key={index} onPress={() => removeSkill(skill)} activeOpacity={0.7}>
                       <View className="bg-blue-100 border border-blue-200 px-3 py-2 rounded-xl flex-row items-center gap-1">
@@ -356,10 +529,119 @@ const Applications = () => {
                   ))}
                 </View>
               </View>
-              <View className="mb-8">
-                <Text className="font-quicksand-bold text-lg text-gray-900 mb-3">Education Level</Text>
+              <View className="mb-3">
+                <Text className="form-input__label mb-2">Has Video Introduction</Text>
+                <TouchableOpacity
+                  onPress={handleHasVideoIntroToggle}
+                  className={renderYesClass(tempFilters.hasVideoIntro || false)}
+                >
+                  <Text className="text-green-800 font-quicksand text-sm">Yes</Text>
+                </TouchableOpacity>
+              </View>
+              <View className="mb-3">
+                <Text className="form-input__label mb-2">Has Cover Letter</Text>
+                <TouchableOpacity
+                  onPress={handleHasCoverLetterToggle}
+                  className={renderYesClass(tempFilters.hasCoverLetter || false)}
+                >
+                  <Text className="text-green-800 font-quicksand text-sm">Yes</Text>
+                </TouchableOpacity>
+              </View>
+              <View className="mb-3">
+                <Text className="form-input__label">Applied Within</Text>
+                <View className="flex-row flex-wrap gap-4 mt-2">
+                  <TouchableOpacity
+                    className={renderYesClass(!tempFilters.applicationDateRange)}
+                    onPress={() => setApplicationDateRange(undefined)}
+                  >
+                    <Text>Any</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={renderYesClass(tempFilters.applicationDateRange === 1)}
+                    onPress={() => setApplicationDateRange(1)}
+                  >
+                    <Text>24 Hours</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={renderYesClass(tempFilters.applicationDateRange === 3)}
+                    onPress={() => setApplicationDateRange(3)}
+                  >
+                    <Text>3 Days</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={renderYesClass(tempFilters.applicationDateRange === 7)}
+                    onPress={() => setApplicationDateRange(7)}
+                  >
+                    <Text>7 Days</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={renderYesClass(tempFilters.applicationDateRange === 14)}
+                    onPress={() => setApplicationDateRange(14)}
+                  >
+                    <Text>14 Days</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={renderYesClass(tempFilters.applicationDateRange === 30)}
+                    onPress={() => setApplicationDateRange(30)}
+                  >
+                    <Text>30 Days</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View className="mb-3">
+                <Text className="form-input__label mb-3">Experience Level</Text>
                 <DropDownPicker
-                  open={open}
+                  open={isExpDropdownOpen}
+                  value={tempFilters.experiences}
+                  items={[
+                    { label: "Any", value: "Any" },
+                    { label: "Intern", value: "Intern" },
+                    { label: "Junior", value: "Junior" },
+                    { label: "Mid", value: "Mid" },
+                    { label: "Senior", value: "Senior" },
+                    { label: "Lead", value: "Lead" },
+                  ]}
+                  setOpen={setIsExpDropdownOpen}
+                  setValue={(callback) => {
+                    const value = typeof callback === "function" ? callback(tempFilters.experiences) : callback;
+                    if (value !== "Any") setTempFilterCount((prev) => prev + 1);
+                    else setTempFilterCount((prev) => prev - 1);
+                    setTempFilters({ ...tempFilters, experiences: value });
+                  }}
+                  style={{
+                    backgroundColor: "#f9fafb",
+                    borderColor: "#e5e7eb",
+                    borderRadius: 10,
+                    minHeight: 35,
+                  }}
+                  textStyle={{
+                    fontSize: 14,
+                    fontFamily: "Quicksand-Medium",
+                    color: "#111827",
+                  }}
+                  dropDownContainerStyle={{
+                    backgroundColor: "white",
+                    borderColor: "#e5e7eb",
+                    borderRadius: 12,
+                  }}
+                  labelStyle={{
+                    fontSize: 14,
+                    fontFamily: "Quicksand-Regular",
+                    color: "#111827",
+                  }}
+                  listItemContainerStyle={{
+                    paddingVertical: 8,
+                  }}
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  placeholder="Any"
+                />
+              </View>
+              <View className="mb-8">
+                <Text className="form-input__label mb-3">Education Level</Text>
+                <DropDownPicker
+                  open={isEduDropdownOpen}
                   value={tempFilters.educations}
                   items={[
                     { label: "Any", value: "Any" },
@@ -371,58 +653,58 @@ const Applications = () => {
                     { label: "PHD", value: "PHD" },
                     { label: "Post Doctorate", value: "Post Doctorate" },
                   ]}
-                  setOpen={setOpen}
+                  setOpen={setIsEduDropdownOpen}
                   setValue={(callback) => {
                     const value = typeof callback === "function" ? callback(tempFilters.educations) : callback;
                     if (value !== "Any") setTempFilterCount((prev) => prev + 1);
                     else setTempFilterCount((prev) => prev - 1);
                     setTempFilters({ ...tempFilters, educations: value });
                   }}
-                  setItems={() => {}}
                   style={{
-                    borderColor: "#d1d5db",
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
+                    backgroundColor: "#f9fafb",
+                    borderColor: "#e5e7eb",
+                    borderRadius: 10,
+                    minHeight: 35,
+                  }}
+                  textStyle={{
+                    fontSize: 14,
+                    fontFamily: "Quicksand-Medium",
+                    color: "#111827",
                   }}
                   dropDownContainerStyle={{
-                    borderColor: "#d1d5db",
+                    backgroundColor: "white",
+                    borderColor: "#e5e7eb",
                     borderRadius: 12,
+                  }}
+                  labelStyle={{
+                    fontSize: 14,
+                    fontFamily: "Quicksand-Regular",
+                    color: "#111827",
+                  }}
+                  listItemContainerStyle={{
+                    paddingVertical: 8,
+                  }}
+                  containerStyle={{
+                    width: "100%",
                   }}
                   placeholder="Any"
                 />
               </View>
-              <View className="flex-row gap-3">
+              <View className="flex-col justify-center items-center gap-2 mb-20 mt-2">
                 <TouchableOpacity
-                  className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
-                  style={{
-                    shadowColor: "#6366f1",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
+                  className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
                   onPress={() => {
                     applyFilters();
                     closeFilters();
                   }}
-                  activeOpacity={0.8}
                 >
-                  <Text className="font-quicksand-bold text-white text-base">Apply Filters</Text>
+                  <Text className="font-quicksand-semibold text-md">Apply</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
+                  className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
                   onPress={clearFilters}
-                  activeOpacity={0.7}
                 >
-                  <Text className="font-quicksand-bold text-gray-700 text-base">Clear All</Text>
+                  <Text className="font-quicksand-semibold text-md">Clear</Text>
                 </TouchableOpacity>
               </View>
             </View>

@@ -120,6 +120,7 @@ export type Job = {
     maxSalary: number,
     tags: Tag[],
     applicants: number,
+    pendingApplicationsSize: number,
     interviews: number
     createdAt: string,
     employmentType: string,
@@ -145,7 +146,11 @@ export type JobFilters = {
 export type ApplicantFilters = {
     locations: string[];
     skills: string[];
-    educations: string
+    educations: string;
+    experiences: string;
+    hasVideoIntro?: boolean;
+    hasCoverLetter?: boolean;
+    applicationDateRange?: number;
 }
 
 export type InterviewFilter = 'Upcoming' | 'Completed' | 'Pending Decision' | 'Hired' | 'Next Round' | 'Rejected'

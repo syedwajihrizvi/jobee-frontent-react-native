@@ -200,7 +200,7 @@ const Dashboard = () => {
                     <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center">
                       <Feather name="clock" size={20} color="#ef4444" />
                     </View>
-                    <Text className="font-quicksand-bold text-lg text-gray-900">Recent Applications</Text>
+                    <Text className="font-quicksand-bold text-lg text-gray-900">Pending Applications</Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => router.push("/businessJobs/applications")}
@@ -275,36 +275,6 @@ const Dashboard = () => {
                     </View>
                   </View>
                 </TouchableOpacity>
-                {(applications?.length || 0) > 0 && (
-                  <View className="flex-row gap-2 mt-4">
-                    <TouchableOpacity
-                      className="flex-1 bg-white border border-red-300 rounded-lg p-3 items-center"
-                      onPress={() => router.push("/businessJobs/applications?filter=pending")}
-                      activeOpacity={0.7}
-                    >
-                      <Feather name="clock" size={16} color="#ef4444" />
-                      <Text className="font-quicksand-semibold text-xs text-red-700 mt-1">Pending</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 bg-white border border-green-300 rounded-lg p-3 items-center"
-                      onPress={() => router.push("/businessJobs/applications?filter=reviewed")}
-                      activeOpacity={0.7}
-                    >
-                      <Feather name="check-circle" size={16} color="#22c55e" />
-                      <Text className="font-quicksand-semibold text-xs text-green-700 mt-1">Reviewed</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 bg-white border border-blue-300 rounded-lg p-3 items-center"
-                      onPress={() => router.push("/businessJobs/applications?filter=interview")}
-                      activeOpacity={0.7}
-                    >
-                      <Feather name="calendar" size={16} color="#3b82f6" />
-                      <Text className="font-quicksand-semibold text-xs text-blue-700 mt-1">Interview</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
             </View>
             <View className="px-3 mb-4">

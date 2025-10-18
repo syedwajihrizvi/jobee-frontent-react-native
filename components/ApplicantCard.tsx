@@ -1,6 +1,6 @@
 import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
-import { getApplicationStatus } from "@/lib/utils";
+import { formatDate, getApplicationStatus } from "@/lib/utils";
 import { ApplicationSummary } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -60,7 +60,7 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
               resizeMode="cover"
             />
           </View>
-          <View className="flex-1 mr-3 gap-1">
+          <View className="flex-1 mr-3">
             <Text className="font-quicksand-bold text-lg text-gray-900">{item.fullName}</Text>
             <Text className="font-quicksand-semibold text-base text-gray-700">{item.title}</Text>
             <View className="flex-row items-center gap-1">
@@ -94,7 +94,7 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
       <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
         <View className="flex-row items-center gap-2">
           <Feather name="calendar" size={14} color="#6b7280" />
-          <Text className="font-quicksand-medium text-sm text-gray-600">Applied recently</Text>
+          <Text className="font-quicksand-medium text-sm text-gray-600">Applied on {formatDate(item.appliedAt)}</Text>
         </View>
         <View
           className="w-8 h-8 bg-green-100 rounded-full items-center justify-center"

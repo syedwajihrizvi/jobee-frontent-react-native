@@ -12,9 +12,7 @@ export const useUserJobPostings = (id: number, search: string) => {
                 'x-auth-token': `Bearer ${token}` || ''
             }
         });
-        console.log(response.status)
         const data = await response.json();
-        console.log(data)
         return data;
     }
 
