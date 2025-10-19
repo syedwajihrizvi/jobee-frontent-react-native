@@ -112,10 +112,13 @@ export const workArrangements = [
 ];
 
 export const experienceLevels = [
-  { label: "0-2", value: "0-2" },
-  { label: "3-5", value: "3-5" },
-  { label: "6-8", value: "6-8" },
-  { label: "9+", value: "9+" },
+  { label: "Any", value: "ANY" },
+  { label: "Intern", value: "INTERN" },
+  { label: "Entry", value: "ENTRY" },
+  { label: "Junior", value: "JUNIOR_LEVEL" },
+  { label: "Mid-Level", value: "MID_LEVEL" },
+  { label: "Senior", value: "SENIOR_LEVEL" },
+  { label: "Lead", value: "LEAD" },
 ];
 
 export const interviewPrepChecklist = [

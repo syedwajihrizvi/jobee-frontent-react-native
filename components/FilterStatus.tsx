@@ -102,13 +102,12 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
                 </Text>
               </View>
             ))}
-            {(filters as JobFilters).experience && (
+            {(filters as JobFilters).experience && (filters as JobFilters).experience !== "ANY" && (
               <View className="bg-green-50 border border-green-200 px-3 py-1 rounded-full flex-row items-center gap-1">
                 <Feather name="trending-up" size={10} color="#22c55e" />
                 <Text className="font-quicksand-medium text-xs text-green-800">
                   {experienceLevels.find((el) => el.value === (filters as JobFilters).experience)?.label ||
-                    (filters as JobFilters).experience}{" "}
-                  years
+                    (filters as JobFilters).experience}
                 </Text>
               </View>
             )}

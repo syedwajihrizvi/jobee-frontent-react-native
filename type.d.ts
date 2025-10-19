@@ -126,6 +126,7 @@ export type Job = {
     businessName: string,
     companyId: number,
     department: string,
+    level: string,
     views: number,
     businessAccountId: number,
     experience: number,
@@ -153,7 +154,7 @@ export type JobFilters = {
     distance?: string;
     minSalary?: number;
     maxSalary?: number;
-    experience?: string;
+    experience: string;
     employmentTypes?: string[];
     workArrangements?: string[];
 }
@@ -199,6 +200,7 @@ export type Company = {
     name: string;
     website: string;
     foundedYear: number;
+    logoUrl: string;
     rating: number;
     numEmployees: number,
     industry: string;

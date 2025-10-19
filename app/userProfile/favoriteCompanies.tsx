@@ -40,7 +40,6 @@ const FavoriteCompanies = () => {
             favoriteCompanies: [company, ...currFavorites],
           });
         }
-        console.log("Successfully toggled favorite company");
       }
     } catch (error) {
       console.error("Error toggling favorite company:", error);
@@ -123,7 +122,8 @@ const FavoriteCompanies = () => {
               </View>
               <Text className="font-quicksand-bold text-xl text-gray-900 text-center mb-3">No Favorite Companies</Text>
               <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6">
-                You have not favorited any companies yet. Start exploring and save companies you are interested in!
+                You have not favorited any companies yet. Start exploring jobs and favorite the companies you are
+                interested in!
               </Text>
               <TouchableOpacity
                 className="bg-emerald-500 rounded-xl px-6 py-3 flex-row items-center gap-2"

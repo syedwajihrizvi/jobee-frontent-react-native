@@ -1,4 +1,12 @@
-import { formatDate, getApplicationStatus, getEmploymentType, getWorkArrangement } from "@/lib/utils";
+import {
+  formatDate,
+  getApplicationStatus,
+  getEmploymentType,
+  getJobLevel,
+  getJobLevelColor,
+  getStatusColor,
+  getWorkArrangement,
+} from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -74,20 +82,7 @@ const JobListing = ({
     return null;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "applied":
-        return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" };
-      case "interviewed":
-        return { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200" };
-      case "offered":
-        return { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" };
-      case "rejected":
-        return { bg: "bg-red-100", text: "text-red-800", border: "border-red-200" };
-      default:
-        return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
-    }
-  };
+  const statusColors = getStatusColor(getApplicationStatus(status || ""));
 
   return (
     <View
@@ -107,10 +102,8 @@ const JobListing = ({
           </View>
           <View className="flex-row items-center gap-3">
             {showStatus && status && (
-              <View
-                className={`${getStatusColor(status).bg} ${getStatusColor(status).border} border px-3 py-1 rounded-full`}
-              >
-                <Text className={`font-quicksand-bold text-xs ${getStatusColor(status).text}`}>
+              <View className={`${statusColors.bg} ${statusColors.border} border rounded-lg px-3 py-1`}>
+                <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
                   {getApplicationStatus(status)}
                 </Text>
               </View>
@@ -158,6 +151,12 @@ const JobListing = ({
             <Feather name="home" size={14} color="#6b7280" />
             <Text className="font-quicksand-medium text-sm text-gray-600">{getWorkArrangement(job.setting)}</Text>
           </View>
+        </View>
+        <View className="flex-row items-center gap-1">
+          <Feather name="trending-up" size={14} color={getJobLevelColor(job.level).iconColor} />
+          <Text className={`font-quicksand-semibold text-sm ${getJobLevelColor(job.level).color}`}>
+            {getJobLevel(job.level)}
+          </Text>
         </View>
         <View className="flex-row items-center gap-2 mb-4">
           <Text className="font-quicksand-bold text-base text-emerald-600">

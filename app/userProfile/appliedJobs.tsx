@@ -18,10 +18,24 @@ const AppliedJobs = () => {
   const [filter, setFilter] = useState<AppliedJobsFilter>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  const getCountOfJobsByStatus = (status: string) => {
+    if (status === "PENDING") {
+      return data ? data.filter((j) => j.status === "PENDING").length : 0;
+    } else if (status === "INTERVIEW_SCHEDULED") {
+      return data ? data.filter((j) => j.status === "INTERVIEW_SCHEDULED").length : 0;
+    } else if (status === "INTERVIEWED") {
+      return data ? data.filter((j) => j.status === "INTERVIEWED").length : 0;
+    } else if (status === "OFFERED") {
+      return data ? data.filter((j) => j.status === "OFFERED").length : 0;
+    } else if (status === "REJECTED") {
+      return data ? data.filter((j) => j.status === "REJECTED").length : 0;
+    }
+    return data ? data.length : 0;
+  };
+
   useEffect(() => {
     if (data && !isLoadingJobs) {
       let filteredJobs = [...data];
-      console.log(filter);
       if (filter) {
         if (filter === "Pending") {
           filteredJobs = filteredJobs.filter((j) => j.status === "PENDING");
@@ -44,7 +58,9 @@ const AppliedJobs = () => {
     if (totalJobs === 0) {
       return (
         <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-          <Text className="font-quicksand-bold text-2xl text-emerald-600">0</Text>
+          <Text className="font-quicksand-bold text-2xl text-emerald-600">
+            {getCountOfJobsByStatus("INTERVIEW_SCHEDULED")}
+          </Text>
           <Text className="font-quicksand-medium text-sm text-emerald-700">Interviews so far</Text>
         </View>
       );
@@ -55,21 +71,6 @@ const AppliedJobs = () => {
         <Text className="font-quicksand-medium text-sm text-emerald-700">{`Interview${totalJobs > 1 ? "s" : ""}`}</Text>
       </View>
     );
-  };
-
-  const renderJobHeaderText = () => {
-    if (filter === "Pending") {
-      return "Application Pending";
-    } else if (filter === "Interview Scheduled") {
-      return "Job Interviews Scheduled";
-    } else if (filter === "Interviewed") {
-      return "Job Interviews Completed";
-    } else if (filter === "Offered") {
-      return "Offered Jobs";
-    } else if (filter === "Rejected") {
-      return "Rejections";
-    }
-    return "Jobs Applied To";
   };
 
   const renderEmptyComponent = () => {
@@ -138,8 +139,6 @@ const AppliedJobs = () => {
         <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6">
           {config.description}
         </Text>
-
-        {/* Action button for default empty state */}
         {!filter && (
           <TouchableOpacity
             className="bg-indigo-500 rounded-xl px-6 py-3 flex-row items-center gap-2"
@@ -160,8 +159,6 @@ const AppliedJobs = () => {
             <Text className="font-quicksand-bold text-white text-base">Browse Jobs</Text>
           </TouchableOpacity>
         )}
-
-        {/* Motivational action for rejections */}
         {filter === "Rejected" && (
           <TouchableOpacity
             className="bg-emerald-500 rounded-xl px-6 py-3 flex-row items-center gap-2"
@@ -219,7 +216,7 @@ const AppliedJobs = () => {
                   elevation: 6,
                 }}
               >
-                <View className="flex-row items-center gap-3 mb-4">
+                <View className="flex-row items-center gap-3">
                   <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
                     <Feather name="folder" size={24} color="#6366f1" />
                   </View>
@@ -229,14 +226,6 @@ const AppliedJobs = () => {
                       View the status of your job applications
                     </Text>
                   </View>
-                </View>
-
-                <View className="flex-row gap-4">
-                  <View className="flex-1 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <Text className="font-quicksand-bold text-2xl text-blue-600">{jobs?.length}</Text>
-                    <Text className="font-quicksand-medium text-sm text-blue-700">{renderJobHeaderText()}</Text>
-                  </View>
-                  {renderJobsSelectedFor()}
                 </View>
               </View>
               <View
@@ -267,7 +256,7 @@ const AppliedJobs = () => {
                   <View className="flex-row flex-wrap gap-2 mt-3">
                     <InterviewFilterButton
                       handlePress={() => setFilter(null)}
-                      count={10}
+                      count={data ? data.length : 0}
                       label="All"
                       isActive={filter == null}
                       iconName="list"
@@ -277,7 +266,7 @@ const AppliedJobs = () => {
                     />
                     <InterviewFilterButton
                       handlePress={() => setFilter("Pending")}
-                      count={10}
+                      count={getCountOfJobsByStatus("PENDING")}
                       label="Pending"
                       isActive={filter === "Pending"}
                       iconName="clock"
@@ -287,7 +276,7 @@ const AppliedJobs = () => {
                     />
                     <InterviewFilterButton
                       handlePress={() => setFilter("Interview Scheduled")}
-                      count={10}
+                      count={getCountOfJobsByStatus("INTERVIEW_SCHEDULED")}
                       label="Interview Scheduled"
                       isActive={filter === "Interview Scheduled"}
                       iconName="calendar"
@@ -297,7 +286,7 @@ const AppliedJobs = () => {
                     />
                     <InterviewFilterButton
                       handlePress={() => setFilter("Rejected")}
-                      count={10}
+                      count={getCountOfJobsByStatus("REJECTED")}
                       label="Rejected"
                       isActive={filter === "Rejected"}
                       iconName="x-circle"
@@ -307,7 +296,7 @@ const AppliedJobs = () => {
                     />
                     <InterviewFilterButton
                       handlePress={() => setFilter("Offered")}
-                      count={10}
+                      count={getCountOfJobsByStatus("OFFERED")}
                       label="Offered"
                       isActive={filter === "Offered"}
                       iconName="check-circle"

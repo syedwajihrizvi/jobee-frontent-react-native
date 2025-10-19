@@ -150,6 +150,64 @@ export const getEmploymentType = (type?: string) => {
   }
 }
 
+export const getJobLevel = (level?: string) => {
+  switch(level) {
+    case 'INTERN':
+      return "Intern";
+    case 'ENTRY':
+      return "Entry-Level";
+    case 'JUNIOR_LEVEL':
+      return "Junior-Level";
+    case 'MID_LEVEL':
+      return "Mid-Level";
+    case 'SENIOR_LEVEL':
+      return "Senior-Level";
+    case 'LEAD':
+      return "Lead";
+    default:
+      return "Not Specified";
+  }
+}
+
+export const getJobLevelColor = (
+  level: string
+): { color: string; iconColor: string } => {
+  switch (level) {
+    case "INTERN":
+      return { color: "text-gray-800", iconColor: "#1f2937" };
+    case "ENTRY":
+      return { color: "text-blue-800", iconColor: "#1e40af" };
+    case "JUNIOR_LEVEL":
+      return { color: "text-green-800", iconColor: "#166534" };
+    case "MID_LEVEL":
+      return { color: "text-yellow-800", iconColor: "#854d0e" };
+    case "SENIOR_LEVEL":
+      return { color: "text-orange-800", iconColor: "#9a3412" };
+    case "LEAD":
+      return { color: "text-red-800", iconColor: "#991b1b" };
+    default:
+      return { color: "text-gray-800", iconColor: "#1f2937" };
+  }
+};
+
+  export const getStatusColor = (status?: string) => {
+    const normalizedStatus = (status ?? "").toLowerCase();
+    if (normalizedStatus.includes("pending") || normalizedStatus.includes("review")) {
+      return { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200" };
+    }
+    if (normalizedStatus.includes("interview")) {
+      return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" };
+    }
+    if (normalizedStatus.includes("accepted") || normalizedStatus.includes("hired")) {
+      return { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" };
+    }
+    if (normalizedStatus.includes("rejected") || normalizedStatus.includes("declined")) {
+      return { bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
+    }
+    return { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-200" };
+  };
+
+
 export const getWorkArrangement = (arrangement?: string) => {
   switch(arrangement) {
     case 'ON_SITE':

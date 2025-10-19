@@ -11,7 +11,6 @@ const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
 export const useJobs = (jobFilters: JobFilters) => {
     const { search, locations, companies, tags, minSalary, maxSalary, experience, employmentTypes, workArrangements } = jobFilters
     const queryParams = new URLSearchParams()
-
     if (search) queryParams.append('search', search)
     locations.forEach(location => queryParams.append('locations', location))
     if (companies) companies.forEach(company => queryParams.append('companies', company))
@@ -20,13 +19,7 @@ export const useJobs = (jobFilters: JobFilters) => {
     workArrangements?.forEach(arrangement => queryParams.append('settings', arrangement))
     if (minSalary) queryParams.append('minSalary', minSalary.toString())
     if (maxSalary) queryParams.append('maxSalary', maxSalary.toString())
-    if (experience) {
-      const experienceLevels = experience.split('-')
-      const minExp = experienceLevels[0]
-      const maxExp = experienceLevels[1]
-      if (minExp) queryParams.append('minExperience', minExp)
-      if (maxExp) queryParams.append('maxExperience', maxExp)
-    }
+    if (experience !== 'ANY') queryParams.append('experience', experience.toString())
     const params = queryParams.toString()
     const fetchJobs = async ({ pageParam = 0} : QueryFunctionContext) : Promise<{ jobs: Job[]; nextPage: number; hasMore: boolean }> => {
         const pageSize = 8;

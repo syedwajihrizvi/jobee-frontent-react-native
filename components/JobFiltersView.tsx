@@ -29,6 +29,7 @@ const JobFiltersView = ({
   const [tempFilters, setTempFilters] = useState<JobFilters>({
     ...defaultFilters,
   });
+  console.log("Temp Filters:", tempFilters.experience);
   const locationInputRef = useRef<TextInput>(null);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -90,15 +91,19 @@ const JobFiltersView = ({
   };
 
   const addExperienceLevel = (level: string) => {
-    if (level && tempFilters.experience !== level) {
-      setTempFilterCount(tempFilterCount + 1);
-      setTempFilters({ ...tempFilters, experience: level });
-    } else if (level && tempFilters.experience === level) {
+    if (level === "ANY") {
+      console.log("Removing experience level filter");
+      setTempFilters({ ...tempFilters, experience: "ANY" });
       setTempFilterCount(tempFilterCount - 1);
-      setTempFilters({ ...tempFilters, experience: "" });
+    } else if (tempFilters.experience === "ANY") {
+      console.log("Adding experience level:", level);
+      setTempFilters({ ...tempFilters, experience: level });
+      setTempFilterCount(tempFilterCount + 1);
+    } else if (tempFilters.experience !== "ANY") {
+      console.log("Changing experience level to:", level);
+      setTempFilters({ ...tempFilters, experience: level });
     }
   };
-
   const addTag = (tag: string) => {
     if (tag && !tempFilters.tags.includes(tag)) {
       setTempFilterCount(tempFilterCount + 1);
@@ -245,14 +250,13 @@ const JobFiltersView = ({
           </View>
           <View className="divider" />
           <View>
-            <Text className="font-quicksand-medium text-md text-gray-900">Experience (Years)</Text>
+            <Text className="font-quicksand-medium text-md text-gray-900">Experience Level</Text>
             <View className="flex flex-row flex-wrap gap-2 mt-2">
-              {experienceLevels.map((type) => (
+              {experienceLevels.map((type, index) => (
                 <TouchableOpacity
                   className={`${tempFilters.experience === type.value ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
-                  onPress={() => addExperienceLevel(type.value)}
-                  activeOpacity={1}
-                  key={type.value}
+                  onPress={() => addExperienceLevel(type.value!)}
+                  key={index}
                 >
                   <Text className="font-quicksand-medium text-green-800 text-sm">{type.label}</Text>
                 </TouchableOpacity>

@@ -19,9 +19,10 @@ const FavoriteJobs = () => {
       ) : (
         <FlatList
           className="w-full p-2"
-          data={jobs || []} // Simulating multiple job listings
+          showsVerticalScrollIndicator={false}
+          data={jobs || []}
           renderItem={({ item, index }: { item: Job; index: number }) => (
-            <TouchableOpacity activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.id}`)}>
+            <TouchableOpacity className="p-1" activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.id}`)}>
               <JobListing showFavorite={false} key={index} job={item} />
             </TouchableOpacity>
           )}
@@ -29,7 +30,7 @@ const FavoriteJobs = () => {
           ListHeaderComponent={() =>
             jobs && jobs.length > 0 ? (
               <View
-                className="mx-4 mb-6 bg-white rounded-2xl p-5 border border-gray-100"
+                className="mx-2 mb-6 bg-white rounded-2xl p-5 border border-gray-100"
                 style={{
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },

@@ -22,7 +22,7 @@ const Jobs = () => {
     maxSalary: undefined,
     employmentTypes: [],
     workArrangements: [],
-    experience: undefined,
+    experience: "ANY",
   };
 
   const { user: businessUser } = useAuthStore();

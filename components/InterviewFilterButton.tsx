@@ -25,9 +25,9 @@ const InterviewFilterButton = ({
 }: Props) => {
   const renderButtonClass = () => {
     if (!isActive) {
-      return `bg-white border border-${theme}-300 px-4 py-2 rounded-xl flex-row items-center gap-2`;
+      return `bg-white border border-${theme}-300 px-3 py-2 rounded-xl flex-row items-center gap-2`;
     }
-    return `bg-${theme}-100 border border-${theme}-300 px-4 py-2 rounded-xl flex-row items-center gap-2`;
+    return `bg-${theme}-100 border border-${theme}-300 px-3 py-2 rounded-xl flex-row items-center gap-2`;
   };
 
   return (
@@ -44,7 +44,7 @@ const InterviewFilterButton = ({
       onPress={handlePress}
     >
       <Feather name={iconName} size={12} color={iconColor} />
-      <Text className={`font-quicksand-bold text-${theme}-800 text-sm`}>
+      <Text className={`font-quicksand-bold text-${theme}-800 text-xs`}>
         {label} ({count})
       </Text>
     </TouchableOpacity>

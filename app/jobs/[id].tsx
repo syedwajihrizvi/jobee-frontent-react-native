@@ -11,7 +11,7 @@ import { addViewToJobs, applyToJob } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob, useJobsByUserApplications } from "@/lib/services/useJobs";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
-import { formatDate, getEmploymentType, getWorkArrangement, onActionSuccess } from "@/lib/utils";
+import { formatDate, getEmploymentType, getJobLevel, getWorkArrangement, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import { Company, CreateApplication, Job, User, UserDocument } from "@/type";
@@ -30,7 +30,6 @@ const JobDetails = () => {
   const user = authUser as User | null;
   const { profileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
-  console.log("Job Details for job ID:", jobId, job);
   const { data: jobApplications, isLoading: isLoadingJobApplications } = useJobsByUserApplications(user?.id);
   const [jobApplication, setJobApplication] = useState<{
     job: Job;
@@ -232,11 +231,11 @@ const JobDetails = () => {
                           : `${job?.applicants} applications`}
                     </Text>
                   </View>
-                  <View className="flex-row gap-1 items-center justify-center px-3 py-1 w-1/4">
+                  <View className="flex-row gap-1 items-center justify-center py-1">
                     <View className="w-6 h-6 bg-amber-100 rounded-full items-center justify-center">
                       <FontAwesome6 name="stairs" size={12} color="#f59e0b" />
                     </View>
-                    <Text className="font-quicksand-semibold text-sm text-amber-700">Mid-Level</Text>
+                    <Text className="font-quicksand-semibold text-sm text-amber-700">{getJobLevel(job?.level)}</Text>
                   </View>
                   <View className="flex-row gap-1 items-center justify-center px-3 py-1">
                     <View className="w-6 h-6 bg-purple-100 rounded-full items-center justify-center">
