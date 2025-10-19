@@ -43,12 +43,9 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Bottom Sheet Handle */}
       <View className="items-center py-3">
         <View className="w-12 h-1 bg-gray-300 rounded-full" />
       </View>
-
-      {/* Header */}
       <View className="px-4 pb-4 border-b border-gray-100">
         <View className="flex-row items-center gap-3">
           <View className="w-10 h-10 bg-emerald-100 rounded-lg items-center justify-center">
@@ -60,8 +57,6 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
           </View>
         </View>
       </View>
-
-      {/* Content */}
       <View className="flex-1 p-4">
         {/* Status Message */}
         <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
@@ -69,8 +64,6 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
             You have already applied to this job. Our team is reviewing your application and will get back to you soon.
           </Text>
         </View>
-
-        {/* Application Details */}
         <View className="bg-gray-50 rounded-xl p-4 mb-4">
           <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Application Details</Text>
 
