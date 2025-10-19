@@ -34,7 +34,6 @@ const RecommendedJobsPreview = ({
   const [appliedToRecommended, setAppliedToRecommended] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const height = useSharedValue(0);
-
   useEffect(() => {
     const interval = setInterval(() => {
       if (!user?.canQuickApplyBatch && user?.nextQuickApplyBatchTime) {
@@ -150,7 +149,6 @@ const RecommendedJobsPreview = ({
   };
 
   const buttonState = getButtonState();
-
   return (
     <View
       className="bg-white rounded-2xl border border-gray-200"
@@ -523,7 +521,7 @@ const RecommendedJobsPreview = ({
                 <Feather name="upload" size={24} color="#3b82f6" />
               </View>
               <Text className="font-quicksand-bold text-gray-800 text-center mb-2">
-                Get Personalized Recommendations
+                Get Personalized Recommendation
               </Text>
               <Text className="font-quicksand-medium text-sm text-gray-600 text-center leading-5 px-4">
                 Upload your resume to receive AI-powered job recommendations tailored to your skills and experience.

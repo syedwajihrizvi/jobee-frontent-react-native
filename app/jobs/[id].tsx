@@ -1,7 +1,6 @@
 import ApplicationInfo from "@/components/ApplicationInfo";
 import ApplyBottomSheet from "@/components/ApplyBottomSheet";
 import BackBar from "@/components/BackBar";
-import CompanyInfo from "@/components/CompanyInfo";
 import CompanyInformation from "@/components/CompanyInformation";
 import ExpandableText from "@/components/ExpandableText";
 import FavoriteJob from "@/components/FavoriteJob";
@@ -12,11 +11,11 @@ import { addViewToJobs, applyToJob } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob, useJobsByUserApplications } from "@/lib/services/useJobs";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
-import { getEmploymentType, getWorkArrangement, onActionSuccess } from "@/lib/utils";
+import { formatDate, getEmploymentType, getWorkArrangement, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import { Company, CreateApplication, Job, User, UserDocument } from "@/type";
-import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import { Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
@@ -31,6 +30,7 @@ const JobDetails = () => {
   const user = authUser as User | null;
   const { profileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
+  console.log("Job Details for job ID:", jobId, job);
   const { data: jobApplications, isLoading: isLoadingJobApplications } = useJobsByUserApplications(user?.id);
   const [jobApplication, setJobApplication] = useState<{
     job: Job;
@@ -89,7 +89,6 @@ const JobDetails = () => {
     if (!profileSummary) return false;
     return profileSummary?.favoriteCompanies.some((company) => company.id === companyId);
   };
-
   const handleFavoriteCompany = async (company: Company) => {
     try {
       const result = await toggleFavoriteCompany(Number(company.id));
@@ -121,13 +120,6 @@ const JobDetails = () => {
     applyBottomRef.current?.close();
     viewApplicationBottomRef.current?.close();
     jobBottomRef.current?.expand();
-  };
-
-  const handleCompanyBottomOpen = () => {
-    jobBottomRef.current?.close();
-    applyBottomRef.current?.close();
-    viewApplicationBottomRef.current?.close();
-    companyBottomRef.current?.expand();
   };
 
   const handleApplyBottomOpen = () => {
@@ -209,7 +201,7 @@ const JobDetails = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-center justify-between mb-1">
+            <View className="flex-row items-center justify-between">
               <View className="flex-1 mr-3">
                 <CompanyInformation company={job?.businessName!} />
               </View>
@@ -218,7 +210,7 @@ const JobDetails = () => {
             <View className="flex-row items-start justify-between mb-1">
               <View className="flex-1 mr-4">
                 <Text className="font-quicksand-bold text-lg text-gray-900 leading-8 mb-2">{job?.title}</Text>
-                <View className="flex-row items-center gap-4 mb-3">
+                <View className="flex-row flex-wrap items-center gap-x-4 gap-y-1 mb-1">
                   <View className="flex-row items-center gap-1">
                     <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center">
                       <Feather name="eye" size={12} color="#3b82f6" />
@@ -239,6 +231,18 @@ const JobDetails = () => {
                           ? "1 applicant"
                           : `${job?.applicants} applications`}
                     </Text>
+                  </View>
+                  <View className="flex-row gap-1 items-center justify-center px-3 py-1 w-1/4">
+                    <View className="w-6 h-6 bg-amber-100 rounded-full items-center justify-center">
+                      <FontAwesome6 name="stairs" size={12} color="#f59e0b" />
+                    </View>
+                    <Text className="font-quicksand-semibold text-sm text-amber-700">Mid-Level</Text>
+                  </View>
+                  <View className="flex-row gap-1 items-center justify-center px-3 py-1">
+                    <View className="w-6 h-6 bg-purple-100 rounded-full items-center justify-center">
+                      <FontAwesome6 name="building" size={12} color="#8b5cf6" />
+                    </View>
+                    <Text className="font-quicksand-semibold text-sm text-purple-700">{job?.department}</Text>
                   </View>
                 </View>
                 <View className="flex-row items-center gap-2 mb-2 flex-wrap">
@@ -266,6 +270,23 @@ const JobDetails = () => {
                     ${job?.minSalary?.toLocaleString()} - ${job?.maxSalary?.toLocaleString()}
                   </Text>
                 </View>
+              </View>
+            </View>
+            <View className="flex-row gap-3 mb-2">
+              <View className="flex-1 bg-gray-50 rounded-xl p-3">
+                <View className="flex-row items-center gap-2 mb-1">
+                  <Feather name="calendar" size={10} color="#6b7280" />
+                  <Text className="font-quicksand-medium text-xs text-gray-600">Posted</Text>
+                </View>
+                <Text className="font-quicksand-bold text-xs text-gray-900">{formatDate(job?.createdAt!)}</Text>
+              </View>
+
+              <View className="flex-1 bg-red-50 rounded-xl p-3">
+                <View className="flex-row items-center gap-2 mb-1">
+                  <Feather name="clock" size={12} color="#ef4444" />
+                  <Text className="font-quicksand-medium text-xs text-red-600">Deadline</Text>
+                </View>
+                <Text className="font-quicksand-bold text-xs text-red-700">{formatDate(job?.appDeadline!)}</Text>
               </View>
             </View>
             {job?.tags && job.tags.length > 0 && (
@@ -351,7 +372,7 @@ const JobDetails = () => {
             ) : (
               <ExpandableText text={company?.description || ""} />
             )}
-            <ViewMore label="View More About Company" onClick={handleCompanyBottomOpen} />
+            <ViewMore label="View More About Company" onClick={() => router.push(`/companies/${company?.id}`)} />
           </View>
           <View className="flex-1" />
         </ScrollView>
@@ -402,14 +423,9 @@ const JobDetails = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["25%", "35%"]} enablePanDownToClose>
+      <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["60%", "65%"]} enablePanDownToClose>
         <BottomSheetView className="flex-1 bg-white">
           {isLoading ? <ActivityIndicator /> : job ? <JobInfo job={job} /> : null}
-        </BottomSheetView>
-      </BottomSheet>
-      <BottomSheet ref={companyBottomRef} index={-1} snapPoints={["25%", "35%"]} enablePanDownToClose>
-        <BottomSheetView className="flex-1 bg-white">
-          {isLoadingCompany ? <ActivityIndicator /> : company ? <CompanyInfo company={company} /> : null}
         </BottomSheetView>
       </BottomSheet>
       {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (

@@ -125,6 +125,7 @@ export type Job = {
     description: string,
     businessName: string,
     companyId: number,
+    department: string,
     views: number,
     businessAccountId: number,
     experience: number,
@@ -198,6 +199,7 @@ export type Company = {
     name: string;
     website: string;
     foundedYear: number;
+    rating: number;
     numEmployees: number,
     industry: string;
     description: string;

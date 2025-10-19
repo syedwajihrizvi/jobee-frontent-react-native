@@ -61,7 +61,7 @@ export const useRecommendedJobs = () => {
   return useQuery<Job[], Error>({
     queryKey: ['jobs', 'recommended'],
     queryFn: fetchRecommendedJobs,
-    staleTime: 1000 * 60 * 720, //12 Hours
+    staleTime: 1000 * 60 * 360, //6 Hours
   })
 }
 
@@ -135,13 +135,15 @@ export const useApplicationById = (applicationId?: number) => {
   })
 }
 
-export const useJobsByCompany = (filters: JobFilters, companyId?: number) => {
+export const useJobsByCompany = (filters?: JobFilters, companyId?: number) => {
   const urlParams = new URLSearchParams()
-  if (filters.search) urlParams.append('search', filters.search)
-  filters.locations.forEach(location => urlParams.append('locations', location))
-  filters.tags.forEach(tag => urlParams.append('tags', tag))
-  if (filters.minSalary) urlParams.append('minSalary', filters.minSalary.toString())
-  if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
+  if (filters) {
+    if (filters.search) urlParams.append('search', filters.search)
+    filters.locations.forEach(location => urlParams.append('locations', location))
+    filters.tags.forEach(tag => urlParams.append('tags', tag))
+    if (filters.minSalary) urlParams.append('minSalary', filters.minSalary.toString())
+    if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
+  }
   if (companyId) urlParams.append('companyId', companyId.toString())
   const params = urlParams.toString()
   const fetchCompanyJobs = async ({ pageParam = 0} : QueryFunctionContext) => {
@@ -185,6 +187,25 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
     queryFn: fetchJobForBusiness,
     staleTime: 1000 * 60 * 5,
     enabled: !!companyId && !!jobId,
+  })
+}
+
+export const useMostRecentJobsAtCompany = (companyId: number) => {
+  const fetchRecentJobsAtCompany = async () => {
+    const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/recent-jobs?limit=3`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const data = await response.json()
+    return data
+  }
+  return useQuery<Job[], Error>({
+    queryKey: ['jobs', 'company', companyId, 'recent'],
+    queryFn: fetchRecentJobsAtCompany,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!companyId,
   })
 }
 
