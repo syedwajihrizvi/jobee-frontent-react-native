@@ -1,19 +1,23 @@
 import Piechart from "@/components/Piechart";
+import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
+import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import { AntDesign, Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Dashboard = () => {
   const { isLoading, profileSummary } = useProfileSummaryStore();
+  const { user: userProfile } = useAuthStore();
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
+
   const handleFavoriteCompany = async (companyId: number) => {
     try {
       const result = await toggleFavoriteCompany(Number(companyId));
@@ -27,7 +31,6 @@ const Dashboard = () => {
             favoriteCompanies: newFavorites,
           });
         }
-        console.log("Successfully toggled favorite company");
       }
     } catch (error) {
       console.error("Error toggling favorite company:", error);
@@ -78,10 +81,21 @@ const Dashboard = () => {
               }}
             >
               <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                  <Feather name="user" size={20} color="#3b82f6" />
+                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-start">
+                  {userProfile?.profileImageUrl ? (
+                    <Image
+                      source={{ uri: getS3ProfileImage(userProfile.profileImageUrl) }}
+                      className="size-10 rounded-full"
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Feather name="user" size={20} color="#3b82f6" />
+                  )}
                 </View>
-                <Text className="font-quicksand-bold text-lg text-gray-900">Profile Completion</Text>
+                <View>
+                  <Text className="font-quicksand-bold text-lg">{profileSummary.fullName}</Text>
+                  <Text className="font-quicksand-bold text-md text-gray-900">Profile Completion</Text>
+                </View>
               </View>
               <View className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                 <View className="flex-row items-center justify-between">
@@ -152,9 +166,9 @@ const Dashboard = () => {
               </View>
               <Piechart
                 data={[
-                  { label: "In Consideration", value: profileSummary.totalInConsideration, color: "#3b82f6" },
+                  { label: "Pending", value: profileSummary.totalInConsideration, color: "#3b82f6" },
                   { label: "Rejected", value: profileSummary.totalRejections, color: "#ef4444" },
-                  { label: "Interviews", value: profileSummary.totalApplications, color: "#10b981" },
+                  { label: "In Consideration", value: profileSummary.totalInterviews, color: "#10b981" },
                 ]}
               />
 

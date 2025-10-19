@@ -16,6 +16,26 @@ export const formatTime = (time: string) => {
   return `${hours}:${minutes}`;
 }
 
+export const calculateRemainingTime = (nextApplyTime: string | undefined) => {
+  if (!nextApplyTime) return { hours: 0, minutes: 0, progress: 100 };
+
+  const nextApplyDate = new Date(nextApplyTime);
+  const currentTime = new Date();
+  const timeDifference = nextApplyDate.getTime() - currentTime.getTime();
+
+  if (timeDifference <= 0) {
+    return { hours: 0, minutes: 0, progress: 100 };
+  }
+
+  const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+  const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+  
+  const totalCooldownMs = 6 * 60 * 60 * 1000;
+  const progress = Math.max(0, Math.min(100, ((totalCooldownMs - timeDifference) / totalCooldownMs) * 100));
+
+  return { hours, minutes, progress };
+};
+
 export const  convertTo12Hour =(time24: string): string => {
   // Expecting input like "23:15" or "08:05"
   const [hourStr, minute] = time24.split(":");

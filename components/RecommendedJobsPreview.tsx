@@ -1,12 +1,22 @@
 import { quickApplyBatch } from "@/lib/jobEndpoints";
+import { calculateRemainingTime } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import { Application, Job, User } from "@/type";
+import useProfileSummaryStore from "@/store/profile-summary.store";
+import { Application, Job, User, UserProfileSummary } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+
+type Props = {
+  handleViewAll: () => void;
+  recommendedJobs?: Job[];
+  isLoadingRecommended: boolean;
+  isViewingRecommended?: boolean;
+  handleBatchQuickApplySuccess: (jobs: Application[]) => void;
+};
 
 const RecommendedJobsPreview = ({
   recommendedJobs,
@@ -14,21 +24,27 @@ const RecommendedJobsPreview = ({
   isViewingRecommended,
   handleViewAll,
   handleBatchQuickApplySuccess,
-}: {
-  handleViewAll: () => void;
-  recommendedJobs?: Job[];
-  isLoadingRecommended: boolean;
-  isViewingRecommended?: boolean;
-  handleBatchQuickApplySuccess: (jobs: Application[]) => void;
-}) => {
-  const { user: authUser } = useAuthStore();
+}: Props) => {
+  const { user: authUser, setUser } = useAuthStore();
+  const { profileSummary, setProfileSummary } = useProfileSummaryStore();
   const user = authUser as User | null;
-  const isAuthenticated = authUser != null;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedToRecommended, setAppliedToRecommended] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const height = useSharedValue(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!user?.canQuickApplyBatch && user?.nextQuickApplyBatchTime) {
+        const remainingTime = calculateRemainingTime(user?.nextQuickApplyBatchTime);
+        const { hours, minutes } = remainingTime;
+        setTimeRemaining({ hours, minutes });
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user?.nextQuickApplyBatchTime, user?.canQuickApplyBatch]);
 
   const toggleDropdown = () => {
     setOpen(!open);
@@ -41,6 +57,15 @@ const RecommendedJobsPreview = ({
   }));
 
   const handleQuickApplyToAll = async () => {
+    if (!user?.canQuickApplyBatch) {
+      Alert.alert(
+        "Quick Apply Cooldown",
+        "You can only quick apply once every 6 hours. This helps us provide you with fresh, relevant recommendations.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     const jobIds = recommendedJobs?.map((job) => job.id) || [];
     if (jobIds.length === 0) {
@@ -53,7 +78,7 @@ const RecommendedJobsPreview = ({
           text: "OK",
           onPress: () => {
             setIsSubmitting(false);
-            router.push("/profile/uploadNewDoc");
+            router.push("/userProfile/uploadNewDoc");
           },
         },
         { text: "Cancel", style: "cancel", onPress: () => setIsSubmitting(false) },
@@ -65,16 +90,66 @@ const RecommendedJobsPreview = ({
       {
         text: "Apply",
         onPress: async () => {
-          const res = await quickApplyBatch(jobIds);
-          console.log(`RESULT OF QUICK APPLY: ${res}`);
-          queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
-          queryClient.invalidateQueries({ queryKey: ["jobs", "appliedJobs"] });
-          setAppliedToRecommended(true);
-          handleBatchQuickApplySuccess(res || []);
+          try {
+            const res = await quickApplyBatch(jobIds);
+            if (res) {
+              queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
+              queryClient.invalidateQueries({ queryKey: ["jobs", "appliedJobs"] });
+              setAppliedToRecommended(true);
+              const updatedUser = {
+                ...user,
+                canQuickApplyBatch: false,
+                quickAppliedAt: new Date().toISOString(),
+              } as User;
+              setUser(updatedUser);
+              setProfileSummary({
+                ...profileSummary,
+                totalApplications: (profileSummary?.totalApplications || 0) + res?.length,
+                totalInConsideration: (profileSummary?.totalInConsideration || 0) + res?.length,
+                lastApplication: res[res.length - 1],
+              } as UserProfileSummary);
+              handleBatchQuickApplySuccess(res || []);
+              setIsSubmitting(false);
+            }
+          } catch (error) {
+            setIsSubmitting(false);
+          }
         },
       },
     ]);
   };
+
+  const getButtonState = () => {
+    if (isSubmitting) {
+      return {
+        disabled: true,
+        bgColor: "bg-gray-400",
+        borderColor: "border-gray-500",
+        text: "Applying...",
+        icon: "loader",
+      };
+    }
+
+    if (!user?.canQuickApplyBatch || appliedToRecommended) {
+      return {
+        disabled: true,
+        bgColor: "bg-blue-500",
+        borderColor: "border-blue-600",
+        text: "Already Quick Applied",
+        icon: "check",
+      };
+    }
+
+    return {
+      disabled: false,
+      bgColor: "bg-green-500",
+      borderColor: "border-green-600",
+      text: "Quick Apply to All",
+      icon: "zap",
+    };
+  };
+
+  const buttonState = getButtonState();
 
   return (
     <View
@@ -112,9 +187,17 @@ const RecommendedJobsPreview = ({
 
         <View className="flex-row items-center gap-2">
           {!open && recommendedJobs && recommendedJobs.length > 0 && (
-            <View className="bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
-              <Text className="font-quicksand-bold text-xs text-emerald-700">
-                {Math.min(recommendedJobs.length, 3)} new
+            <View
+              className={`border px-3 py-1 rounded-full ${
+                user?.canQuickApplyBatch ? "bg-emerald-100 border-emerald-200" : "bg-orange-100 border-orange-200"
+              }`}
+            >
+              <Text
+                className={`font-quicksand-bold text-xs ${
+                  user?.canQuickApplyBatch ? "text-emerald-700" : "text-orange-700"
+                }`}
+              >
+                {user?.canQuickApplyBatch ? `${Math.min(recommendedJobs.length, 3)} new` : "Cooldown active"}
               </Text>
             </View>
           )}
@@ -130,7 +213,147 @@ const RecommendedJobsPreview = ({
 
       <Animated.View style={animatedStyle} className="overflow-hidden">
         <View className="px-5 py-5">
-          {isLoadingRecommended ? (
+          {!user?.canQuickApplyBatch && (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ alignItems: "center", paddingBottom: 20 }}
+            >
+              <View
+                className="w-10 h-10 bg-orange-100 rounded-full items-center justify-center mb-4"
+                style={{
+                  shadowColor: "#f97316",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Feather name="clock" size={20} color="#f97316" />
+              </View>
+
+              <Text className="font-quicksand-bold text-lg text-gray-900 text-center">Recommended Jobs Cooldown</Text>
+
+              <Text className="font-quicksand-medium text-sm text-gray-600 text-center leading-5 px-4 mb-6">
+                We are preparing fresh, personalized recommendations for you. New batch available at in{" "}
+                {timeRemaining.hours} hours and {timeRemaining.minutes} minutes.
+              </Text>
+              <View className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-4">
+                <View className="flex-row items-center gap-2 mb-3">
+                  <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center">
+                    <Feather name="bell" size={12} color="#3b82f6" />
+                  </View>
+                  <Text className="font-quicksand-bold text-sm text-gray-900">Get Notified When Ready</Text>
+                </View>
+
+                <Text className="font-quicksand-medium text-xs text-gray-600 mb-4 leading-4">
+                  We will alert you when new recommendations are available so you never miss out on great opportunities.
+                </Text>
+
+                <View className="gap-3">
+                  <TouchableOpacity
+                    className="bg-blue-500 border border-blue-600 rounded-xl p-3 flex-row items-center justify-center gap-2"
+                    style={{
+                      shadowColor: "#3b82f6",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    onPress={() => {
+                      Alert.alert(
+                        "Push Notifications",
+                        "Enable push notifications to get instant alerts when new job recommendations are ready.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Enable", onPress: () => console.log("Enable push notifications") },
+                        ]
+                      );
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="smartphone" size={16} color="white" />
+                    <Text className="font-quicksand-semibold text-white text-sm">Enable Push Notifications</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-emerald-500 border border-emerald-600 rounded-xl p-3 flex-row items-center justify-center gap-2"
+                    style={{
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    onPress={() => {
+                      Alert.alert(
+                        "Email Notifications",
+                        "Get email alerts when new personalized job recommendations are available.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Subscribe", onPress: () => console.log("Enable email notifications") },
+                        ]
+                      );
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="mail" size={16} color="white" />
+                    <Text className="font-quicksand-semibold text-white text-sm">Email Me Updates</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-purple-500 border border-purple-600 rounded-xl p-3 flex-row items-center justify-center gap-2"
+                    style={{
+                      shadowColor: "#8b5cf6",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    onPress={() => {
+                      Alert.alert(
+                        "SMS Notifications",
+                        "Receive text message alerts for new job recommendations (standard messaging rates apply).",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          { text: "Enable SMS", onPress: () => console.log("Enable SMS notifications") },
+                        ]
+                      );
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="message-circle" size={16} color="white" />
+                    <Text className="font-quicksand-semibold text-white text-sm">SMS Alerts</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <TouchableOpacity
+                className="bg-gray-600 border border-gray-700 rounded-xl px-6 py-3 flex-row items-center gap-2"
+                style={{
+                  shadowColor: "#374151",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+                onPress={() => router.push("/users/jobs")}
+                activeOpacity={0.8}
+              >
+                <Feather name="search" size={16} color="white" />
+                <Text className="font-quicksand-semibold text-white text-sm">Browse All Jobs Instead</Text>
+              </TouchableOpacity>
+              <View className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-3 w-full">
+                <View className="flex-row items-start gap-2">
+                  <Feather name="info" size={14} color="#3b82f6" />
+                  <View className="flex-1">
+                    <Text className="font-quicksand-semibold text-xs text-blue-800 mb-1">Why the wait?</Text>
+                    <Text className="font-quicksand-medium text-xs text-blue-700 leading-4">
+                      Our AI analyzes market trends and your profile to curate the best matches. The cooldown ensures
+                      you get quality over quantity.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+          )}
+          {user?.canQuickApplyBatch && isLoadingRecommended ? (
             <View className="items-center py-8">
               <View
                 className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center mb-3"
@@ -200,25 +423,22 @@ const RecommendedJobsPreview = ({
               showsVerticalScrollIndicator={false}
               ListHeaderComponent={() => (
                 <TouchableOpacity
-                  className={`rounded-xl py-2 items-center w-1/2 justify-center mb-2 ${
-                    appliedToRecommended ? "bg-blue-500 border border-blue-600" : "bg-green-500 border border-green-600"
-                  }`}
+                  className={`rounded-xl py-3 px-4 items-center justify-center mb-3 ${buttonState.bgColor} border ${buttonState.borderColor}`}
                   style={{
-                    shadowColor: appliedToRecommended ? "#ef4444" : "#10b981",
+                    shadowColor: buttonState.disabled ? "#6b7280" : "#22c55e",
                     shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
+                    shadowOpacity: buttonState.disabled ? 0.1 : 0.2,
                     shadowRadius: 6,
-                    elevation: 4,
+                    elevation: buttonState.disabled ? 1 : 4,
+                    opacity: buttonState.disabled ? 0.7 : 1,
                   }}
                   onPress={handleQuickApplyToAll}
-                  disabled={appliedToRecommended}
+                  disabled={buttonState.disabled}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center gap-2">
-                    <Feather name="zap" size={12} color="white" />
-                    <Text className="font-quicksand-bold text-white text-sm">
-                      {appliedToRecommended ? "Already Quick Applied" : "Quick Apply to All"}
-                    </Text>
+                    <Feather name={buttonState.icon as keyof typeof Feather.glyphMap} size={14} color="white" />
+                    <Text className="font-quicksand-bold text-white text-sm">{buttonState.text}</Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -248,6 +468,45 @@ const RecommendedJobsPreview = ({
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View className="h-2" />}
+              ListEmptyComponent={() => (
+                <ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
+                  <View
+                    className="w-16 h-16 bg-blue-100 rounded-full items-center justify-center mb-4"
+                    style={{
+                      shadowColor: "#3b82f6",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    <Feather name="upload" size={24} color="#3b82f6" />
+                  </View>
+                  <Text className="font-quicksand-bold text-gray-800 text-center mb-2">
+                    Get Personalized Recommendations
+                  </Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600 text-center leading-5 px-4">
+                    Upload your resume to receive AI-powered job recommendations tailored to your skills and experience.
+                  </Text>
+                  <TouchableOpacity
+                    className="bg-blue-500 rounded-xl px-6 py-3 mt-4"
+                    style={{
+                      shadowColor: "#3b82f6",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    onPress={() => router.push("/userProfile/manageDocs")}
+                    activeOpacity={0.8}
+                  >
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="upload" size={16} color="white" />
+                      <Text className="font-quicksand-bold text-white text-sm">Upload Resume</Text>
+                    </View>
+                  </TouchableOpacity>
+                </ScrollView>
+              )}
             />
           ) : (
             <ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
@@ -278,7 +537,7 @@ const RecommendedJobsPreview = ({
                   shadowRadius: 4,
                   elevation: 3,
                 }}
-                onPress={() => router.push("/profile/manageDocs")}
+                onPress={() => router.push("/userProfile/manageDocs")}
                 activeOpacity={0.8}
               >
                 <View className="flex-row items-center gap-2">

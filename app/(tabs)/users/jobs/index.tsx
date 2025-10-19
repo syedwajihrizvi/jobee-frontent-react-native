@@ -10,7 +10,8 @@ import { quickApplyToJob } from "@/lib/jobEndpoints";
 import { useJobs, useRecommendedJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
 import { hasUserAppliedToJob, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import { Application, JobFilters, User } from "@/type";
+import useProfileSummaryStore from "@/store/profile-summary.store";
+import { Application, JobFilters, User, UserProfileSummary } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
@@ -35,6 +36,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const screenWidth = Dimensions.get("window").width;
 
 const Jobs = () => {
+  const { profileSummary, setProfileSummary } = useProfileSummaryStore();
   const { companyName } = useLocalSearchParams();
   const defaultFilters: JobFilters = {
     search: "",
@@ -250,12 +252,18 @@ const Jobs = () => {
           queryKey: ["job", quickApplyJob, "application"],
         });
         queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
+        const updatedProfileSummary = {
+          ...profileSummary,
+          lastApplication: res,
+          totalApplications: (profileSummary?.totalApplications || 0) + 1,
+          totalInConsideration: (profileSummary?.totalInConsideration || 0) + 1,
+        };
+        setProfileSummary(updatedProfileSummary as UserProfileSummary);
         setLocalApplyJobs((prev) => [...prev, quickApplyJob]);
         updateUserApplications([res]);
         player.seekTo(0);
         player.play();
         await onActionSuccess();
-        setShowRecommendedJobsModalSuccess(true);
       }
     }
     setQuickApplyJob(null);

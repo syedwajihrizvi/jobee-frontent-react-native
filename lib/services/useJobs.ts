@@ -106,11 +106,32 @@ export const useJobsByUserApplications = (userId?: number) => {
     return data
   }
 
-  return useQuery<{job: Job, status: string, appliedAt: string}[], Error>({
+  return useQuery<{job: Job, status: string, appliedAt: string, applicationId: number}[], Error>({
     queryKey: ['jobs', 'applications', userId],
     queryFn: fetchAppliedJobs,
     staleTime: 1000 * 60 * 5,
     enabled: !!userId
+  })
+}
+
+export const useApplicationById = (applicationId?: number) => {
+  const fetchApplication = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const response = await fetch(`${APPLICATIONS_API_URL}/${applicationId}`, {
+      headers: {
+        'x-auth-token': `Bearer ${token}`
+      }
+    })
+    const data = await response.json()
+    return data as Application;
+  }
+
+  return useQuery<Application | null, Error>({
+    queryKey: ['application', applicationId],
+    queryFn: fetchApplication,
+    staleTime: 1000 * 60 * 10,
+    enabled: !!applicationId
   })
 }
 
@@ -284,6 +305,7 @@ export const useJobApplication = (jobId: number) => {
         'x-auth-token': `Bearer ${token}`
       },
     })
+    console.log("Response status:", response.status);
     const data = await response.json()
     return data
   }

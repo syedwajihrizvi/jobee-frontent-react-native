@@ -10,12 +10,12 @@ import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { addViewToJobs, applyToJob } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
-import { useJob, useJobApplication } from "@/lib/services/useJobs";
+import { useJob, useJobsByUserApplications } from "@/lib/services/useJobs";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { getEmploymentType, getWorkArrangement, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
-import { Company, CreateApplication, User, UserDocument } from "@/type";
+import { Company, CreateApplication, Job, User, UserDocument } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,9 +28,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
   const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
-  const { profileSummary, isLoading: isLoadingProfileSummary } = useProfileSummaryStore();
+  const user = authUser as User | null;
+  const { profileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
-  const { data: jobApplication, isLoading: isLoadingJobApplication } = useJobApplication(Number(jobId));
+  const { data: jobApplications, isLoading: isLoadingJobApplications } = useJobsByUserApplications(user?.id);
+  const [jobApplication, setJobApplication] = useState<{
+    job: Job;
+    status: string;
+    appliedAt: string;
+    applicationId: number;
+  } | null>(null);
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
@@ -45,11 +52,17 @@ const JobDetails = () => {
     COVER_LETTERS: UserDocument[];
   } | null>(null);
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
-  const user = authUser as User | null;
   const userHasResume = user && user.documents && user.documents.some((doc) => doc.documentType === "RESUME");
   const queryClient = useQueryClient();
   const player = useAudioPlayer(sounds.popSound);
 
+  useEffect(() => {
+    if (!isLoadingJobApplications && jobApplications) {
+      // find the application for the current job
+      const application = jobApplications.find((app) => app.job.id === Number(jobId));
+      setJobApplication(application || null);
+    }
+  }, [isLoadingJobApplications, jobApplications, jobId]);
   useEffect(() => {
     const addView = async () => {
       await addViewToJobs(Number(jobId));
@@ -399,10 +412,10 @@ const JobDetails = () => {
           {isLoadingCompany ? <ActivityIndicator /> : company ? <CompanyInfo company={company} /> : null}
         </BottomSheetView>
       </BottomSheet>
-      {isAuthenticated && !isLoadingJobApplication && jobApplication && !(jobApplication instanceof Error) && (
+      {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (
         <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["40%"]} enablePanDownToClose>
           <BottomSheetView className="flex-1 bg-white">
-            <ApplicationInfo job={job!} application={jobApplication!} />
+            <ApplicationInfo applicationId={jobApplication.applicationId} />
           </BottomSheetView>
         </BottomSheet>
       )}

@@ -45,12 +45,12 @@ export type CustomButtonProps = {
 export type UserProfileSummary = {
     fullName: string;
     profileViews: number;
-    interviewsScheduled: number;
     profileViews: number;
     lastApplicationDate: string;
     totalInConsideration: number;
     totalRejections: number;
     totalApplications: number;
+    totalInterviews: number;
     lastApplication: Application| null;
     favoriteCompanies: Company[];
 }
@@ -212,6 +212,8 @@ export type User = {
     id: number;
     firstName: string;
     lastName: string;
+    canQuickApplyBatch: boolean;
+    nextQuickApplyBatchTime: string | null;
     age: number;
     email: string;
     state: string;
