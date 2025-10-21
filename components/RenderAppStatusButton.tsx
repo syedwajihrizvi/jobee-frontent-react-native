@@ -13,7 +13,7 @@ type Props = {
 const RenderAppStatusButton = ({ icon, color, shadowColor, loading = false, label, handlePress }: Props) => {
   return (
     <TouchableOpacity
-      className={`bg-${color}-500 rounded-xl px-4 py-3 flex-row items-center gap-2`}
+      className={`bg-${color}-500 rounded-xl px-3 py-2 flex-row items-center gap-2`}
       style={{
         shadowColor,
         shadowOffset: { width: 0, height: 2 },
@@ -30,7 +30,7 @@ const RenderAppStatusButton = ({ icon, color, shadowColor, loading = false, labe
       ) : (
         <>
           {icon}
-          <Text className="font-quicksand-bold text-white text-sm">{label}</Text>
+          <Text className="font-quicksand-bold text-white text-xs">{label}</Text>
         </>
       )}
     </TouchableOpacity>
