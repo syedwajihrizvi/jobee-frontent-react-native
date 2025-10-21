@@ -405,6 +405,8 @@ export type ApplicationDetailsForBusiness = {
     coverLetterUrl?: string;
     fullName: string;
     jobId: number;
+    jobTitle: string;
+    companyName: string;
     shortListed: boolean;
     userProfile: User
 }
