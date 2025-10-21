@@ -7,7 +7,7 @@ import ModalWithBg from "./ModalWithBg";
 type Props = {
   showRecommendedJobsModalSuccess: boolean;
   setShowRecommendedJobsModalSuccess: (show: boolean) => void;
-  recommendedJobs: Job[];
+  recommendedJobs: { job: Job; match: number }[];
 };
 
 const RecommededJobApplySuccessModal = ({

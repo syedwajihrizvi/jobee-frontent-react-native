@@ -1,7 +1,7 @@
 import BackBar from "@/components/BackBar";
 import { useCompany } from "@/lib/services/useCompany";
 import { useMostRecentJobsAtCompany } from "@/lib/services/useJobs";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getWorkArrangement } from "@/lib/utils";
 import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -177,7 +177,7 @@ const CompanyInfo = () => {
               Jobs at {company?.name || "this Company"}
             </Text>
             <TouchableOpacity
-              className="flex-row items-center gap-1"
+              className="flex-row items-center gap-1 mb-1"
               onPress={() => router.push(`/users/jobs?companyName=${company?.name}`)}
             >
               <Text className="font-quicksand-semibold text-sm text-blue-600">View All</Text>
@@ -198,9 +198,9 @@ const CompanyInfo = () => {
                   activeOpacity={0.7}
                   onPress={() => router.push(`/jobs/${job.id}`)}
                 >
-                  <View className="flex-row items-start justify-between mb-2">
+                  <View className="flex-row items-start justify-between mb-1">
                     <View className="flex-1">
-                      <Text className="font-quicksand-bold text-sm text-gray-900 mb-1">{job.title}</Text>
+                      <Text className="font-quicksand-bold text-sm text-gray-900">{job.title}</Text>
                       <View className="flex-row items-center gap-2">
                         <View className="flex-row items-center gap-1">
                           <FontAwesome5 name="layer-group" size={10} color="#6b7280" />
@@ -211,22 +211,26 @@ const CompanyInfo = () => {
                           <Feather name="map-pin" size={10} color="#6b7280" />
                           <Text className="font-quicksand-medium text-xs text-gray-600">{job.location}</Text>
                         </View>
+                        <View className="w-1 h-1 bg-gray-400 rounded-full" />
+                        <View className="flex-row items-center gap-1 w-3/4">
+                          <Feather name="map-pin" size={10} color="#6b7280" />
+                          <Text className="font-quicksand-medium text-xs text-gray-600">
+                            {getWorkArrangement(job.setting)}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                     <View className="items-end">
-                      <View className="bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-full mb-1">
-                        <Text className="font-quicksand-bold text-xs text-emerald-700">{job.employmentType}</Text>
-                      </View>
                       <Text className="font-quicksand-medium text-xs text-gray-500">{formatDate(job.createdAt)}</Text>
                     </View>
                   </View>
 
                   <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-2">
-                      <View className="w-4 h-4 bg-blue-100 rounded-full items-center justify-center">
-                        <Feather name="briefcase" size={8} color="#3b82f6" />
+                    <View className="flex-row items-center gap-1">
+                      <View className="w-4 h-4 bg-green-100 rounded-full items-center justify-center">
+                        <Feather name="briefcase" size={8} color="#21c48f" />
                       </View>
-                      <Text className="font-quicksand-medium text-xs text-blue-600">Quick Apply Available</Text>
+                      <Text className="font-quicksand-medium text-xs text-green-600">Quick Apply Available</Text>
                     </View>
                     <Feather name="chevron-right" size={12} color="#6b7280" />
                   </View>

@@ -1,4 +1,4 @@
-import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
+import { formatDate, getEmploymentType, getJobLevel, getWorkArrangement } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -49,6 +49,7 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
               ${job.minSalary?.toLocaleString()} - ${job.maxSalary?.toLocaleString()}
             </Text>
           </View>
+          <Text className="font-quicksand-semibold text-sm text-amber-700">{getJobLevel(job?.level)}</Text>
         </View>
       </View>
       <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">

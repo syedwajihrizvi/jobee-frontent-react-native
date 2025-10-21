@@ -195,7 +195,11 @@ const Jobs = () => {
       ) : (
         <FlatList
           className="w-full px-2"
-          data={isViewingRecommended ? recommendedJobs : jobs?.pages.flatMap((page) => page.jobs) || []} // Simulating multiple job listings
+          data={
+            isViewingRecommended
+              ? recommendedJobs?.map((item) => item.job)
+              : jobs?.pages.flatMap((page) => page.jobs) || []
+          } // Simulating multiple job listings
           renderItem={({ item, index }) => {
             let userApplication = hasUserAppliedToJob(user, item.id);
             let showFavorite = userApplication ? false : true;

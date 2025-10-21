@@ -395,3 +395,71 @@ export const getDecisionString = (decision: string) => {
   }
 
 }
+
+export const capFirstLetter = (text: string) => {
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
+export const getMatchConfig = (percentage: number) => {
+    if (percentage >= 90) return {
+      bgColor: 'bg-emerald-600',
+      borderColor: 'border-emerald-700',
+      shadowColor: '#059669',
+      textColor: 'text-white',
+      icon: 'star',
+      label: 'Excellent Match',
+      gradientFrom: 'from-emerald-500',
+      gradientTo: 'to-emerald-600',
+      progressBarColor: '#34d399', // emerald-400 for contrast
+      progressBarBg: 'bg-emerald-200' // lighter background
+    };
+    if (percentage >= 75) return {
+      bgColor: 'bg-green-500',
+      borderColor: 'border-green-600',
+      shadowColor: '#16a34a',
+      textColor: 'text-white',
+      icon: 'thumbs-up',
+      label: 'Great Match',
+      gradientFrom: 'from-green-400',
+      gradientTo: 'to-green-500',
+      progressBarColor: '#4ade80', // green-400 for contrast
+      progressBarBg: 'bg-green-200'
+    };
+    if (percentage >= 60) return {
+      bgColor: 'bg-yellow-500',
+      borderColor: 'border-yellow-600',
+      shadowColor: '#eab308',
+      textColor: 'text-white',
+      icon: 'check-circle',
+      label: 'Good Match',
+      gradientFrom: 'from-yellow-400',
+      gradientTo: 'to-yellow-500',
+      progressBarColor: '#fbbf24', // yellow-400 for contrast
+      progressBarBg: 'bg-yellow-200'
+    };
+    if (percentage >= 40) return {
+      bgColor: 'bg-orange-500',
+      borderColor: 'border-orange-600',
+      shadowColor: '#ea580c',
+      textColor: 'text-white',
+      icon: 'alert-circle',
+      label: 'Fair Match',
+      gradientFrom: 'from-orange-400',
+      gradientTo: 'to-orange-500',
+      progressBarColor: '#fb923c', // orange-400 for contrast
+      progressBarBg: 'bg-orange-200'
+    };
+    return {
+      bgColor: 'bg-red-500',
+      borderColor: 'border-red-600',
+      shadowColor: '#dc2626',
+      textColor: 'text-white',
+      icon: 'x-circle',
+      label: 'Low Match',
+      gradientFrom: 'from-red-400',
+      gradientTo: 'to-red-500',
+      progressBarColor: '#f87171', // red-400 for contrast
+      progressBarBg: 'bg-red-200'
+    };
+  };

@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const BusinessJobDetails = () => {
   const { id: jobId, companyId } = useLocalSearchParams();
+  console.log("BusinessJobDetails params:", { jobId, companyId });
   const { data: job, isLoading } = useJobsForBusiness(Number(companyId), Number(jobId));
   const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(
     Number(jobId)

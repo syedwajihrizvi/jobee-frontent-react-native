@@ -5,9 +5,8 @@ import { useDocuments } from "@/lib/services/useDocuments";
 import useAuthStore from "@/store/auth.store";
 import { AllUserDocuments, User, UserDocument } from "@/type";
 import { Feather } from "@expo/vector-icons";
-import BottomSheet from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -31,10 +30,8 @@ const documentTypes = [
 const ManageDocuments = () => {
   const { isLoading, user: authUser } = useAuthStore();
   const { data: userDocs, isLoading: isLoadingDocs } = useDocuments();
-  const addDocumentRef = useRef<BottomSheet>(null);
   const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(null);
   const user = authUser as User | null;
-
   useEffect(() => {
     if (userDocs && !isLoadingDocs) {
       const resumeDocuments: UserDocument[] = userDocs.filter((doc) => doc.documentType === UserDocumentType.RESUME);
@@ -122,7 +119,7 @@ const ManageDocuments = () => {
                 document={item}
                 actionIcon="edit"
                 customAction={() => {}}
-                outline={item.id === user?.primaryResume?.id}
+                standOut={item.documentType === UserDocumentType.RESUME && item.id === user?.primaryResume?.id}
               />
             )}
             horizontal
@@ -133,6 +130,17 @@ const ManageDocuments = () => {
           />
         )}
       </View>
+    );
+  };
+
+  const getTotalDocumentsCount = () => {
+    if (!userDocuments) return 0;
+    return (
+      (userDocuments?.resumeDocuments?.length || 0) +
+      (userDocuments?.coverLetterDocuments?.length || 0) +
+      (userDocuments?.certificateDocuments?.length || 0) +
+      (userDocuments?.transcriptDocuments?.length || 0) +
+      (userDocuments?.recommendationDocuments?.length || 0)
     );
   };
 
@@ -150,7 +158,7 @@ const ManageDocuments = () => {
               shadowRadius: 4,
               elevation: 3,
             }}
-            onPress={() => router.push("/profile/uploadNewDoc")}
+            onPress={() => router.push("/userProfile/uploadNewDoc")}
             activeOpacity={0.8}
           >
             <Feather name="plus" size={18} color="white" />
@@ -209,18 +217,8 @@ const ManageDocuments = () => {
 
               <View className="flex-row gap-4">
                 <View className="flex-1 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                  <Text className="font-quicksand-bold text-2xl text-blue-600">
-                    {(userDocuments?.resumeDocuments?.length || 0) + (userDocuments?.coverLetterDocuments?.length || 0)}
-                  </Text>
-                  <Text className="font-quicksand-medium text-sm text-blue-700">Job Applications</Text>
-                </View>
-
-                <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                  <Text className="font-quicksand-bold text-2xl text-emerald-600">
-                    {(userDocuments?.certificateDocuments?.length || 0) +
-                      (userDocuments?.transcriptDocuments?.length || 0)}
-                  </Text>
-                  <Text className="font-quicksand-medium text-sm text-emerald-700">Credentials</Text>
+                  <Text className="font-quicksand-bold text-2xl text-blue-600">{getTotalDocumentsCount()}</Text>
+                  <Text className="font-quicksand-medium text-sm text-blue-700">Total Documents</Text>
                 </View>
               </View>
             </View>

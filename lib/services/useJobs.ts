@@ -49,9 +49,10 @@ export const useRecommendedJobs = () => {
      }
     })
     const data = await response.json()
+    console.log("Fetched recommended jobs:", data); // Debugging log
     return data
   }
-  return useQuery<Job[], Error>({
+  return useQuery<{job: Job, match: number}[], Error>({
     queryKey: ['jobs', 'recommended'],
     queryFn: fetchRecommendedJobs,
     staleTime: 1000 * 60 * 360, //6 Hours
@@ -136,6 +137,7 @@ export const useJobsByCompany = (filters?: JobFilters, companyId?: number) => {
     filters.tags.forEach(tag => urlParams.append('tags', tag))
     if (filters.minSalary) urlParams.append('minSalary', filters.minSalary.toString())
     if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
+    if (filters.experience && filters.experience !== 'ANY') urlParams.append('experience', filters.experience)
   }
   if (companyId) urlParams.append('companyId', companyId.toString())
   const params = urlParams.toString()

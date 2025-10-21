@@ -559,3 +559,15 @@ export const updateCompanyLocation = async ({city, country, state, companyId }: 
     });
     return response.status === 200;
 }
+
+export const updatePrimaryResume = async (documentId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const response = await fetch(`${PROFILES_API_URL}/update-primary-resume?resumeId=${documentId}`, {
+        method: 'PATCH',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    });
+    return response.status === 200;
+}

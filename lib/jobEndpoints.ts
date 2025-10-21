@@ -127,3 +127,19 @@ export const addViewToJobs = async (jobId: number) => {
         console.error("Error adding view to job:", error)
     }
 }    
+
+export const checkJobMatchForUser = async (jobId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const result = await fetch(`${JOBS_API_URL}/${jobId}/check-match`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    if (result.status !== 200) return null;
+    const data = await result.json();
+    console.log("Match Percentage Data:", data);
+    return { matchPercentage: data.match };
+}

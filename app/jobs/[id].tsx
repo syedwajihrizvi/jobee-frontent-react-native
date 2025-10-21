@@ -7,11 +7,18 @@ import FavoriteJob from "@/components/FavoriteJob";
 import JobInfo from "@/components/JobInfo";
 import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
-import { addViewToJobs, applyToJob } from "@/lib/jobEndpoints";
+import { addViewToJobs, applyToJob, checkJobMatchForUser } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob, useJobsByUserApplications } from "@/lib/services/useJobs";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
-import { formatDate, getEmploymentType, getJobLevel, getWorkArrangement, onActionSuccess } from "@/lib/utils";
+import {
+  formatDate,
+  getEmploymentType,
+  getJobLevel,
+  getMatchConfig,
+  getWorkArrangement,
+  onActionSuccess,
+} from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import { Company, CreateApplication, Job, User, UserDocument } from "@/type";
@@ -42,6 +49,8 @@ const JobDetails = () => {
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
   const [selectedResume, setSelectedResume] = useState<string | null>(null);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState<string | null>(null);
+  const [matchPercentage, setMatchPercentage] = useState<number | null>(null);
+  const [isCheckingMatch, setIsCheckingMatch] = useState(false);
   const jobBottomRef = useRef<BottomSheet>(null);
   const companyBottomRef = useRef<BottomSheet>(null);
   const applyBottomRef = useRef<BottomSheet>(null);
@@ -169,6 +178,93 @@ const JobDetails = () => {
     return ["50%"];
   };
 
+  const handleCheckMatch = async () => {
+    try {
+      setIsCheckingMatch(true);
+      const res = await checkJobMatchForUser(Number(jobId));
+      if (res) {
+        console.log("Job match result:", res);
+        setMatchPercentage(res.matchPercentage);
+      }
+    } catch (error) {
+      console.error("Error checking job match:", error);
+    } finally {
+      setIsCheckingMatch(false);
+    }
+  };
+
+  const renderJobMatchView = () => {
+    if (isCheckingMatch) {
+      return (
+        <TouchableOpacity
+          className="bg-gray-400 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2"
+          style={{
+            shadowColor: "#6b7280",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+          disabled
+        >
+          <ActivityIndicator size="small" color="white" />
+          <Text className="font-quicksand-bold text-sm text-white">Analyzing Match...</Text>
+        </TouchableOpacity>
+      );
+    }
+    if (matchPercentage === null) {
+      return (
+        <TouchableOpacity
+          className="bg-emerald-500 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+          activeOpacity={0.8}
+          onPress={handleCheckMatch}
+        >
+          <Text className="font-quicksand-bold text-sm text-white">Check Match</Text>
+          <Feather name="target" size={12} color="white" />
+        </TouchableOpacity>
+      );
+    }
+    const config = getMatchConfig(matchPercentage);
+    return (
+      <View className="mb-2">
+        <View
+          className={`${config.bgColor} rounded-xl px-2 py-3 items-center justify-center flex-row gap-2`}
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <Text className="font-quicksand-bold text-sm text-white">{matchPercentage}% Match</Text>
+          <Feather name={config.icon as React.ComponentProps<typeof Feather>["name"]} size={12} color="white" />
+        </View>
+        <TouchableOpacity
+          className="bg-emerald-500 border border-gray-200 rounded-xl px-3 py-2 mt-2 flex-row items-center justify-center gap-2"
+          style={{
+            shadowColor: "#6b7280",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+          activeOpacity={0.8}
+          onPress={handleCheckMatch}
+        >
+          <Feather name="refresh-cw" size={12} color="white" />
+          <Text className="font-quicksand-semibold text-xs text-white">Re-analyze Match</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
   return (
     <SafeAreaView className="flex-1 bg-gray-50 relative">
       <BackBar label="Job Details" />
@@ -302,22 +398,7 @@ const JobDetails = () => {
                 ))}
               </ScrollView>
             )}
-            {isAuthenticated && (
-              <TouchableOpacity
-                className="bg-emerald-500 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2"
-                style={{
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                activeOpacity={0.8}
-              >
-                <Text className="font-quicksand-bold text-sm text-white">Check Match</Text>
-                <Feather name="target" size={12} color="white" />
-              </TouchableOpacity>
-            )}
+            {isAuthenticated && renderJobMatchView()}
           </View>
           <View
             className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"

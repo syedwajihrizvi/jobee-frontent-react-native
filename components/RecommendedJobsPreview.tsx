@@ -12,7 +12,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-na
 
 type Props = {
   handleViewAll: () => void;
-  recommendedJobs?: Job[];
+  recommendedJobs?: { job: Job; match: number }[];
   isLoadingRecommended: boolean;
   isViewingRecommended?: boolean;
   handleBatchQuickApplySuccess: (jobs: Application[]) => void;
@@ -66,7 +66,7 @@ const RecommendedJobsPreview = ({
     }
 
     setIsSubmitting(true);
-    const jobIds = recommendedJobs?.map((job) => job.id) || [];
+    const jobIds = recommendedJobs?.map((job) => job.job.id) || [];
     if (jobIds.length === 0) {
       setIsSubmitting(false);
       return;
@@ -370,11 +370,11 @@ const RecommendedJobsPreview = ({
           ) : recommendedJobs && recommendedJobs?.length > 0 ? (
             <FlatList
               data={recommendedJobs?.slice(0, Math.min(recommendedJobs.length, 3))}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => item.job.id.toString()}
               renderItem={({ item, index }) => (
                 <Pressable
                   key={index}
-                  onPress={() => router.push(`/jobs/${item.id}`)}
+                  onPress={() => router.push(`/jobs/${item.job.id}`)}
                   className="bg-gray-50 border border-gray-200 rounded-xl py-4 px-2"
                   style={{
                     shadowColor: "#000",
@@ -389,26 +389,26 @@ const RecommendedJobsPreview = ({
                     <View className="flex-1 mr-3">
                       <View className="flex-row items-center justify-between mb-1">
                         <Text className="font-quicksand-bold text-base text-gray-900 mb-1" numberOfLines={1}>
-                          {item.title}
+                          {item.job.title}
                         </Text>
                         <View className="bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-full">
-                          <Text className="font-quicksand-bold text-xs text-emerald-700">{85 + index * 3}% match</Text>
+                          <Text className="font-quicksand-bold text-xs text-emerald-700">{item.match}% match</Text>
                         </View>
                       </View>
                       <View className="flex-row items-center gap-2">
                         <View className="flex-row items-center gap-1">
                           <FontAwesome5 name="building" size={12} color="#6b7280" />
-                          <Text className="font-quicksand-medium text-sm text-gray-600">{item.businessName}</Text>
+                          <Text className="font-quicksand-medium text-sm text-gray-600">{item.job.businessName}</Text>
                         </View>
                         <View className="w-1 h-1 bg-gray-400 rounded-full" />
                         <View className="flex-row items-center gap-1">
                           <Feather name="map-pin" size={12} color="#6b7280" />
-                          <Text className="font-quicksand-medium text-sm text-gray-600">{item.location}</Text>
+                          <Text className="font-quicksand-medium text-sm text-gray-600">{item.job.location}</Text>
                         </View>
                       </View>
                       <View className="flex-row items-center justify-between mt-1 w-full">
                         <Text className="font-quicksand-semibold text-sm text-emerald-600">
-                          ${item.minSalary?.toLocaleString()} - ${item.maxSalary?.toLocaleString()}
+                          ${item.job.minSalary?.toLocaleString()} - ${item.job.maxSalary?.toLocaleString()}
                         </Text>
                         <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
                           <Feather name="chevron-right" size={12} color="#10b981" />
