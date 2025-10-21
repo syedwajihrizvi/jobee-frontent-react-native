@@ -1,12 +1,15 @@
 import ApplicantCard from "@/components/ApplicantCard";
 import BackBar from "@/components/BackBar";
+import CandidateCard from "@/components/CandidateCard";
 import FilterStatus from "@/components/FilterStatus";
+import ModalWithBg from "@/components/ModalWithBg";
 import SearchBar from "@/components/SearchBar";
+import { getCandidatesForJob } from "@/lib/jobEndpoints";
 import { useApplicantsForJob, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import useApplicantsForJobStore from "@/store/applicants.store";
-import { ApplicantFilters } from "@/type";
+import { ApplicantFilters, CandidateForJob } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -38,6 +41,9 @@ const Applications = () => {
     educations: "Any",
     experiences: "Any",
   });
+  const [showFindCandidatesModal, setShowFindCandidatesModal] = useState(false);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [candidates, setCandidates] = useState<CandidateForJob[]>([]);
   const { applications: storeApplications, setApplications: setStoreApplications } = useApplicantsForJobStore();
   const { data: applicantsData, isLoading } = useApplicantsForJob(Number(id), filters);
   const { data: shortListedApplicants } = useShortListedCandidatesForJob(Number(id));
@@ -200,6 +206,26 @@ const Applications = () => {
     const oldValue = tempFilters.hasCoverLetter;
     setTempFilters({ ...tempFilters, hasCoverLetter: !oldValue });
     setTempFilterCount((prev) => prev + (oldValue ? -1 : 1));
+  };
+
+  const handleFindCandidates = async () => {
+    setLoadingCandidates(true);
+    try {
+      const res = await getCandidatesForJob(Number(id));
+      if (res) {
+        setShowFindCandidatesModal(true);
+        setCandidates(res);
+      }
+    } catch (error) {
+      console.error("Error fetching candidates for job:", error);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  const handleCandidateCardPress = (candidate: CandidateForJob) => {
+    setShowFindCandidatesModal(false);
+    router.push(`/businessJobs/candidates/${candidate.id}`);
   };
 
   if (shortListed && applicants?.length === 0) {
@@ -491,13 +517,19 @@ const Applications = () => {
               shadowRadius: 6,
               elevation: 4,
             }}
-            onPress={() => console.log("Find Applicants")}
+            onPress={handleFindCandidates}
             activeOpacity={0.8}
           >
             <View className="flex-row items-center gap-2">
-              <Feather name="search" size={18} color="white" />
-              <Text className="font-quicksand-bold text-white text-base">Find More Applicants</Text>
-              <MaterialIcons name="auto-awesome" size={18} color="#fbbf24" />
+              {loadingCandidates ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Feather name="search" size={18} color="white" />
+                  <Text className="font-quicksand-bold text-white text-base">Find More Applicants</Text>
+                  <MaterialIcons name="auto-awesome" size={18} color="#fbbf24" />
+                </>
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -757,6 +789,45 @@ const Applications = () => {
           </Animated.View>
         </>
       )}
+      <ModalWithBg visible={showFindCandidatesModal} customHeight={0.8} customWidth={0.9}>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
+            <Text className="font-quicksand-bold text-lg text-gray-800">Candidates For Job</Text>
+            <TouchableOpacity onPress={() => setShowFindCandidatesModal(false)} className="p-2">
+              <Feather name="x" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={candidates.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0)) || []}
+            renderItem={({ item }) => (
+              <CandidateCard item={item} handleCandidateCardPress={() => handleCandidateCardPress(item)} />
+            )}
+            ListEmptyComponent={() => (
+              <View className="flex-1 justify-center items-center p-6">
+                <View
+                  className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
+                  style={{
+                    shadowColor: "#3b82f6",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <Feather name="users" size={32} color="#3b82f6" />
+                </View>
+                <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Candidates Found</Text>
+                <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
+                  There are no candidates available for this job at the moment.
+                </Text>
+              </View>
+            )}
+            ItemSeparatorComponent={() => <View className="h-2" />}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
+          />
+        </View>
+      </ModalWithBg>
     </SafeAreaView>
   );
 };

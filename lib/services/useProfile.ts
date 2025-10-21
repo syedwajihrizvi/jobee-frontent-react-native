@@ -5,7 +5,6 @@ const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
 
 export const useApplicant = (applicantId?: number, jobId?: number, candidateId?: number) => {
-    console.log("useApplicant called with applicantId:", applicantId, "jobId:", jobId, "candidateId:", candidateId);
     const fetchApplicant = async () => {
         if (!jobId && !candidateId) {
             const response = await fetch(`${APPLICATIONS_API_URL}/${applicantId}`, {

@@ -3,197 +3,36 @@ import BackBar from "@/components/BackBar";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import ContactCandidate from "@/components/ContactCandidate";
 import DocumentModal from "@/components/DocumentModal";
-import RenderAppStatusButton from "@/components/RenderAppStatusButton";
 import UserVideoIntro from "@/components/UserVideoIntro";
 import { images } from "@/constants";
-import { shortListCandidate, unshortListCandidate } from "@/lib/jobEndpoints";
 import { getS3ProfileImage, getS3VideoIntroUrl } from "@/lib/s3Urls";
-import { updateApplicationStatus } from "@/lib/services/applicationEndpoints";
-import { useShortListedCandidatesForJob } from "@/lib/services/useJobs";
-import { useApplicant } from "@/lib/services/useProfile";
-import { addViewToProfile } from "@/lib/updateUserProfile";
-import useApplicantsForJobStore from "@/store/applicants.store";
-import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
+import { useUserProfileForBusiness } from "@/lib/services/useUserProfileForBusiness";
 import { User } from "@/type";
 import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { useQueryClient } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import React, { useRef, useState } from "react";
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const ApplicantForBusiness = () => {
-  const queryClient = useQueryClient();
-  const { id, jobId, candidateId } = useLocalSearchParams();
+const Candidate = () => {
+  const { id } = useLocalSearchParams();
+  const { data: userProfile, isLoading } = useUserProfileForBusiness(Number(id));
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const { setApplications: setStoreApplications, applications: storeApplications } = useApplicantsForJobStore();
-  const { applications, setApplications } = useApplicantsForUserJobs();
-  const { data: applicationData, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
-  const [application, setApplication] = useState(applicationData);
-  const { data: shortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId));
-  const { userProfile } = application || {};
-  const [isUpdatingReject, setIsUpdatingReject] = useState(false);
   const [showSkills, setShowSkills] = useState(false);
   const [showExperience, setShowExperience] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
   const [showCertificates, setShowCertificates] = useState(false);
-  const [makingShortListRequest, setMakingShortListRequest] = useState(false);
-  const [isShortListed, setIsShortListed] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<string | undefined>();
 
-  useEffect(() => {
-    if (applicationData && !isLoading) {
-      setApplication(applicationData);
-    }
-  }, [applicationData, isLoading]);
-
-  useEffect(() => {
-    if (shortListedCandidates && application) {
-      setIsShortListed(shortListedCandidates?.includes(application?.id) || false);
-    }
-  }, [shortListedCandidates, application]);
-
-  useEffect(() => {
-    const addProfileView = async () => {
-      await addViewToProfile(Number(application?.userProfile.id));
-      console.log("Profile view added");
-    };
-    addProfileView();
-  }, [application]);
-
-  const handleRejectCandidate = async () => {
-    Alert.alert("Confirm Rejection", "Are you sure you want to reject this candidate? This action cannot be undone.", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Reject",
-        style: "destructive",
-        onPress: async () => {
-          setIsUpdatingReject(true);
-          try {
-            const res = await updateApplicationStatus(Number(application?.id), "REJECTED");
-            if (res) {
-              Alert.alert("Candidate Rejected", "The candidate has been rejected successfully.");
-              setApplication((prev) => (prev ? { ...prev, status: "REJECTED" } : prev));
-              const index = storeApplications.findIndex((app) => app.id === application?.id);
-              if (index > -1) {
-                const updatedApplications = [...storeApplications];
-                setStoreApplications(updatedApplications);
-              }
-              const updatedPendingApplications = applications.filter((app) => app.id !== application?.id);
-              setApplications(updatedPendingApplications);
-            }
-          } catch (error) {
-            console.log("Error rejecting candidate: ", error);
-          } finally {
-            setIsUpdatingReject(false);
-          }
-        },
-      },
-    ]);
-  };
-
-  const renderNonPendingStatus = () => {
-    if (!application) return null;
-    switch (application.status) {
-      case "REJECTED":
-        return (
-          <TouchableOpacity
-            className="bg-red-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
-            style={{
-              shadowColor: "#f59e0b",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            onPress={() => console.log("View interview details via bottom sheet")}
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-bold text-white text-sm">Candidate Already Rejected</Text>
-          </TouchableOpacity>
-        );
-      case "INTERVIEW_SCHEDULED":
-        return (
-          <TouchableOpacity
-            className="bg-amber-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
-            style={{
-              shadowColor: "#f59e0b",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            onPress={() => console.log("View interview details via bottom sheet")}
-            activeOpacity={0.8}
-          >
-            <Feather name="clock" size={14} color="white" />
-            <Text className="font-quicksand-bold text-white text-sm">Interview Scheduled</Text>
-          </TouchableOpacity>
-        );
-    }
-  };
-
-  const handleShortList = async () => {
-    if (!application) return;
-    setMakingShortListRequest(true);
-    try {
-      const result = await shortListCandidate({
-        applicationId: application.id,
-      });
-      if (result) {
-        Alert.alert("Success", "Candidate added to shortlist successfully.");
-        setIsShortListed(true);
-        queryClient.invalidateQueries({
-          queryKey: [application.jobId, "shortlist"],
-        });
-      } else {
-        Alert.alert("Error", "Failed to add candidate to shortlist.");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to add candidate to shortlist.");
-    } finally {
-      setMakingShortListRequest(false);
-    }
-  };
-
   const handleResumePress = () => {
-    setViewingDocument(application?.resumeUrl);
-  };
-
-  const handleCoverLetterPress = () => {
-    setViewingDocument(application?.coverLetterUrl);
-  };
-
-  const handleUnshortList = async () => {
-    if (!application) return;
-    setMakingShortListRequest(true);
-    try {
-      const result = await unshortListCandidate({
-        applicationId: application.id,
-      });
-      if (result) {
-        Alert.alert("Success", "Candidate removed from shortlist successfully.");
-        setIsShortListed(false);
-        queryClient.invalidateQueries({
-          queryKey: [application.jobId, "shortlist"],
-        });
-      } else {
-        Alert.alert("Error", "Failed to remove candidate from shortlist.");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to remove candidate from shortlist.");
-    } finally {
-      setMakingShortListRequest(false);
-    }
+    console.log("Viewing document URL:", userProfile?.primaryResume?.documentUrl);
+    setViewingDocument(userProfile?.primaryResume?.documentUrl);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 relative pb-20">
+    <SafeAreaView className="flex-1 bg-gray-50 relative">
       {isLoading ? (
         <>
           <BackBar label="Back" />
@@ -215,7 +54,7 @@ const ApplicantForBusiness = () => {
         </>
       ) : (
         <>
-          <BackBar label="Applicant Details" />
+          <BackBar label={`${userProfile?.firstName} ${userProfile?.lastName}`} />
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View
               className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
@@ -265,67 +104,21 @@ const ApplicantForBusiness = () => {
                 <Text className="font-quicksand-bold text-lg text-gray-900">Professional Summary</Text>
                 <Text className="font-quicksand-medium text-base text-gray-700">{userProfile?.summary}</Text>
               </View>
-              <View className="flex-row flex-wrap gap-3">
-                <TouchableOpacity
-                  className="bg-blue-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
-                  style={{
-                    shadowColor: "#3b82f6",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                  onPress={handleResumePress}
-                  activeOpacity={0.8}
-                >
-                  <Feather name="file-text" size={12} color="white" />
-                  <Text className="font-quicksand-bold text-white text-xs">View Resume</Text>
-                </TouchableOpacity>
-
-                {application?.coverLetterUrl && (
-                  <TouchableOpacity
-                    className="bg-purple-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
-                    style={{
-                      shadowColor: "#8b5cf6",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                    onPress={handleCoverLetterPress}
-                    activeOpacity={0.8}
-                  >
-                    <Feather name="mail" size={12} color="white" />
-                    <Text className="font-quicksand-bold text-white text-xs">Cover Letter</Text>
-                  </TouchableOpacity>
-                )}
-                {application?.status === "PENDING" ? (
-                  <>
-                    <RenderAppStatusButton
-                      icon={<Feather name="calendar" size={12} color="white" />}
-                      color="emerald"
-                      loading={false}
-                      label="Schedule Interview"
-                      shadowColor="#10b981"
-                      handlePress={() =>
-                        router.push(
-                          `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
-                        )
-                      }
-                    />
-                    <RenderAppStatusButton
-                      icon={<Feather name="x" size={14} color="white" />}
-                      loading={isUpdatingReject}
-                      color="red"
-                      label="Reject Candidate"
-                      shadowColor="#3b82f6"
-                      handlePress={handleRejectCandidate}
-                    />
-                  </>
-                ) : (
-                  renderNonPendingStatus()
-                )}
-              </View>
+              <TouchableOpacity
+                className="bg-emerald-500 rounded-lg px-2 py-3 flex-row items-center justify-center gap-2"
+                style={{
+                  shadowColor: "#3b82f6",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+                onPress={handleResumePress}
+                activeOpacity={0.8}
+              >
+                <Feather name="file-text" size={18} color="white" />
+                <Text className="font-quicksand-bold text-white text-md">View Resume</Text>
+              </TouchableOpacity>
             </View>
             <View className="mx-4 mt-4">
               <CollapsibleSection
@@ -528,42 +321,13 @@ const ApplicantForBusiness = () => {
                   <Text className="font-quicksand-bold text-white text-base">Contact Applicant</Text>
                 </View>
               </TouchableOpacity>
-
-              {application?.status === "PENDING" && (
-                <TouchableOpacity
-                  className={`flex-1 rounded-xl py-4 items-center justify-center ${
-                    isShortListed ? "bg-red-500" : "bg-emerald-500"
-                  }`}
-                  style={{
-                    shadowColor: isShortListed ? "#ef4444" : "#10b981",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
-                  onPress={isShortListed ? handleUnshortList : handleShortList}
-                  disabled={makingShortListRequest}
-                  activeOpacity={0.8}
-                >
-                  {makingShortListRequest ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <View className="flex-row items-center gap-2">
-                      <Feather name={isShortListed ? "x" : "star"} size={18} color="white" />
-                      <Text className="font-quicksand-bold text-white text-base">
-                        {isShortListed ? "Unshortlist" : "Shortlist"}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
             </View>
           </View>
         </>
       )}
       {viewingDocument && (
         <DocumentModal
-          documentType="User Document"
+          documentType="Resume"
           documentUrl={viewingDocument}
           visible={!!viewingDocument}
           handleClose={() => setViewingDocument(undefined)}
@@ -585,12 +349,12 @@ const ApplicantForBusiness = () => {
       >
         <ContactCandidate
           userProfile={userProfile as User}
-          customSMSBody={` I saw your application on Jobee for ${application?.jobTitle} at ${application?.companyName}.`}
-          customEmailSubject={`Regarding your application for ${application?.jobTitle} at ${application?.companyName}.`}
+          customSMSBody={` I saw your profile on Jobee, would you be interested in a quick chat?`}
+          customEmailSubject={`Connecting regarding opportunities at our company`}
         />
       </BottomSheet>
     </SafeAreaView>
   );
 };
 
-export default ApplicantForBusiness;
+export default Candidate;

@@ -170,6 +170,15 @@ export type ApplicantFilters = {
     search?: string;
 }
 
+export type CandidateForJob = {
+    id: number;
+    fullName: string;
+    profileImageUrl: string;
+    title: string;
+    location: string;
+    matchScore: number;
+}
+
 export type InterviewFilter = 'Upcoming' | 'Completed' | 'Pending Decision' | 'Hired' | 'Next Round' | 'Rejected'
 
 export type ProfileLinks = {

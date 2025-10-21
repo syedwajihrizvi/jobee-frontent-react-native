@@ -1,4 +1,4 @@
-import { Application, CreateApplication, CreateJobForm } from "@/type";
+import { Application, CandidateForJob, CreateApplication, CreateJobForm } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const APPLICATION_API_URL = 'http://192.168.2.29:8080/applications'
@@ -140,6 +140,20 @@ export const checkJobMatchForUser = async (jobId: number) => {
     })
     if (result.status !== 200) return null;
     const data = await result.json();
-    console.log("Match Percentage Data:", data);
     return { matchPercentage: data.match };
+}
+
+export const getCandidatesForJob = async (jobId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const result = await fetch(`${JOBS_API_URL}/${jobId}/find-candidates`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    if (result.status !== 200) return null;
+    const data = await result.json();
+    return data as CandidateForJob[];
 }

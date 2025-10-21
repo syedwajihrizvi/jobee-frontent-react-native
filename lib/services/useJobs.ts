@@ -235,7 +235,6 @@ export const useApplicantsForJob = (jobId?: number, filters?: ApplicantFilters) 
       },
     })
     const data = await response.json()
-    console.log("Fetched applicants for job with filters:", data); // Debugging log
     return data
   }
 
