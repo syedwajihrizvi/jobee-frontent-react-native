@@ -70,6 +70,14 @@ export type BusinessProfileSummary = {
 
 }
 
+export type MessagePreview = {
+    id: number;
+    from: string;
+    dateReceived: string;
+    content: string;
+    read: boolean
+}
+
 export type ApplicationForJobState = {
     applications: ApplicationSummary[];
     isLoading: boolean;
