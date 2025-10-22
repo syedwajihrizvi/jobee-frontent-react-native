@@ -121,6 +121,12 @@ const Jobs = () => {
     const updatedApplications = [...newApplications, ...(user?.applications || [])];
     setUser(user ? { ...user, applications: updatedApplications } : user);
   };
+  const handleUnAuthenticatedQuickApply = () => {
+    setQuickApplyJob(null);
+    setShowQuickApplyModal(false);
+    router.push("/(auth)/sign-in");
+  };
+
   const handleQuickApplyClose = async (apply: boolean) => {
     if (apply && quickApplyJob) {
       const res = await quickApplyToJob(quickApplyJob);
@@ -157,7 +163,7 @@ const Jobs = () => {
   };
 
   return (
-    <SafeAreaView className="relative flex-1 bg-white pb-20">
+    <SafeAreaView className={`relative flex-1 bg-white${isAuthenticated ? " pb-20" : ""}`}>
       <StatusBar hidden={true} />
       <View className="w-full items-center justify-center mb-4">
         <SearchBar placeholder="Search for Jobs..." onSubmit={handleSearchSubmit} />
@@ -249,6 +255,7 @@ const Jobs = () => {
         label={quickApplyLabel}
         handleClose={handleQuickApplyClose}
         canQuickApply={!!user?.primaryResume}
+        handleUnAuthenticatedQuickApply={handleUnAuthenticatedQuickApply}
       />
     </SafeAreaView>
   );

@@ -1,8 +1,11 @@
+import useAuthStore from "@/store/auth.store";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
 const TabsLayout = () => {
+  const { isAuthenticated } = useAuthStore();
+  console.log("Is Authenticated in Tabs Layout:", isAuthenticated);
   return (
     <Tabs
       screenOptions={{
@@ -32,30 +35,36 @@ const TabsLayout = () => {
           elevation: 5,
           paddingHorizontal: 20,
           paddingVertical: 10,
+          opacity: isAuthenticated ? 1 : 0,
+          zIndex: isAuthenticated ? 1 : -1,
         },
       }}
     >
       <Tabs.Screen
         name="dashboard/index"
         options={{
+          tabBarButton: isAuthenticated ? undefined : () => null,
           tabBarIcon: ({ color, size }) => <AntDesign name="dashboard" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="jobs/index"
         options={{
+          tabBarButton: isAuthenticated ? undefined : () => null,
           tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages/index"
         options={{
+          tabBarButton: isAuthenticated ? undefined : () => null,
           tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile/index"
         options={{
+          tabBarButton: isAuthenticated ? undefined : () => null,
           tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
         }}
       />

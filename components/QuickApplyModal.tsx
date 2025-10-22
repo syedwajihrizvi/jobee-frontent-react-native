@@ -8,11 +8,13 @@ const QuickApplyModal = ({
   label,
   canQuickApply,
   handleClose,
+  handleUnAuthenticatedQuickApply,
 }: {
   visible: boolean;
   label: string;
   canQuickApply: boolean;
   handleClose: (apply: boolean, signedIn: boolean) => void;
+  handleUnAuthenticatedQuickApply: () => void;
 }) => {
   const { isAuthenticated } = useAuthStore();
 
@@ -39,7 +41,7 @@ const QuickApplyModal = ({
               <View className="flex flex-row items-center justify-center w-full gap-2">
                 <TouchableOpacity
                   className="apply-button w-1/2 items-center justify-center h-14"
-                  onPress={() => handleClose(false, false)}
+                  onPress={handleUnAuthenticatedQuickApply}
                 >
                   <Text className="font-quicksand-bold">Sign Up</Text>
                 </TouchableOpacity>
