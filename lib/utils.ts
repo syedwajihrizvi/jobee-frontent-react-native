@@ -468,12 +468,10 @@ export const formatMessageTimestamp = (timestamp: string): string => {
   const date = new Date(timestamp);
   const now = new Date();
 
-  // Calculate difference in days
   const diffTime = now.getTime() - date.getTime();
   const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
   if (diffDays < 1 && now.getDate() === date.getDate()) {
-    // Same day → show time (e.g. "11:41 AM")
     return date.toLocaleTimeString([], {
       hour: 'numeric',
       minute: '2-digit',
@@ -482,7 +480,6 @@ export const formatMessageTimestamp = (timestamp: string): string => {
     // Yesterday → show "Yesterday"
     return "Yesterday";
   } else {
-    // Older → show date (e.g. "Oct 18, 2025")
     return date.toLocaleDateString([], {
       month: 'short',
       day: 'numeric',

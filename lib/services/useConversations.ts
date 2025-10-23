@@ -20,7 +20,7 @@ export const useConversations = () => {
     }
 
     return useQuery<Conversation[], Error>({
-        queryKey: ['messages'],
+        queryKey: ['conversations'],
         queryFn: fetchMessages,
     })
 }

@@ -1,4 +1,4 @@
-import { getS3BusinessProfileImage } from "@/lib/s3Urls";
+import { getS3BusinessProfileImage, getS3ProfileImage } from "@/lib/s3Urls";
 import { formatDate } from "@/lib/utils";
 import { Conversation } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -13,6 +13,13 @@ type Props = {
 
 // TODO: Update how we get the profile iamge url since it differs for business and user
 const MessagePreviewCard = ({ message }: Props) => {
+  const renderProfileImageUrl = () => {
+    if (message.participantRole === "BUSINESS") {
+      return getS3BusinessProfileImage(message.participantProfileImageUrl);
+    }
+    return getS3ProfileImage(message.participantProfileImageUrl);
+  };
+
   return (
     <TouchableOpacity
       className="bg-white rounded-xl p-4 mb-3 border border-gray-100"
@@ -34,7 +41,7 @@ const MessagePreviewCard = ({ message }: Props) => {
         <View className="relative">
           {message.participantProfileImageUrl ? (
             <Image
-              source={{ uri: getS3BusinessProfileImage(message.participantProfileImageUrl) }}
+              source={{ uri: renderProfileImageUrl() }}
               className="w-12 h-12 rounded-full border-2 border-gray-200"
               resizeMode="cover"
             />

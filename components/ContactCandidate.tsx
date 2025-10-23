@@ -1,8 +1,10 @@
 import { images } from "@/constants";
+import { createConversationBetweenUsers, fetchConversationBetweenUsers } from "@/lib/chat";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { User } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
 import React from "react";
 import { Alert, Image, Linking, Text, TouchableOpacity, View } from "react-native";
 
@@ -47,8 +49,23 @@ const ContactCandidate = ({ userProfile, customSMSBody, customEmailSubject }: Pr
       .catch((err) => console.error("An error occurred", err));
   };
 
-  const handleJobeeMsgApplicant = () => {
-    console.log("Jobee Message Applicant on Jobee");
+  const handleJobeeMsgApplicant = async () => {
+    try {
+      const res = await fetchConversationBetweenUsers(userProfile.id, "USER");
+      if (res == null) {
+        console.log("No existing conversation found. Creating a new one.");
+        // Need to create a new conversation
+        const conversationId = await createConversationBetweenUsers(userProfile.id, "USER");
+        console.log("Created new conversation with ID:", conversationId);
+        router.push(
+          `/messages/${userProfile.id}?name=${userProfile.firstName}%20${userProfile.lastName}&role=USER&conversationId=${conversationId}`
+        );
+      }
+      console.log("In-app messaging to Applicant ID:", userProfile?.id, "Conversation:", res);
+    } catch {
+    } finally {
+      console.log("In-app messaging to Applicant ID:", userProfile?.id);
+    }
   };
 
   const handleSMSApplicant = () => {

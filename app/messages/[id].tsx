@@ -2,23 +2,27 @@ import { images } from "@/constants";
 import { createStompClient, fetchMessages, publishMessage } from "@/lib/chat";
 import { formatMessageTimestamp } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import useConversationStore from "@/store/conversation.store";
 import { Message } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { Client } from "@stomp/stompjs";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Image, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MessageChat = () => {
+  const queryClient = useQueryClient();
   const { id, name, role, conversationId } = useLocalSearchParams();
   const router = useRouter();
   const { user, userType } = useAuthStore();
+  const { conversations, setConversations } = useConversationStore();
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [client, setClient] = useState<Client | null>(null);
-
+  const flatListRef = useRef<FlatList>(null);
   useEffect(() => {
     const controller = new AbortController();
     const fetchChatMessages = async () => {
@@ -50,8 +54,24 @@ const MessageChat = () => {
     const client = createStompClient({
       userId: user!.id,
       userType: userParamType,
-      onMessage: (msg) => {
-        console.log("New message received:", msg);
+      onMessage: (msg: Message) => {
+        setMessages((prevMessages) => [...prevMessages, msg]);
+        // Update the conversation
+        const conversationIndex = conversations.findIndex((c) => c.id === Number(conversationId));
+        if (conversationIndex === -1) {
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        } else {
+          const updatedConversation = conversations[conversationIndex];
+          updatedConversation.lastMessageContent = msg.text;
+          updatedConversation.lastMessageTimestamp = msg.timestamp;
+          const updatedConversations = [...conversations];
+          updatedConversations.splice(conversationIndex, 1);
+          updatedConversations.unshift(updatedConversation);
+          setConversations(updatedConversations);
+        }
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
       },
     });
     client.activate();
@@ -150,6 +170,7 @@ const MessageChat = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <FlatList
+          ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id.toString()}
@@ -157,6 +178,14 @@ const MessageChat = () => {
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
           inverted={false}
+          ListEmptyComponent={
+            <View className="items-center justify-center px-6 mt-20">
+              <Text className="font-quicksand-semibold text-lg text-gray-800 text-center">Start a conversation</Text>
+              <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
+                Send a message to {name || "this user"} to get the conversation going.
+              </Text>
+            </View>
+          }
         />
         <View className="bg-white border-t border-gray-100 px-4 py-3">
           <View className="flex-row items-end gap-3">
