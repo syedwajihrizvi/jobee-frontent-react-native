@@ -49,7 +49,6 @@ export const useRecommendedJobs = () => {
      }
     })
     const data = await response.json()
-    console.log("Fetched recommended jobs:", data); // Debugging log
     return data
   }
   return useQuery<{job: Job, match: number}[], Error>({

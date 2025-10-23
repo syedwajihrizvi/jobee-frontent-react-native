@@ -5,7 +5,6 @@ import React from "react";
 
 const TabsLayout = () => {
   const { isAuthenticated } = useAuthStore();
-  console.log("Is Authenticated in Tabs Layout:", isAuthenticated);
   return (
     <Tabs
       screenOptions={{

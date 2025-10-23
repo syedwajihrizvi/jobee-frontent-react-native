@@ -73,9 +73,24 @@ export type BusinessProfileSummary = {
 export type MessagePreview = {
     id: number;
     from: string;
+    to: string;
+    senderProfileImageUrl: string;
     dateReceived: string;
+    receiverProfileImageUrl: string;
     content: string;
     read: boolean
+}
+
+export type Conversation = {
+    id: number;
+    lastMessageRead: boolean;
+    participantId: number;
+    participantName: string;
+    participantProfileImageUrl: string;
+    lastMessageTimestamp: string;
+    lastMessageContent: string;
+    wasLastMessageSender: boolean;
+
 }
 
 export type ApplicationForJobState = {
