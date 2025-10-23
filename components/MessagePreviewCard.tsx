@@ -23,7 +23,11 @@ const MessagePreviewCard = ({ message }: Props) => {
         shadowRadius: 8,
         elevation: 3,
       }}
-      onPress={() => router.push(`/messages/${message.participantId}?name=${message.participantName}`)}
+      onPress={() =>
+        router.push(
+          `/messages/${message.participantId}?name=${message.participantName}&role=${message.participantRole}&conversationId=${message.id}`
+        )
+      }
       activeOpacity={0.8}
     >
       <View className="flex-row items-start gap-3">

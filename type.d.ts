@@ -70,6 +70,13 @@ export type BusinessProfileSummary = {
 
 }
 
+export type Message = {
+    id: number;
+    text: string;
+    timestamp: string;
+    sentByUser: boolean
+}
+
 export type MessagePreview = {
     id: number;
     from: string;
@@ -87,6 +94,7 @@ export type Conversation = {
     participantId: number;
     participantName: string;
     participantProfileImageUrl: string;
+    participantRole: string;
     lastMessageTimestamp: string;
     lastMessageContent: string;
     wasLastMessageSender: boolean;

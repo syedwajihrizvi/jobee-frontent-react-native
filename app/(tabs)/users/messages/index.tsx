@@ -13,7 +13,6 @@ const Messages = () => {
   const { data: messages, isLoading } = useConversations();
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
-  console.log(messages);
   return (
     <SafeAreaView className="relative flex-1 bg-white pb-20">
       <BackBar label="Messages" />

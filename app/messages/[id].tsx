@@ -1,6 +1,8 @@
 import { images } from "@/constants";
-import { createStompClient, publishMessage } from "@/lib/chat";
+import { createStompClient, fetchMessages, publishMessage } from "@/lib/chat";
+import { formatMessageTimestamp } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import { Message } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { Client } from "@stomp/stompjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -8,59 +10,40 @@ import React, { useEffect, useState } from "react";
 import { FlatList, Image, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type Message = {
-  id: string;
-  text: string;
-  sender: "me" | "other";
-  timestamp: string;
-};
-
-const sampleMessages: Message[] = [
-  {
-    id: "1",
-    text: "Hi there! I saw your job posting and I'm very interested.",
-    sender: "other",
-    timestamp: "10:30 AM",
-  },
-  {
-    id: "2",
-    text: "Great! I'd love to discuss the position with you. Do you have experience with React Native?",
-    sender: "me",
-    timestamp: "10:32 AM",
-  },
-  {
-    id: "3",
-    text: "Yes, I have 3+ years of experience with React Native and have built several mobile apps.",
-    sender: "other",
-    timestamp: "10:35 AM",
-  },
-  {
-    id: "4",
-    text: "That sounds perfect! Would you be available for a quick call this week?",
-    sender: "me",
-    timestamp: "10:37 AM",
-  },
-  {
-    id: "5",
-    text: "Absolutely! I'm free Tuesday through Thursday afternoons. What works best for you?",
-    sender: "other",
-    timestamp: "10:40 AM",
-  },
-  {
-    id: "6",
-    text: "How about Wednesday at 2 PM? I can send you a calendar invite.",
-    sender: "me",
-    timestamp: "10:42 AM",
-  },
-  { id: "7", text: "Perfect! Looking forward to speaking with you then.", sender: "other", timestamp: "10:43 AM" },
-];
-
 const MessageChat = () => {
-  const { id, name } = useLocalSearchParams();
+  const { id, name, role, conversationId } = useLocalSearchParams();
   const router = useRouter();
   const { user, userType } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [client, setClient] = useState<Client | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchChatMessages = async () => {
+      try {
+        setIsLoading(true);
+        const msgs = await fetchMessages({
+          conversationId: Number(conversationId),
+          otherPartyId: Number(id),
+          otherPartyRole: role as string,
+        });
+        if (msgs) {
+          setMessages(msgs);
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        console.log("Fetch messages aborted or completed");
+        setIsLoading(false);
+      }
+    };
+    fetchChatMessages();
+    return () => {
+      controller.abort();
+    };
+  }, [id, name, role, conversationId]);
 
   useEffect(() => {
     const userParamType = userType === "user" ? "USER" : "BUSINESS";
@@ -80,7 +63,7 @@ const MessageChat = () => {
   }, [user, userType]);
 
   const renderMessage = ({ item }: { item: Message }) => {
-    const isMe = item.sender === "me";
+    const isMe = item.sentByUser;
     return (
       <View className={`flex-row mb-4 px-4 ${isMe ? "justify-end" : "justify-start"}`}>
         <View className={`max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
@@ -100,7 +83,9 @@ const MessageChat = () => {
               {item.text}
             </Text>
           </View>
-          <Text className="font-quicksand-medium text-xs text-gray-500 mt-1 px-1">{item.timestamp}</Text>
+          <Text className="font-quicksand-medium text-xs text-gray-500 mt-1 px-1">
+            {formatMessageTimestamp(item.timestamp)}
+          </Text>
         </View>
       </View>
     );
@@ -165,9 +150,9 @@ const MessageChat = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <FlatList
-          data={sampleMessages}
+          data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           className="flex-1"
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
