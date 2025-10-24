@@ -11,11 +11,12 @@ const CustomInput = ({
   autoCapitalize = "none",
   multiline = false,
   autocorrect = true,
+  fullWidth = false,
   customClass,
   onChangeText,
 }: CustomInputProps) => {
   return (
-    <View className="form-input">
+    <View className={`form-input${fullWidth ? " w-full" : ""}`}>
       {label && <Text className="form-input__label">{label}</Text>}
       <TextInput
         placeholder={placeholder}

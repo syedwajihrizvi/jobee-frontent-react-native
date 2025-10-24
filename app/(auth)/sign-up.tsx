@@ -1,5 +1,6 @@
 import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
+import GoogleButton from "@/components/GoogleButton";
 import { registerForPushNotifications, signUpBusiness, signUpUser } from "@/lib/auth";
 import useAuthStore from "@/store/auth.store";
 import useUserStore from "@/store/user.store";
@@ -258,24 +259,7 @@ const SignUp = () => {
           <Text className="font-quicksand-medium text-sm text-gray-500 px-4">or sign up with</Text>
           <View className="flex-1 h-px bg-gray-200" />
         </View>
-        <View className="flex-row gap-4 mb-4">
-          <TouchableOpacity
-            className="flex-1 bg-white border border-gray-200 rounded-xl py-3 items-center"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center gap-2">
-              <Feather name="mail" size={18} color="#374151" />
-              <Text className="font-quicksand-semibold text-sm text-gray-700">Google</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        <GoogleButton />
         <View className="items-center">
           <Text className="font-quicksand-medium text-sm text-gray-600">
             Already have an account?{" "}

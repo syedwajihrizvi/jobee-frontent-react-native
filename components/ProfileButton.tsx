@@ -5,14 +5,15 @@ type Props = {
   color: string;
   buttonText: string;
   disabled?: boolean;
+  fullWidth?: boolean;
   handlePress: () => void;
 };
 
-const ProfileButton = ({ color, buttonText, disabled = false, handlePress }: Props) => {
+const ProfileButton = ({ color, buttonText, disabled = false, fullWidth = false, handlePress }: Props) => {
   return (
     <TouchableOpacity
       disabled={disabled}
-      className={`bg-${color} rounded-lg px-6 py-3 flex-row items-center justify-center`}
+      className={`bg-${color} rounded-lg px-6 py-3 flex-row items-center justify-center${fullWidth ? " w-full" : ""}`}
       style={{
         shadowColor: "#22c55e",
         shadowOffset: { width: 0, height: 2 },

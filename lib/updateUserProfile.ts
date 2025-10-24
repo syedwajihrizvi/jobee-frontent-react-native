@@ -2,6 +2,7 @@ import { AddExperienceForm, AddProjectForm, AddUserEducationForm, AddUserSkillFo
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
+import { convertSocialMediaTypeToEnum } from "./utils";
 
 const PROFILES_API_URL = 'http://192.168.2.29:8080/profiles';
 const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles';
@@ -570,4 +571,81 @@ export const updatePrimaryResume = async (documentId: number) => {
         }
     });
     return response.status === 200;
+}
+
+export const createSocialMediaLink = async (type: string, url: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const res = await fetch(`${PROFILES_API_URL}/socialMedia`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ type: convertSocialMediaTypeToEnum(type), url })
+    });
+    if (res.status === 201 || res.status === 200) {
+        const data = await res.json();
+        console.log("Create social media link response data:", data);
+        return data;
+    }
+    return null;
+}
+
+export const updateSocialMediaLink = async (type: string, url: string, id:number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const res = await fetch(`${PROFILES_API_URL}/socialMedia/${id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ type: convertSocialMediaTypeToEnum(type), url })
+    });
+    if (res.status === 200) {
+        const data = await res.json();
+        console.log("Update social media link response data:", data);
+        return data;
+    }
+    return null;
+}
+
+
+export const createBusinessSocialMediaLink = async (type: string, url: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const res = await fetch(`${BUSINESS_PROFILES_API_URL}/socialMedia`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ type: convertSocialMediaTypeToEnum(type), url })
+    });
+    if (res.status === 201 || res.status === 200) {
+        const data = await res.json();
+        console.log("Create social media link response data:", data);
+        return data;
+    }
+    return null;
+}
+
+export const updateBusinessSocialMediaLink = async (type: string, url: string, id:number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const res = await fetch(`${BUSINESS_PROFILES_API_URL}/socialMedia/${id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ type: convertSocialMediaTypeToEnum(type), url })
+    });
+    if (res.status === 200) {
+        const data = await res.json();
+        console.log("Update social media link response data:", data);
+        return data;
+    }
+    return null;
 }

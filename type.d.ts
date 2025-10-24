@@ -27,6 +27,7 @@ export type CustomInputProps = {
     multiline?: boolean;
     style?: object;
     autocorrect?: boolean;
+    fullWidth?: boolean;
     customClass?: string;
     returnKeyType?: string;
     keyboardType?: string;
@@ -358,6 +359,12 @@ export type Education = {
     fromYear: string;
     toYear: string | null;
     degreeType: string;
+}
+
+export type SocialMedia = {
+    id: number;
+    type: string;
+    url: string;
 }
 
 export type ProfileImageUpdate = {

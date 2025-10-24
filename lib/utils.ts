@@ -308,6 +308,12 @@ export const editProfileSections: { label: string; subtitle: string; route: stri
     route: "projects",
     icon: "folder",
   },
+  {
+    label: "Social Media Links",
+    subtitle: "Add links to your professional social media profiles.",
+    route: "socialMedia",
+    icon: "share-2",
+  }
 ];
 
 export const businessProfileSections: { label: string; subtitle: string; route: string; icon: string }[] = [
@@ -319,8 +325,8 @@ export const businessProfileSections: { label: string; subtitle: string; route: 
   },
   {
     label: "Social Media Links",
-    subtitle: "Add or update links to your social media profiles.",
-    route: "social-media",
+    subtitle: "Add links to your professional social media profiles.",
+    route: "socialMedia",
     icon: "share-2",
   }
 ];
@@ -487,3 +493,37 @@ export const formatMessageTimestamp = (timestamp: string): string => {
     });
   }
 };
+
+export const convertSocialMediaTypeToEnum = (type: string) => {
+  switch(type) {
+    case 'linkedin':
+      return "LINKEDIN";
+    case 'github':
+      return "GITHUB";
+    case 'stackOverflow':
+      return "STACK_OVERFLOW";
+    case 'twitter':
+      return "TWITTER";
+    case 'personalWebsite':
+      return "PERSONAL_WEBSITE";
+    default:
+      return "PERSONAL_WEBSITE";
+  }
+}
+
+export const convertEnumToSocialMediaType = (type: string) => {
+  switch(type) {
+    case 'LINKEDIN':
+      return "linkedin";
+    case 'GITHUB':
+      return "github";
+    case 'STACK_OVERFLOW':
+      return "stackOverflow";
+    case 'TWITTER':
+      return "twitter";
+    case 'PERSONAL_WEBSITE':
+      return "personalWebsite";
+    default:
+      return "personalWebsite";
+  }
+}
