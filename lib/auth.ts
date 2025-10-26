@@ -2,6 +2,7 @@ import { BusinessSignUpParams, SignInParams, UserSignUpParams } from "@/type";
 import Asyncstorage from "@react-native-async-storage/async-storage";
 import * as AuthSession from 'expo-auth-session';
 import * as Device from 'expo-device';
+import { Directory, File, Paths } from "expo-file-system";
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 
@@ -259,6 +260,91 @@ export const clearStoredGoogleDriveTokens = async () => {
     await SecureStore.deleteItemAsync('googleDriveIdToken');
 }
 
-export const getGoogleDriveFiles = async () => {
+export const isGoogleDriveAccessTokenValid = async () => {
+    const accessToken = await fetchGoogleDriveAccessToken();
+    if (!accessToken) {
+        return false;
+    }
+    const tokenExpiry = await getStoredGoogleDriveTokenExpiry();
+    const currentTime = Date.now();
+    if (tokenExpiry && currentTime >= tokenExpiry) {
+        return false;
+    }
+    return true;
+}
 
+export const getGoogleDriveFiles = async (pageToken?: string) => {
+    const accessToken = await fetchGoogleDriveAccessToken();
+    if (!accessToken) {
+    console.log('No access token found.');
+    return null;
+    }
+
+    const tokenExpiry = await getStoredGoogleDriveTokenExpiry();
+    const currentTime = Date.now();
+    if (tokenExpiry && currentTime >= tokenExpiry) {
+    console.log('Access token has expired. Use refresh token to get a new access token.');
+    return null;
+    }
+
+    const urlParams = new URLSearchParams();
+    urlParams.append('pageSize', '5');
+    urlParams.append('fields', 'nextPageToken, files(id,name,mimeType,modifiedTime)');
+    urlParams.append('q', "mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'");
+    if (pageToken) {
+    urlParams.append('pageToken', pageToken);
+    }
+
+    const files = await fetch(`https://www.googleapis.com/drive/v3/files?${urlParams.toString()}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const response = await files.json();
+
+    return response;
+};
+
+export const fetchGoogleDocAsPdfAndCreateTempFile = async (fileId: string, fileName: string, fileMimeType: string) => {
+    const accessToken = await fetchGoogleDriveAccessToken();
+    if (!accessToken) {
+        console.log('No access token found.');
+        return null;
+    }
+
+    const exportUrl = fileMimeType === "application/vnd.google-apps.document"
+        ? `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`
+        : `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    console.log('Export URL:', exportUrl);
+    const destination = new Directory(Paths.cache, 'googleDriveDownloads');
+    if (!destination.exists) {
+        console.log('Creating directory for Google Drive downloads at:', destination.uri);
+        destination.create();
+        console.log('Created directory at:', destination.uri);
+    }
+    const file = new File(destination, `${fileName}.pdf`);
+    if (file.exists) {
+        console.log('File already exists at:', file.uri);
+        file.delete()
+    }
+    const fileUri = file.uri;
+    console.log('Downloading Google Doc to:', fileUri);
+    try {
+        const downloadUri = await File.downloadFileAsync(exportUrl, file, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }); 
+        console.log('Download Google Doc Response Status:', downloadUri);
+        return file;
+    } catch (error) {
+        console.error('Error downloading Google Doc as PDF:', error);
+        return null
+    }
+
+}
+
+export const useRefreshTokenToGetNewAccessToken = async () => {
+    const refreshToken = await getStoredGoogleDriveRefreshToken();
+    if (!refreshToken) {
+        console.log('No refresh token found.');
+        return null;
+    }
 }

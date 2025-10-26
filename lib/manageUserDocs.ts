@@ -1,6 +1,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 const USER_DOCS_API_URL = "http://192.168.2.29:8080/user-documents";
 
 export const uploadUserDocument = async (
@@ -20,6 +21,40 @@ export const uploadUserDocument = async (
         uri: document.assets![0].uri,
         name: safeName || 'document.pdf',
         type: document.assets![0].mimeType,
+    } as any)
+    formData.append('documentType', documentType);
+    formData.append('title', documentTitle);
+    const response = await fetch(
+        USER_DOCS_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: formData
+    })
+    if (response.status !== 201)
+        return false
+    return true
+}
+
+export const uploadGoogleDriveDocumentToServer = async (
+    document: File,
+    documentType: string,
+    documentTitle: string
+) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData();
+    const safeName = document.name
+    ?.trim()
+    .replace(/\s+/g, "_") 
+    .replace(/[^a-zA-Z0-9._-]/g, "");
+    
+    formData.append('document', {
+        uri: document.uri,
+        name: safeName || 'document.pdf',
+        type: "application/pdf",
     } as any)
     formData.append('documentType', documentType);
     formData.append('title', documentTitle);

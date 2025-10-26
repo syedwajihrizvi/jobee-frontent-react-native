@@ -574,3 +574,11 @@ export interface PagedResponse<T> {
   totalPages: number
   hasMore: boolean
 }
+
+
+export type GoogleDriveFile = {
+    id: string;
+    name: string;
+    mimeType: string;
+    modifiedTime: string;
+}
