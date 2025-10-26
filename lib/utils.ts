@@ -527,3 +527,30 @@ export const convertEnumToSocialMediaType = (type: string) => {
       return "personalWebsite";
   }
 }
+
+export const converOAuthProviderToText = (provider: string) => {
+  switch(provider) {
+    case 'GOOGLE_DRIVE':
+      return "Google Drive";
+    case 'DROPBOX':
+      return "Dropbox";
+    case 'ONEDRIVE':
+      return "OneDrive";
+    default:
+      return "Cloud Storage";
+  }
+}
+
+export const isValidGoogleDriveLink = (link: string) => {
+  const googleDrivePattern = /^(https?:\/\/)?(www\.)?(drive\.google\.com\/file\/d\/|docs\.google\.com\/)[\w-]+/;
+  return googleDrivePattern.test(link);
+}
+
+export const isValidDropboxLink = (link: string) => {
+  const dropboxPattern = /^(https?:\/\/)?(www\.)?dropbox\.com\/s\/[\w-]+/;
+  return dropboxPattern.test(link);
+}
+
+export const isValidDocumentLink = (link: string) => {
+  return isValidGoogleDriveLink(link) || isValidDropboxLink(link);
+}

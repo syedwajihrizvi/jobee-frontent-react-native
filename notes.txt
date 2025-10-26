@@ -1,0 +1,11 @@
+Submissions: Google Service Account Key for Play Store Submissions  
+  None assigned yet
+
+Configuration: Build Credentials FkqI8rUWzF (Default)  
+Keystore  
+Type                JKS
+Key Alias           a8e882a916beacdb02816d69e2665b3f
+MD5 Fingerprint     72:54:B9:10:F1:33:50:BE:2B:E2:D3:7F:92:26:19:04
+SHA1 Fingerprint    C0:04:CD:51:81:50:1D:02:69:36:14:3C:C7:DD:28:4D:AD:27:A3:A1
+SHA256 Fingerprint  65:4E:7F:7D:EA:75:34:2D:E4:3B:1E:C4:ED:AA:06:09:B4:AA:EA:5D:F4:8F:30:13:41:8D:1C:02:B3:33:2D:F5
+Updated             9 seconds ago

@@ -1,5 +1,6 @@
 import { BusinessSignUpParams, SignInParams, UserSignUpParams } from "@/type";
 import Asyncstorage from "@react-native-async-storage/async-storage";
+import * as AuthSession from 'expo-auth-session';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
@@ -144,3 +145,27 @@ export const registerForPushNotifications = async () => {
     }
 }
     
+
+// OAuth configuration
+
+export const connectToGoogleDriveOAuth = async () => {
+    const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
+    const REDIRECT_URI = AuthSession.makeRedirectUri({
+        scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq'
+    });
+    console.log('Redirect URI:', REDIRECT_URI);
+    const DISCOVERY = {
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    };
+    
+    const request = new AuthSession.AuthRequest({
+        clientId: CLIENT_ID,
+        redirectUri: REDIRECT_URI,
+        scopes: ['https://www.googleapis.com/auth/drive.readonly', 'profile', 'email'],
+        responseType: AuthSession.ResponseType.Code,
+    });
+    const result = await request.promptAsync(DISCOVERY);
+    console.log('Google Drive OAuth Result:', result);
+    return result;
+}

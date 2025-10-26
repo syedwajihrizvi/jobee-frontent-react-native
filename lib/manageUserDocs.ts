@@ -36,3 +36,31 @@ export const uploadUserDocument = async (
         return false
     return true
 }
+
+export const sendDocumentLinkToServer = async (
+    documentLink: string,
+    documentType: string,
+    documentTitle: string,
+    documentUrlType: 'GOOGLE_DRIVE' | 'DROPBOX'
+) => {
+    console.log('Sending document link to server:', { documentLink, documentType, documentTitle, documentUrlType });
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const response = await fetch(
+        USER_DOCS_API_URL + '/link', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            documentLink: "https://www.dropbox.com/scl/fi/f8hpvxqu27rxle8yl01v6/Resume.pdf?rlkey=77bwp4zn0o577vptz2jzx074y&st=xwpefrcw&dl=0",
+            documentType,
+            documentTitle,
+            documentUrlType: 'DROPBOX'
+        })
+    })
+    if (response.status !== 201)
+        return false
+    return true
+}

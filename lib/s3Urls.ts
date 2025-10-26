@@ -10,6 +10,7 @@ export const getS3BusinessProfileImage = (key: string) => {
 }
 
 export const getS3DocumentUrl = (key: string) => {
+    
     return `https://${bucketName}.s3.${region}.amazonaws.com/user-documents/${key}`;
 };
 
