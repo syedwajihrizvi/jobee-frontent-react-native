@@ -43,7 +43,7 @@ const QuickApplyModal = ({
                   className="apply-button w-1/2 items-center justify-center h-14"
                   onPress={handleUnAuthenticatedQuickApply}
                 >
-                  <Text className="font-quicksand-bold">Sign Up</Text>
+                  <Text className="font-quicksand-bold">Sign In</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="apply-button w-1/2 items-center justify-center h-14"

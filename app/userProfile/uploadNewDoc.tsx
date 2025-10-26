@@ -11,7 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,35 +36,32 @@ const UploadNewDoc = () => {
   const [isConnectedToDropbox, setIsConnectedToDropbox] = useState(false);
   const [isConnectedToOneDrive, setIsConnectedToOneDrive] = useState(false);
   const [showOauthPickerModal, setShowOauthPickerModal] = useState(false);
-  const [showOAuthConnectModal, setShowOAuthConnectModal] = useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] = useState<"GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | null>(null);
 
   const handleGoogleDrivePress = async () => {
     setActiveOAuthProvider("GOOGLE_DRIVE");
     if (!isConnectedToGoogleDrive) {
       const result = await connectToGoogleDriveOAuth();
-    } else {
-      setShowOauthPickerModal(true);
+      if (result) {
+        setIsConnectedToGoogleDrive(true);
+      } else {
+        setShowOauthPickerModal(true);
+      }
     }
   };
 
-  const handleDropboxPress = () => {
-    // OAuth 2.0 implementation will go here
-    console.log("Connect to Dropbox Drive");
-    setActiveOAuthProvider("DROPBOX");
-    if (!isConnectedToDropbox) {
-      setShowOAuthConnectModal(true);
-    } else {
-      setShowOauthPickerModal(true);
-    }
+  const handleSelectGoogleDriveDocs = async () => {
+    console.log("Select Google Drive docs");
   };
-  const handleOnedrivepress = () => {
+
+  const handleDropboxPress = () => {
+    setActiveOAuthProvider("DROPBOX");
+    console.log("Handle Dropbox OAuth");
+  };
+
+  const handleOnedrivePress = () => {
     setActiveOAuthProvider("ONEDRIVE");
-    if (!isConnectedToOneDrive) {
-      setShowOAuthConnectModal(true);
-    } else {
-      setShowOauthPickerModal(true);
-    }
+    console.log("Handle OneDrive OAuth");
   };
   const getDocumentTypeInfo = (type: string) => {
     return documentTypes.find((doc) => doc.value === type) || documentTypes[0];
@@ -208,7 +205,6 @@ const UploadNewDoc = () => {
         )}
         {!uploadSuccess && (
           <>
-            {/* Header Section */}
             <View className="items-center mb-8">
               <View
                 className="w-16 h-16 rounded-full items-center justify-center mb-4"
@@ -221,8 +217,6 @@ const UploadNewDoc = () => {
                 Upload a new document to your professional library
               </Text>
             </View>
-
-            {/* Document Type Selection */}
             <View className="mb-8">
               <Text className="font-quicksand-bold text-base text-gray-900 mb-4">Document Type</Text>
               <View className="flex-row flex-wrap gap-2">
@@ -258,8 +252,6 @@ const UploadNewDoc = () => {
                 ))}
               </View>
             </View>
-
-            {/* Document Title */}
             <View className="mb-8">
               <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Document Title</Text>
               <TextInput
@@ -277,8 +269,6 @@ const UploadNewDoc = () => {
                 onChangeText={setDocumentTitle}
               />
             </View>
-
-            {/* Selected Document Display */}
             {uploadedDocument?.assets?.[0]?.name && (
               <View
                 className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-8"
@@ -370,7 +360,7 @@ const UploadNewDoc = () => {
                           shadowRadius: 4,
                           elevation: 2,
                         }}
-                        onPress={handleGoogleDrivePress}
+                        onPress={!isConnectedToGoogleDrive ? handleGoogleDrivePress : handleSelectGoogleDriveDocs}
                         activeOpacity={0.7}
                       >
                         <View
@@ -460,7 +450,7 @@ const UploadNewDoc = () => {
                           shadowRadius: 4,
                           elevation: 2,
                         }}
-                        onPress={handleOnedrivepress}
+                        onPress={handleOnedrivePress}
                         activeOpacity={0.7}
                       >
                         <View
@@ -530,8 +520,6 @@ const UploadNewDoc = () => {
                 </TouchableOpacity>
               )}
             </View>
-
-            {/* Action Buttons */}
             <View className="flex-row gap-3">
               <TouchableOpacity
                 className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
@@ -575,18 +563,6 @@ const UploadNewDoc = () => {
               Upload file from {converOAuthProviderToText(activeOAuthProvider || "Cloud")}
             </Text>
             <TouchableOpacity onPress={() => setShowOauthPickerModal(false)} className="p-2">
-              <Feather name="x" size={20} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ModalWithBg>
-      <ModalWithBg visible={showOAuthConnectModal} customHeight={0.8} customWidth={0.9}>
-        <View className="flex-1">
-          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
-            <Text className="font-quicksand-bold text-lg text-gray-800">
-              Connect to {converOAuthProviderToText(activeOAuthProvider || "Cloud")}
-            </Text>
-            <TouchableOpacity onPress={() => setShowOAuthConnectModal(false)} className="p-2">
               <Feather name="x" size={20} color="#6b7280" />
             </TouchableOpacity>
           </View>

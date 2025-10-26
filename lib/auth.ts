@@ -3,6 +3,7 @@ import Asyncstorage from "@react-native-async-storage/async-storage";
 import * as AuthSession from 'expo-auth-session';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import * as SecureStore from 'expo-secure-store';
 
 const USER_ACCOUNTS_API_URL = "http://192.168.2.29:8080/accounts";
 const PROFILES_API_URL = "http://192.168.2.29:8080/profiles";
@@ -151,7 +152,7 @@ export const registerForPushNotifications = async () => {
 export const connectToGoogleDriveOAuth = async () => {
     const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
-        scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq'
+        scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
     });
     console.log('Redirect URI:', REDIRECT_URI);
     const DISCOVERY = {
@@ -166,6 +167,98 @@ export const connectToGoogleDriveOAuth = async () => {
         responseType: AuthSession.ResponseType.Code,
     });
     const result = await request.promptAsync(DISCOVERY);
-    console.log('Google Drive OAuth Result:', result);
-    return result;
+    const { codeVerifier } = request
+    console.log('OAuth Result:', result);
+    const successful = result.type === 'success';
+    if (successful && codeVerifier) {
+        const {code} =  result.params
+        const tokens = await exhchangeGoogleOAuthCodeForToken(code, codeVerifier);
+        console.log('OAuth Tokens:', tokens);
+        return tokens;
+    }
+    return null;
+}
+
+export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifier: string) => {
+    const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
+    const REDIRECT_URI = AuthSession.makeRedirectUri({
+         scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
+    });
+    const params = new URLSearchParams();
+    params.append('code', code);
+    params.append('code_verifier', codeVerifier);
+    params.append('client_id', CLIENT_ID);
+    params.append('redirect_uri', REDIRECT_URI);
+    params.append('grant_type', 'authorization_code');
+    const queryParams = params.toString();
+    console.log('Token Request Params:', queryParams);
+    const response = await fetch(`https://oauth2.googleapis.com/token?${queryParams}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
+    const data = await response.json();
+    const { access_token, refresh_token, expires_in, id_token } = data;
+    const res = await storeTokensOnDevice({
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        expiresIn: expires_in,
+        idToken: id_token
+    })
+    if (!res) {
+        return null
+    } 
+    console.log('Token Response:', data);
+    return true;
+}
+
+export const storeTokensOnDevice = async ({accessToken, refreshToken, expiresIn, idToken}: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    idToken: string;
+}) => {
+    const storedAt = Date.now();
+    const expiresAt = storedAt + expiresIn * 1000;
+    try {
+        await SecureStore.setItemAsync('googleDriveAccessToken', accessToken);
+        await SecureStore.setItemAsync('googleDriveRefreshToken', refreshToken);
+        await SecureStore.setItemAsync('googleDriveExpiresIn', expiresIn.toString());
+        await SecureStore.setItemAsync('googleDriveStoredAt', storedAt.toString());
+        await SecureStore.setItemAsync('googleDriveExpiresAt', expiresAt.toString());
+        await SecureStore.setItemAsync('googleDriveIdToken', idToken);
+        return true;
+    } catch (error) {
+        console.error('Error storing tokens:', error);
+        return false;
+    }
+}
+
+export const fetchGoogleDriveAccessToken = async () => {
+    const accessToken = await SecureStore.getItemAsync('googleDriveAccessToken');
+    return accessToken;
+}
+
+export const getStoredGoogleDriveRefreshToken = async () => {
+    const refreshToken = await SecureStore.getItemAsync('googleDriveRefreshToken');
+    return refreshToken;
+}
+
+export const getStoredGoogleDriveTokenExpiry = async () => {
+    const expiresAt = await SecureStore.getItemAsync('googleDriveExpiresAt');
+    return expiresAt ? parseInt(expiresAt, 10) : null;
+}
+
+export const clearStoredGoogleDriveTokens = async () => {
+    await SecureStore.deleteItemAsync('googleDriveAccessToken');
+    await SecureStore.deleteItemAsync('googleDriveRefreshToken');
+    await SecureStore.deleteItemAsync('googleDriveExpiresIn');
+    await SecureStore.deleteItemAsync('googleDriveStoredAt');
+    await SecureStore.deleteItemAsync('googleDriveExpiresAt');
+    await SecureStore.deleteItemAsync('googleDriveIdToken');
+}
+
+export const getGoogleDriveFiles = async () => {
+
 }
