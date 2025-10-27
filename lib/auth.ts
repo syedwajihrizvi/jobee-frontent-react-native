@@ -149,7 +149,7 @@ export const registerForPushNotifications = async () => {
     
 
 // OAuth configuration
-
+// Google Drive OAuth
 export const connectToGoogleDriveOAuth = async () => {
     const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
@@ -201,7 +201,7 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
     });
     const data = await response.json();
     const { access_token, refresh_token, expires_in, id_token } = data;
-    const res = await storeTokensOnDevice({
+    const res = await storeGoogleTokensOnDevice({
         accessToken: access_token,
         refreshToken: refresh_token,
         expiresIn: expires_in,
@@ -214,7 +214,7 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
     return true;
 }
 
-export const storeTokensOnDevice = async ({accessToken, refreshToken, expiresIn, idToken}: {
+export const storeGoogleTokensOnDevice = async ({accessToken, refreshToken, expiresIn, idToken}: {
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
@@ -347,4 +347,150 @@ export const useRefreshTokenToGetNewAccessToken = async () => {
         console.log('No refresh token found.');
         return null;
     }
+}
+
+// Dropbox OAuth
+export const connectToDropboxOAuth = async () => {
+    const CLIENT_ID = 'y5p2hr089nvhqz6';
+    const REDIRECT_URI = AuthSession.makeRedirectUri({
+        scheme: 'com.syedwajihrizvi.JobeeFrontEnd',
+        path: 'redirect'
+    })
+    const DISCOVERY = {
+        authorizationEndpoint: 'https://www.dropbox.com/oauth2/authorize',
+        tokenEndpoint: 'https://api.dropboxapi.com/oauth2/token'
+    }
+    const request = new AuthSession.AuthRequest({
+        clientId: CLIENT_ID,
+        redirectUri: REDIRECT_URI,
+        scopes: ['files.metadata.read', 'files.content.read'],
+        responseType: AuthSession.ResponseType.Code,
+        usePKCE: true
+    })
+    const result = await request.promptAsync(DISCOVERY);
+    const {codeVerifier} = request
+    if (result.type === 'success' && codeVerifier) {
+        const { code } = result.params
+        const tokens = await exchangeDropboxOAuthCodeForToken(code, codeVerifier);
+        return tokens;
+    }
+    return null;
+}
+
+export const exchangeDropboxOAuthCodeForToken = async (code: string, codeVerifier: string) => {
+    const CLIENT_ID = 'y5p2hr089nvhqz6';
+    const REDIRECT_URI = AuthSession.makeRedirectUri({
+        scheme: 'com.syedwajihrizvi.JobeeFrontEnd', 
+        path: 'redirect'
+    });
+    const params = new URLSearchParams();
+    params.append('client_id', CLIENT_ID);
+    params.append('code', code);
+    params.append('code_verifier', codeVerifier);
+    params.append('redirect_uri', REDIRECT_URI);
+    params.append('grant_type', 'authorization_code');
+    const queryParams = params.toString();
+    console.log('Dropbox Token Request Params:', queryParams);
+    const response = await fetch(`https://api.dropboxapi.com/oauth2/token?${queryParams}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
+    const data = await response.json();
+    const { access_token, expires_in, account_id } = data
+    const res = await storeDropBoxTokensOnDevice({
+        accessToken: access_token,
+        expiresIn: expires_in,
+        accountId: account_id
+    })
+    if (!res) {
+        return null;
+    }
+    console.log('Dropbox Token Response:', data);
+    return true;
+}
+
+export const storeDropBoxTokensOnDevice = async ({accessToken, expiresIn, accountId}: {
+    accessToken: string;
+    expiresIn: number;
+    accountId: string;
+}) => {
+    const storedAt = Date.now();
+    const expiresAt = storedAt + expiresIn * 1000;
+    try {
+        await SecureStore.setItemAsync('dropboxAccessToken', accessToken);
+        await SecureStore.setItemAsync('dropboxExpiresIn', expiresIn.toString());
+        await SecureStore.setItemAsync('dropboxStoredAt', storedAt.toString());
+        await SecureStore.setItemAsync('dropboxExpiresAt', expiresAt.toString());
+        await SecureStore.setItemAsync('dropboxAccountId', accountId);
+        return true;
+    } catch (error) {
+        console.error('Error storing Dropbox tokens:', error);
+        return false;
+    }
+}
+
+export const fetchDropboxAccessToken = async () => {
+    const accessToken = await SecureStore.getItemAsync('dropboxAccessToken');
+    return accessToken;
+}
+
+export const getStoredDropboxTokenExpiry = async () => {
+    const expiresAt = await SecureStore.getItemAsync('dropboxExpiresAt');
+    return expiresAt ? parseInt(expiresAt, 10) : null;
+}
+
+export const clearStoredDropboxTokens = async () => {
+    await SecureStore.deleteItemAsync('dropboxAccessToken');
+    await SecureStore.deleteItemAsync('dropboxExpiresIn');
+    await SecureStore.deleteItemAsync('dropboxStoredAt');
+    await SecureStore.deleteItemAsync('dropboxExpiresAt');
+    await SecureStore.deleteItemAsync('dropboxAccountId');
+}
+
+export const isDropboxAccessTokenValid = async () => {
+    const accessToken = await fetchDropboxAccessToken();
+    if (!accessToken) {
+        return false;
+    }
+    const tokenExpiry = await getStoredDropboxTokenExpiry();
+    const currentTime = Date.now();
+    if (tokenExpiry && currentTime >= tokenExpiry) {
+        return false;
+    }
+    return true;
+}
+
+export const getDropBoxFiles = async () => {
+    const accessToken = await fetchDropboxAccessToken();
+    if (!accessToken) {
+        console.log('No Dropbox access token found.');
+        return null;
+    }
+    const requestBody = JSON.stringify({
+        path: "",
+        recursive: false,
+        include_deleted: false,
+        limit: 20
+    })
+    const response = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: requestBody
+    });
+    console.log(response)
+    console.log(requestBody)
+    if (response.ok) {
+        const data = await response.json();
+        console.log('Dropbox Files Response:', data);
+        return data;
+    }
+    const errorText = await response.text();
+    console.error(`Dropbox API Error (${response.status}): ${errorText}`);
+    console.error('Request Body Sent:', requestBody);
+    return null; 
 }
