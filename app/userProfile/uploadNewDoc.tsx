@@ -482,7 +482,6 @@ const UploadNewDoc = () => {
               <Text className="font-quicksand-medium text-sm text-gray-600 mb-6">
                 Select how you would like to add your document
               </Text>
-
               {!uploadedDocument ? (
                 <View className="space-y-4">
                   <View className="mb-6">

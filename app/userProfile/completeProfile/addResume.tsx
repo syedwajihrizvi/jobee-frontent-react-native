@@ -157,7 +157,7 @@ const AddResume = ({ uploadedResume, setUploadedResume, resumeTitle, setResumeTi
         <View className="mb-6">
           <Text className="font-quicksand-medium text-sm text-gray-600 mb-2">Resume Title</Text>
           <TextInput
-            placeholder="Give your resume a title (e.g. Software Engineer Resume)"
+            placeholder="e.g. Software Engineer Resume"
             className="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
             style={{
               fontSize: 12,

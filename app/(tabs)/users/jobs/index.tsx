@@ -196,6 +196,7 @@ const Jobs = () => {
       {!isAuthLoading && showProfileCompleteReminder && (
         <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater} />
       )}
+      <CompleteProfileReminder onComplete={handleProfileComplete} onLater={handleProfileLater} />
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
