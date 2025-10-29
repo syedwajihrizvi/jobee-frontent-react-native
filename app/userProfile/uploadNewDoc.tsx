@@ -1,27 +1,42 @@
 import BackBar from "@/components/BackBar";
-import GoogleDriveFilesList from "@/components/GoogleDriveFilesList";
+import DropBoxFileSelector from "@/components/DropBoxFileSelector";
+import GoogleDriveFileSelector from "@/components/GoogleDriveFileSelector";
 import LinkInput from "@/components/LinkInput";
 import ModalWithBg from "@/components/ModalWithBg";
+import OneDriveFileSelector from "@/components/OneDriveFileSelector";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import { UserDocumentType } from "@/constants";
 import {
+  sendDocumentLinkToServer,
+  uploadDropboxDocumentToServer,
+  uploadGoogleDriveDocumentToServer,
+  uploadOneDriveDocumentToServer,
+  uploadUserDocument,
+} from "@/lib/manageUserDocs";
+import {
   connectToDropboxOAuth,
+  fetchDropboxFileAsPdfAndCreateTempFile,
+  isDropboxAccessTokenValid,
+} from "@/lib/oauth/dropbox";
+import {
   connectToGoogleDriveOAuth,
   fetchGoogleDocAsPdfAndCreateTempFile,
-  getDropBoxFiles,
-  getGoogleDriveFiles,
   isGoogleDriveAccessTokenValid,
-} from "@/lib/auth";
-import { sendDocumentLinkToServer, uploadGoogleDriveDocumentToServer, uploadUserDocument } from "@/lib/manageUserDocs";
+} from "@/lib/oauth/googledrive";
+import {
+  connectToOneDriveOAuth,
+  fetchOneDriveFileAsPdfAndCreateTempFile,
+  isOneDriveAccessTokenValid,
+} from "@/lib/oauth/onedrive";
 import { converOAuthProviderToText, isValidGoogleDriveLink } from "@/lib/utils";
-import { GoogleDriveFile } from "@/type";
+import useOAuthDocStore from "@/store/oauth-doc.store";
 import { AntDesign, Entypo, Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -46,10 +61,11 @@ const UploadNewDoc = () => {
   const [isConnectedToOneDrive, setIsConnectedToOneDrive] = useState(false);
   const [showOauthPickerModal, setShowOauthPickerModal] = useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] = useState<"GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | null>(null);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-  const [googleDriveFiles, setGoogleDriveFiles] = useState<GoogleDriveFile[]>([]);
-  const [isLoadingGoogleDriveFiles, setIsLoadingGoogleDriveFiles] = useState(false);
-  const [selectedGoogleDriveFile, setSelectedGoogleDriveFile] = useState<GoogleDriveFile | null>(null);
+  const { googleDriveFile, oneDriveFile, dropboxFile, resetState } = useOAuthDocStore();
+  const [selectedUploadMethod, setSelectedUploadMethod] = useState<
+    "DIRECT_UPLOAD" | "GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | "LINK_INPUT" | null
+  >(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   useEffect(() => {
     const checkGoogleDriveAccessToken = async () => {
@@ -57,101 +73,72 @@ const UploadNewDoc = () => {
         setIsConnectedToGoogleDrive(true);
       }
     };
+    const checkDropboxAccessToken = async () => {
+      if (await isDropboxAccessTokenValid()) {
+        setIsConnectedToDropbox(true);
+      }
+    };
+    const checkOneDriveAccessToken = async () => {
+      if (await isOneDriveAccessTokenValid()) {
+        setIsConnectedToOneDrive(true);
+      }
+    };
     checkGoogleDriveAccessToken();
+    checkDropboxAccessToken();
+    checkOneDriveAccessToken();
   }, []);
 
   const handleGoogleDrivePress = async () => {
     setActiveOAuthProvider("GOOGLE_DRIVE");
     if (!isConnectedToGoogleDrive) {
-      const result = await connectToGoogleDriveOAuth();
-      if (result) {
-        setIsConnectedToGoogleDrive(true);
-        handleSelectGoogleDriveDocs();
-      } else {
-        setShowOauthPickerModal(true);
-      }
-    }
-  };
-
-  const handleSelectGoogleDriveDocs = async () => {
-    setIsLoadingGoogleDriveFiles(true);
-    try {
-      setShowOauthPickerModal(true);
-      setActiveOAuthProvider("GOOGLE_DRIVE");
-      const result = await getGoogleDriveFiles(nextPageToken || undefined);
-      const files = result.files as GoogleDriveFile[];
-      if (files && files.length > 0) {
-        console.log("Fetched Google Drive files: ", files.length);
-        setGoogleDriveFiles((prev) => [...prev, ...files]);
-        if (result.nextPageToken) {
-          setNextPageToken(result.nextPageToken);
-        } else {
-          setNextPageToken(null);
-        }
-      }
-    } catch (error) {
-      console.log("Error selecting Google Drive document: ", error);
-    } finally {
-      setIsLoadingGoogleDriveFiles(false);
-    }
-  };
-
-  const fetchMoreGoogleDriveFiles = async () => {
-    if (nextPageToken) {
-      setIsLoadingGoogleDriveFiles(true);
       try {
-        const result = await getGoogleDriveFiles(nextPageToken);
-        const files = result.files as GoogleDriveFile[];
-        if (files && files.length > 0) {
-          setGoogleDriveFiles((prev) => [...prev, ...files]);
-          if (result.nextPageToken) {
-            setNextPageToken(result.nextPageToken);
-          } else {
-            setNextPageToken(null);
-          }
+        const result = await connectToGoogleDriveOAuth();
+        if (result) {
+          setIsConnectedToGoogleDrive(true);
         }
-        console.log("Fetched more Google Drive files: ", result);
       } catch (error) {
-      } finally {
-        setIsLoadingGoogleDriveFiles(false);
+        console.log("Error during OneDrive OAuth");
       }
     }
+    setShowOauthPickerModal(true);
   };
 
   const handleDropboxPress = async () => {
     setActiveOAuthProvider("DROPBOX");
-    try {
-      console.log("Handle Dropbox OAuth");
-      const result = await connectToDropboxOAuth();
-      if (result) {
-        setIsConnectedToDropbox(true);
+    if (!isConnectedToDropbox) {
+      try {
+        const result = await connectToDropboxOAuth();
+        if (result) {
+          setIsConnectedToDropbox(true);
+        }
+      } catch {
+        console.log("Error during Dropbox OAuth");
+      } finally {
+        console.log("Finish Dropbox OAuth");
       }
-    } catch {
-      console.log("Error during Dropbox OAuth");
-    } finally {
-      console.log("Finish Dropbox OAuth");
     }
-  };
-
-  const handleSelectDropboxDocs = async () => {
-    setActiveOAuthProvider("DROPBOX");
     setShowOauthPickerModal(true);
-    try {
-      await getDropBoxFiles();
-    } catch (error) {
-      console.log("Error selecting Dropbox document: ", error);
-    } finally {
-      console.log("Finish Dropbox document selection");
-    }
   };
 
-  const handleOnedrivePress = () => {
+  const handleOnedrivePress = async () => {
     setActiveOAuthProvider("ONEDRIVE");
-    console.log("Handle OneDrive OAuth");
+    if (!isConnectedToOneDrive) {
+      try {
+        const result = await connectToOneDriveOAuth();
+        if (result) {
+          setIsConnectedToOneDrive(true);
+        }
+      } catch (error) {
+        console.log("Error during OneDrive OAuth");
+      }
+    }
+    setShowOauthPickerModal(true);
   };
+
   const getDocumentTypeInfo = (type: string) => {
     return documentTypes.find((doc) => doc.value === type) || documentTypes[0];
   };
+
   const handleUpload = async () => {
     setUploadingDocument(true);
     try {
@@ -174,17 +161,51 @@ const UploadNewDoc = () => {
   };
 
   const noFileSelected = () => {
-    return uploadedDocument == null && selectedGoogleDriveFile == null && selectedGoogleDriveFile == null;
+    return uploadedDocument == null && documentLink.trim() === "" && !googleDriveFile && !dropboxFile && !oneDriveFile;
   };
-  const handleDocumentUploadSubmit = async () => {
+
+  const handleUploadConfirmation = () => {
     if (noFileSelected()) {
-      Alert.alert("Error", "Please select a document to upload or provide a link.");
+      Alert.alert("No File Selected", "Please upload a document or provide a link.");
       return;
     }
-    // Based on what type of file is provides, we need to handle it differently
+    setShowConfirmationModal(true);
+  };
+
+  const handleSuccessFullUpload = () => {
+    setDocumentTitle("");
+    setUploadedDocument(null);
+    setDocumentLink("");
+    resetState();
+    queryClient.invalidateQueries({ queryKey: ["documents", "user"] });
+    // Invalidate if resume since it may affect profile completeness
+    if (selectedDocumentType === UserDocumentType.RESUME) {
+      queryClient.invalidateQueries({ queryKey: ["skills", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["education", "user"] });
+      queryClient.invalidateQueries({ queryKey: ["experience", "user"] });
+    }
+    setShowConfirmationModal(false);
+    setUploadSuccess(true);
+    setShowOauthPickerModal(false);
+  };
+
+  const inferUploadMethod = () => {
+    if (selectedUploadMethod) {
+      return selectedUploadMethod;
+    }
+    if (uploadedDocument) return "DIRECT_UPLOAD";
+    if (documentLink.trim() !== "") return "LINK_INPUT";
+    if (googleDriveFile) return "GOOGLE_DRIVE";
+    if (dropboxFile) return "DROPBOX";
+    if (oneDriveFile) return "ONEDRIVE";
+    return null;
+  };
+
+  const handleDocumentUploadSubmit = async () => {
+    const uploadMethod = inferUploadMethod();
+    console.log("Upload method inferred:", uploadMethod);
     setUploadingDocument(true);
-    // Only run if resumeLink is empty, this means user is uploading a document file
-    if (documentLink.trim() !== "" && uploadedDocument) {
+    if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
       try {
         await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
         Alert.alert("Success", "Document uploaded successfully");
@@ -204,12 +225,8 @@ const UploadNewDoc = () => {
       } finally {
         setUploadingDocument(false);
       }
-    } else if (documentLink.trim() !== "") {
+    } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
       try {
-        // if (!isValidDocumentLink(documentLink)) {
-        //   Alert.alert("Error", "Please provide a valid Google Drive or Dropbox link.");
-        //   return;
-        // }
         const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
         await sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType);
         Alert.alert("Success", "Document uploaded successfully");
@@ -230,42 +247,18 @@ const UploadNewDoc = () => {
       } finally {
         setUploadingDocument(false);
       }
-    } else if (selectedGoogleDriveFile != null) {
-      setUploadingDocument(true);
-      try {
-        const { id, name, mimeType } = selectedGoogleDriveFile;
-        const tempFile = await fetchGoogleDocAsPdfAndCreateTempFile(id, name, mimeType);
-        if (tempFile == null) {
-          Alert.alert("Error", "Failed to process the selected Google Drive document.");
-          return;
-        }
-        const res = await uploadGoogleDriveDocumentToServer(tempFile, selectedDocumentType, documentTitle);
-        console.log(res);
-        console.log("Uploading selected Google Drive file:", selectedGoogleDriveFile);
-        Alert.alert("Success", "Document uploaded successfully");
-        setSelectedGoogleDriveFile(null);
-        setDocumentTitle("");
-        queryClient.invalidateQueries({ queryKey: ["documents", "user"] });
-        // Invalidate if resume since it may affect profile completeness
-        if (selectedDocumentType === UserDocumentType.RESUME) {
-          queryClient.invalidateQueries({ queryKey: ["skills", "user"] });
-          queryClient.invalidateQueries({ queryKey: ["education", "user"] });
-          queryClient.invalidateQueries({ queryKey: ["experience", "user"] });
-        }
-        setUploadSuccess(true);
-      } catch (error) {
-      } finally {
-        setUploadingDocument(false);
-      }
+    }
+    // Otherwise, we are uploading a document file
+    else if (uploadMethod === "GOOGLE_DRIVE") {
+      await handleGoogleDriveUpload();
+    } else if (uploadMethod === "DROPBOX") {
+      await handleDropboxUpload();
+    } else if (uploadMethod === "ONEDRIVE") {
+      await handleOneDriveUpload();
     }
   };
 
-  const handleDocImagePicker = async (
-    noAccessMsg: string,
-    accessMsg: string,
-    uploadByPhotoMsg: string,
-    uploadByGalleryMsg: string
-  ) => {
+  const handleDocImagePicker = async (noAccessMsg: string, uploadByPhotoMsg: string, uploadByGalleryMsg: string) => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (result.granted === false) {
       Alert.alert(noAccessMsg);
@@ -299,6 +292,80 @@ const UploadNewDoc = () => {
         style: "cancel",
       },
     ]);
+  };
+
+  const handleGoogleDriveUpload = async () => {
+    console.log("Uploading selected file...");
+    if (!googleDriveFile) return;
+    setUploadingDocument(true);
+    try {
+      const { id, name, mimeType } = googleDriveFile;
+      console.log("Selected Google Drive File Details:", { id, name, mimeType });
+      const tempFile = await fetchGoogleDocAsPdfAndCreateTempFile(id, name, mimeType || "application/pdf");
+      if (tempFile == null) {
+        Alert.alert("Error", "Failed to fetch the document from Google Drive.");
+        return;
+      }
+      const title = documentTitle || name;
+      const res = await uploadGoogleDriveDocumentToServer(tempFile, selectedDocumentType, documentTitle || title);
+      console.log("Upload result:", res);
+      handleSuccessFullUpload();
+    } catch (error) {
+      console.log("Error uploading Google Drive document:", error);
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
+  const handleDropboxUpload = async () => {
+    if (!dropboxFile) return;
+    setUploadingDocument(true);
+    try {
+      const { id, name } = dropboxFile;
+      const tempFile = await fetchDropboxFileAsPdfAndCreateTempFile(id, name);
+      if (tempFile == null) {
+        Alert.alert("Error", "Failed to process the selected Dropbox doucment.");
+        return;
+      }
+      const res = await uploadDropboxDocumentToServer(tempFile, selectedDocumentType, documentTitle || name);
+      console.log(res);
+      handleSuccessFullUpload();
+    } catch (error) {
+      console.log("Error uploading Dropbox document:", error);
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
+  const handleOneDriveUpload = async () => {
+    console.log("Uploading selected OneDrive file:", oneDriveFile);
+    if (!oneDriveFile) return;
+    try {
+      const tempFile = await fetchOneDriveFileAsPdfAndCreateTempFile(oneDriveFile.downloadUrl!, oneDriveFile.name);
+      if (tempFile == null) {
+        Alert.alert("Error", "Failed to fetch the selected OneDrive file.");
+        return;
+      }
+      const title = oneDriveFile.name;
+      const res = await uploadOneDriveDocumentToServer(tempFile, selectedDocumentType, documentTitle || title);
+      console.log("OneDrive file uploaded successfully:", res);
+      handleSuccessFullUpload();
+    } catch (error) {
+      console.log("Error uploading OneDrive file:", error);
+      Alert.alert("Error", "An error occurred while uploading the OneDrive file.");
+    } finally {
+      console.log("Finished upload attempt for OneDrive file.");
+    }
+  };
+
+  const multipleUploadMethodsSelected = () => {
+    let count = 0;
+    if (uploadedDocument) count++;
+    if (documentLink.trim() !== "") count++;
+    if (googleDriveFile) count++;
+    if (dropboxFile) count++;
+    if (oneDriveFile) count++;
+    return count > 1;
   };
 
   const selectedDocInfo = getDocumentTypeInfo(selectedDocumentType);
@@ -410,7 +477,7 @@ const UploadNewDoc = () => {
                 </View>
               </View>
             )}
-            <View className="mb-8">
+            <View className="mb-4">
               <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">Choose Upload Method</Text>
               <Text className="font-quicksand-medium text-sm text-gray-600 mb-6">
                 Select how you would like to add your document
@@ -447,12 +514,7 @@ const UploadNewDoc = () => {
                           elevation: 2,
                         }}
                         onPress={() =>
-                          handleDocImagePicker(
-                            "Camera access needed!",
-                            "Upload document by taking a photo",
-                            "Take Photo",
-                            "Choose from Gallery"
-                          )
+                          handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")
                         }
                         activeOpacity={0.7}
                       >
@@ -477,7 +539,7 @@ const UploadNewDoc = () => {
                           shadowRadius: 4,
                           elevation: 2,
                         }}
-                        onPress={!isConnectedToGoogleDrive ? handleGoogleDrivePress : handleSelectGoogleDriveDocs}
+                        onPress={handleGoogleDrivePress}
                         activeOpacity={0.7}
                       >
                         <View
@@ -501,13 +563,13 @@ const UploadNewDoc = () => {
                             }`}
                           >
                             {isConnectedToGoogleDrive
-                              ? selectedGoogleDriveFile
-                                ? selectedGoogleDriveFile.name
-                                : "Select a Google Doc or PDF File"
+                              ? googleDriveFile
+                                ? `Selected: ${googleDriveFile.name}`
+                                : "Select a Google Drive File"
                               : "Connect with OAuth"}
                           </Text>
                         </View>
-                        {isConnectedToGoogleDrive && (
+                        {isConnectedToGoogleDrive && googleDriveFile && activeOAuthProvider === "GOOGLE_DRIVE" && (
                           <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
                             <Feather name="check" size={12} color="white" />
                           </View>
@@ -525,7 +587,7 @@ const UploadNewDoc = () => {
                           shadowRadius: 4,
                           elevation: 2,
                         }}
-                        onPress={!isConnectedToDropbox ? handleDropboxPress : handleSelectDropboxDocs}
+                        onPress={handleDropboxPress}
                         activeOpacity={0.7}
                       >
                         <View
@@ -548,10 +610,14 @@ const UploadNewDoc = () => {
                               isConnectedToDropbox ? "text-blue-600" : "text-gray-500"
                             }`}
                           >
-                            {isConnectedToDropbox ? "Connected & Ready" : "Connect with OAuth"}
+                            {isConnectedToDropbox
+                              ? dropboxFile
+                                ? `Selected: ${dropboxFile.name}`
+                                : "Select a Dropbox File"
+                              : "Connect with OAuth"}
                           </Text>
                         </View>
-                        {isConnectedToDropbox && (
+                        {isConnectedToDropbox && dropboxFile && activeOAuthProvider === "DROPBOX" && (
                           <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
                             <Feather name="check" size={12} color="white" />
                           </View>
@@ -594,10 +660,14 @@ const UploadNewDoc = () => {
                               isConnectedToOneDrive ? "text-blue-600" : "text-gray-500"
                             }`}
                           >
-                            {isConnectedToOneDrive ? "Connected & Ready" : "Connect with OAuth"}
+                            {isConnectedToOneDrive
+                              ? oneDriveFile
+                                ? `Selected: ${oneDriveFile.name}`
+                                : "Select a OneDrive File"
+                              : "Connect with OAuth"}
                           </Text>
                         </View>
-                        {isConnectedToOneDrive && (
+                        {isConnectedToOneDrive && oneDriveFile && activeOAuthProvider === "ONEDRIVE" && (
                           <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
                             <Feather name="check" size={12} color="white" />
                           </View>
@@ -651,7 +721,7 @@ const UploadNewDoc = () => {
                   shadowRadius: 6,
                   elevation: 4,
                 }}
-                onPress={handleDocumentUploadSubmit}
+                onPress={handleUploadConfirmation}
                 disabled={uploadingDocument}
                 activeOpacity={0.8}
               >
@@ -659,7 +729,7 @@ const UploadNewDoc = () => {
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <View className="flex-row items-center gap-2">
-                    <Text className="font-quicksand-bold text-white text-base">Save Document</Text>
+                    <Text className="font-quicksand-bold text-white text-base">Upload Document</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -688,22 +758,289 @@ const UploadNewDoc = () => {
             </TouchableOpacity>
           </View>
           {activeOAuthProvider === "GOOGLE_DRIVE" && (
-            <GoogleDriveFilesList
-              isLoadingGoogleDriveFiles={isLoadingGoogleDriveFiles}
-              googleDriveFiles={googleDriveFiles}
-              selectedGoogleDriveFile={selectedGoogleDriveFile}
-              setSelectedGoogleDriveFile={setSelectedGoogleDriveFile}
-              nextPageToken={nextPageToken}
-              fetchMoreGoogleDriveFiles={fetchMoreGoogleDriveFiles}
-              setShowOauthPickerModal={setShowOauthPickerModal}
-            />
+            <GoogleDriveFileSelector onClose={() => setShowOauthPickerModal(false)} />
           )}
-          {activeOAuthProvider === "DROPBOX" && (
-            <View className="flex-1 items-center justify-center">
-              <Text className="font-quicksand-medium text-gray-600">Dropbox file selection coming soon!</Text>
-            </View>
+          {activeOAuthProvider === "DROPBOX" && <DropBoxFileSelector onClose={() => setShowOauthPickerModal(false)} />}
+          {activeOAuthProvider === "ONEDRIVE" && (
+            <OneDriveFileSelector onClose={() => setShowOauthPickerModal(false)} />
           )}
         </View>
+      </ModalWithBg>
+      <ModalWithBg visible={showConfirmationModal} customHeight={0.8} customWidth={0.9}>
+        <ScrollView className="flex-1 p-4">
+          <View className="py-4 border-b border-gray-200">
+            <View className="flex-row items-center gap-3">
+              <View
+                className="w-12 h-12 rounded-full items-center justify-center"
+                style={{ backgroundColor: `${selectedDocInfo.color}20` }}
+              >
+                <Feather name={selectedDocInfo.icon as any} size={20} color={selectedDocInfo.color} />
+              </View>
+              <View className="flex-1">
+                <Text className="font-quicksand-bold text-lg text-gray-900">Confirm Upload</Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600">
+                  Review your document details before uploading
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View className="py-4">
+            <Text className="font-quicksand-bold text-base text-gray-900 mb-4">Document Details</Text>
+            <View className="bg-gray-50 rounded-xl p-4 mb-4">
+              <View className="flex-row justify-between items-center mb-3">
+                <Text className="font-quicksand-medium text-sm text-gray-600">Title</Text>
+                <Text className="font-quicksand-bold text-sm text-gray-900 flex-1 text-right" numberOfLines={1}>
+                  {documentTitle || "Untitled Document"}
+                </Text>
+              </View>
+              <View className="flex-row justify-between items-center">
+                <Text className="font-quicksand-medium text-sm text-gray-600">Type</Text>
+                <View className="flex-row items-center gap-2">
+                  <Feather name={selectedDocInfo.icon as any} size={14} color={selectedDocInfo.color} />
+                  <Text className="font-quicksand-bold text-sm text-gray-900">{selectedDocInfo.label}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View>
+            <Text className="font-quicksand-bold text-base text-gray-900">Upload Method</Text>
+            {multipleUploadMethodsSelected() ? (
+              <View className="gap-3">
+                <Text className="font-quicksand-medium text-sm text-gray-600 mt-4">
+                  Multiple upload methods detected. Please choose only one.
+                </Text>
+                {uploadedDocument?.assets?.[0] && (
+                  <TouchableOpacity
+                    className={`rounded-xl p-8 border ${
+                      selectedUploadMethod === "DIRECT_UPLOAD"
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-white border-gray-200"
+                    }`}
+                    onPress={() => setSelectedUploadMethod("DIRECT_UPLOAD")}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                          <Feather name="upload" size={18} color="#22c55e" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">Direct Upload</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600" numberOfLines={1}>
+                            {uploadedDocument.assets[0].name}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {googleDriveFile && (
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 border ${
+                      selectedUploadMethod === "GOOGLE_DRIVE"
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-white border-gray-200"
+                    }`}
+                    onPress={() => setSelectedUploadMethod("GOOGLE_DRIVE")}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
+                          <AntDesign name="google" size={18} color="#4285F4" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">Google Drive</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600" numberOfLines={1}>
+                            {googleDriveFile.name}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {dropboxFile && (
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 border ${
+                      selectedUploadMethod === "DROPBOX" ? "bg-blue-50 border-blue-300" : "bg-white border-gray-200"
+                    }`}
+                    onPress={() => setSelectedUploadMethod("DROPBOX")}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
+                          <AntDesign name="dropbox" size={18} color="#0061FF" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">Dropbox</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600" numberOfLines={1}>
+                            {dropboxFile.name}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {oneDriveFile && (
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 border ${
+                      selectedUploadMethod === "ONEDRIVE" ? "bg-blue-50 border-blue-300" : "bg-white border-gray-200"
+                    }`}
+                    onPress={() => setSelectedUploadMethod("ONEDRIVE")}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
+                          <Entypo name="onedrive" size={18} color="#0078D4" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">OneDrive</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600" numberOfLines={1}>
+                            {oneDriveFile.name}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {documentLink.trim() && (
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 border ${
+                      selectedUploadMethod === "LINK_INPUT" ? "bg-blue-50 border-blue-300" : "bg-white border-gray-200"
+                    }`}
+                    onPress={() => setSelectedUploadMethod("LINK_INPUT")}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 bg-purple-100 rounded-lg items-center justify-center">
+                          <Feather name="link" size={18} color="#8b5cf6" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">Direct Link</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600" numberOfLines={1}>
+                            {documentLink}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <View className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                {uploadedDocument?.assets?.[0] && (
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                      <Feather name="upload" size={18} color="#22c55e" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-sm text-blue-900">Direct Upload</Text>
+                      <Text className="font-quicksand-medium text-xs text-blue-700" numberOfLines={1}>
+                        {uploadedDocument.assets[0].name}
+                      </Text>
+                    </View>
+                    <Feather name="check-circle" size={20} color="#22c55e" />
+                  </View>
+                )}
+
+                {googleDriveFile && (
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
+                      <AntDesign name="google" size={18} color="#4285F4" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-sm text-blue-900">Google Drive</Text>
+                      <Text className="font-quicksand-medium text-xs text-blue-700" numberOfLines={1}>
+                        {googleDriveFile.name}
+                      </Text>
+                    </View>
+                    <Feather name="check-circle" size={20} color="#22c55e" />
+                  </View>
+                )}
+
+                {dropboxFile && (
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
+                      <AntDesign name="dropbox" size={18} color="#0061FF" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-sm text-blue-900">Dropbox</Text>
+                      <Text className="font-quicksand-medium text-xs text-blue-700" numberOfLines={1}>
+                        {dropboxFile.name}
+                      </Text>
+                    </View>
+                    <Feather name="check-circle" size={20} color="#22c55e" />
+                  </View>
+                )}
+                {oneDriveFile && (
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
+                      <Entypo name="onedrive" size={18} color="#0078D4" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-sm text-blue-900">OneDrive</Text>
+                      <Text className="font-quicksand-medium text-xs text-blue-700" numberOfLines={1}>
+                        {oneDriveFile.name}
+                      </Text>
+                    </View>
+                    <Feather name="check-circle" size={20} color="#22c55e" />
+                  </View>
+                )}
+
+                {documentLink.trim() && (
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-purple-100 rounded-lg items-center justify-center">
+                      <Feather name="link" size={18} color="#8b5cf6" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-sm text-blue-900">Direct Link</Text>
+                      <Text className="font-quicksand-medium text-xs text-blue-700" numberOfLines={1}>
+                        {documentLink}
+                      </Text>
+                    </View>
+                    <Feather name="check-circle" size={20} color="#22c55e" />
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+          <View className="flex-row gap-3 mt-4">
+            <TouchableOpacity
+              className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+              style={{
+                shadowColor: "#22c55e",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={handleDocumentUploadSubmit}
+              disabled={uploadingDocument}
+              activeOpacity={0.8}
+            >
+              {uploadingDocument ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-quicksand-bold text-white text-base">Confirm</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+              activeOpacity={0.7}
+              onPress={() => setShowConfirmationModal(false)}
+            >
+              <View className="flex-row items-center gap-2">
+                <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </ModalWithBg>
     </SafeAreaView>
   );

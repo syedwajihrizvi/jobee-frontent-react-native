@@ -72,6 +72,73 @@ export const uploadGoogleDriveDocumentToServer = async (
     return true
 }
 
+export const uploadDropboxDocumentToServer = async (
+    document: File,
+    documentType: string,
+    documentTitle: string
+) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData();
+    const safeName = document.name
+    ?.trim()
+    .replace(/\s+/g, "_") 
+    .replace(/[^a-zA-Z0-9._-]/g, "");
+    
+    formData.append('document', {
+        uri: document.uri,
+        name: safeName || 'document.pdf',
+        type: "application/pdf",
+    } as any)
+    formData.append('documentType', documentType);
+    formData.append('title', documentTitle);
+    const response = await fetch(
+        USER_DOCS_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: formData
+    })
+    if (response.status !== 201)
+        return false
+    return true
+}
+
+export const uploadOneDriveDocumentToServer = async (
+    document: File,
+    documentType: string,
+    documentTitle: string
+) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData();
+    const safeName = document.name
+    ?.trim()
+    .replace(/\s+/g, "_") 
+    .replace(/[^a-zA-Z0-9._-]/g, "");
+    
+    formData.append('document', {
+        uri: document.uri,
+        name: safeName || 'document.pdf',
+        type: "application/pdf",
+    } as any)
+    formData.append('documentType', documentType);
+    formData.append('title', documentTitle);
+    const response = await fetch(
+        USER_DOCS_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: formData
+    })
+    if (response.status !== 201)
+        return false
+    return true
+}
 export const sendDocumentLinkToServer = async (
     documentLink: string,
     documentType: string,

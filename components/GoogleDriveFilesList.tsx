@@ -11,9 +11,11 @@ type Props = {
   nextPageToken: string | null;
   fetchMoreGoogleDriveFiles: () => void;
   setShowOauthPickerModal: (show: boolean) => void;
+  noFilesMessage: string;
+  selectFileMessage: string;
 };
 
-const GoogleDriveFilesList = ({
+const OAuthFileList = ({
   isLoadingGoogleDriveFiles,
   googleDriveFiles,
   selectedGoogleDriveFile,
@@ -21,32 +23,28 @@ const GoogleDriveFilesList = ({
   nextPageToken,
   fetchMoreGoogleDriveFiles,
   setShowOauthPickerModal,
+  noFilesMessage,
+  selectFileMessage,
 }: Props) => {
   return (
     <>
       <View className="flex-1 px-6 py-4">
         {isLoadingGoogleDriveFiles && googleDriveFiles.length === 0 ? (
-          // Initial loading state
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#4285F4" />
             <Text className="font-quicksand-medium text-gray-600 mt-4">Loading your files...</Text>
           </View>
         ) : googleDriveFiles.length === 0 ? (
-          // Empty state
           <View className="flex-1 items-center justify-center">
             <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
               <Feather name="folder" size={28} color="#9ca3af" />
             </View>
             <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">No Files Found</Text>
-            <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
-              No documents found in your Google Drive
-            </Text>
+            <Text className="font-quicksand-medium text-sm text-gray-500 text-center">{noFilesMessage}</Text>
           </View>
         ) : (
           <View className="flex-1">
-            <Text className="font-quicksand-semibold text-base text-gray-800 mb-4">
-              Select a document from your Google Drive
-            </Text>
+            <Text className="font-quicksand-semibold text-base text-gray-800 mb-4">{selectFileMessage}</Text>
 
             <FlatList
               data={googleDriveFiles}
@@ -233,4 +231,4 @@ const GoogleDriveFilesList = ({
   );
 };
 
-export default GoogleDriveFilesList;
+export default OAuthFileList;

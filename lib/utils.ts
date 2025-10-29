@@ -1,7 +1,8 @@
-import { Application, User, UserDocument } from "@/type";
+import { Application, OneDriveFile, User, UserDocument } from "@/type";
 import * as Haptics from 'expo-haptics';
 
 export const formatDate = (date: string) => {
+  if (!date) return "";
     const parsedDate = new Date(date);
     const formatter = new Intl.DateTimeFormat('en-US', {
       year: '2-digit',
@@ -554,3 +555,45 @@ export const isValidDropboxLink = (link: string) => {
 export const isValidDocumentLink = (link: string) => {
   return isValidGoogleDriveLink(link) || isValidDropboxLink(link);
 }
+
+export const getMimeTypeFromFileName = (fileName: string):string => {
+   const ext = fileName.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'png': return 'image/png';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'txt': return 'text/plain';
+    case 'doc': return 'application/msword';
+    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    default: return 'application/octet-stream';
+  } 
+}
+export const getOneDriveFileType = (item: OneDriveFile) => {
+  if (item.folder) {
+    return 'folder';
+  } else if (item.file) {
+    return 'file';
+  } else if (item.specialFolder) {
+    return 'specialFolder';
+  }
+  return 'unknown';
+}
+
+export const getFileIcon = (mimeType: string) => {
+  if (mimeType === "application/pdf") {
+    return { name: "file-text", color: "#ef4444", bgColor: "bg-red-100" };
+  } else if (mimeType.startsWith("image/")) {
+    return { name: "image", color: "#10b981", bgColor: "bg-green-100" };
+  } else if (mimeType === "application/vnd.google-apps.document") {
+    return { name: "file-text", color: "#3b82f6", bgColor: "bg-blue-100" };
+  } else if (mimeType.includes("word") || mimeType.includes("document")) {
+    return { name: "file-text", color: "#3b82f6", bgColor: "bg-blue-100" };
+  } else if (mimeType === "folder") {
+    return { name: "folder", color: "#f59e0b", bgColor: "bg-yellow-100" };
+  } else if (mimeType === "specialFolder") {
+    return { name: "folder", color: "#6b7280", bgColor: "bg-gray-100" };
+  } else {
+    return { name: "file", color: "#6b7280", bgColor: "bg-gray-100" };
+  }
+};

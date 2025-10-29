@@ -582,3 +582,48 @@ export type GoogleDriveFile = {
     mimeType: string;
     modifiedTime: string;
 }
+
+export type DropboxFile = {
+    id: string;
+    name: string;
+    server_modified: string;
+    client_modified: string;
+    path_display: string;
+    ".tag": string
+}
+
+export type OneDriveFile = {
+    id: string;
+    name: string;
+    lastModifiedDateTime: string;
+    folder: any;
+    file: any;
+    specialFolder: any;
+    "@microsoft.graph.downloadUrl"?: string;
+}
+
+type GoogleDrivePathContent = {
+  id: string;
+  name: string;
+  fileType: "file" | "folder";
+  modifiedTime: string;
+  mimeType?: string;
+};
+
+type DropBoxPathContent = {
+  id: string;
+  name: string;
+  pathDisplay: string;
+  fileType: string;
+  serverModified?: string;
+  clientModified?: string;
+};
+
+type OneDrivePathContent = {
+  id: string;
+  name: string;
+  fileType: "file" | "folder" | "specialFolder" | "unknown";
+  lastModifiedDateTime: string;
+  mimeType?: string;
+  downloadUrl?: string;
+};
