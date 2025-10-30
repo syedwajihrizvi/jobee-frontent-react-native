@@ -97,6 +97,8 @@ export type Conversation = {
     participantName: string;
     participantProfileImageUrl: string;
     participantRole: string;
+    participantOneName; string;
+    participantTwoName: string;
     lastMessageTimestamp: string;
     lastMessageContent: string;
     wasLastMessageSender: boolean;
@@ -627,3 +629,5 @@ type OneDrivePathContent = {
   mimeType?: string;
   downloadUrl?: string;
 };
+
+export type SelectedUploadMethod = "DIRECT_UPLOAD" | "GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | "LINK_INPUT" | null;

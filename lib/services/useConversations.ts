@@ -4,10 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 
 const MESSAGES_API_URL = 'http://192.168.2.29:8080/messages'
 
-export const useConversations = () => {
+export const useConversations = (search: string) => {
+    console.log("useConversations called with search:", search);
     const fetchMessages = async () => {
         const token = await AsyncStorage.getItem('x-auth-token');
-        const response = await fetch(`${MESSAGES_API_URL}/conversations`, {
+        const queryParams = new URLSearchParams();
+        if (search) {
+            queryParams.append('search', search);
+        }
+        const response = await fetch(`${MESSAGES_API_URL}/conversations?${queryParams.toString()}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -20,7 +25,7 @@ export const useConversations = () => {
     }
 
     return useQuery<Conversation[], Error>({
-        queryKey: ['conversations'],
+        queryKey: ['conversations', search],
         queryFn: fetchMessages,
     })
 }

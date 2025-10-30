@@ -1,6 +1,5 @@
 import { AddExperienceForm, AddProjectForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate, Project } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as DocumentPicker from 'expo-document-picker';
 import { ImagePickerResult } from "expo-image-picker";
 import { convertSocialMediaTypeToEnum } from "./utils";
 
@@ -297,22 +296,13 @@ export const deleteProject = async (projectId: number) => {
 }
 
 export const completeProfile = async (
-    document: DocumentPicker.DocumentPickerResult,
     image: ImagePickerResult,
     videoIntro: ImagePickerResult,
     details: CompleteProfileForm,
-    resumeTitle: string
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
     const formData = new FormData();
-    if (document && document.assets && document.assets.length > 0) {
-        formData.append('resume', {
-            uri: document.assets[0].uri,
-            name: document.assets[0].name,
-            type: document.assets[0].mimeType,
-        } as any);
-    }
     if (image && image.assets && image.assets.length > 0) {
         const localUri = image.assets[0].uri;
         const fileName = image.assets[0].fileName || localUri.split('/').pop() || 'profile.jpg';
@@ -339,7 +329,6 @@ export const completeProfile = async (
         details.phoneNumber = formattedNumber;
     }
     formData.append('data', JSON.stringify(details));
-    formData.append('resumeTitle', resumeTitle);
     try {
         const response = await fetch(
             `${PROFILES_API_URL}/complete-profile`, {

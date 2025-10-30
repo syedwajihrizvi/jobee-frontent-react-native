@@ -1,10 +1,18 @@
 import BackBar from "@/components/BackBar";
 import { sounds } from "@/constants";
+import {
+  processDropboxUpload,
+  processGoogleDriveUpload,
+  processOneDriveUpload,
+  sendDocumentLinkToServer,
+  uploadUserDocument,
+} from "@/lib/manageUserDocs";
 import { completeProfile } from "@/lib/updateUserProfile";
+import { isValidGoogleDriveLink } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import useCompleteProfileStore from "@/store/completeProfile.store";
 import { CompleteProfileForm } from "@/type";
 import { useAudioPlayer } from "expo-audio";
-import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { ReactNode, useState } from "react";
@@ -23,10 +31,10 @@ const CompleteProfile = () => {
   const width = Dimensions.get("window").width;
   const player = useAudioPlayer(sounds.popSound);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<ImagePicker.ImagePickerResult | null>(null);
-  const [uploadedResume, setUploadedResume] = useState<DocumentPicker.DocumentPickerResult | null>(null);
-  const [resumeTitle, setResumeTitle] = useState("");
   const [uploadedVideoIntro, setUploadedVideoIntro] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const { uploadMethod, documentTitle, uploadedDocument, documentLink, googleDriveFile, dropboxFile, oneDriveFile } =
+    useCompleteProfileStore();
   const [detailsForm, setDetailsForm] = useState<CompleteProfileForm>({
     title: "",
     city: "",
@@ -37,17 +45,63 @@ const CompleteProfile = () => {
   const [step, setSteps] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const translateX = useSharedValue(0);
+  console.log("Complete Profile Store State:", {
+    uploadMethod,
+    documentTitle,
+    uploadedDocument,
+    documentLink,
+    googleDriveFile,
+    dropboxFile,
+    oneDriveFile,
+  });
+  const handleGoogleDriveUpload = async () => {
+    if (!googleDriveFile) return;
+    try {
+      await processGoogleDriveUpload(googleDriveFile, "RESUME", documentTitle);
+    } catch (error) {
+      console.log("Error uploading Google Drive document:", error);
+      Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
+    }
+  };
+
+  const handleDropboxUpload = async () => {
+    if (!dropboxFile) return;
+    try {
+      await processDropboxUpload(dropboxFile, "RESUME", documentTitle);
+    } catch (error) {
+      console.log("Error uploading Dropbox document:", error);
+      Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
+    }
+  };
+
+  const handleOneDriveUpload = async () => {
+    if (!oneDriveFile) return;
+    try {
+      await processOneDriveUpload(oneDriveFile, "RESUME", documentTitle);
+    } catch (error) {
+      console.log("Error uploading OneDrive file:", error);
+      Alert.alert("Error", "An error occurred while uploading the OneDrive file.");
+    }
+  };
 
   const handleDone = async () => {
     setIsSubmitting(true);
+    const selectedDocumentType = "RESUME";
     try {
-      const res = await completeProfile(
-        uploadedResume!,
-        uploadedProfileImage!,
-        uploadedVideoIntro!,
-        detailsForm,
-        resumeTitle
-      );
+      // Upload resume first via endpoint
+      if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
+        await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
+      } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
+        const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
+        await sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType);
+      } else if (uploadMethod === "GOOGLE_DRIVE") {
+        await handleGoogleDriveUpload();
+      } else if (uploadMethod === "DROPBOX") {
+        await handleDropboxUpload();
+      } else if (uploadMethod === "ONEDRIVE") {
+        await handleOneDriveUpload();
+      }
+      const res = await completeProfile(uploadedProfileImage!, uploadedVideoIntro!, detailsForm);
       if (res === null) {
         Alert.alert("Error", "Failed to complete profile. Please try again.");
         setIsSubmitting(false);
@@ -76,14 +130,7 @@ const CompleteProfile = () => {
     },
     {
       stepName: "Add Resume",
-      element: (
-        <AddResume
-          uploadedResume={uploadedResume}
-          setUploadedResume={setUploadedResume}
-          resumeTitle={resumeTitle}
-          setResumeTitle={setResumeTitle}
-        />
-      ),
+      element: <AddResume />,
     },
     {
       stepName: "Add Title & Bio",

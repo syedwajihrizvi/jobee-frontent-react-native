@@ -1,7 +1,11 @@
 
+import { DropBoxPathContent, GoogleDrivePathContent, OneDrivePathContent } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
+import { fetchDropboxFileAsPdfAndCreateTempFile } from './oauth/dropbox';
+import { fetchGoogleDocAsPdfAndCreateTempFile } from './oauth/googledrive';
+import { fetchOneDriveFileAsPdfAndCreateTempFile } from './oauth/onedrive';
 const USER_DOCS_API_URL = "http://192.168.2.29:8080/user-documents";
 
 export const uploadUserDocument = async (
@@ -166,3 +170,32 @@ export const sendDocumentLinkToServer = async (
         return false
     return true
 }
+
+export const processGoogleDriveUpload = async (googleDriveFile: GoogleDrivePathContent, selectedDocumentType: string, documentTitle: string) => {
+    const { id, name, mimeType } = googleDriveFile;
+    const tempFile = await fetchGoogleDocAsPdfAndCreateTempFile(id, name, mimeType || "application/pdf");
+    if (tempFile == null) {
+    throw new Error("Failed to fetch the document from Google Drive.");
+    }
+    const title = documentTitle || name;
+    await uploadGoogleDriveDocumentToServer(tempFile, selectedDocumentType, title);
+};
+
+export const processDropboxUpload = async (dropboxFile: DropBoxPathContent, selectedDocumentType: string, documentTitle: string) => {
+    const { id, name } = dropboxFile;
+    const tempFile = await fetchDropboxFileAsPdfAndCreateTempFile(id, name);
+    if (tempFile == null) {
+        throw new Error("Failed to fetch the selected Dropbox file.");
+    }
+    const title = documentTitle || name
+    await uploadDropboxDocumentToServer(tempFile, selectedDocumentType, title);
+};
+
+export const processOneDriveUpload = async (oneDriveFile: OneDrivePathContent, selectedDocumentType: string, documentTitle: string) => {
+    const tempFile = await fetchOneDriveFileAsPdfAndCreateTempFile(oneDriveFile.downloadUrl!, oneDriveFile.name);
+    if (tempFile == null) {
+    throw new Error("Failed to fetch the selected OneDrive file.");
+    }
+    const title = oneDriveFile.name;
+    uploadOneDriveDocumentToServer(tempFile, selectedDocumentType, title);
+};
