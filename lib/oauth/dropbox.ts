@@ -149,14 +149,18 @@ export const getDropBoxFiles = async (cursor?: string, folderPath?: string) => {
     return null; 
 }
 
-export const fetchDropboxFileAsPdfAndCreateTempFile = async (fileId: string, fileName: string) => {
+export const fetchDropboxFileAsPdfAndCreateTempFile = async (
+    fileId: string, fileName: string, fileMimeType: string, filePath: string) => {
     const accessToken = await fetchDropboxAccessToken();
     if (!accessToken) {
         console.log('No Dropbox access token found.');
         return null;
     }
-
     const downloadUrl = 'https://content.dropboxapi.com/2/files/download';
+    const body = {
+        path: fileId
+    };
+    console.log('Dropbox File Download Body:', body);
     const destination = new Directory(Paths.cache, 'dropboxDownloads');
     if (!destination.exists) {
         console.log('Creating directory for Dropbox downloads at:', destination.uri);
@@ -164,7 +168,7 @@ export const fetchDropboxFileAsPdfAndCreateTempFile = async (fileId: string, fil
         console.log('Created directory at:', destination.uri);
     }
 
-    const file = new File(destination, `${fileName}.pdf`);
+    const file = new File(destination, `${fileName}`);
     if (file.exists) {
         console.log('File already exists at:', file.uri);
         file.delete()
@@ -175,9 +179,10 @@ export const fetchDropboxFileAsPdfAndCreateTempFile = async (fileId: string, fil
         const downloadUri = await File.downloadFileAsync(downloadUrl, file, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
-                'Dropbox-API-Arg': JSON.stringify({ path: fileId })
+                'Dropbox-API-Arg': JSON.stringify(body),
             },
         });
+        console.log('Download Dropbox File Response:', downloadUri);
         console.log('Download Dropbox File Response Status:', downloadUri);
         return file;
     } catch (error) {

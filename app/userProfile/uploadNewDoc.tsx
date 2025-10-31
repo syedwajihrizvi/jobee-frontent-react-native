@@ -46,9 +46,9 @@ const UploadNewDoc = () => {
         )}
         {!uploadSuccess && (
           <>
-            <View className="items-center mb-8">
+            <View className="items-center mb-2">
               <View
-                className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                className="w-16 h-16 rounded-full items-center justify-center mb-2"
                 style={{ backgroundColor: `${selectedDocInfo.color}20` }}
               >
                 <Feather name={selectedDocInfo.icon as any} size={28} color={selectedDocInfo.color} />
@@ -58,7 +58,7 @@ const UploadNewDoc = () => {
                 Upload a new document to your professional library
               </Text>
             </View>
-            <View className="mb-8">
+            <View className="mb-4">
               <Text className="font-quicksand-bold text-base text-gray-900 mb-4">Document Type</Text>
               <View className="flex-row flex-wrap gap-2">
                 {documentTypes.map((doc) => (

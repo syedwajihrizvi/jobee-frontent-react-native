@@ -1,10 +1,11 @@
 import { getOneDriveFiles } from "@/lib/oauth/onedrive";
-import { formatDate, getFileIcon, getOneDriveFileType } from "@/lib/utils";
+import { formatDate, getOneDriveFileType, isValidFileType } from "@/lib/utils";
 import useOAuthDocStore from "@/store/oauth-doc.store";
 import { OneDrivePathContent } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from "react-native";
+import FileTypeIcon from "./FileTypeIcon";
 
 type Props = {
   onClose: () => void;
@@ -20,9 +21,45 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
 
   useEffect(() => {
     const fetchRootFolderContent = async () => {
-      const result = await getOneDriveFiles(currentPath.join("/"));
+      setIsLoading(true);
+      try {
+        const result = await getOneDriveFiles(currentPath.join("/"));
+        if (result) {
+          const { files, nextLink } = result;
+          const rootPathContents = files.map((file) => {
+            console.log("OneDrive File:", file);
+            const fileType = getOneDriveFileType(file);
+            return {
+              id: file.id,
+              name: file.name,
+              fileType: fileType,
+              lastModifiedDateTime: file.lastModifiedDateTime,
+              mimeType: file.file ? file.file.mimeType : undefined,
+              downloadUrl: file["@microsoft.graph.downloadUrl"] || undefined,
+              fileSize: file.size || undefined,
+            } as OneDrivePathContent;
+          });
+          setCurrentPathContent(rootPathContents);
+          setNextPageToken(nextLink || null);
+        }
+      } catch (error) {
+        console.log("Error fetching OneDrive root folder content:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRootFolderContent();
+  }, [currentPath]);
+
+  const loadMoreOneDriveFiles = async () => {
+    if (!nextPageToken) return;
+    setIsLoading(true);
+    try {
+      const result = await getOneDriveFiles(currentPath.join("/"), nextPageToken);
       if (result) {
-        const rootPathContents = result.map((file) => {
+        const { files, nextLink } = result;
+        const moreContents = files.map((file) => {
+          console.log("OneDrive File:", file);
           const fileType = getOneDriveFileType(file);
           return {
             id: file.id,
@@ -31,27 +68,36 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
             lastModifiedDateTime: file.lastModifiedDateTime,
             mimeType: file.file ? file.file.mimeType : undefined,
             downloadUrl: file["@microsoft.graph.downloadUrl"] || undefined,
+            fileSize: file.size || undefined,
           } as OneDrivePathContent;
         });
-        setCurrentPathContent(rootPathContents);
+        setCurrentPathContent((prevContents) => [...prevContents, ...moreContents]);
+        setNextPageToken(nextLink || null);
       }
-    };
-    setIsLoading(true);
-    try {
-      fetchRootFolderContent();
     } catch (error) {
-      console.log("Error fetching OneDrive root folder content:", error);
+      console.log("Error loading more OneDrive files:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [currentPath]);
+  };
 
   const handleContentSelection = (content: OneDrivePathContent) => {
-    console.log("Selected content:", content);
     if (content.fileType === "folder") {
       setCurrentPath((prevPath) => [...prevPath, content.name]);
       setFolderId(content.id);
+      setNextPageToken(null);
     } else if (content.fileType === "file") {
+      if (content.fileSize && content.fileSize > 10 * 1024 * 1024) {
+        Alert.alert(
+          "File Too Large",
+          "Please select a document smaller than 10 MB. Your file was " + content.fileSize + " bytes."
+        );
+        return;
+      }
+      if (content.mimeType && !isValidFileType(content.mimeType)) {
+        Alert.alert("Invalid File Type", "Please select a PDF or Word document");
+        return;
+      }
       setOneDriveFile(content);
     }
   };
@@ -74,9 +120,8 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
               data={currentPathContent}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 120 }} // Space for fixed footer
+              contentContainerStyle={{ paddingBottom: 120 }}
               renderItem={({ item }) => {
-                const fileIcon = getFileIcon(item.fileType);
                 const isSelected = oneDriveFile?.id === item.id;
                 return (
                   <TouchableOpacity
@@ -94,9 +139,7 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
                     onPress={() => handleContentSelection(item)}
                   >
                     <View className="flex-row items-center gap-3">
-                      <View className={`w-12 h-12 ${fileIcon.bgColor} rounded-lg items-center justify-center`}>
-                        <Feather name={fileIcon.name as any} size={20} color={fileIcon.color} />
-                      </View>
+                      <FileTypeIcon fileType={item.fileType} mimeType={item.mimeType || ""} />
 
                       <View className="flex-1">
                         <Text
@@ -149,7 +192,7 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
                       <View className="flex-1">
                         <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">
                           {currentPath[currentPath.length - 1] === "/"
-                            ? "OneDrive"
+                            ? "OneDrive Root"
                             : currentPath[currentPath.length - 1]}
                         </Text>
                         <View className="flex-row items-center gap-1">
@@ -175,7 +218,7 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
                       shadowRadius: 4,
                       elevation: 3,
                     }}
-                    onPress={() => {}}
+                    onPress={loadMoreOneDriveFiles}
                     disabled={isLoading}
                     activeOpacity={0.8}
                   >
@@ -194,6 +237,17 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
                 ) : null
               }
               ListEmptyComponent={() => {
+                if (isLoading) {
+                  return (
+                    <View className="flex-1 items-center justify-center">
+                      <ActivityIndicator size="large" color="#4285F4" />
+                      <Text className="font-quicksand-medium text-gray-600 mt-4">
+                        Loading files from {displayCurrentPath()}...
+                      </Text>
+                    </View>
+                  );
+                }
+
                 return (
                   <View className="flex-1 items-center justify-center">
                     <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
@@ -202,7 +256,9 @@ const OneDriveFileSelector = ({ onClose }: Props) => {
                     <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">
                       No Files Found in {displayCurrentPath()}
                     </Text>
-                    <Text className="font-quicksand-medium text-sm text-gray-500 text-center"></Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
+                      This folder appears to be empty
+                    </Text>
                   </View>
                 );
               }}

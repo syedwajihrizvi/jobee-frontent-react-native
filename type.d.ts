@@ -583,6 +583,7 @@ export type GoogleDriveFile = {
     name: string;
     mimeType: string;
     modifiedTime: string;
+    size: string;
 }
 
 export type DropboxFile = {
@@ -591,7 +592,8 @@ export type DropboxFile = {
     server_modified: string;
     client_modified: string;
     path_display: string;
-    ".tag": string
+    ".tag": string;
+    size: number;
 }
 
 export type OneDriveFile = {
@@ -602,6 +604,7 @@ export type OneDriveFile = {
     file: any;
     specialFolder: any;
     "@microsoft.graph.downloadUrl"?: string;
+    size: number;
 }
 
 type GoogleDrivePathContent = {
@@ -610,6 +613,7 @@ type GoogleDrivePathContent = {
   fileType: "file" | "folder";
   modifiedTime: string;
   mimeType?: string;
+  fileSize?: number;
 };
 
 type DropBoxPathContent = {
@@ -619,6 +623,8 @@ type DropBoxPathContent = {
   fileType: string;
   serverModified?: string;
   clientModified?: string;
+  fileSize?: number;
+    mimeType?: string;
 };
 
 type OneDrivePathContent = {
@@ -628,6 +634,7 @@ type OneDrivePathContent = {
   lastModifiedDateTime: string;
   mimeType?: string;
   downloadUrl?: string;
+  fileSize?: number;
 };
 
 export type SelectedUploadMethod = "DIRECT_UPLOAD" | "GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | "LINK_INPUT" | null;

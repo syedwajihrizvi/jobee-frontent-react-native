@@ -148,8 +148,7 @@ export const getOneDriveFiles = async (folderPath?: string, nextLink?: string) =
     });
     if (response.ok) {
         const data = await response.json();
-        const value = data.value as OneDriveFile[];
-        return value
+        return {files: data.value as OneDriveFile[], nextLink: data['@odata.nextLink']};
     }
     return null; 
     } catch (error) {
@@ -171,13 +170,11 @@ export const fetchOneDriveFileAsPdfAndCreateTempFile = async (downloadUrl: strin
         console.log('Created directory at:', destination.uri);
     }
 
-    const file = new File(destination, `${fileName}.pdf`);
+    const file = new File(destination, `${fileName}`);
     if (file.exists) {
         console.log('File already exists at:', file.uri);
         file.delete()
     }
-    const fileUri = file.uri;
-    console.log('Downloading OneDrive File to:', fileUri);
     try {
         const downloadUri = await File.downloadFileAsync(downloadUrl, file);
         console.log('Download OneDrive File Response Status:', downloadUri);

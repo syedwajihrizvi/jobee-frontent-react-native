@@ -79,7 +79,8 @@ export const uploadGoogleDriveDocumentToServer = async (
 export const uploadDropboxDocumentToServer = async (
     document: File,
     documentType: string,
-    documentTitle: string
+    documentTitle: string,
+    
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -123,10 +124,11 @@ export const uploadOneDriveDocumentToServer = async (
     .replace(/\s+/g, "_") 
     .replace(/[^a-zA-Z0-9._-]/g, "");
     
+    console.log("Uploading OneDrive Document to Server:", { documentType, documentTitle, documentName: safeName });
     formData.append('document', {
         uri: document.uri,
         name: safeName || 'document.pdf',
-        type: "application/pdf",
+        type: document.type,
     } as any)
     formData.append('documentType', documentType);
     formData.append('title', documentTitle);
@@ -147,7 +149,7 @@ export const sendDocumentLinkToServer = async (
     documentLink: string,
     documentType: string,
     documentTitle: string,
-    documentUrlType: 'GOOGLE_DRIVE' | 'DROPBOX'
+    documentUrlType: 'GOOGLE_DRIVE' | 'DROPBOX' | 'ONE_DRIVE'
 ) => {
     console.log('Sending document link to server:', { documentLink, documentType, documentTitle, documentUrlType });
     const token = await AsyncStorage.getItem('x-auth-token');
@@ -166,6 +168,7 @@ export const sendDocumentLinkToServer = async (
             documentUrlType: 'DROPBOX'
         })
     })
+    console.log(response)
     if (response.status !== 201)
         return false
     return true
@@ -178,24 +181,30 @@ export const processGoogleDriveUpload = async (googleDriveFile: GoogleDrivePathC
     throw new Error("Failed to fetch the document from Google Drive.");
     }
     const title = documentTitle || name;
-    await uploadGoogleDriveDocumentToServer(tempFile, selectedDocumentType, title);
+    const res = await uploadGoogleDriveDocumentToServer(tempFile, selectedDocumentType, title);
+    return res
 };
 
 export const processDropboxUpload = async (dropboxFile: DropBoxPathContent, selectedDocumentType: string, documentTitle: string) => {
-    const { id, name } = dropboxFile;
-    const tempFile = await fetchDropboxFileAsPdfAndCreateTempFile(id, name);
+    const { id, name, mimeType, pathDisplay} = dropboxFile;
+    console.log("Dropbox File Info:", { id, name, mimeType, pathDisplay });
+    const tempFile = await fetchDropboxFileAsPdfAndCreateTempFile(id, name, mimeType || "application/pdf", pathDisplay);
     if (tempFile == null) {
         throw new Error("Failed to fetch the selected Dropbox file.");
     }
     const title = documentTitle || name
-    await uploadDropboxDocumentToServer(tempFile, selectedDocumentType, title);
+    const res = await uploadDropboxDocumentToServer(tempFile, selectedDocumentType, title);
+    return res;
 };
 
 export const processOneDriveUpload = async (oneDriveFile: OneDrivePathContent, selectedDocumentType: string, documentTitle: string) => {
     const tempFile = await fetchOneDriveFileAsPdfAndCreateTempFile(oneDriveFile.downloadUrl!, oneDriveFile.name);
+    console.log("OneDrive Temp File:", tempFile);
     if (tempFile == null) {
     throw new Error("Failed to fetch the selected OneDrive file.");
     }
-    const title = oneDriveFile.name;
-    uploadOneDriveDocumentToServer(tempFile, selectedDocumentType, title);
+    const title = documentTitle ||oneDriveFile.name;
+    const res = await uploadOneDriveDocumentToServer(tempFile, selectedDocumentType, title);
+    console.log("OneDrive Upload Result:", res);
+    return res;
 };

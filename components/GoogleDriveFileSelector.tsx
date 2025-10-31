@@ -1,10 +1,11 @@
 import { getGoogleDriveFiles } from "@/lib/oauth/googledrive";
-import { formatDate, getFileIcon } from "@/lib/utils";
+import { formatDate, isValidFileType } from "@/lib/utils";
 import useOAuthDocStore from "@/store/oauth-doc.store";
 import { GoogleDrivePathContent } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from "react-native";
+import FileTypeIcon from "./FileTypeIcon";
 
 type Props = {
   onClose: () => void;
@@ -19,35 +20,38 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
   const { googleDriveFile, setGoogleDriveFile } = useOAuthDocStore();
   useEffect(() => {
     const fetchPathContent = async () => {
-      const result = await getGoogleDriveFiles(
-        nextPageToken || undefined,
-        currentPathByIds ? currentPathByIds[currentPathByIds.length - 1] : undefined
-      );
-      console.log(result);
-      if (!result) {
-        return;
+      setIsLoading(true);
+      try {
+        const result = await getGoogleDriveFiles(
+          nextPageToken || undefined,
+          currentPathByIds ? currentPathByIds[currentPathByIds.length - 1] : undefined
+        );
+        console.log(result);
+        if (!result) {
+          return;
+        }
+        const rootPathContents = result.files.map((file) => {
+          console.log(file);
+          console.log(file.modifiedTime);
+          return {
+            id: file.id,
+            modifiedTime: file.modifiedTime,
+            name: file.name,
+            fileType: file.mimeType === "application/vnd.google-apps.folder" ? "folder" : "file",
+            mimeType: file.mimeType,
+            fileSize: file.size && parseInt(file.size, 10),
+          } as GoogleDrivePathContent;
+        });
+        setNextPageToken(result.nextPageToken || null);
+        setCurrentPathContent(rootPathContents);
+      } catch (error) {
+        console.log("Error fetching Google Drive path content:", error);
+      } finally {
+        setIsLoading(false);
       }
-      const rootPathContents = result.files.map((file) => {
-        console.log(file.modifiedTime);
-        return {
-          id: file.id,
-          modifiedTime: file.modifiedTime,
-          name: file.name,
-          fileType: file.mimeType === "application/vnd.google-apps.folder" ? "folder" : "file",
-          mimeType: file.mimeType,
-        } as GoogleDrivePathContent;
-      });
-      setNextPageToken(result.nextPageToken || null);
-      setCurrentPathContent(rootPathContents);
     };
-    setIsLoading(true);
-    try {
-      fetchPathContent();
-    } catch (error) {
-      console.log("Error fetching Google Drive path content:", error);
-    } finally {
-      setIsLoading(false);
-    }
+
+    fetchPathContent(); // Call the async function
   }, [currentPathByIds]);
 
   const loadMoreGoogleDriveFiles = async () => {
@@ -82,13 +86,23 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
   };
 
   const handleContentSelection = (content: GoogleDrivePathContent) => {
-    console.log("Selected content:", content);
     if (content.fileType === "folder") {
       setNextPageToken(null);
       setCurrentPath((prev) => [...prev, content.name]);
       setCurrentPathByIds((prev) => [...prev, content.id]);
     }
     if (content.fileType === "file") {
+      if (content.fileSize && content.fileSize > 10 * 1024 * 1024) {
+        Alert.alert(
+          "File Too Large",
+          "Please select a document smaller than 10 MB. Your file was " + content.fileSize + " bytes."
+        );
+        return;
+      }
+      if (content.mimeType && !isValidFileType(content.mimeType)) {
+        Alert.alert("Invalid File Type", "Please select a PDF or Word document");
+        return;
+      }
       setGoogleDriveFile(content);
     }
   };
@@ -113,7 +127,6 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 120 }} // Space for fixed footer
               renderItem={({ item }) => {
-                const fileIcon = getFileIcon(item.fileType);
                 const isSelected = googleDriveFile?.id === item.id;
                 return (
                   <TouchableOpacity
@@ -131,9 +144,7 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
                     onPress={() => handleContentSelection(item)}
                   >
                     <View className="flex-row items-center gap-3">
-                      <View className={`w-12 h-12 ${fileIcon.bgColor} rounded-lg items-center justify-center`}>
-                        <Feather name={fileIcon.name as any} size={20} color={fileIcon.color} />
-                      </View>
+                      <FileTypeIcon fileType={item.fileType} mimeType={item.mimeType || ""} />
 
                       <View className="flex-1">
                         <Text
@@ -189,7 +200,7 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
                       <View className="flex-1">
                         <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">
                           {currentPath[currentPath.length - 1] === "/"
-                            ? "OneDrive"
+                            ? "Google Drive Root"
                             : currentPath[currentPath.length - 1]}
                         </Text>
                         <View className="flex-row items-center gap-1">
@@ -234,6 +245,17 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
                 ) : null
               }
               ListEmptyComponent={() => {
+                if (isLoading) {
+                  return (
+                    <View className="flex-1 items-center justify-center">
+                      <ActivityIndicator size="large" color="#4285F4" />
+                      <Text className="font-quicksand-medium text-gray-600 mt-4">
+                        Loading files from {displayCurrentPath()}...
+                      </Text>
+                    </View>
+                  );
+                }
+
                 return (
                   <View className="flex-1 items-center justify-center">
                     <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
@@ -242,7 +264,9 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
                     <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">
                       No Files Found in {displayCurrentPath()}
                     </Text>
-                    <Text className="font-quicksand-medium text-sm text-gray-500 text-center"></Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
+                      This folder appears to be empty
+                    </Text>
                   </View>
                 );
               }}

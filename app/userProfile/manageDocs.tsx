@@ -106,10 +106,8 @@ const ManageDocuments = () => {
             >
               <Feather name={docInfo.icon as any} size={24} color={docInfo.color} />
             </View>
-            <Text className="font-quicksand-semibold text-gray-700 mb-2">No documents yet</Text>
-            <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
-              Upload your first {title.toLowerCase()} to get started
-            </Text>
+            <Text className="font-quicksand-semibold text-gray-700 mb-2">No {title.toLowerCase()} yet</Text>
+            <Text className="font-quicksand-medium text-sm text-gray-500 text-center">Upload to get started</Text>
           </View>
         ) : (
           <FlatList
@@ -224,31 +222,31 @@ const ManageDocuments = () => {
             </View>
 
             {renderDocumentFlatList({
-              title: "My Resumes",
+              title: "Resumes",
               documents: userDocuments?.resumeDocuments || [],
               type: UserDocumentType.RESUME,
             })}
 
             {renderDocumentFlatList({
-              title: "My Cover Letters",
+              title: "Cover Letters",
               documents: userDocuments?.coverLetterDocuments || [],
               type: UserDocumentType.COVER_LETTER,
             })}
 
             {renderDocumentFlatList({
-              title: "My Certificates",
+              title: "Certificates",
               documents: userDocuments?.certificateDocuments || [],
               type: UserDocumentType.CERTIFICATE,
             })}
 
             {renderDocumentFlatList({
-              title: "My Transcripts",
+              title: "Transcripts",
               documents: userDocuments?.transcriptDocuments || [],
               type: UserDocumentType.TRANSCRIPT,
             })}
 
             {renderDocumentFlatList({
-              title: "My Recommendations",
+              title: "Recommendations",
               documents: userDocuments?.recommendationDocuments || [],
               type: UserDocumentType.RECOMMENDATION,
             })}

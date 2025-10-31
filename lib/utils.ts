@@ -566,9 +566,46 @@ export const getMimeTypeFromFileName = (fileName: string):string => {
     case 'txt': return 'text/plain';
     case 'doc': return 'application/msword';
     case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'xls': return 'application/vnd.ms-excel';
+    case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case 'ppt': return 'application/vnd.ms-powerpoint';
+    case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    case 'odt': return 'application/vnd.oasis.opendocument.text';
+    case 'ods': return 'application/vnd.oasis.opendocument.spreadsheet';
+    case 'odp': return 'application/vnd.oasis.opendocument.presentation';
+    case 'rtf': return 'application/rtf';
+    case 'csv': return 'text/csv';
+    case 'gif': return 'image/gif';
+    case 'bmp': return 'image/bmp';
+    case 'webp': return 'image/webp';
+    case 'mp3': return 'audio/mpeg';
+    case 'wav': return 'audio/wav';
+    case 'mp4': return 'video/mp4';
+    case 'mov': return 'video/quicktime';
+    case 'avi': return 'video/x-msvideo';
+    case 'zip': return 'application/zip';
+    case 'rar': return 'application/vnd.rar';
+    case '7z': return 'application/x-7z-compressed';
+    case 'tar': return 'application/x-tar';
+    case 'gz': return 'application/gzip';
     default: return 'application/octet-stream';
   } 
 }
+
+export const isValidFileType = (mimeType: string) => {
+  const validMimeTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.google-apps.document',
+    'application/vnd.oasis.opendocument.text',
+    'text/plain',
+    "application/rtf"
+  ];
+  
+  return validMimeTypes.includes(mimeType);
+}
+
 export const getOneDriveFileType = (item: OneDriveFile) => {
   if (item.folder) {
     return 'folder';

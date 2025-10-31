@@ -1,10 +1,11 @@
 import { getDropBoxFiles } from "@/lib/oauth/dropbox";
-import { formatDate, getFileIcon } from "@/lib/utils";
+import { formatDate, getMimeTypeFromFileName, isValidFileType } from "@/lib/utils";
 import useOAuthDocStore from "@/store/oauth-doc.store";
 import { DropBoxPathContent } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from "react-native";
+import FileTypeIcon from "./FileTypeIcon";
 
 type Props = {
   onClose: () => void;
@@ -20,34 +21,36 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
 
   useEffect(() => {
     const fetchPathContent = async () => {
-      const result = await getDropBoxFiles(
-        cursor || undefined,
-        currentPath ? currentPath[currentPath.length - 1] : undefined
-      );
-      if (!result) return;
-      const { entries, hasMore, cursor: newCursor } = result;
-      const rootPathContents = entries.map((entry) => {
-        return {
-          id: entry.id,
-          name: entry.name,
-          pathDisplay: entry.path_display,
-          fileType: entry[".tag"],
-          serverModified: entry.server_modified,
-          clientModified: entry.client_modified,
-        } as DropBoxPathContent;
-      });
-      setCursor(newCursor);
-      setHasMore(hasMore);
-      setCurrentPathContent(rootPathContents);
+      setIsLoading(true);
+      try {
+        const result = await getDropBoxFiles(
+          cursor || undefined,
+          currentPath ? currentPath[currentPath.length - 1] : undefined
+        );
+        if (!result) return;
+        const { entries, hasMore, cursor: newCursor } = result;
+        const rootPathContents = entries.map((entry) => {
+          return {
+            id: entry.id,
+            name: entry.name,
+            pathDisplay: entry.path_display,
+            fileType: entry[".tag"],
+            serverModified: entry.server_modified,
+            clientModified: entry.client_modified,
+            fileSize: entry.size,
+            mimeType: getMimeTypeFromFileName(entry.name),
+          } as DropBoxPathContent;
+        });
+        setCursor(newCursor);
+        setHasMore(hasMore);
+        setCurrentPathContent(rootPathContents);
+      } catch (error) {
+        console.log("Error fetching Dropbox path content:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setIsLoading(true);
-    try {
-      fetchPathContent();
-    } catch (error) {
-      console.log("Error fetching Dropbox path content:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    fetchPathContent();
   }, [currentPath]);
 
   const loadMoreDropboxFiles = async () => {
@@ -78,7 +81,6 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
     }
   };
 
-  console.log("Selected Dropbox File: ", dropboxFile);
   const handleContentSelection = (content: DropBoxPathContent) => {
     console.log("Selected content:", content);
     if (content.fileType === "folder") {
@@ -86,6 +88,17 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
       setCurrentPath((prev) => [...prev, content.pathDisplay]);
     }
     if (content.fileType === "file") {
+      if (content.fileSize && content.fileSize > 10 * 1024 * 1024) {
+        Alert.alert(
+          "File Too Large",
+          "Please select a document smaller than 10 MB. Your file was " + content.fileSize + " bytes."
+        );
+        return;
+      }
+      if (content.mimeType && !isValidFileType(content.mimeType)) {
+        Alert.alert("Invalid File Type", "Please select a PDF or Word document.");
+        return;
+      }
       setDropboxFile(content);
     }
   };
@@ -110,7 +123,6 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 120 }}
               renderItem={({ item }) => {
-                const fileIcon = getFileIcon(item.fileType);
                 const isSelected = dropboxFile?.id === item.id;
                 return (
                   <TouchableOpacity
@@ -128,9 +140,7 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
                     onPress={() => handleContentSelection(item)}
                   >
                     <View className="flex-row items-center gap-3">
-                      <View className={`w-12 h-12 ${fileIcon.bgColor} rounded-lg items-center justify-center`}>
-                        <Feather name={fileIcon.name as any} size={20} color={fileIcon.color} />
-                      </View>
+                      <FileTypeIcon fileType={item.fileType} mimeType={item.mimeType || ""} />
 
                       <View className="flex-1">
                         <Text
@@ -185,7 +195,7 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
                       <View className="flex-1">
                         <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">
                           {currentPath[currentPath.length - 1] === "/"
-                            ? "OneDrive"
+                            ? "Dropbox Root"
                             : currentPath[currentPath.length - 1]}
                         </Text>
                         <View className="flex-row items-center gap-1">
@@ -230,6 +240,17 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
                 ) : null
               }
               ListEmptyComponent={() => {
+                if (isLoading) {
+                  return (
+                    <View className="flex-1 items-center justify-center">
+                      <ActivityIndicator size="large" color="#4285F4" />
+                      <Text className="font-quicksand-medium text-gray-600 mt-4">
+                        Loading files from {displayCurrentPath()}...
+                      </Text>
+                    </View>
+                  );
+                }
+
                 return (
                   <View className="flex-1 items-center justify-center">
                     <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
@@ -238,7 +259,9 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
                     <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">
                       No Files Found in {displayCurrentPath()}
                     </Text>
-                    <Text className="font-quicksand-medium text-sm text-gray-500 text-center"></Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-500 text-center">
+                      This folder appears to be empty
+                    </Text>
                   </View>
                 );
               }}

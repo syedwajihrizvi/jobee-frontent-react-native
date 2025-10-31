@@ -40,6 +40,8 @@ const documentTypes = [
   { label: "Recommendation", value: UserDocumentType.RECOMMENDATION, icon: "star", color: "#ef4444" },
 ];
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleUploadMethod = false }: Props) => {
   const queryClient = useQueryClient();
   const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
@@ -139,7 +141,16 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ],
       });
-      if (!document.canceled) {
+      if (document && !document.canceled && document.assets && document.assets.length > 0) {
+        if (document.assets[0].size! > MAX_FILE_SIZE_BYTES) {
+          Alert.alert(
+            "File Too Large",
+            "Please select a document smaller than 10 MB. Your file was " +
+              formatFileSize(document.assets[0].size!) +
+              "."
+          );
+          return;
+        }
         setUploadedDocument(document);
       }
     } catch (error) {
@@ -156,6 +167,9 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
         const result = await connectToGoogleDriveOAuth();
         if (result) {
           setIsConnectedToGoogleDrive(true);
+        } else {
+          Alert.alert("Google Drive Connection Failed", "Unable to connect to Google Drive. Please try again.");
+          return;
         }
       } catch (error) {
         console.log("Error during OneDrive OAuth");
@@ -171,6 +185,9 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
         const result = await connectToDropboxOAuth();
         if (result) {
           setIsConnectedToDropbox(true);
+        } else {
+          Alert.alert("Dropbox Connection Failed", "Unable to connect to Dropbox. Please try again.");
+          return;
         }
       } catch {
         console.log("Error during Dropbox OAuth");
@@ -188,6 +205,9 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
         const result = await connectToOneDriveOAuth();
         if (result) {
           setIsConnectedToOneDrive(true);
+        } else {
+          Alert.alert("OneDrive Connection Failed", "Unable to connect to OneDrive. Please try again.");
+          return;
         }
       } catch (error) {
         console.log("Error during OneDrive OAuth");
@@ -210,34 +230,42 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
   const handleGoogleDriveUpload = async () => {
     if (!googleDriveFile) return;
     try {
-      await processGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle);
+      const res = await processGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle);
+      console.log(res);
+      return res;
     } catch (error) {
       console.log("Error uploading Google Drive document:", error);
       Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
     }
+    return null;
   };
 
   const handleDropboxUpload = async () => {
     if (!dropboxFile) return;
     try {
-      await processDropboxUpload(dropboxFile, selectedDocumentType, documentTitle);
+      const res = await processDropboxUpload(dropboxFile, selectedDocumentType, documentTitle);
+      return res;
     } catch (error) {
       console.log("Error uploading Dropbox document:", error);
       Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
     }
+    return null;
   };
 
   const handleOneDriveUpload = async () => {
     if (!oneDriveFile) return;
     try {
-      await processOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle);
+      console.log("Using document title: ", documentTitle);
+      const res = await processOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle);
+      console.log("OneDrive upload result:", res);
+      return res;
     } catch (error) {
       console.log("Error uploading OneDrive file:", error);
       Alert.alert("Error", "An error occurred while uploading the OneDrive file.");
     }
+    return null;
   };
 
-  // If an override upload method is provided, use that
   const handleDocumentUploadSubmit = async () => {
     const uploadMethod = inferUploadMethod();
     if (customHandleUploadMethod) {
@@ -256,14 +284,34 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
       if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
         await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
       } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
+        if (!isValidGoogleDriveLink(documentLink) && !documentLink.includes("dropbox.com")) {
+          Alert.alert("Invalid Link", "Please provide a valid Google Drive or Dropbox link.");
+          return;
+        }
         const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
-        await sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType);
+        const res = await sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType);
+        if (!res) {
+          Alert.alert("Error", "Failed to upload document link. Please try again.");
+          return;
+        }
       } else if (uploadMethod === "GOOGLE_DRIVE") {
-        await handleGoogleDriveUpload();
+        const res = await handleGoogleDriveUpload();
+        if (!res) {
+          Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
+          return;
+        }
       } else if (uploadMethod === "DROPBOX") {
-        await handleDropboxUpload();
+        const res = await handleDropboxUpload();
+        if (!res) {
+          Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
+          return;
+        }
       } else if (uploadMethod === "ONEDRIVE") {
-        await handleOneDriveUpload();
+        const res = await handleOneDriveUpload();
+        if (!res) {
+          Alert.alert("Error", "An error occurred while uploading the OneDrive document.");
+          return;
+        }
       }
       handleSuccessFullUpload();
     } catch (error) {
@@ -320,7 +368,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
           }}
         >
           <View className="items-center">
-            <View className="w-16 h-16 bg-green-100 rounded-2xl items-center justify-center mb-4">
+            <View className="w-16 h-16 bg-green-100 rounded-2xl items-center justify-center mb-2">
               <Feather name={getFileIcon(file.name || "")} size={28} color="#22c55e" />
             </View>
             <Text className="font-quicksand-bold text-lg text-gray-800 text-center mb-1" numberOfLines={2}>
@@ -329,7 +377,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
             <Text className="font-quicksand-medium text-sm text-gray-500">
               {file.size ? formatFileSize(file.size) : "Size unknown"}
             </Text>
-            <View className="bg-green-50 border border-green-200 rounded-xl px-3 py-2 mt-4">
+            <View className="bg-green-50 border border-green-200 rounded-xl px-3 py-2 mt-2 mb-2">
               <View className="flex-row items-center gap-2">
                 <Feather name="check-circle" size={14} color="#22c55e" />
                 <Text className="font-quicksand-semibold text-green-700 text-xs">Resume uploaded successfully!</Text>
@@ -371,7 +419,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
   const selectedDocInfo = getDocumentTypeInfo(selectedDocumentType);
   return (
     <>
-      <View className="mb-8">
+      <View className="mb-2">
         <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Document Title</Text>
         <TextInput
           className="border border-gray-200 rounded-xl p-4 font-quicksand-medium bg-white"
@@ -390,7 +438,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
       </View>
       {uploadedDocument?.assets?.[0]?.name && (
         <View
-          className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-8"
+          className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-2"
           style={{
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 2 },
@@ -611,7 +659,6 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
               <View className="flex flex-row items-center gap-2 mb-3">
                 <AntDesign name="google" size={14} color="#4285F4" />
                 <AntDesign name="dropbox" size={14} color="#0061FF" />
-                <Entypo name="onedrive" size={16} color="#0078D4" />
                 <Text className="font-quicksand-medium text-xs text-gray-500 ml-2">Supported services</Text>
               </View>
               <LinkInput

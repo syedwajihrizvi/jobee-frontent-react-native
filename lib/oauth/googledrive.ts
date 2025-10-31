@@ -143,7 +143,7 @@ export const getGoogleDriveFiles = async (pageToken?: string, folderId?: string)
 
     const urlParams = new URLSearchParams();
     urlParams.append('pageSize', '5');
-    urlParams.append('fields', 'nextPageToken, files(id,name,mimeType,modifiedTime)');
+    urlParams.append('fields', 'nextPageToken, files(id,name,mimeType,modifiedTime, size)');
     if (folderId) {
     urlParams.append('q', `'${folderId}' in parents and trashed = false`);
     }
