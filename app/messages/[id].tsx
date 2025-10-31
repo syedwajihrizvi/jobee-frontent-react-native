@@ -55,6 +55,7 @@ const MessageChat = () => {
       userId: user!.id,
       userType: userParamType,
       onMessage: (msg: Message) => {
+        console.log("Received message via STOMP:", msg);
         setMessages((prevMessages) => [...prevMessages, msg]);
         // Update the conversation
         const conversationIndex = conversations.findIndex((c) => c.id === Number(conversationId));
