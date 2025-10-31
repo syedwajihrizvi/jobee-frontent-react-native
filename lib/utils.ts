@@ -1,5 +1,6 @@
 import { Application, OneDriveFile, User, UserDocument } from "@/type";
 import * as Haptics from 'expo-haptics';
+import * as ImageManipulator from "expo-image-manipulator";
 
 export const formatDate = (date: string) => {
   if (!date) return "";
@@ -634,3 +635,12 @@ export const getFileIcon = (mimeType: string) => {
     return { name: "file", color: "#6b7280", bgColor: "bg-gray-100" };
   }
 };
+
+export const compressImage = async (uri: string) => {
+  const compressedImage = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 1024 } }], // Resize to width of 1024px
+    { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Compress to 70% quality
+  );
+  return compressedImage.uri;
+}

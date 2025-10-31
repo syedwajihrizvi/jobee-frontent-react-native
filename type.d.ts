@@ -637,4 +637,4 @@ type OneDrivePathContent = {
   fileSize?: number;
 };
 
-export type SelectedUploadMethod = "DIRECT_UPLOAD" | "GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | "LINK_INPUT" | null;
+export type SelectedUploadMethod = "IMAGE_UPLOAD" |"DIRECT_UPLOAD" | "GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | "LINK_INPUT" | null;

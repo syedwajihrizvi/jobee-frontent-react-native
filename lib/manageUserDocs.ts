@@ -3,6 +3,7 @@ import { DropBoxPathContent, GoogleDrivePathContent, OneDrivePathContent } from 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
+import * as ImagePicker from "expo-image-picker";
 import { fetchDropboxFileAsPdfAndCreateTempFile } from './oauth/dropbox';
 import { fetchGoogleDocAsPdfAndCreateTempFile } from './oauth/googledrive';
 import { fetchOneDriveFileAsPdfAndCreateTempFile } from './oauth/onedrive';
@@ -30,6 +31,41 @@ export const uploadUserDocument = async (
     formData.append('title', documentTitle);
     const response = await fetch(
         USER_DOCS_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: formData
+    })
+    if (response.status !== 201)
+        return false
+    return true
+}
+
+export const uploadUserDocumentViaImage = async (
+    document: ImagePicker.ImagePickerResult,
+    documentUri: string,
+    documentType: string,
+    documentTitle: string
+) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const formData = new FormData();
+    const safeName = document.assets![0].fileName
+    ?.trim()
+    .replace(/\s+/g, "_") 
+    .replace(/[^a-zA-Z0-9._-]/g, "");
+    
+    formData.append('documentImage', {
+        uri: documentUri,
+        name: safeName || 'document.jpg',
+        type: document.assets![0].type || "image/jpeg",
+    } as any)
+    formData.append('documentType', documentType);
+    formData.append('title', documentTitle);
+    const response = await fetch(
+        `${USER_DOCS_API_URL}/image`, {
         method: 'POST',
         headers: {
             'Content-Type': 'multipart/form-data',

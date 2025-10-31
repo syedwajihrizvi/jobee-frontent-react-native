@@ -5,11 +5,12 @@ import {
   processOneDriveUpload,
   sendDocumentLinkToServer,
   uploadUserDocument,
+  uploadUserDocumentViaImage,
 } from "@/lib/manageUserDocs";
 import { connectToDropboxOAuth, isDropboxAccessTokenValid } from "@/lib/oauth/dropbox";
 import { connectToGoogleDriveOAuth, isGoogleDriveAccessTokenValid } from "@/lib/oauth/googledrive";
 import { connectToOneDriveOAuth, isOneDriveAccessTokenValid } from "@/lib/oauth/onedrive";
-import { converOAuthProviderToText, isValidGoogleDriveLink } from "@/lib/utils";
+import { compressImage, converOAuthProviderToText, isValidGoogleDriveLink } from "@/lib/utils";
 import useCompleteProfileStore from "@/store/completeProfile.store";
 import useOAuthDocStore from "@/store/oauth-doc.store";
 import { SelectedUploadMethod } from "@/type";
@@ -19,7 +20,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import DropBoxFileSelector from "./DropBoxFileSelector";
 import GoogleDriveFileSelector from "./GoogleDriveFileSelector";
 import LinkInput from "./LinkInput";
@@ -45,6 +46,7 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleUploadMethod = false }: Props) => {
   const queryClient = useQueryClient();
   const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
+  const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [isConnectedToGoogleDrive, setIsConnectedToGoogleDrive] = useState(false);
   const [isConnectedToDropbox, setIsConnectedToDropbox] = useState(false);
@@ -87,7 +89,14 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
     checkOneDriveAccessToken();
   }, []);
   const noFileSelected = () => {
-    return uploadedDocument == null && documentLink.trim() === "" && !googleDriveFile && !dropboxFile && !oneDriveFile;
+    return (
+      uploadedDocument == null &&
+      selectedImage == null &&
+      documentLink.trim() === "" &&
+      !googleDriveFile &&
+      !dropboxFile &&
+      !oneDriveFile
+    );
   };
   const handleUploadConfirmation = () => {
     if (noFileSelected()) {
@@ -106,23 +115,32 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
       {
         text: uploadByPhotoMsg,
         onPress: async () => {
-          await ImagePicker.launchCameraAsync({
+          const cameraResult = await ImagePicker.launchCameraAsync({
             mediaTypes: "images",
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
           });
+          if (!cameraResult.canceled && cameraResult.assets && cameraResult.assets.length > 0) {
+            console.log("Image picked from camera:", cameraResult.assets[0]);
+            setSelectedImage(cameraResult);
+          }
+          return;
         },
       },
       {
         text: uploadByGalleryMsg,
         onPress: async () => {
-          await ImagePicker.launchImageLibraryAsync({
+          const galleryResult = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: "images",
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
           });
+          if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
+            console.log("Image picked from gallery:", galleryResult.assets[0]);
+            setSelectedImage(galleryResult);
+          }
         },
       },
       {
@@ -219,6 +237,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
     if (selectedUploadMethod) {
       return selectedUploadMethod;
     }
+    if (selectedImage) return "IMAGE_UPLOAD";
     if (uploadedDocument) return "DIRECT_UPLOAD";
     if (documentLink.trim() !== "") return "LINK_INPUT";
     if (googleDriveFile) return "GOOGLE_DRIVE";
@@ -269,6 +288,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
   const handleDocumentUploadSubmit = async () => {
     const uploadMethod = inferUploadMethod();
     if (customHandleUploadMethod) {
+      setSelectedImage(selectedImage);
       setUploadMethod(uploadMethod);
       setDocumentTitleStore(documentTitle);
       setUploadedDocumentStore(uploadedDocument);
@@ -281,8 +301,24 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
     }
     setUploadingDocument(true);
     try {
-      if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
-        await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
+      if (
+        uploadMethod === "IMAGE_UPLOAD" &&
+        selectedImage &&
+        !selectedImage.canceled &&
+        selectedImage.assets.length > 0
+      ) {
+        const compressedUri = await compressImage(selectedImage.assets[0].uri);
+        const res = await uploadUserDocumentViaImage(selectedImage, compressedUri, selectedDocumentType, documentTitle);
+        if (!res) {
+          Alert.alert("Error", "Failed to upload image document. Please try again.");
+          return;
+        }
+      } else if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
+        const res = await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
+        if (!res) {
+          Alert.alert("Error", "Failed to upload document. Please try again.");
+          return;
+        }
       } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
         if (!isValidGoogleDriveLink(documentLink) && !documentLink.includes("dropbox.com")) {
           Alert.alert("Invalid Link", "Please provide a valid Google Drive or Dropbox link.");
@@ -348,6 +384,98 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
     }
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  const renderUploadedImageInfo = () => {
+    if (selectedImage && !selectedImage.canceled && selectedImage.assets && selectedImage.assets.length > 0) {
+      const image = selectedImage.assets[0];
+      return (
+        <View
+          className="bg-white border-2 border-blue-200 rounded-2xl p-6 mb-3"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
+        >
+          <View className="items-center">
+            <View className="w-full max-w-xs aspect-[3/4] bg-gray-100 rounded-2xl mb-4 overflow-hidden border border-gray-200">
+              <Image source={{ uri: image.uri }} className="w-full h-full" style={{ resizeMode: "cover" }} />
+            </View>
+            <View className="w-full bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+              <View className="flex-row items-center gap-3 mb-2">
+                <View className="w-8 h-8 bg-blue-500 rounded-full items-center justify-center">
+                  <Feather name="camera" size={16} color="white" />
+                </View>
+                <Text className="font-quicksand-bold text-blue-900 text-base">Image Captured</Text>
+              </View>
+
+              <View className="gap-2">
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-quicksand-medium text-blue-700 text-sm">Dimensions:</Text>
+                  <Text className="font-quicksand-bold text-blue-900 text-sm">
+                    {image.width} × {image.height}
+                  </Text>
+                </View>
+
+                {image.fileSize && (
+                  <View className="flex-row justify-between items-center">
+                    <Text className="font-quicksand-medium text-blue-700 text-sm">Size:</Text>
+                    <Text className="font-quicksand-bold text-blue-900 text-sm">{formatFileSize(image.fileSize)}</Text>
+                  </View>
+                )}
+
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-quicksand-medium text-blue-700 text-sm">Type:</Text>
+                  <Text className="font-quicksand-bold text-blue-900 text-sm">Image Document</Text>
+                </View>
+              </View>
+            </View>
+            <View className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 w-full">
+              <View className="flex-row items-center justify-center gap-2">
+                <Feather name="check-circle" size={16} color="#22c55e" />
+                <Text className="font-quicksand-semibold text-green-700 text-sm">Image ready for upload!</Text>
+              </View>
+            </View>
+          </View>
+          <View className="flex-row gap-3">
+            <TouchableOpacity
+              className="flex-1 bg-blue-500 rounded-xl p-4 flex-row items-center justify-center gap-2"
+              style={{
+                shadowColor: "#3b82f6",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={() => handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")}
+              activeOpacity={0.8}
+            >
+              <Feather name="camera" size={16} color="white" />
+              <Text className="font-quicksand-bold text-white text-sm">Retake</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 bg-red-500 rounded-xl p-4 flex-row items-center justify-center gap-2"
+              style={{
+                shadowColor: "#ef4444",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={() => setSelectedImage(null)}
+              activeOpacity={0.8}
+            >
+              <Feather name="trash-2" size={16} color="white" />
+              <Text className="font-quicksand-bold text-white text-sm">Remove</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+  };
+
   const renderUploadedResumeInfo = () => {
     if (
       uploadedDocument &&
@@ -406,6 +534,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
   };
   const multipleUploadMethodsSelected = () => {
     let count = 0;
+    if (selectedImage) count++;
     if (uploadedDocument) count++;
     if (documentLink.trim() !== "") count++;
     if (googleDriveFile) count++;
@@ -485,22 +614,26 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                   <Feather name="upload" size={18} color="white" />
                   <Text className="font-quicksand-bold text-white text-base">Upload from Device</Text>
                 </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center justify-center gap-3"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
-                  onPress={() => handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")}
-                  activeOpacity={0.7}
-                >
-                  <Feather name="camera" size={18} color="#6b7280" />
-                  <Text className="font-quicksand-bold text-gray-700 text-base">Take Photo</Text>
-                </TouchableOpacity>
+                {selectedDocumentType !== UserDocumentType.RESUME &&
+                  (!selectedImage ? (
+                    <TouchableOpacity
+                      className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                      style={{
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.05,
+                        shadowRadius: 4,
+                        elevation: 2,
+                      }}
+                      onPress={() => handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")}
+                      activeOpacity={0.7}
+                    >
+                      <Feather name="camera" size={18} color="#6b7280" />
+                      <Text className="font-quicksand-bold text-gray-700 text-base">Take Photo</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    renderUploadedImageInfo()
+                  ))}
               </View>
             </View>
             <View className="mb-6">
@@ -770,6 +903,31 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                 <Text className="font-quicksand-semibold text-MD text-gray-600 mt-4">
                   Multiple upload methods detected. Please choose only one.
                 </Text>
+                {selectedImage?.assets?.[0] && (
+                  <TouchableOpacity
+                    className={`rounded-xl p-8 border ${
+                      selectedUploadMethod === "IMAGE_UPLOAD"
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-white border-gray-200"
+                    }`}
+                    onPress={() => setSelectedUploadMethod("IMAGE_UPLOAD")}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                          <Feather name="image" size={18} color="#22c55e" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">Image Upload</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600" numberOfLines={1}>
+                            {selectedImage.assets[0].fileName}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
                 {uploadedDocument?.assets?.[0] && (
                   <TouchableOpacity
                     className={`rounded-xl p-8 border ${
@@ -906,7 +1064,20 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                     <Feather name="check-circle" size={20} color="#22c55e" />
                   </View>
                 )}
-
+                {selectedImage?.assets?.[0] && (
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                      <Feather name="image" size={18} color="#22c55e" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-sm text-blue-900">Image Upload</Text>
+                      <Text className="font-quicksand-medium text-xs text-blue-700" numberOfLines={1}>
+                        {selectedImage.assets[0].fileName}
+                      </Text>
+                    </View>
+                    <Feather name="check-circle" size={20} color="#22c55e" />
+                  </View>
+                )}
                 {googleDriveFile && (
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-blue-100 rounded-lg items-center justify-center">
