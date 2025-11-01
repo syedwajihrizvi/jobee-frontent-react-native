@@ -195,7 +195,11 @@ const RecommendedJobsPreview = ({
                   user?.canQuickApplyBatch ? "text-emerald-700" : "text-orange-700"
                 }`}
               >
-                {user?.canQuickApplyBatch ? `${Math.min(recommendedJobs.length, 3)} new` : "Cooldown active"}
+                {user?.canQuickApplyBatch ? (
+                  `${Math.min(recommendedJobs.length, 3)} new`
+                ) : (
+                  <Feather name="clock" size={10} color="#d97706" />
+                )}
               </Text>
             </View>
           )}

@@ -1,5 +1,5 @@
 import { images } from "@/constants";
-import { createStompClient, fetchMessages, publishMessage } from "@/lib/chat";
+import { createStompClient, fetchMessages, markMessageAsRead, publishMessage } from "@/lib/chat";
 import { formatMessageTimestamp } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
@@ -23,6 +23,7 @@ const MessageChat = () => {
   const [message, setMessage] = useState("");
   const [client, setClient] = useState<Client | null>(null);
   const flatListRef = useRef<FlatList>(null);
+
   useEffect(() => {
     const controller = new AbortController();
     const fetchChatMessages = async () => {
@@ -49,30 +50,48 @@ const MessageChat = () => {
     };
   }, [id, name, role, conversationId]);
 
+  // Run use effect once to make any unread messages as read
+  useEffect(() => {
+    console.log("SYED-DEBUG: Marking messages as read for conversation:", conversationId);
+    const conversation = conversations.find((c) => c.id === Number(conversationId));
+    console.log("Found conversation:", conversation);
+    if (conversation && !conversation.lastMessageRead) {
+      markMessageAsRead(Number(conversationId));
+      console.log("Updating conversation to mark as read:", conversationId);
+      const updatedConversation = { ...conversation, lastMessageRead: true };
+      const updatedConversations = conversations.filter((c) => c.id !== Number(conversationId));
+      console.log("Update Conversation: ,", updatedConversation);
+      updatedConversations.unshift(updatedConversation);
+      setConversations(updatedConversations);
+    }
+  }, []);
+
   useEffect(() => {
     const userParamType = userType === "user" ? "USER" : "BUSINESS";
     const client = createStompClient({
       userId: user!.id,
       userType: userParamType,
       onMessage: (msg: Message) => {
-        console.log("Received message via STOMP:", msg);
+        markMessageAsRead(Number(conversationId));
         setMessages((prevMessages) => [...prevMessages, msg]);
-        // Update the conversation
         const conversationIndex = conversations.findIndex((c) => c.id === Number(conversationId));
         if (conversationIndex === -1) {
+          console.log("Invalidating conversations for incoming message:", msg);
           queryClient.invalidateQueries({ queryKey: ["conversations"] });
         } else {
+          console.log("Updating conversation for incoming message:", msg);
           const updatedConversation = conversations[conversationIndex];
           updatedConversation.lastMessageContent = msg.text;
           updatedConversation.lastMessageTimestamp = msg.timestamp;
+          updatedConversation.lastMessageRead = true;
           const updatedConversations = [...conversations];
           updatedConversations.splice(conversationIndex, 1);
           updatedConversations.unshift(updatedConversation);
           setConversations(updatedConversations);
         }
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        // setTimeout(() => {
+        //   flatListRef.current?.scrollToEnd({ animated: true });
+        // }, 100);
       },
     });
     client.activate();
@@ -172,13 +191,14 @@ const MessageChat = () => {
       >
         <FlatList
           ref={flatListRef}
-          data={messages}
+          data={[...messages].reverse()} // <-- clone to avoid mutation
           renderItem={renderMessage}
           keyExtractor={(item) => item.id.toString()}
           className="flex-1"
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
-          inverted={false}
+          inverted // <-- this alone handles the bottom-up behavior
+          onContentSizeChange={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
           ListEmptyComponent={
             <View className="items-center justify-center px-6 mt-20">
               <Text className="font-quicksand-semibold text-lg text-gray-800 text-center">Start a conversation</Text>

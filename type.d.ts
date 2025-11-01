@@ -102,7 +102,6 @@ export type Conversation = {
     lastMessageTimestamp: string;
     lastMessageContent: string;
     wasLastMessageSender: boolean;
-
 }
 
 export type ApplicationForJobState = {

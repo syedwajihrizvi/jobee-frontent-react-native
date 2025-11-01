@@ -29,7 +29,7 @@ export const createStompClient = ({ userId, userType, onMessage }: Props) => {
         const subscriptionEndpoint = `/topic/messages/${userType.toLocaleLowerCase()}/${userId}`;
         console.log('Subscribing to:', subscriptionEndpoint);
         stompClient.subscribe(subscriptionEndpoint, (message) => {
-            const body = JSON.parse(message.body);4
+            const body = JSON.parse(message.body);
             onMessage(body);
         })
     }
@@ -63,7 +63,6 @@ export const fetchMessages = async ({conversationId, otherPartyId, otherPartyRol
     params.append('otherPartyId', otherPartyId.toString());
     params.append('otherPartyRole', otherPartyRole);
     const queryParams = params.toString()
-    console.log("Fetching messages with params:", queryParams);
     const response = await fetch(`${MESSAGE_API_URL}?${queryParams}`, {
         method: "GET",
         headers: {
@@ -71,8 +70,6 @@ export const fetchMessages = async ({conversationId, otherPartyId, otherPartyRol
             "x-auth-token": `Bearer ${token}`
         }
     })
-    console.log("Response OK:", response);
-    console.log("Response status:", response.status);
     const data = await response.json();
     return data as Message[];
 }
@@ -90,14 +87,10 @@ export const fetchConversationBetweenUsers = async (otherPartyId: number, otherP
             "x-auth-token": `Bearer ${token}`
         }
     })
-    console.log("Response status:", response.status);
     if (response.status === 404) {
         return null;
     }
-    console.log("Response OK:", response);
-    console.log(response.text)
     const data = await response.json();
-    console.log("Fetched conversation between users:", data);
     return data.conversationId as number;
 }
 
@@ -115,6 +108,21 @@ export const createConversationBetweenUsers = async (otherPartyId: number, other
         })
     })
     const data = await response.json();
-    console.log("Created conversation between users:", data);
     return data.id as number;
+}
+
+export const markMessageAsRead = async (messageId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    const response = await fetch(`${MESSAGE_API_URL}/${messageId}/read`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            "x-auth-token": `Bearer ${token}`
+        }
+    })
+    if (response.status !== 200) {
+        console.log("Failed to mark message as read:", response.status);
+        return false;
+    }
+    return true;
 }

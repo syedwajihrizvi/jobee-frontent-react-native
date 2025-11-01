@@ -49,12 +49,12 @@ const Jobs = () => {
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const { data: jobs, isLoading, fetchNextPage, hasNextPage } = useJobs(filters);
-  const { data: recommendedJobs, isLoading: isLoadingRecommended } = useRecommendedJobs();
+  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated, setUser } = useAuthStore();
+  const user = authUser as User | null;
+  const { data: recommendedJobs, isLoading: isLoadingRecommended } = useRecommendedJobs(isAuthenticated);
   const { data: appliedJobs, isLoading: isAppliedJobsLoading } = useUserAppliedJobs();
   const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated, setUser } = useAuthStore();
-  const user = authUser as User | null;
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(
     !user?.profileComplete && isAuthenticated
   );

@@ -6,12 +6,14 @@ const RenderSlicedText = ({
   text,
   maxLength,
   textClassName,
+  withFormatting = true,
 }: {
   text: string;
   maxLength: number;
   textClassName?: string;
+  withFormatting?: boolean;
 }) => {
-  const formatted = capFirstLetter(text);
+  const formatted = withFormatting ? capFirstLetter(text) : text;
   return (
     <Text className={`font-quicksand-regular text-sm ${textClassName}`}>
       {formatted.length > maxLength ? `${formatted.slice(0, maxLength)}...` : formatted}

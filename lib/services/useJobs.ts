@@ -39,7 +39,7 @@ export const useJobs = (jobFilters: JobFilters) => {
     })
 }
 
-export const useRecommendedJobs = () => {
+export const useRecommendedJobs = (isAuthenticated: boolean) => {
   const fetchRecommendedJobs = async () => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return [];
@@ -55,6 +55,7 @@ export const useRecommendedJobs = () => {
     queryKey: ['jobs', 'recommended'],
     queryFn: fetchRecommendedJobs,
     staleTime: 1000 * 60 * 360, //6 Hours
+    enabled: isAuthenticated,
   })
 }
 

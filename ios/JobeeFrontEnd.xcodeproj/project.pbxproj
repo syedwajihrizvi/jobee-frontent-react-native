@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		20555D6941CDA38929CE0CBC /* libPods-JobeeFrontEnd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 005F2E1FEF63ECCDC0D0EE38 /* libPods-JobeeFrontEnd.a */; };
+		2815B555FCBE4F7E72348462 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FC56FF2A87E6D07479F5AEEE /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		8E665BD3F7D9D5B6FE46E511 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C5231B92F24B23D78B993E /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		BDE262D62659CFDA1634A319 /* libPods-JobeeFrontEnd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4914A05B2336E0234EE03A13 /* libPods-JobeeFrontEnd.a */; };
-		CDEA89F41012D91ADBE37FA7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 33A62D8FB2AC5BBFBDF4131C /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		FB28D765D692B8A8DF4802F4 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94E6F975468E13ABB748AE1 /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		005F2E1FEF63ECCDC0D0EE38 /* libPods-JobeeFrontEnd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JobeeFrontEnd.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* JobeeFrontEnd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JobeeFrontEnd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = JobeeFrontEnd/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = JobeeFrontEnd/Info.plist; sourceTree = "<group>"; };
-		33A62D8FB2AC5BBFBDF4131C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = JobeeFrontEnd/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		4914A05B2336E0234EE03A13 /* libPods-JobeeFrontEnd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JobeeFrontEnd.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D447FC8C6DFA92C46F9EDC2 /* Pods-JobeeFrontEnd.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JobeeFrontEnd.release.xcconfig"; path = "Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd.release.xcconfig"; sourceTree = "<group>"; };
+		9D2102AFB94E45B57FA1F6D2 /* Pods-JobeeFrontEnd.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JobeeFrontEnd.debug.xcconfig"; path = "Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = JobeeFrontEnd/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		D69DB518DFAD25A1A5DB69C1 /* Pods-JobeeFrontEnd.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JobeeFrontEnd.debug.xcconfig"; path = "Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd.debug.xcconfig"; sourceTree = "<group>"; };
-		D9D0FF1BB92928199209AB32 /* Pods-JobeeFrontEnd.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JobeeFrontEnd.release.xcconfig"; path = "Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd.release.xcconfig"; sourceTree = "<group>"; };
-		E8C5231B92F24B23D78B993E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-JobeeFrontEnd/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		D94E6F975468E13ABB748AE1 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-JobeeFrontEnd/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = JobeeFrontEnd/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* JobeeFrontEnd-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "JobeeFrontEnd-Bridging-Header.h"; path = "JobeeFrontEnd/JobeeFrontEnd-Bridging-Header.h"; sourceTree = "<group>"; };
+		FC56FF2A87E6D07479F5AEEE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = JobeeFrontEnd/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,21 +37,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BDE262D62659CFDA1634A319 /* libPods-JobeeFrontEnd.a in Frameworks */,
+				20555D6941CDA38929CE0CBC /* libPods-JobeeFrontEnd.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		105A80E4B19DFEEEB45BD8A0 /* JobeeFrontEnd */ = {
-			isa = PBXGroup;
-			children = (
-				E8C5231B92F24B23D78B993E /* ExpoModulesProvider.swift */,
-			);
-			name = JobeeFrontEnd;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* JobeeFrontEnd */ = {
 			isa = PBXGroup;
 			children = (
@@ -61,26 +53,28 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				33A62D8FB2AC5BBFBDF4131C /* PrivacyInfo.xcprivacy */,
+				FC56FF2A87E6D07479F5AEEE /* PrivacyInfo.xcprivacy */,
 			);
 			name = JobeeFrontEnd;
-			sourceTree = "<group>";
-		};
-		17FC1B84355DBF76B311B4B2 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				105A80E4B19DFEEEB45BD8A0 /* JobeeFrontEnd */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				4914A05B2336E0234EE03A13 /* libPods-JobeeFrontEnd.a */,
+				005F2E1FEF63ECCDC0D0EE38 /* libPods-JobeeFrontEnd.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4BE27C574701F55C2FCE783D /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				9D2102AFB94E45B57FA1F6D2 /* Pods-JobeeFrontEnd.debug.xcconfig */,
+				2D447FC8C6DFA92C46F9EDC2 /* Pods-JobeeFrontEnd.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -97,8 +91,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				AFC51E5D19ED2ADB493D6479 /* Pods */,
-				17FC1B84355DBF76B311B4B2 /* ExpoModulesProviders */,
+				4BE27C574701F55C2FCE783D /* Pods */,
+				EECE49F8777BCF34A706F8E5 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -113,16 +107,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AFC51E5D19ED2ADB493D6479 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				D69DB518DFAD25A1A5DB69C1 /* Pods-JobeeFrontEnd.debug.xcconfig */,
-				D9D0FF1BB92928199209AB32 /* Pods-JobeeFrontEnd.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -130,6 +114,22 @@
 			);
 			name = Supporting;
 			path = JobeeFrontEnd/Supporting;
+			sourceTree = "<group>";
+		};
+		EECE49F8777BCF34A706F8E5 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				F7D2DC41B0AFA26C7FF15EEE /* JobeeFrontEnd */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		F7D2DC41B0AFA26C7FF15EEE /* JobeeFrontEnd */ = {
+			isa = PBXGroup;
+			children = (
+				D94E6F975468E13ABB748AE1 /* ExpoModulesProvider.swift */,
+			);
+			name = JobeeFrontEnd;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "JobeeFrontEnd" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				A01882B2BF333796F882DC93 /* [Expo] Configure project */,
+				FE84F478A9BDA9E3251C903F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				B4CD2B13CBA943B454CD30FB /* [CP] Embed Pods Frameworks */,
+				C1D12E07E8B76975A7D94866 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				CDEA89F41012D91ADBE37FA7 /* PrivacyInfo.xcprivacy in Resources */,
+				2815B555FCBE4F7E72348462 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,7 +286,29 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A01882B2BF333796F882DC93 /* [Expo] Configure project */ = {
+		C1D12E07E8B76975A7D94866 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		FE84F478A9BDA9E3251C903F /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -310,28 +332,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-JobeeFrontEnd/expo-configure-project.sh\"\n";
 		};
-		B4CD2B13CBA943B454CD30FB /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-JobeeFrontEnd/Pods-JobeeFrontEnd-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -340,7 +340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				8E665BD3F7D9D5B6FE46E511 /* ExpoModulesProvider.swift in Sources */,
+				FB28D765D692B8A8DF4802F4 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -349,7 +349,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D69DB518DFAD25A1A5DB69C1 /* Pods-JobeeFrontEnd.debug.xcconfig */;
+			baseConfigurationReference = 9D2102AFB94E45B57FA1F6D2 /* Pods-JobeeFrontEnd.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -385,7 +385,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D9D0FF1BB92928199209AB32 /* Pods-JobeeFrontEnd.release.xcconfig */;
+			baseConfigurationReference = 2D447FC8C6DFA92C46F9EDC2 /* Pods-JobeeFrontEnd.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

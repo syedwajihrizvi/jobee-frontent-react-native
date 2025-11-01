@@ -59,11 +59,16 @@ const MessagePreviewCard = ({ message }: Props) => {
               {formatDate(message.lastMessageTimestamp)}
             </Text>
           </View>
-          <RenderSlicedText text={message.lastMessageContent} maxLength={88} textClassName="text-gray-600 leading-5" />
+          <RenderSlicedText
+            text={message.lastMessageContent}
+            maxLength={88}
+            textClassName="text-gray-600 leading-5"
+            withFormatting={false}
+          />
         </View>
-        {message.wasLastMessageSender && (
+        {!message.wasLastMessageSender && (
           <View className="items-center gap-2">
-            {message.lastMessageRead && <View className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
+            {!message.lastMessageRead && <View className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
           </View>
         )}
       </View>
