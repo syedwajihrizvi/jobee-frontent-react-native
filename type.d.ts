@@ -104,13 +104,6 @@ export type Conversation = {
     wasLastMessageSender: boolean;
 }
 
-export type ApplicationForJobState = {
-    applications: ApplicationSummary[];
-    isLoading: boolean;
-    setIsLoading: (isLoading: boolean) => void;
-    setApplications: (applications: ApplicationSummary[]) => void
-};
-
 export type ApplicationsForBusinessUserState = {
     applications: ApplicationSummary[];
     isLoading: boolean;
@@ -452,6 +445,7 @@ export type ApplicationDetailsForBusiness = {
     status: string;
     resumeUrl: string;
     coverLetterUrl?: string;
+    interviewIds: number[];
     fullName: string;
     jobId: number;
     jobTitle: string;
@@ -482,8 +476,12 @@ export type CreateInterviewForm = {
     timezone: string;
     endTime: string;
     interviewType: string;
-    location: string;
+    streetAddress: string;
+    buildingName: string;
+    parkingInfo: string;
+    contactInstructionsOnArrival: string;
     meetingLink: string;
+    meetingPlatformType: string;
     phoneNumber: string;
     preparationTipsFromInterviewer: string[];
 }
@@ -510,8 +508,12 @@ export type InterviewDetails = {
     interviewers: {name: string; email: string, title: string}[];
     otherInterviewers: {name: string; email: string, title: string}[];
     preparationTipsFromInterviewer: string[];
-    location: string;
+    streetAddress: string;
+    buildingName: string;
+    parkingInfo: string;
+    contactInstructionsOnArrival: string;
     meetingLink: string;
+    interviewMeetingPlatform: string;
     phoneNumber: string;
     notes: string[];
     preparationStatus: string;

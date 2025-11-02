@@ -644,3 +644,112 @@ export const compressImage = async (uri: string) => {
   );
   return compressedImage.uri;
 }
+
+
+export const validateZoomMeetingLink = (link: string) => {
+  const regex = /^https?:\/\/(www\.)?zoom\.us\/(j|my)\/[a-zA-Z0-9?=&_\-]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateGoogleMeetLink = (link: string) => {
+  const regex = /^https?:\/\/(meet\.google\.com)\/[a-zA-Z0-9-]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateMicrosoftTeamsLink = (link: string) => {
+  const regex = /^https?:\/\/(www\.)?teams\.microsoft\.com\/l\/meetup-join\/[a-zA-Z0-9/?=&_\-%.]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateSkypeLink = (link: string) => {
+  const regex = /^https?:\/\/join\.skype\.com\/[a-zA-Z0-9]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateWebexLink = (link: string) => {
+  const regex = /^https?:\/\/[a-zA-Z0-9-]+\.webex\.com\/(meet|join)\/[a-zA-Z0-9?=&_\-]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateCoderPadLink = (link: string) => {
+  const regex = /^https?:\/\/(app\.)?coderpad\.io\/[a-zA-Z0-9]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateCodeSignalLink = (link: string) => {
+  const regex = /^https?:\/\/(app\.)?codesignal\.com\/interview\/[a-zA-Z0-9-]+$/;
+  return regex.test(link.trim());
+};
+
+export const validateMeetingLink = (link: string, platformType: string) => {
+  switch(platformType) {
+    case 'ZOOM':
+      return validateZoomMeetingLink(link);
+    case 'GOOGLE_MEET':
+      return validateGoogleMeetLink(link);
+    case 'MICROSOFT_TEAMS':
+      return validateMicrosoftTeamsLink(link);
+    case 'SKYPE':
+      return validateSkypeLink(link);
+    case 'WEBEX':
+      return validateWebexLink(link);
+    case 'CODERPAD':
+      return validateCoderPadLink(link);
+    case 'CODESIGNAL':
+      return validateCodeSignalLink(link);
+    case 'OTHER':
+      return true; // No validation for other links
+    default:
+      return false;
+  }
+}
+
+export const validatePhoneNumber = (phoneNumber: string) => {
+  const cleaned = phoneNumber.replace(/[\s()-]/g, "");
+  const phoneRegex = /^\+?[0-9]{7,15}$/;
+
+  return phoneRegex.test(cleaned);
+};
+
+export const validTimeZone = (timezone: string) => {
+  const lowerTimezone = timezone.toLowerCase();
+  if (lowerTimezone === 'utc' || lowerTimezone === 'gmt' || lowerTimezone === 'est' || lowerTimezone === 'cst' || lowerTimezone === 'mst' || lowerTimezone === 'pst') return true;
+  return false;
+}
+
+export const validateTime = (time: string) => {
+  const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i;
+  return timeRegex.test(time.trim());
+};
+
+// Validate that endTime is strictly after startTime
+// Both inputs expected in "HH:MM AM/PM" but this function tolerates trailing commas/spaces.
+export const validateTimes = (startTime: string, endTime: string) => {
+  const sanitize = (t: string) =>
+    (t || "")
+      .toString()
+      .trim()
+      .replace(/[,\s]+$/g, ""); // strip trailing commas and trailing whitespace
+
+  const s = sanitize(startTime);
+  const e = sanitize(endTime);
+
+  if (!validateTime(s) || !validateTime(e)) return false;
+
+  const toMinutes = (t: string) => {
+    const parts = t.split(/\s+/); // ["HH:MM", "AM"]
+    const timePart = parts[0];
+    const period = parts[1].toUpperCase();
+    const [hoursStr, minutesStr] = timePart.split(":");
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+    let h = hours % 12; // 12 -> 0
+    if (period === "PM") h += 12;
+    return h * 60 + minutes;
+  };
+
+  const startMinutes = toMinutes(s);
+  const endMinutes = toMinutes(e);
+
+  return endMinutes > startMinutes;
+};

@@ -1,15 +1,30 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
+import ModalWithBg from "@/components/ModalWithBg";
+import PlatformButton from "@/components/PlatformButton";
+import { meetingPlatforms, platformLogos } from "@/constants";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
+import { validateMeetingLink, validatePhoneNumber, validateTime, validateTimes } from "@/lib/utils";
+import useApplicantsForJobStore from "@/store/applicants.store";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, CreateInterviewForm } from "@/type";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Keyboard, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Keyboard,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -23,14 +38,19 @@ const ScheduleInterview = () => {
     endTime: "",
     interviewType: "ONLINE",
     timezone: "",
-    location: "",
+    streetAddress: "",
+    buildingName: "",
     meetingLink: "",
+    parkingInfo: "",
+    contactInstructionsOnArrival: "",
     phoneNumber: "",
+    meetingPlatformType: "",
     preparationTipsFromInterviewer: [],
   };
   const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
+  const { applications, setApplicationStatus } = useApplicantsForJobStore();
   const conductorNameRef = useRef<TextInput>(null);
   const conductorEmailRef = useRef<TextInput>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -45,7 +65,13 @@ const ScheduleInterview = () => {
   const [loadingNewInterview, setLoadingNewInterview] = useState(false);
   const [addedSelf, setAddedSelf] = useState(false);
   const [snapPoints, setSnapPoints] = useState<string[]>(["30%", "40%"]);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const user = authUser as BusinessUser | null;
+
+  console.log("Applicant ID: ", applicantId);
+  console.log("Job ID: ", jobId);
+  console.log("Candidate ID: ", candidateId);
+  console.log("Previous Interview ID: ", previousInterviewId);
 
   useEffect(() => {
     const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
@@ -67,7 +93,6 @@ const ScheduleInterview = () => {
         const interview = await getMostRecentInterviewForJob(Number(jobId));
         if (isMounted && interview) {
           const { title, description, interviewType, interviewers, otherInterviewers } = interview;
-          console.log("Fetched interview:", interview);
           const conductors = [
             ...interviewers.map((interviewer) => ({
               name: interviewer.name,
@@ -98,6 +123,35 @@ const ScheduleInterview = () => {
     };
   }, [user, jobId]);
 
+  const renderPlatformIcon = (platformType: string, platformColor: string) => {
+    if (platformType === "ZOOM") {
+      return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "GOOGLE_MEET") {
+      return <Image source={platformLogos.GOOGLE_MEET} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "MICROSOFT_TEAMS") {
+      return <FontAwesome5 name="microsoft" size={16} color={platformColor} />;
+    }
+    if (platformType === "SKYPE") {
+      return <FontAwesome5 name="skype" size={16} color={platformColor} />;
+    }
+    if (platformType === "WEBEX") {
+      return <Image source={platformLogos.WEBEX} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "CODERPAD") {
+      return <Image source={platformLogos.CODERPAD} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "CODESIGNAL") {
+      return <Image source={platformLogos.CODESIGNAL} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "OTHER") {
+      return <FontAwesome5 name="link" size={16} color={platformColor} />;
+    }
+    // fallback: always return a React element so callers expecting a ReactElement won't receive undefined
+    return <FontAwesome5 name="link" size={16} color={platformColor} />;
+  };
+
   const handleInterviewFormSubmit = async () => {
     const {
       title,
@@ -107,7 +161,11 @@ const ScheduleInterview = () => {
       interviewType,
       startTime,
       endTime,
-      location,
+      streetAddress,
+      buildingName,
+      meetingLink,
+      phoneNumber,
+      meetingPlatformType,
     } = interviewDetails;
     if (!title) {
       Alert.alert("Error", "Please enter interview title.");
@@ -133,22 +191,52 @@ const ScheduleInterview = () => {
       Alert.alert("Error", "Please enter interview end time.");
       return;
     }
-    if (interviewType === "IN_PERSON" && !location) {
-      Alert.alert("Error", "Please enter interview location.");
+    if (!validateTime(startTime)) {
+      Alert.alert("Error", "Please enter a valid start time in HH:MM AM/PM format.");
       return;
     }
-    if (interviewType === "ONLINE" && !interviewDetails.meetingLink) {
-      Alert.alert("Error", "Please enter meeting link.");
+    if (!validateTime(endTime)) {
+      Alert.alert("Error", "Please enter a valid end time in HH:MM AM/PM format.");
       return;
     }
-    if (interviewType === "PHONE" && !interviewDetails.phoneNumber) {
-      Alert.alert("Error", "Please enter phone number.");
+    if (!validateTimes(startTime, endTime)) {
+      Alert.alert("Error", "Please ensure that end time is after start time.");
       return;
+    }
+    if (interviewType === "IN_PERSON") {
+      if (!streetAddress) {
+        Alert.alert("Error", "Please enter street address.");
+        return;
+      }
+    }
+    if (interviewType === "ONLINE") {
+      if (!meetingPlatformType) {
+        Alert.alert("Error", "Please select meeting platform.");
+        return;
+      }
+      if (!meetingLink) {
+        Alert.alert("Error", "Please enter meeting link.");
+        return;
+      }
+      if (!validateMeetingLink(meetingLink, meetingPlatformType)) {
+        Alert.alert("Error", "Please enter a valid meeting link.");
+        return;
+      }
+    }
+    if (interviewType === "PHONE") {
+      if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
+        Alert.alert("Error", "Please enter a valid phone number.");
+        return;
+      }
     }
     if (!interviewDetails.timezone) {
       Alert.alert("Error", "Please enter timezone.");
       return;
     }
+    setShowConfirmationModal(true);
+  };
+
+  const handleScheduleInterviewConfirm = async () => {
     setLoadingNewInterview(true);
     try {
       const res = await createInterview(
@@ -159,6 +247,11 @@ const ScheduleInterview = () => {
         Number(previousInterviewId)
       );
       if (res) {
+        const applicationIndex = applications.findIndex((app) => app.id === Number(applicantId));
+        if (applicationIndex !== -1) {
+          setApplicationStatus(Number(applicantId), "INTERVIEW_SCHEDULED");
+        }
+        // Update application in the store
         queryClient.invalidateQueries({
           queryKey: ["applicant", Number(applicantId)],
         });
@@ -169,10 +262,8 @@ const ScheduleInterview = () => {
           queryKey: ["job", "business", Number(jobId)],
         });
         Alert.alert("Success", "Interview created successfully.");
-        setTimeout(() => {
-          setInterviewDetails({ ...defaultInterviewForm });
-          router.back();
-        }, 3000);
+        setInterviewDetails({ ...defaultInterviewForm });
+        router.back();
         return;
       }
       Alert.alert("Error", "Error creating interview. Please try again.");
@@ -356,7 +447,7 @@ const ScheduleInterview = () => {
   }
 
   const updateTimeValue = (text: string) => {
-    const lowercase = text.toLowerCase();
+    const lowercase = text.toLowerCase().replace(" ", "").trim();
     if (lowercase.includes("am") || lowercase.includes("pm")) {
       const index = lowercase.indexOf("am") > -1 ? lowercase.indexOf("am") : lowercase.indexOf("pm");
       return text.slice(0, index) + " " + text.slice(index).toUpperCase();
@@ -430,7 +521,7 @@ const ScheduleInterview = () => {
                 numberOfLines={4}
                 placeholder="Discuss project experience and technical skills..."
                 value={interviewDetails?.description}
-                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900 min-h-[100px]"
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900 min-h-[100px]"
                 style={{
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 1 },
@@ -728,7 +819,7 @@ const ScheduleInterview = () => {
                   value={interviewDetails?.timezone}
                   onFocus={() => bottomSheetRef.current?.close()}
                   placeholder="EST, PST, GMT"
-                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, timezone: text }))}
+                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, timezone: text.toUpperCase() }))}
                   className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
                   style={{
                     shadowColor: "#000",
@@ -752,7 +843,7 @@ const ScheduleInterview = () => {
               elevation: 3,
             }}
           >
-            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Interview Format</Text>
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">Interview Format</Text>
 
             <View className="gap-3">
               {["IN_PERSON", "ONLINE", "PHONE"].map((type) => {
@@ -787,20 +878,68 @@ const ScheduleInterview = () => {
                 {renderInterviewTypeText(interviewDetails.interviewType)}
               </Text>
               {interviewDetails.interviewType === "IN_PERSON" && (
-                <TextInput
-                  value={interviewDetails?.location}
-                  onFocus={() => bottomSheetRef.current?.close()}
-                  placeholder="123 Main St, City, State"
-                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, location: text }))}
-                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                />
+                <View className="gap-2">
+                  <CustomInput
+                    placeholder="123 Main St, City, State"
+                    label="Address *"
+                    autoCapitalize="words"
+                    value={interviewDetails?.streetAddress}
+                    onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, streetAddress: text }))}
+                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                  <CustomInput
+                    placeholder="Techhub Tower, 5th Floor"
+                    autoCapitalize="words"
+                    label="Building or Office Name"
+                    value={interviewDetails?.buildingName}
+                    onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, buildingName: text }))}
+                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                  <CustomMultilineInput
+                    placeholder="Parking available at rear entrance"
+                    label="Parking Information"
+                    value={interviewDetails?.parkingInfo}
+                    onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, parkingInfo: text }))}
+                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                  <CustomMultilineInput
+                    placeholder="Show ID at first floor reception"
+                    label="Contact Instructions"
+                    value={interviewDetails?.contactInstructionsOnArrival}
+                    onChangeText={(text) =>
+                      setInterviewDetails((prev) => ({ ...prev, contactInstructionsOnArrival: text }))
+                    }
+                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                  />
+                </View>
               )}
               {interviewDetails.interviewType === "PHONE" && (
                 <TextInput
@@ -824,26 +963,49 @@ const ScheduleInterview = () => {
                 />
               )}
               {interviewDetails.interviewType === "ONLINE" && (
-                <TextInput
-                  value={interviewDetails?.meetingLink}
-                  onFocus={() => bottomSheetRef.current?.close()}
-                  placeholder="https://zoom.us/j/1234567890"
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      meetingLink: text,
-                    }))
-                  }
-                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                  autoCapitalize="none"
-                />
+                <View className="gap-2">
+                  <View className="gap-2">
+                    <Text className="font-quicksand-semibold">Platform Type</Text>
+                    <View className="flex flex-row flex-wrap gap-2">
+                      {meetingPlatforms.map((platform) => (
+                        <PlatformButton
+                          key={platform.value}
+                          textColor={platform.textColor}
+                          bgColor={platform.bgColor}
+                          label={platform.label}
+                          icon={renderPlatformIcon(platform.value, platform.textColor)}
+                          onPress={() =>
+                            setInterviewDetails((prev) => ({
+                              ...prev,
+                              meetingPlatformType: platform.value,
+                            }))
+                          }
+                          isSelected={interviewDetails.meetingPlatformType === platform.value}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <CustomInput
+                    value={interviewDetails?.meetingLink}
+                    label="Meeting Link *"
+                    placeholder="https://zoom.us/j/1234567890"
+                    onChangeText={(text) =>
+                      setInterviewDetails((prev) => ({
+                        ...prev,
+                        meetingLink: text,
+                      }))
+                    }
+                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                    autoCapitalize="none"
+                  />
+                </View>
               )}
             </View>
           </View>
@@ -1026,16 +1188,12 @@ const ScheduleInterview = () => {
                     textAlignVertical="top"
                     autoCapitalize="sentences"
                     onChangeText={(text) => {
-                      // Handle the case where Enter was pressed
                       if (text.endsWith("\n") && text.trim() !== "") {
-                        // Remove the newline and trim the text
                         const cleanText = text.replace(/\n$/, "").trim();
                         setPreparationTip(cleanText);
                         Keyboard.dismiss();
                         return;
                       }
-
-                      // Handle empty input with just newline
                       if (text === "\n" && preparationTip === "") {
                         Keyboard.dismiss();
                         return;
@@ -1099,6 +1257,254 @@ const ScheduleInterview = () => {
           )}
         </BottomSheetScrollView>
       </BottomSheet>
+      <ModalWithBg visible={showConfirmationModal} customHeight={0.85} customWidth={0.95}>
+        <View className="flex-1">
+          <View className="px-6 py-5 border-b border-gray-200 bg-white">
+            <View className="flex-row items-center gap-3">
+              <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                <FontAwesome name="calendar-check-o" size={20} color="#16a34a" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-quicksand-bold text-xl text-gray-900">Confirm Interview</Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600">
+                  Review interview details before scheduling
+                </Text>
+              </View>
+            </View>
+          </View>
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="px-6 py-4 gap-5">
+              <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Basic Information</Text>
+
+                <View className="gap-3">
+                  <View>
+                    <Text className="font-quicksand-semibold text-sm text-gray-600">Title</Text>
+                    <Text className="font-quicksand-bold text-base text-gray-900 mt-1">
+                      {interviewDetails.title || "Not specified"}
+                    </Text>
+                  </View>
+
+                  <View>
+                    <Text className="font-quicksand-semibold text-sm text-gray-600">Description</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-800 mt-1 leading-5">
+                      {interviewDetails.description || "No description provided"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <Text className="font-quicksand-bold text-base text-blue-900 mb-3">Interview Panel</Text>
+
+                {interviewDetails.conductors && interviewDetails.conductors.length > 0 ? (
+                  <View className="gap-2">
+                    {interviewDetails.conductors.map((conductor, index) => (
+                      <View key={index} className="flex-row items-center gap-3 bg-white rounded-lg p-3">
+                        <View className="w-8 h-8 bg-blue-500 rounded-full items-center justify-center">
+                          <Text className="font-quicksand-bold text-white text-xs">
+                            {conductor.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </Text>
+                        </View>
+                        <View className="flex-1">
+                          <Text className="font-quicksand-bold text-sm text-gray-900">{conductor.name}</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-600">{conductor.email}</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text className="font-quicksand-medium text-sm text-blue-700">No interviewers added</Text>
+                )}
+              </View>
+              <View className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <Text className="font-quicksand-bold text-base text-purple-900 mb-3">Schedule</Text>
+
+                <View className="gap-3">
+                  <View className="flex-row gap-4">
+                    <View className="flex-1">
+                      <Text className="font-quicksand-semibold text-sm text-purple-700">Date</Text>
+                      <Text className="font-quicksand-bold text-sm text-purple-900 mt-1">
+                        {interviewDetails.interviewDate || "Not specified"}
+                      </Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-semibold text-sm text-purple-700">Timezone</Text>
+                      <Text className="font-quicksand-bold text-sm text-purple-900 mt-1">
+                        {interviewDetails.timezone || "Not specified"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row gap-4">
+                    <View className="flex-1">
+                      <Text className="font-quicksand-semibold text-sm text-purple-700">Start Time</Text>
+                      <Text className="font-quicksand-bold text-sm text-purple-900 mt-1">
+                        {interviewDetails.startTime || "Not specified"}
+                      </Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-semibold text-sm text-purple-700">End Time</Text>
+                      <Text className="font-quicksand-bold text-sm text-purple-900 mt-1">
+                        {interviewDetails.endTime || "Not specified"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+              <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
+
+                <View className="flex-row items-center gap-3 mb-4">
+                  <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
+                    {getInterviewTypeIcon(interviewDetails.interviewType)}
+                  </View>
+                  <View>
+                    <Text className="font-quicksand-bold text-base text-emerald-900">
+                      {interviewDetails.interviewType === "IN_PERSON"
+                        ? "In-Person Interview"
+                        : interviewDetails.interviewType === "ONLINE"
+                          ? "Online Interview"
+                          : interviewDetails.interviewType === "PHONE"
+                            ? "Phone Interview"
+                            : "Not specified"}
+                    </Text>
+                  </View>
+                </View>
+                {interviewDetails.interviewType === "IN_PERSON" && (
+                  <View className="bg-white rounded-lg p-3 gap-2">
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Address</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails.streetAddress || "Address not provided"}
+                      </Text>
+                    </View>
+                    {interviewDetails.buildingName && (
+                      <View>
+                        <Text className="font-quicksand-semibold text-sm text-emerald-700">Building</Text>
+                        <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                          {interviewDetails.buildingName}
+                        </Text>
+                      </View>
+                    )}
+                    {interviewDetails.parkingInfo && (
+                      <View>
+                        <Text className="font-quicksand-semibold text-sm text-emerald-700">Parking</Text>
+                        <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                          {interviewDetails.parkingInfo.trim() || "No parking information provided"}
+                        </Text>
+                      </View>
+                    )}
+                    {interviewDetails.contactInstructionsOnArrival && (
+                      <View>
+                        <Text className="font-quicksand-semibold text-sm text-emerald-700">Instructions</Text>
+                        <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                          {interviewDetails.contactInstructionsOnArrival.trim() || "No instructions provided"}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+                {interviewDetails.interviewType === "ONLINE" && (
+                  <View className="bg-white rounded-lg p-3 gap-2">
+                    {interviewDetails.meetingPlatformType && (
+                      <View className="flex-row items-center gap-2 mb-2">
+                        <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
+                        <View className="flex-row items-center gap-2">
+                          {renderPlatformIcon(interviewDetails.meetingPlatformType, "#059669")}
+                          <Text className="font-quicksand-bold text-sm text-emerald-900">
+                            {meetingPlatforms.find((p) => p.value === interviewDetails.meetingPlatformType)?.label}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Meeting Link</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
+                        {interviewDetails.meetingLink || "Meeting link not provided"}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                {interviewDetails.interviewType === "PHONE" && (
+                  <View className="bg-white rounded-lg p-3">
+                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Phone Number</Text>
+                    <Text className="font-quicksand-bold text-base text-emerald-900 mt-1">
+                      {interviewDetails.phoneNumber || "Phone number not provided"}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              {interviewDetails.preparationTipsFromInterviewer &&
+                interviewDetails.preparationTipsFromInterviewer.length > 0 && (
+                  <View className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <Text className="font-quicksand-bold text-base text-amber-900 mb-3">
+                      Preparation Notes ({interviewDetails.preparationTipsFromInterviewer.length})
+                    </Text>
+
+                    <View className="gap-2">
+                      {interviewDetails.preparationTipsFromInterviewer.map((tip, index) => (
+                        <View key={index} className="flex-row items-start gap-3 bg-white rounded-lg p-3">
+                          <View className="w-5 h-5 bg-amber-500 rounded-full items-center justify-center mt-0.5">
+                            <Text className="font-quicksand-bold text-white text-xs">{index + 1}</Text>
+                          </View>
+                          <Text className="font-quicksand-medium text-sm text-amber-900 flex-1 leading-5">{tip}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+            </View>
+          </ScrollView>
+          <View className="px-6 py-4 border-t border-gray-200 bg-white">
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+                style={{
+                  shadowColor: "#16a34a",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={() => {
+                  setShowConfirmationModal(false);
+                  handleScheduleInterviewConfirm();
+                }}
+                activeOpacity={0.8}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-quicksand-bold text-white text-base">Confirm</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 bg-red-500 border border-gray-200 rounded-xl py-4 items-center justify-center"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+                onPress={() => setShowConfirmationModal(false)}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ModalWithBg>
     </SafeAreaView>
   );
 };

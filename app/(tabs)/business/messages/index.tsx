@@ -20,6 +20,7 @@ const Messages = () => {
   const { data: messages, isLoading } = useConversations(search);
   useEffect(() => {
     const userParamType = "BUSINESS";
+    if (!isAuthenticated || !user) return;
     const client = createStompClient({
       userId: user!.id,
       userType: userParamType,

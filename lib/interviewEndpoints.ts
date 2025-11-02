@@ -6,7 +6,8 @@ const INTERVIEWS_API_URL = 'http://192.168.2.29:8080/interviews'
 const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles'
 
 export const createInterview = async (
-        interview: CreateInterviewForm, jobId: number, 
+        interview: CreateInterviewForm, 
+        jobId: number, 
         candidateId: number,
         applicationId: number,
         previousInterviewId: number

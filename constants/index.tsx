@@ -1,6 +1,12 @@
+import coderpad from "@/assets/images/coderpad.png";
+import codesignal from "@/assets/images/codesignal.png";
+import googleMeet from "@/assets/images/googlemeet.webp";
 import resumeImage from "@/assets/images/sampleResume.jpg";
+import webex from "@/assets/images/webex.png";
+import zoom from "@/assets/images/zoom.png";
 import beepSound from "@/assets/sounds/beep.mp3";
 import popSound from "@/assets/sounds/pop.mp3";
+
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 
@@ -8,6 +14,15 @@ import { ReactNode } from "react";
 
 const placeholder = "https://placehold.co/600x400/png";
 const companyLogo = "https://placehold.co/40x40/png";
+
+export const platformLogos = {
+  WEBEX: webex,
+  GOOGLE_MEET: googleMeet,
+  ZOOM: zoom,
+  CODERPAD: coderpad,
+  CODESIGNAL: codesignal,
+};
+
 export const images = {
   placeholder,
   companyLogo,
@@ -18,6 +33,57 @@ export const sounds = {
   popSound,
   beepSound,
 };
+
+export const meetingPlatforms = [
+  {
+    label: "Zoom",
+    value: "ZOOM",
+    bgColor: "#E3F2FD", // Light blue
+    textColor: "#0B5CFF", // Zoom blue
+  },
+  {
+    label: "Google Meet",
+    value: "GOOGLE_MEET",
+    bgColor: "#E8F5E9", // Light green
+    textColor: "#188038", // Google green
+  },
+  {
+    label: "Microsoft Teams",
+    value: "MICROSOFT_TEAMS",
+    bgColor: "#F3E5F5", // Light purple
+    textColor: "#5A2D91", // Teams purple
+  },
+  {
+    label: "Skype",
+    value: "SKYPE",
+    bgColor: "#E0F7FA", // Light cyan
+    textColor: "#00AFF0", // Skype blue
+  },
+  {
+    label: "Webex",
+    value: "WEBEX",
+    bgColor: "#E0F2F1", // Light teal
+    textColor: "#00897B", // Webex teal
+  },
+  {
+    label: "CoderPad",
+    value: "CODERPAD",
+    bgColor: "#FBE9E7", // Light orange
+    textColor: "red", // CoderPad orange-red
+  },
+  {
+    label: "CodeSignal",
+    value: "CODESIGNAL",
+    bgColor: "#E3F2FD", // Light blue
+    textColor: "#2E8BE6", // CodeSignal blue
+  },
+  {
+    label: "Other",
+    value: "OTHER",
+    bgColor: "#F5F5F5", // Light gray
+    textColor: "#616161", // Dark gray
+  },
+];
 
 export enum UserDocumentType {
   RESUME = "RESUME",

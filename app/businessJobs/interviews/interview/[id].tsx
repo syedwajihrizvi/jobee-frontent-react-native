@@ -1,10 +1,10 @@
 import BackBar from "@/components/BackBar";
 import CheckList from "@/components/CheckList";
 import InterviewersFlatList from "@/components/InterviewersFlatList";
-import { images } from "@/constants";
+import { images, meetingPlatforms, platformLogos } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useInterviewDetails } from "@/lib/services/useProfile";
-import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
+import { convertTo12Hour } from "@/lib/utils";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
@@ -16,6 +16,51 @@ const InterviewDetailsForBusiness = () => {
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(id));
   const totalInterviewers = [...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])]
     .length;
+
+  const getInterviewTypeIcon = (type: string) => {
+    const isSelected = interviewDetails?.interviewType === type;
+    const color = isSelected ? "white" : "#6b7280";
+
+    switch (type) {
+      case "IN_PERSON":
+        return <Feather name="users" size={16} color={color} />;
+      case "ONLINE":
+        return <Feather name="video" size={16} color={color} />;
+      case "PHONE":
+        return <Feather name="phone" size={16} color={color} />;
+      default:
+        return null;
+    }
+  };
+
+  const renderPlatformIcon = (platformType: string, platformColor: string) => {
+    if (platformType === "ZOOM") {
+      return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "GOOGLE_MEET") {
+      return <Image source={platformLogos.GOOGLE_MEET} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "MICROSOFT_TEAMS") {
+      return <FontAwesome5 name="microsoft" size={16} color={platformColor} />;
+    }
+    if (platformType === "SKYPE") {
+      return <FontAwesome5 name="skype" size={16} color={platformColor} />;
+    }
+    if (platformType === "WEBEX") {
+      return <Image source={platformLogos.WEBEX} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "CODERPAD") {
+      return <Image source={platformLogos.CODERPAD} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "CODESIGNAL") {
+      return <Image source={platformLogos.CODESIGNAL} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "OTHER") {
+      return <FontAwesome5 name="link" size={16} color={platformColor} />;
+    }
+    // fallback: always return a React element so callers expecting a ReactElement won't receive undefined
+    return <FontAwesome5 name="link" size={16} color={platformColor} />;
+  };
 
   const renderDecisionButton = (result: string) => {
     if (result === "PENDING") {
@@ -173,44 +218,90 @@ const InterviewDetailsForBusiness = () => {
                   {interviewDetails?.timezone})
                 </Text>
               </View>
+            </View>
+            <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
 
-              <View className="flex-row items-center gap-3">
-                <Feather
-                  name={
-                    interviewDetails?.interviewType === "ONLINE"
-                      ? "video"
-                      : interviewDetails?.interviewType === "PHONE"
-                        ? "phone"
-                        : "users"
-                  }
-                  size={16}
-                  color="#6b7280"
-                />
-                <Text className="font-quicksand-medium text-base text-gray-700">
-                  {getInterviewStyle(interviewDetails?.interviewType!)}
-                </Text>
+              <View className="flex-row items-center gap-3 mb-4">
+                <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
+                  {getInterviewTypeIcon(interviewDetails?.interviewType || "")}
+                </View>
+                <View>
+                  <Text className="font-quicksand-bold text-base text-emerald-900">
+                    {interviewDetails?.interviewType === "IN_PERSON"
+                      ? "In-Person Interview"
+                      : interviewDetails?.interviewType === "ONLINE"
+                        ? "Online Interview"
+                        : interviewDetails?.interviewType === "PHONE"
+                          ? "Phone Interview"
+                          : "Not specified"}
+                  </Text>
+                </View>
               </View>
+              {interviewDetails?.interviewType === "IN_PERSON" && (
+                <View className="bg-white rounded-lg p-3 gap-2">
+                  <View>
+                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Address</Text>
+                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                      {interviewDetails?.streetAddress || "Address not provided"}
+                    </Text>
+                  </View>
+                  {interviewDetails?.buildingName && (
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Building</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails?.buildingName}
+                      </Text>
+                    </View>
+                  )}
+                  {interviewDetails?.parkingInfo && (
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Parking</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails?.parkingInfo.trim() || "No parking information provided"}
+                      </Text>
+                    </View>
+                  )}
+                  {interviewDetails?.contactInstructionsOnArrival && (
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Instructions</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails?.contactInstructionsOnArrival.trim() || "No instructions provided"}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+              {interviewDetails?.interviewType === "ONLINE" && (
+                <View className="bg-white rounded-lg p-3 gap-2">
+                  {interviewDetails?.interviewMeetingPlatform && (
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
+                      <View className="flex-row items-center gap-2">
+                        {renderPlatformIcon(interviewDetails?.interviewMeetingPlatform, "#059669")}
+                        <Text className="font-quicksand-bold text-sm text-emerald-900">
+                          {meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.label}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
 
-              <TouchableOpacity className="flex-row items-center justify-center gap-3 bg-blue-50 p-3 rounded-xl">
-                {interviewDetails?.interviewType === "ONLINE" && (
-                  <>
-                    <Feather name="external-link" size={16} color="#3b82f6" />
-                    <Text className="font-quicksand-semibold text-base text-blue-600">Join Meeting</Text>
-                  </>
-                )}
-                {interviewDetails?.interviewType === "IN_PERSON" && (
-                  <>
-                    <Feather name="map-pin" size={16} color="#3b82f6" />
-                    <Text className="font-quicksand-semibold text-base text-blue-600">View Location</Text>
-                  </>
-                )}
-                {interviewDetails?.interviewType === "PHONE" && (
-                  <>
-                    <Feather name="phone" size={16} color="#3b82f6" />
-                    <Text className="font-quicksand-semibold text-base text-blue-600">Call Candidate</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                  <View>
+                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Meeting Link</Text>
+                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
+                      {interviewDetails?.meetingLink || "Meeting link not provided"}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {interviewDetails?.interviewType === "PHONE" && (
+                <View className="bg-white rounded-lg p-3">
+                  <Text className="font-quicksand-semibold text-sm text-emerald-700">Phone Number</Text>
+                  <Text className="font-quicksand-bold text-base text-emerald-900 mt-1">
+                    {interviewDetails?.phoneNumber || "Phone number not provided"}
+                  </Text>
+                </View>
+              )}
             </View>
             <View
               className="bg-white mt-4 mb-6 rounded-2xl p-6 border border-gray-100"

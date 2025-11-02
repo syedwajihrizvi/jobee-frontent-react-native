@@ -128,7 +128,15 @@ const ApplicantForBusiness = () => {
               shadowRadius: 4,
               elevation: 3,
             }}
-            onPress={() => console.log("View interview details via bottom sheet")}
+            onPress={() => {
+              const interviewIds = application.interviewIds || [];
+              if (interviewIds.length === 0) {
+                return router.push(`/businessJobs/applications/${application.jobId}`);
+              } else {
+                const latestInterviewId = interviewIds[interviewIds.length - 1];
+                return router.push(`/businessJobs/interviews/interview/${latestInterviewId}`);
+              }
+            }}
             activeOpacity={0.8}
           >
             <Feather name="clock" size={14} color="white" />

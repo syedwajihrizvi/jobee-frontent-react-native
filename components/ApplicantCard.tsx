@@ -1,4 +1,3 @@
-import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
 import { ApplicationSummary } from "@/type";
@@ -45,7 +44,7 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
       <View className="flex-row items-start justify-between mb-2">
         <View className="flex-row items-start gap-4 flex-1">
           <View
-            className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200"
+            className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200 items-center justify-center"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -54,13 +53,19 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
               elevation: 3,
             }}
           >
-            <Image
-              source={{
-                uri: item.profileImageUrl ? getS3ProfileImage(item.profileImageUrl) : images.companyLogo,
-              }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
+            {item.profileImageUrl ? (
+              <Image
+                source={{
+                  uri: getS3ProfileImage(item.profileImageUrl),
+                }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            ) : (
+              <View className="w-12 h-12 rounded-full items-center justify-center">
+                <Feather name="user" size={30} color="black" />
+              </View>
+            )}
           </View>
           <View className="flex-1 mr-3">
             <Text className="font-quicksand-bold text-lg text-gray-900">{item.fullName}</Text>

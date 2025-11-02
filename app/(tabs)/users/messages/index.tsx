@@ -21,6 +21,7 @@ const Messages = () => {
 
   useEffect(() => {
     const userParamType = "USER";
+    if (!isAuthenticated || !user) return;
     const client = createStompClient({
       userId: user!.id,
       userType: userParamType,

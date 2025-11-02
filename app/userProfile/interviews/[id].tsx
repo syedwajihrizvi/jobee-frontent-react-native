@@ -3,12 +3,12 @@ import CheckList from "@/components/CheckList";
 import CompanyInformation from "@/components/CompanyInformation";
 import PrepareWithJobee from "@/components/PrepareWithJobee";
 import ViewInterviewerModal from "@/components/ViewInterviewerModal";
-import { images } from "@/constants";
+import { images, meetingPlatforms, platformLogos } from "@/constants";
 import { getInterviewerProfileSummary, prepareForInterview } from "@/lib/interviewEndpoints";
 import { useInterviewDetails } from "@/lib/services/useProfile";
-import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
+import { convertTo12Hour } from "@/lib/utils";
 import { InterviewerProfileSummary } from "@/type";
-import { AntDesign, Feather, FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -27,9 +27,25 @@ const InterviewDetails = () => {
     if (interviewDetails?.preparationStatus === "NOT_STARTED") {
       setShowInterviewPrepModal(true);
     } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
-      router.push(`/profile/interviews/prep?id=${interviewId}`);
+      router.push(`/userProfile/interviews/prep?id=${interviewId}`);
     } else {
-      router.push(`/profile/interviews/prep?id=${interviewId}`);
+      router.push(`/userProfile/interviews/prep?id=${interviewId}`);
+    }
+  };
+
+  const getInterviewTypeIcon = (type: string) => {
+    const isSelected = interviewDetails?.interviewType === type;
+    const color = isSelected ? "white" : "#6b7280";
+
+    switch (type) {
+      case "IN_PERSON":
+        return <Feather name="users" size={16} color={color} />;
+      case "ONLINE":
+        return <Feather name="video" size={16} color={color} />;
+      case "PHONE":
+        return <Feather name="phone" size={16} color={color} />;
+      default:
+        return null;
     }
   };
 
@@ -41,6 +57,35 @@ const InterviewDetails = () => {
     } else {
       return "Review Prep";
     }
+  };
+
+  const renderPlatformIcon = (platformType: string, platformColor: string) => {
+    if (platformType === "ZOOM") {
+      return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "GOOGLE_MEET") {
+      return <Image source={platformLogos.GOOGLE_MEET} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "MICROSOFT_TEAMS") {
+      return <FontAwesome5 name="microsoft" size={16} color={platformColor} />;
+    }
+    if (platformType === "SKYPE") {
+      return <FontAwesome5 name="skype" size={16} color={platformColor} />;
+    }
+    if (platformType === "WEBEX") {
+      return <Image source={platformLogos.WEBEX} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "CODERPAD") {
+      return <Image source={platformLogos.CODERPAD} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "CODESIGNAL") {
+      return <Image source={platformLogos.CODESIGNAL} style={{ width: 20, height: 20, borderRadius: 4 }} />;
+    }
+    if (platformType === "OTHER") {
+      return <FontAwesome5 name="link" size={16} color={platformColor} />;
+    }
+    // fallback: always return a React element so callers expecting a ReactElement won't receive undefined
+    return <FontAwesome5 name="link" size={16} color={platformColor} />;
   };
 
   const handleShowInterviewPrepModalClose = () => {
@@ -74,8 +119,6 @@ const InterviewDetails = () => {
         return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
     }
   };
-
-  const statusColors = getStatusColor(interviewDetails?.preparationStatus || "NOT_STARTED");
 
   const interviewers = [...(interviewDetails?.interviewers || []), ...(interviewDetails?.otherInterviewers || [])];
   const totalInterviewers = interviewers.length;
@@ -191,48 +234,95 @@ const InterviewDetails = () => {
                 <Feather name="globe" size={14} color="#10b981" />
                 <Text className="font-quicksand-semibold text-sm text-emerald-800">{interviewDetails?.timezone}</Text>
               </View>
-
-              <View className="bg-gray-50 border border-gray-300 px-3 py-2 rounded-xl flex-row items-center gap-2">
-                <Feather name="video" size={14} color="#6b7280" />
-                <Text className="font-quicksand-semibold text-sm text-gray-800">
-                  {getInterviewStyle(interviewDetails?.interviewType!)}
-                </Text>
-              </View>
             </View>
-            <View className="gap-3">
-              {interviewDetails?.location && (
-                <View className="flex-row items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                  <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center">
-                    <MaterialIcons name="location-on" size={16} color="#ef4444" />
+            <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
+
+              <View className="flex-row items-center gap-3 mb-4">
+                <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
+                  {getInterviewTypeIcon(interviewDetails?.interviewType || "")}
+                </View>
+                <View>
+                  <Text className="font-quicksand-bold text-base text-emerald-900">
+                    {interviewDetails?.interviewType === "IN_PERSON"
+                      ? "In-Person Interview"
+                      : interviewDetails?.interviewType === "ONLINE"
+                        ? "Online Interview"
+                        : interviewDetails?.interviewType === "PHONE"
+                          ? "Phone Interview"
+                          : "Not specified"}
+                  </Text>
+                </View>
+              </View>
+              {interviewDetails?.interviewType === "IN_PERSON" && (
+                <View className="bg-white rounded-lg p-3 gap-2">
+                  <View>
+                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Address</Text>
+                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                      {interviewDetails?.streetAddress || "Address not provided"}
+                    </Text>
                   </View>
-                  <Text className="font-quicksand-medium text-gray-800 flex-1">{interviewDetails?.location}</Text>
+                  {interviewDetails?.buildingName && (
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Building</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails?.buildingName}
+                      </Text>
+                    </View>
+                  )}
+                  {interviewDetails?.parkingInfo && (
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Parking</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails?.parkingInfo.trim() || "No parking information provided"}
+                      </Text>
+                    </View>
+                  )}
+                  {interviewDetails?.contactInstructionsOnArrival && (
+                    <View>
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Instructions</Text>
+                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
+                        {interviewDetails?.contactInstructionsOnArrival.trim() || "No instructions provided"}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
-              {interviewDetails?.phoneNumber && (
-                <View className="flex-row items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                  <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
-                    <MaterialIcons name="phone" size={16} color="#3b82f6" />
+              {interviewDetails?.interviewType === "ONLINE" && (
+                <View className="bg-white rounded-lg p-3 gap-2">
+                  {interviewDetails?.interviewMeetingPlatform && (
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
+                      <View className="flex-row items-center gap-2">
+                        {renderPlatformIcon(interviewDetails?.interviewMeetingPlatform, "#059669")}
+                        <Text className="font-quicksand-bold text-sm text-emerald-900">
+                          {meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.label}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  <View>
+                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Meeting Link</Text>
+                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
+                      {interviewDetails?.meetingLink || "Meeting link not provided"}
+                    </Text>
                   </View>
-                  <Text className="font-quicksand-medium text-blue-800 flex-1">{interviewDetails?.phoneNumber}</Text>
                 </View>
               )}
-              {interviewDetails?.meetingLink && (
-                <TouchableOpacity
-                  className="flex-row items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-200"
-                  activeOpacity={0.7}
-                >
-                  <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center">
-                    <AntDesign name="link" size={16} color="#6366f1" />
-                  </View>
-                  <Text className="font-quicksand-medium text-green-800 flex-1">Join Meeting Link</Text>
-                  <Feather name="external-link" size={16} color="#6366f1" />
-                </TouchableOpacity>
+              {interviewDetails?.interviewType === "PHONE" && (
+                <View className="bg-white rounded-lg p-3">
+                  <Text className="font-quicksand-semibold text-sm text-emerald-700">Phone Number</Text>
+                  <Text className="font-quicksand-bold text-base text-emerald-900 mt-1">
+                    {interviewDetails?.phoneNumber || "Phone number not provided"}
+                  </Text>
+                </View>
               )}
             </View>
           </View>
 
           {interviewDetails?.preparationTipsFromInterviewer &&
-            interviewDetails.preparationTipsFromInterviewer.length > 0 && (
+            interviewDetails?.preparationTipsFromInterviewer.length > 0 && (
               <View
                 className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
                 style={{

@@ -14,6 +14,7 @@ export const useApplicant = (applicantId?: number, jobId?: number, candidateId?:
                 },
             })
             const data = await response.json()
+            console.log("ONE-Fetched applicant data:", data);
             return data
         } else {
             const response = await fetch(`${APPLICATIONS_API_URL}?jobId=${jobId}&userId=${candidateId}`, {
@@ -28,7 +29,7 @@ export const useApplicant = (applicantId?: number, jobId?: number, candidateId?:
             }
             const res = data[0]
             console.log("Fetched applicant data:", res); // Debugging log
-            return data[0]     
+            return data[0] as ApplicationDetailsForBusiness;
         }
     }
     return useQuery<ApplicationDetailsForBusiness, Error>({

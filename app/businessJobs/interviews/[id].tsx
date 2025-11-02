@@ -20,22 +20,16 @@ const Interviews = () => {
     if (interviews && !isLoading) {
       let filteredInterviews = [...interviews];
       if (filter === "Upcoming") {
-        console.log("Filtering Upcoming");
         filteredInterviews = filteredInterviews.filter((i) => i.status === "SCHEDULED");
       } else if (filter === "Completed") {
-        console.log("Filtering Completed");
         filteredInterviews = filteredInterviews.filter((i) => i.status === "COMPLETED");
       } else if (filter === "Pending Decision") {
-        console.log("Filtering Pending Decision");
         filteredInterviews = filteredInterviews.filter((i) => i.decisionResult === "PENDING");
       } else if (filter === "Hired") {
-        console.log("Filtering Hired");
         filteredInterviews = filteredInterviews.filter((i) => i.decisionResult === "HIRED");
       } else if (filter === "Next Round") {
-        console.log("Filtering Next Round");
         filteredInterviews = filteredInterviews.filter((i) => i.decisionResult === "NEXT_ROUND");
       } else if (filter === "Rejected") {
-        console.log("Filtering Rejected");
         filteredInterviews = filteredInterviews.filter((i) => i.decisionResult === "REJECTED");
       }
 
