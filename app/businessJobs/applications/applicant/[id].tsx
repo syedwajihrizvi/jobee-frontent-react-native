@@ -5,7 +5,6 @@ import ContactCandidate from "@/components/ContactCandidate";
 import DocumentModal from "@/components/DocumentModal";
 import RenderAppStatusButton from "@/components/RenderAppStatusButton";
 import UserVideoIntro from "@/components/UserVideoIntro";
-import { images } from "@/constants";
 import { shortListCandidate, unshortListCandidate } from "@/lib/jobEndpoints";
 import { getS3ProfileImage, getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { updateApplicationStatus } from "@/lib/services/applicationEndpoints";
@@ -238,7 +237,7 @@ const ApplicantForBusiness = () => {
               <View className="flex-row items-start justify-between mb-2">
                 <View className="flex-row items-start gap-4 flex-1">
                   <View
-                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200"
+                    className="w-16 h-16 rounded-full overflow-hidden items-center justify-center border-2 border-gray-200"
                     style={{
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 2 },
@@ -247,15 +246,19 @@ const ApplicantForBusiness = () => {
                       elevation: 3,
                     }}
                   >
-                    <Image
-                      source={{
-                        uri: userProfile?.profileImageUrl
-                          ? getS3ProfileImage(userProfile?.profileImageUrl)
-                          : images.companyLogo,
-                      }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
+                    {userProfile?.profileImageUrl ? (
+                      <Image
+                        source={{
+                          uri: getS3ProfileImage(userProfile?.profileImageUrl),
+                        }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View className="w-12 h-12 rounded-full items-center justify-center">
+                        <Feather name="user" size={30} color="black" />
+                      </View>
+                    )}
                   </View>
                   <View className="flex-1">
                     <Text className="font-quicksand-bold text-xl text-gray-900">

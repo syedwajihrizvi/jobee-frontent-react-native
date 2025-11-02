@@ -3,28 +3,25 @@ import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import PlatformButton from "@/components/PlatformButton";
-import { meetingPlatforms, platformLogos } from "@/constants";
+import RenderMeetingPlatformIcon from "@/components/RenderMeetingPlatformIcon";
+import { meetingPlatforms } from "@/constants";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
-import { validateMeetingLink, validatePhoneNumber, validateTime, validateTimes } from "@/lib/utils";
+import {
+  convert10DigitNumberToPhoneFormat,
+  validatePhoneNumber,
+  validateTime,
+  validateTimes,
+  validInterviewDate,
+} from "@/lib/utils";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, CreateInterviewForm } from "@/type";
-import { Feather, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Keyboard,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Keyboard, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,7 +41,7 @@ const ScheduleInterview = () => {
     parkingInfo: "",
     contactInstructionsOnArrival: "",
     phoneNumber: "",
-    meetingPlatformType: "",
+    meetingPlatform: "",
     preparationTipsFromInterviewer: [],
   };
   const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
@@ -67,11 +64,6 @@ const ScheduleInterview = () => {
   const [snapPoints, setSnapPoints] = useState<string[]>(["30%", "40%"]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const user = authUser as BusinessUser | null;
-
-  console.log("Applicant ID: ", applicantId);
-  console.log("Job ID: ", jobId);
-  console.log("Candidate ID: ", candidateId);
-  console.log("Previous Interview ID: ", previousInterviewId);
 
   useEffect(() => {
     const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
@@ -123,35 +115,6 @@ const ScheduleInterview = () => {
     };
   }, [user, jobId]);
 
-  const renderPlatformIcon = (platformType: string, platformColor: string) => {
-    if (platformType === "ZOOM") {
-      return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "GOOGLE_MEET") {
-      return <Image source={platformLogos.GOOGLE_MEET} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "MICROSOFT_TEAMS") {
-      return <FontAwesome5 name="microsoft" size={16} color={platformColor} />;
-    }
-    if (platformType === "SKYPE") {
-      return <FontAwesome5 name="skype" size={16} color={platformColor} />;
-    }
-    if (platformType === "WEBEX") {
-      return <Image source={platformLogos.WEBEX} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "CODERPAD") {
-      return <Image source={platformLogos.CODERPAD} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "CODESIGNAL") {
-      return <Image source={platformLogos.CODESIGNAL} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "OTHER") {
-      return <FontAwesome5 name="link" size={16} color={platformColor} />;
-    }
-    // fallback: always return a React element so callers expecting a ReactElement won't receive undefined
-    return <FontAwesome5 name="link" size={16} color={platformColor} />;
-  };
-
   const handleInterviewFormSubmit = async () => {
     const {
       title,
@@ -165,7 +128,7 @@ const ScheduleInterview = () => {
       buildingName,
       meetingLink,
       phoneNumber,
-      meetingPlatformType,
+      meetingPlatform,
     } = interviewDetails;
     if (!title) {
       Alert.alert("Error", "Please enter interview title.");
@@ -191,6 +154,10 @@ const ScheduleInterview = () => {
       Alert.alert("Error", "Please enter interview end time.");
       return;
     }
+    if (!validInterviewDate(interviewDate)) {
+      Alert.alert("Error", "Please enter a valid interview date in MM/DD/YYYY format which is not in the past.");
+      return;
+    }
     if (!validateTime(startTime)) {
       Alert.alert("Error", "Please enter a valid start time in HH:MM AM/PM format.");
       return;
@@ -210,7 +177,7 @@ const ScheduleInterview = () => {
       }
     }
     if (interviewType === "ONLINE") {
-      if (!meetingPlatformType) {
+      if (!meetingPlatform) {
         Alert.alert("Error", "Please select meeting platform.");
         return;
       }
@@ -218,10 +185,10 @@ const ScheduleInterview = () => {
         Alert.alert("Error", "Please enter meeting link.");
         return;
       }
-      if (!validateMeetingLink(meetingLink, meetingPlatformType)) {
-        Alert.alert("Error", "Please enter a valid meeting link.");
-        return;
-      }
+      // if (!validateMeetingLink(meetingLink, meetingPlatformType)) {
+      //   Alert.alert("Error", "Please enter a valid meeting link.");
+      //   return;
+      // }
     }
     if (interviewType === "PHONE") {
       if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
@@ -952,6 +919,24 @@ const ScheduleInterview = () => {
                       phoneNumber: text,
                     }))
                   }
+                  onSubmitEditing={() => {
+                    const phoneNumber = interviewDetails.phoneNumber;
+                    if (phoneNumber.length === 10) {
+                      const formattedNumber = convert10DigitNumberToPhoneFormat(phoneNumber);
+                      setInterviewDetails((prev) => ({
+                        ...prev,
+                        phoneNumber: formattedNumber,
+                      }));
+                    }
+                    if (phoneNumber.length === 11) {
+                      const formattedNumber =
+                        phoneNumber[0] + " " + convert10DigitNumberToPhoneFormat(phoneNumber.slice(1));
+                      setInterviewDetails((prev) => ({
+                        ...prev,
+                        phoneNumber: formattedNumber,
+                      }));
+                    }
+                  }}
                   className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
                   style={{
                     shadowColor: "#000",
@@ -973,14 +958,19 @@ const ScheduleInterview = () => {
                           textColor={platform.textColor}
                           bgColor={platform.bgColor}
                           label={platform.label}
-                          icon={renderPlatformIcon(platform.value, platform.textColor)}
+                          icon={
+                            <RenderMeetingPlatformIcon
+                              platformColor={platform.textColor}
+                              platformType={platform.value}
+                            />
+                          }
                           onPress={() =>
                             setInterviewDetails((prev) => ({
                               ...prev,
-                              meetingPlatformType: platform.value,
+                              meetingPlatform: platform.value,
                             }))
                           }
-                          isSelected={interviewDetails.meetingPlatformType === platform.value}
+                          isSelected={interviewDetails.meetingPlatform === platform.value}
                         />
                       ))}
                     </View>
@@ -995,7 +985,7 @@ const ScheduleInterview = () => {
                         meetingLink: text,
                       }))
                     }
-                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                     style={{
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
@@ -1414,13 +1404,16 @@ const ScheduleInterview = () => {
                 )}
                 {interviewDetails.interviewType === "ONLINE" && (
                   <View className="bg-white rounded-lg p-3 gap-2">
-                    {interviewDetails.meetingPlatformType && (
+                    {interviewDetails.meetingPlatform && (
                       <View className="flex-row items-center gap-2 mb-2">
                         <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
                         <View className="flex-row items-center gap-2">
-                          {renderPlatformIcon(interviewDetails.meetingPlatformType, "#059669")}
+                          <RenderMeetingPlatformIcon
+                            platformColor="#059669"
+                            platformType={interviewDetails.meetingPlatform}
+                          />
                           <Text className="font-quicksand-bold text-sm text-emerald-900">
-                            {meetingPlatforms.find((p) => p.value === interviewDetails.meetingPlatformType)?.label}
+                            {meetingPlatforms.find((p) => p.value === interviewDetails.meetingPlatform)?.label}
                           </Text>
                         </View>
                       </View>

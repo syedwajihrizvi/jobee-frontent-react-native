@@ -16,6 +16,7 @@ export const createInterview = async (
     if (token == null) return null
     const startTime = extract24HourTime(interview.startTime)
     const endTime = extract24HourTime(interview.endTime)
+    const phoneNumber = interview.phoneNumber.replace(/\D/g, '');
     const timezone = interview.timezone.toUpperCase()
     const requestBody = {
         ...interview,
@@ -24,9 +25,11 @@ export const createInterview = async (
         applicationId,
         startTime,
         endTime,
+        phoneNumber,
         timezone,
         previousInterviewId
     }
+    console.log("Creating interview with request body: ", requestBody)
     const result = await fetch(`${INTERVIEWS_API_URL}`, {
         method: 'POST',
         headers: {

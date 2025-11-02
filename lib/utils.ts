@@ -230,6 +230,16 @@ export const convert10DigitNumberToPhoneFormat = (num: string | undefined) => {
   return `(${areaCode}) ${centralOfficeCode}-${lineNumber}`;
 }
 
+export const convert11Or10DigitNumberToPhoneFormat = (num: string | undefined) => {
+  if (!num) return "";
+  if (num.length === 10) {
+    return convert10DigitNumberToPhoneFormat(num);
+  }
+  if (num.length === 11) {
+    return `+${num[0]} ${convert10DigitNumberToPhoneFormat(num.slice(1))}`;
+  }
+}
+
 export const onActionSuccess = async () => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 }
@@ -752,4 +762,18 @@ export const validateTimes = (startTime: string, endTime: string) => {
   const endMinutes = toMinutes(e);
 
   return endMinutes > startMinutes;
+};
+
+export const validInterviewDate = (date: string) => {
+  if (!date || typeof date !== "string") return false;
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(date)) return false;
+
+  const parsedDate = new Date(date + "T00:00:00"); // ensure no timezone drift
+  if (isNaN(parsedDate.getTime())) return false; // invalid date
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return parsedDate >= today;
 };

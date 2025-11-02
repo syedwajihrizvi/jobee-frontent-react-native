@@ -178,7 +178,6 @@ export const workArrangements = [
 ];
 
 export const experienceLevels = [
-  { label: "Any", value: "ANY" },
   { label: "Intern", value: "INTERN" },
   { label: "Entry", value: "ENTRY" },
   { label: "Junior", value: "JUNIOR_LEVEL" },
@@ -192,4 +191,13 @@ export const interviewPrepChecklist = [
   "Analyze your weaknesses and how you can improve on them.",
   "Find resources and online tools to help you prepare for the interview.",
   "Try sample questions and practice your answers.",
+];
+
+export const appliedWithinOptions = [
+  { label: "Any", value: undefined },
+  { label: "24 hours", value: 1 },
+  { label: "3 days", value: 3 },
+  { label: "7 days", value: 7 },
+  { label: "14 days", value: 14 },
+  { label: "30 days", value: 30 },
 ];

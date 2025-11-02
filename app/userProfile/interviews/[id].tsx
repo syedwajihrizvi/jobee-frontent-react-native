@@ -1,9 +1,10 @@
 import BackBar from "@/components/BackBar";
 import CheckList from "@/components/CheckList";
 import CompanyInformation from "@/components/CompanyInformation";
+import InterviewersFlatList from "@/components/InterviewersFlatList";
+import InterviewFormatSummary from "@/components/InterviewFormatSummary";
 import PrepareWithJobee from "@/components/PrepareWithJobee";
 import ViewInterviewerModal from "@/components/ViewInterviewerModal";
-import { images, meetingPlatforms, platformLogos } from "@/constants";
 import { getInterviewerProfileSummary, prepareForInterview } from "@/lib/interviewEndpoints";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour } from "@/lib/utils";
@@ -11,7 +12,7 @@ import { InterviewerProfileSummary } from "@/type";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const InterviewDetails = () => {
@@ -22,7 +23,7 @@ const InterviewDetails = () => {
   const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] = useState(false);
   const [interviewerDetails, setInterviewerDetails] = useState<InterviewerProfileSummary | null>(null);
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(interviewId));
-
+  console.log("interviewDetails", interviewDetails);
   const handlePrepareWithJobee = () => {
     if (interviewDetails?.preparationStatus === "NOT_STARTED") {
       setShowInterviewPrepModal(true);
@@ -30,22 +31,6 @@ const InterviewDetails = () => {
       router.push(`/userProfile/interviews/prep?id=${interviewId}`);
     } else {
       router.push(`/userProfile/interviews/prep?id=${interviewId}`);
-    }
-  };
-
-  const getInterviewTypeIcon = (type: string) => {
-    const isSelected = interviewDetails?.interviewType === type;
-    const color = isSelected ? "white" : "#6b7280";
-
-    switch (type) {
-      case "IN_PERSON":
-        return <Feather name="users" size={16} color={color} />;
-      case "ONLINE":
-        return <Feather name="video" size={16} color={color} />;
-      case "PHONE":
-        return <Feather name="phone" size={16} color={color} />;
-      default:
-        return null;
     }
   };
 
@@ -57,35 +42,6 @@ const InterviewDetails = () => {
     } else {
       return "Review Prep";
     }
-  };
-
-  const renderPlatformIcon = (platformType: string, platformColor: string) => {
-    if (platformType === "ZOOM") {
-      return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "GOOGLE_MEET") {
-      return <Image source={platformLogos.GOOGLE_MEET} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "MICROSOFT_TEAMS") {
-      return <FontAwesome5 name="microsoft" size={16} color={platformColor} />;
-    }
-    if (platformType === "SKYPE") {
-      return <FontAwesome5 name="skype" size={16} color={platformColor} />;
-    }
-    if (platformType === "WEBEX") {
-      return <Image source={platformLogos.WEBEX} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "CODERPAD") {
-      return <Image source={platformLogos.CODERPAD} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "CODESIGNAL") {
-      return <Image source={platformLogos.CODESIGNAL} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "OTHER") {
-      return <FontAwesome5 name="link" size={16} color={platformColor} />;
-    }
-    // fallback: always return a React element so callers expecting a ReactElement won't receive undefined
-    return <FontAwesome5 name="link" size={16} color={platformColor} />;
   };
 
   const handleShowInterviewPrepModalClose = () => {
@@ -107,23 +63,15 @@ const InterviewDetails = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "NOT_STARTED":
-        return { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" };
-      case "IN_PROGRESS":
-        return { bg: "bg-amber-100", text: "text-amber-800", border: "border-amber-200" };
-      case "COMPLETED":
-        return { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" };
-      default:
-        return { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" };
-    }
-  };
-
   const interviewers = [...(interviewDetails?.interviewers || []), ...(interviewDetails?.otherInterviewers || [])];
   const totalInterviewers = interviewers.length;
 
-  const handleInterviewerPress = async (email: string, firstName: string, lastName: string) => {
+  const handleInterviewerPress = async (
+    email: string,
+    firstName: string,
+    lastName: string,
+    profileImageUrl: string
+  ) => {
     setInterviewModalVisible(true);
     setLoadingInterviewer(true);
     try {
@@ -131,7 +79,16 @@ const InterviewDetails = () => {
       if (details) {
         setInterviewerDetails({ ...details, verified: true });
       } else {
-        setInterviewerDetails({ firstName, lastName, email, title: "", summary: "", id: 0, verified: false });
+        setInterviewerDetails({
+          firstName,
+          lastName,
+          email,
+          title: "",
+          summary: "",
+          id: 0,
+          verified: false,
+          profileImageUrl,
+        });
       }
       return;
     } catch (error) {
@@ -235,92 +192,10 @@ const InterviewDetails = () => {
                 <Text className="font-quicksand-semibold text-sm text-emerald-800">{interviewDetails?.timezone}</Text>
               </View>
             </View>
-            <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
-
-              <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
-                  {getInterviewTypeIcon(interviewDetails?.interviewType || "")}
-                </View>
-                <View>
-                  <Text className="font-quicksand-bold text-base text-emerald-900">
-                    {interviewDetails?.interviewType === "IN_PERSON"
-                      ? "In-Person Interview"
-                      : interviewDetails?.interviewType === "ONLINE"
-                        ? "Online Interview"
-                        : interviewDetails?.interviewType === "PHONE"
-                          ? "Phone Interview"
-                          : "Not specified"}
-                  </Text>
-                </View>
-              </View>
-              {interviewDetails?.interviewType === "IN_PERSON" && (
-                <View className="bg-white rounded-lg p-3 gap-2">
-                  <View>
-                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Address</Text>
-                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                      {interviewDetails?.streetAddress || "Address not provided"}
-                    </Text>
-                  </View>
-                  {interviewDetails?.buildingName && (
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Building</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                        {interviewDetails?.buildingName}
-                      </Text>
-                    </View>
-                  )}
-                  {interviewDetails?.parkingInfo && (
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Parking</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                        {interviewDetails?.parkingInfo.trim() || "No parking information provided"}
-                      </Text>
-                    </View>
-                  )}
-                  {interviewDetails?.contactInstructionsOnArrival && (
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Instructions</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                        {interviewDetails?.contactInstructionsOnArrival.trim() || "No instructions provided"}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-              {interviewDetails?.interviewType === "ONLINE" && (
-                <View className="bg-white rounded-lg p-3 gap-2">
-                  {interviewDetails?.interviewMeetingPlatform && (
-                    <View className="flex-row items-center gap-2 mb-2">
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
-                      <View className="flex-row items-center gap-2">
-                        {renderPlatformIcon(interviewDetails?.interviewMeetingPlatform, "#059669")}
-                        <Text className="font-quicksand-bold text-sm text-emerald-900">
-                          {meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.label}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  <View>
-                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Meeting Link</Text>
-                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
-                      {interviewDetails?.meetingLink || "Meeting link not provided"}
-                    </Text>
-                  </View>
-                </View>
-              )}
-              {interviewDetails?.interviewType === "PHONE" && (
-                <View className="bg-white rounded-lg p-3">
-                  <Text className="font-quicksand-semibold text-sm text-emerald-700">Phone Number</Text>
-                  <Text className="font-quicksand-bold text-base text-emerald-900 mt-1">
-                    {interviewDetails?.phoneNumber || "Phone number not provided"}
-                  </Text>
-                </View>
-              )}
-            </View>
           </View>
-
+          <View className="p-4">
+            <InterviewFormatSummary interviewDetails={interviewDetails || null} />
+          </View>
           {interviewDetails?.preparationTipsFromInterviewer &&
             interviewDetails?.preparationTipsFromInterviewer.length > 0 && (
               <View
@@ -366,42 +241,12 @@ const InterviewDetails = () => {
                 </Text>
               </View>
             </View>
-            <FlatList
-              data={[...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])]}
-              keyExtractor={(_, index) => index.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className="items-center p-4 bg-gray-50 rounded-xl border border-gray-200 w-[120px]"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
-                  onPress={() =>
-                    handleInterviewerPress(item.email, item.name.split(" ")[0], item.name.split(" ")[1] || "")
-                  }
-                  activeOpacity={0.7}
-                >
-                  <View
-                    className="w-16 h-16 rounded-full mb-3 overflow-hidden border-2 border-gray-200"
-                    style={{
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                  >
-                    <Image source={{ uri: images.companyLogo }} className="w-full h-full" resizeMode="cover" />
-                  </View>
-                  <Text className="font-quicksand-bold text-base text-gray-900 text-center">{item.name}</Text>
-                </TouchableOpacity>
-              )}
-              ItemSeparatorComponent={() => <View className="w-3" />}
+            <InterviewersFlatList
+              interviewers={interviewDetails?.interviewers ?? []}
+              otherInterviewers={interviewDetails?.otherInterviewers ?? []}
+              onInterviewerSelect={(email, name, profileImageUrl) => {
+                handleInterviewerPress(email, name.split(" ")[0], name.split(" ")[1] || "", profileImageUrl);
+              }}
             />
           </View>
           <View className="flex-1" />

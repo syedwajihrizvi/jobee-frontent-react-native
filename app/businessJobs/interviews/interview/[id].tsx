@@ -1,7 +1,8 @@
 import BackBar from "@/components/BackBar";
 import CheckList from "@/components/CheckList";
 import InterviewersFlatList from "@/components/InterviewersFlatList";
-import { images, meetingPlatforms, platformLogos } from "@/constants";
+import InterviewFormatSummary from "@/components/InterviewFormatSummary";
+import { images, platformLogos } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour } from "@/lib/utils";
@@ -33,6 +34,7 @@ const InterviewDetailsForBusiness = () => {
     }
   };
 
+  console.log(interviewDetails?.interviewers);
   const renderPlatformIcon = (platformType: string, platformColor: string) => {
     if (platformType === "ZOOM") {
       return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
@@ -219,89 +221,8 @@ const InterviewDetailsForBusiness = () => {
                 </Text>
               </View>
             </View>
-            <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
-
-              <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
-                  {getInterviewTypeIcon(interviewDetails?.interviewType || "")}
-                </View>
-                <View>
-                  <Text className="font-quicksand-bold text-base text-emerald-900">
-                    {interviewDetails?.interviewType === "IN_PERSON"
-                      ? "In-Person Interview"
-                      : interviewDetails?.interviewType === "ONLINE"
-                        ? "Online Interview"
-                        : interviewDetails?.interviewType === "PHONE"
-                          ? "Phone Interview"
-                          : "Not specified"}
-                  </Text>
-                </View>
-              </View>
-              {interviewDetails?.interviewType === "IN_PERSON" && (
-                <View className="bg-white rounded-lg p-3 gap-2">
-                  <View>
-                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Address</Text>
-                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                      {interviewDetails?.streetAddress || "Address not provided"}
-                    </Text>
-                  </View>
-                  {interviewDetails?.buildingName && (
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Building</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                        {interviewDetails?.buildingName}
-                      </Text>
-                    </View>
-                  )}
-                  {interviewDetails?.parkingInfo && (
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Parking</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                        {interviewDetails?.parkingInfo.trim() || "No parking information provided"}
-                      </Text>
-                    </View>
-                  )}
-                  {interviewDetails?.contactInstructionsOnArrival && (
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Instructions</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1">
-                        {interviewDetails?.contactInstructionsOnArrival.trim() || "No instructions provided"}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-              {interviewDetails?.interviewType === "ONLINE" && (
-                <View className="bg-white rounded-lg p-3 gap-2">
-                  {interviewDetails?.interviewMeetingPlatform && (
-                    <View className="flex-row items-center gap-2 mb-2">
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
-                      <View className="flex-row items-center gap-2">
-                        {renderPlatformIcon(interviewDetails?.interviewMeetingPlatform, "#059669")}
-                        <Text className="font-quicksand-bold text-sm text-emerald-900">
-                          {meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.label}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  <View>
-                    <Text className="font-quicksand-semibold text-sm text-emerald-700">Meeting Link</Text>
-                    <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
-                      {interviewDetails?.meetingLink || "Meeting link not provided"}
-                    </Text>
-                  </View>
-                </View>
-              )}
-              {interviewDetails?.interviewType === "PHONE" && (
-                <View className="bg-white rounded-lg p-3">
-                  <Text className="font-quicksand-semibold text-sm text-emerald-700">Phone Number</Text>
-                  <Text className="font-quicksand-bold text-base text-emerald-900 mt-1">
-                    {interviewDetails?.phoneNumber || "Phone number not provided"}
-                  </Text>
-                </View>
-              )}
+            <View className="p-4">
+              <InterviewFormatSummary interviewDetails={interviewDetails || null} />
             </View>
             <View
               className="bg-white mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
@@ -327,7 +248,7 @@ const InterviewDetailsForBusiness = () => {
               <InterviewersFlatList
                 interviewers={interviewDetails?.interviewers ?? []}
                 otherInterviewers={interviewDetails?.otherInterviewers ?? []}
-                handleInterviewerPress={() => {}}
+                onInterviewerSelect={() => {}}
               />
             </View>
             {interviewDetails?.preparationTipsFromInterviewer &&

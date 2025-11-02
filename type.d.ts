@@ -181,7 +181,7 @@ export type JobFilters = {
     distance?: string;
     minSalary?: number;
     maxSalary?: number;
-    experience: string;
+    experience: string[];
     employmentTypes?: string[];
     workArrangements?: string[];
 }
@@ -299,6 +299,7 @@ export type InterviewerProfileSummary = {
     id: number;
     firstName: string;
     lastName: string;
+    profileImageUrl: string;
     email: string;
     title: string;
     summary: string;
@@ -481,7 +482,7 @@ export type CreateInterviewForm = {
     parkingInfo: string;
     contactInstructionsOnArrival: string;
     meetingLink: string;
-    meetingPlatformType: string;
+    meetingPlatform: string;
     phoneNumber: string;
     preparationTipsFromInterviewer: string[];
 }
@@ -505,8 +506,8 @@ export type InterviewDetails = {
     status: string;
     interviewType: string;
     timezone: string;
-    interviewers: {name: string; email: string, title: string}[];
-    otherInterviewers: {name: string; email: string, title: string}[];
+    interviewers: {name: string; email: string, title: string, profileImageUrl: string}[];
+    otherInterviewers: {name: string; email: string, title: string, profileImageUrl: string}[];
     preparationTipsFromInterviewer: string[];
     streetAddress: string;
     buildingName: string;

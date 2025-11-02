@@ -19,7 +19,7 @@ export const useJobs = (jobFilters: JobFilters) => {
     workArrangements?.forEach(arrangement => queryParams.append('settings', arrangement))
     if (minSalary) queryParams.append('minSalary', minSalary.toString())
     if (maxSalary) queryParams.append('maxSalary', maxSalary.toString())
-    if (experience !== 'ANY') queryParams.append('experience', experience.toString())
+    if (experience) experience.forEach(exp => queryParams.append('experience', exp))
     const params = queryParams.toString()
     const fetchJobs = async ({ pageParam = 0} : QueryFunctionContext) : Promise<{ jobs: Job[]; nextPage: number; hasMore: boolean }> => {
         const pageSize = 8;
@@ -137,7 +137,7 @@ export const useJobsByCompany = (filters?: JobFilters, companyId?: number) => {
     filters.tags.forEach(tag => urlParams.append('tags', tag))
     if (filters.minSalary) urlParams.append('minSalary', filters.minSalary.toString())
     if (filters.maxSalary) urlParams.append('maxSalary', filters.maxSalary.toString())
-    if (filters.experience && filters.experience !== 'ANY') urlParams.append('experience', filters.experience)
+    filters.experience?.forEach(exp => urlParams.append('experience', exp))
   }
   if (companyId) urlParams.append('companyId', companyId.toString())
   const params = urlParams.toString()

@@ -1,4 +1,4 @@
-import { images } from "@/constants";
+import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { InterviewerProfileSummary } from "@/type";
 import { Entypo, Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import React from "react";
@@ -14,6 +14,7 @@ type Props = {
 const { height, width } = Dimensions.get("window");
 
 const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interviewerDetails }: Props) => {
+  console.log("Interviewer Details in Modal:", interviewerDetails);
   const renderFirstName = () => {
     if (!interviewerDetails) return "Unknown Interviewer";
     return `${interviewerDetails.firstName} ${interviewerDetails.lastName}`;
@@ -73,7 +74,17 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
                       elevation: 8,
                     }}
                   >
-                    <Image source={{ uri: images.companyLogo }} className="w-24 h-24 rounded-full bg-gray-200" />
+                    {interviewerDetails?.profileImageUrl ? (
+                      <Image
+                        source={{ uri: getS3BusinessProfileImage(interviewerDetails.profileImageUrl) }}
+                        className="w-24 h-24 rounded-full" // Add explicit sizing and rounded
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
+                        <Feather name="user" size={40} color="#6b7280" />
+                      </View>
+                    )}
                     {interviewerDetails?.verified && (
                       <View className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full items-center justify-center border-4 border-white">
                         <Entypo name="check" size={12} color="white" />
@@ -101,7 +112,7 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
                         elevation: 1,
                       }}
                     >
-                      <View className="flex-row items-center gap-3 mb-2">
+                      <View className="flex-row items-center gap-3 mb-1">
                         <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
                           <Feather name="mail" size={16} color="#3b82f6" />
                         </View>
@@ -124,7 +135,7 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
                             elevation: 1,
                           }}
                         >
-                          <View className="flex-row items-center gap-3 mb-3">
+                          <View className="flex-row items-center gap-3 mb-1">
                             <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
                               <Feather name="user" size={16} color="#3b82f6" />
                             </View>

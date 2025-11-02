@@ -4,11 +4,12 @@ import CandidateCard from "@/components/CandidateCard";
 import FilterStatus from "@/components/FilterStatus";
 import ModalWithBg from "@/components/ModalWithBg";
 import SearchBar from "@/components/SearchBar";
+import { appliedWithinOptions } from "@/constants";
 import { getCandidatesForJob } from "@/lib/jobEndpoints";
 import { useApplicantsForJob, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import { ApplicantFilters, CandidateForJob } from "@/type";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -34,6 +35,7 @@ const Applications = () => {
   const [applicationStatusFilter, setApplicationStatusFilter] = useState<string | null>(
     (initialFilter as string) || null
   );
+  console.log("Initial application status filter:", applicationStatusFilter);
   const [filterCount, setFilterCount] = useState(0);
   const [filters, setFilters] = useState<ApplicantFilters>({
     locations: [],
@@ -226,6 +228,97 @@ const Applications = () => {
   const handleCandidateCardPress = (candidate: CandidateForJob) => {
     setShowFindCandidatesModal(false);
     router.push(`/businessJobs/candidates/${candidate.id}`);
+  };
+
+  const renderEmptyComponent = () => {
+    console.log("Rendering empty component for application status filter:", applicationStatusFilter);
+    const getEmptyStateContent = () => {
+      switch (applicationStatusFilter) {
+        case "reviewed":
+          return {
+            icon: "check-circle",
+            color: "#22c55e",
+            bgColor: "#dcfce7",
+            title: "No Reviewed Applications",
+            subtitle:
+              "Applications that have been reviewed will appear here. Review pending applications to see them in this filter.",
+          };
+        case "pending":
+          return {
+            icon: "clock",
+            color: "#f59e0b",
+            bgColor: "#fef3c7",
+            title: "No Pending Applications",
+            subtitle: "New applications waiting for review will appear here. All applications have been reviewed.",
+          };
+        case "interview_scheduled":
+          return {
+            icon: "calendar",
+            color: "#3b82f6",
+            bgColor: "#dbeafe",
+            title: "No Interviews Scheduled",
+            subtitle:
+              "Applications with scheduled interviews will appear here. Schedule interviews for qualified candidates.",
+          };
+        case "rejected":
+          return {
+            icon: "x-circle",
+            color: "#ef4444",
+            bgColor: "#fee2e2",
+            title: "No Rejected Applications",
+            subtitle:
+              "Applications that have been rejected will appear here. This means all applications are still under consideration.",
+          };
+        default:
+          return {
+            icon: "users",
+            color: "#3b82f6",
+            bgColor: "#dbeafe",
+            title: "No Applications Yet",
+            subtitle: "Applications will appear here when candidates apply for this job.",
+          };
+      }
+    };
+
+    const { icon, color, bgColor, title, subtitle } = getEmptyStateContent();
+
+    return (
+      <View className="flex-1 justify-center items-center p-6">
+        <View
+          className="w-20 h-20 rounded-full items-center justify-center mb-6"
+          style={{
+            backgroundColor: bgColor,
+            shadowColor: color,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
+        >
+          <Feather name={icon as any} size={32} color={color} />
+        </View>
+        <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">{title}</Text>
+        <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 max-w-xs">{subtitle}</Text>
+
+        {(applicationStatusFilter === "pending" || applicationStatusFilter === "interview_scheduled") && (
+          <TouchableOpacity
+            className="mt-6 bg-indigo-500 px-6 py-3 rounded-xl flex-row items-center gap-2"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            onPress={() => setApplicationStatusFilter(null)}
+            activeOpacity={0.8}
+          >
+            <Feather name="eye" size={16} color="white" />
+            <Text className="font-quicksand-bold text-white text-sm">View All Applications</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
   };
 
   if (shortListed && applicants?.length === 0) {
@@ -472,26 +565,7 @@ const Applications = () => {
             renderItem={({ item }) => (
               <ApplicantCard item={item} isShortListed={!!(item.id && isShortListed(item.id))} />
             )}
-            ListEmptyComponent={() => (
-              <View className="flex-1 justify-center items-center p-6">
-                <View
-                  className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
-                  style={{
-                    shadowColor: "#3b82f6",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 8,
-                    elevation: 4,
-                  }}
-                >
-                  <Feather name="users" size={32} color="#3b82f6" />
-                </View>
-                <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Applications Yet</Text>
-                <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
-                  Applications will appear here when candidates apply for this job.
-                </Text>
-              </View>
-            )}
+            ListEmptyComponent={() => renderEmptyComponent()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }}
           />
@@ -566,41 +640,87 @@ const Applications = () => {
           >
             <View className="px-6 py-20">
               <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-6">Filter Applicants</Text>
-              <View className="mb-3">
-                <Text className="font-quicksand-medium text-md text-gray-900">Location</Text>
-                <TextInput
-                  ref={locationInputRef}
-                  autoCapitalize="words"
-                  className="border border-black rounded-lg p-3 mt-2"
-                  placeholder="e.g. New York, San Francisco"
-                  returnKeyType="done"
-                  onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
-                />
-                <View className="flex-row flex-wrap gap-2 mt-2">
+              <View className="mb-4">
+                <Text className="font-quicksand-semibold text-base text-gray-900 mb-3">Location</Text>
+                <View className="relative">
+                  <TextInput
+                    ref={locationInputRef}
+                    autoCapitalize="words"
+                    className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900"
+                    style={{
+                      fontSize: 14,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                    placeholder="e.g. New York, San Francisco"
+                    placeholderTextColor="#9ca3af"
+                    returnKeyType="done"
+                    onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
+                  />
+                  <View className="absolute right-3 top-3">
+                    <Feather name="map-pin" size={16} color="#9ca3af" />
+                  </View>
+                </View>
+                <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.locations.map((location, index) => (
                     <TouchableOpacity key={index} onPress={() => removeLocation(location)} activeOpacity={0.7}>
-                      <View className="bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-xl flex-row items-center gap-1">
-                        <Text className="text-emerald-800 font-quicksand-medium text-sm">{location}</Text>
+                      <View
+                        className="bg-emerald-100 border border-emerald-300 px-3 py-2 rounded-lg flex-row items-center gap-2"
+                        style={{
+                          shadowColor: "#10b981",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      >
+                        <Text className="text-emerald-800 font-quicksand-semibold text-sm">{location}</Text>
                         <Feather name="x" size={12} color="#059669" />
                       </View>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
-              <View className="mb-3">
-                <Text className="font-quicksand-medium text-md text-gray-900">Skills</Text>
-                <TextInput
-                  ref={skillInputRef}
-                  className="border border-black rounded-lg p-3 mt-2"
-                  placeholder="e.g. JavaScript, Python"
-                  returnKeyType="done"
-                  onSubmitEditing={(event) => addSkill(event.nativeEvent.text.trim())}
-                />
-                <View className="flex-row flex-wrap gap-2 mt-2">
+              <View className="mb-4">
+                <Text className="font-quicksand-semibold text-base text-gray-900 mb-3">Skills</Text>
+                <View className="relative">
+                  <TextInput
+                    ref={skillInputRef}
+                    className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900"
+                    style={{
+                      fontSize: 14,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                      elevation: 1,
+                    }}
+                    placeholder="e.g. JavaScript, Python, React"
+                    placeholderTextColor="#9ca3af"
+                    returnKeyType="done"
+                    onSubmitEditing={(event) => addSkill(event.nativeEvent.text.trim())}
+                  />
+                  <View className="absolute right-3 top-3">
+                    <FontAwesome5 name="wrench" size={16} color="#9ca3af" />
+                  </View>
+                </View>
+                <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.skills.map((skill, index) => (
                     <TouchableOpacity key={index} onPress={() => removeSkill(skill)} activeOpacity={0.7}>
-                      <View className="bg-blue-100 border border-blue-200 px-3 py-2 rounded-xl flex-row items-center gap-1">
-                        <Text className="text-blue-800 font-quicksand-medium text-sm">{skill}</Text>
+                      <View
+                        className="bg-blue-100 border border-blue-300 px-3 py-2 rounded-lg flex-row items-center gap-2"
+                        style={{
+                          shadowColor: "#3b82f6",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      >
+                        <Text className="text-blue-800 font-quicksand-semibold text-sm">{skill}</Text>
                         <Feather name="x" size={12} color="#2563eb" />
                       </View>
                     </TouchableOpacity>
@@ -628,42 +748,15 @@ const Applications = () => {
               <View className="mb-3">
                 <Text className="form-input__label">Applied Within</Text>
                 <View className="flex-row flex-wrap gap-4 mt-2">
-                  <TouchableOpacity
-                    className={renderYesClass(!tempFilters.applicationDateRange)}
-                    onPress={() => setApplicationDateRange(undefined)}
-                  >
-                    <Text>Any</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={renderYesClass(tempFilters.applicationDateRange === 1)}
-                    onPress={() => setApplicationDateRange(1)}
-                  >
-                    <Text>24 Hours</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={renderYesClass(tempFilters.applicationDateRange === 3)}
-                    onPress={() => setApplicationDateRange(3)}
-                  >
-                    <Text>3 Days</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={renderYesClass(tempFilters.applicationDateRange === 7)}
-                    onPress={() => setApplicationDateRange(7)}
-                  >
-                    <Text>7 Days</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={renderYesClass(tempFilters.applicationDateRange === 14)}
-                    onPress={() => setApplicationDateRange(14)}
-                  >
-                    <Text>14 Days</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={renderYesClass(tempFilters.applicationDateRange === 30)}
-                    onPress={() => setApplicationDateRange(30)}
-                  >
-                    <Text>30 Days</Text>
-                  </TouchableOpacity>
+                  {appliedWithinOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      className={renderYesClass(tempFilters.applicationDateRange === option.value)}
+                      onPress={() => setApplicationDateRange(option.value)}
+                    >
+                      <Text className="font-quicksand-semibold text-sm">{option.label}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
               <View className="mb-3">
@@ -802,26 +895,7 @@ const Applications = () => {
             renderItem={({ item }) => (
               <CandidateCard item={item} handleCandidateCardPress={() => handleCandidateCardPress(item)} />
             )}
-            ListEmptyComponent={() => (
-              <View className="flex-1 justify-center items-center p-6">
-                <View
-                  className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
-                  style={{
-                    shadowColor: "#3b82f6",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 8,
-                    elevation: 4,
-                  }}
-                >
-                  <Feather name="users" size={32} color="#3b82f6" />
-                </View>
-                <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Candidates Found</Text>
-                <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
-                  There are no candidates available for this job at the moment.
-                </Text>
-              </View>
-            )}
+            ListEmptyComponent={() => renderEmptyComponent()}
             ItemSeparatorComponent={() => <View className="h-2" />}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}

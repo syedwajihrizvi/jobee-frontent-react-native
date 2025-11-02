@@ -1,5 +1,6 @@
 import { employmentTypes, experienceLevels, workArrangements } from "@/constants";
 import { JobFilters } from "@/type";
+import { Feather, FontAwesome5, Foundation } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import { Alert, Dimensions, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -29,7 +30,6 @@ const JobFiltersView = ({
   const [tempFilters, setTempFilters] = useState<JobFilters>({
     ...defaultFilters,
   });
-  console.log("Temp Filters:", tempFilters.experience);
   const locationInputRef = useRef<TextInput>(null);
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -91,17 +91,18 @@ const JobFiltersView = ({
   };
 
   const addExperienceLevel = (level: string) => {
-    if (level === "ANY") {
-      console.log("Removing experience level filter");
-      setTempFilters({ ...tempFilters, experience: "ANY" });
-      setTempFilterCount(tempFilterCount - 1);
-    } else if (tempFilters.experience === "ANY") {
-      console.log("Adding experience level:", level);
-      setTempFilters({ ...tempFilters, experience: level });
+    if (level && !tempFilters.experience?.includes(level)) {
       setTempFilterCount(tempFilterCount + 1);
-    } else if (tempFilters.experience !== "ANY") {
-      console.log("Changing experience level to:", level);
-      setTempFilters({ ...tempFilters, experience: level });
+      setTempFilters({
+        ...tempFilters,
+        experience: [...(tempFilters.experience || []), level],
+      });
+    } else if (level && tempFilters.experience?.includes(level)) {
+      setTempFilterCount(tempFilterCount - 1);
+      setTempFilters({
+        ...tempFilters,
+        experience: tempFilters.experience.filter((t) => t !== level),
+      });
     }
   };
   const addTag = (tag: string) => {
@@ -169,13 +170,19 @@ const JobFiltersView = ({
           <Text className="font-quicksand-bold text-lg text-gray-900 text-center my-2">Filter Jobs</Text>
           <View>
             <Text className="font-quicksand-medium text-md text-gray-900">Location</Text>
-            <TextInput
-              ref={locationInputRef}
-              className="border border-black rounded-lg p-3 mt-2"
-              placeholder="e.g. New York, San Francisco"
-              returnKeyType="done"
-              onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
-            />
+            <View className="relative">
+              <TextInput
+                ref={locationInputRef}
+                autoCapitalize="words"
+                className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900 mt-2"
+                placeholder="e.g. New York, San Francisco"
+                returnKeyType="done"
+                onSubmitEditing={(event) => addLocation(event.nativeEvent.text.trim())}
+              />
+              <View className="absolute right-3 top-5">
+                <Feather name="map-pin" size={16} color="#22c55e" />
+              </View>
+            </View>
             <View className="flex-row flex-wrap gap-2 mt-3">
               {tempFilters.locations.map((location, index) => (
                 <TouchableOpacity key={index}>
@@ -191,13 +198,19 @@ const JobFiltersView = ({
             <>
               <View>
                 <Text className="font-quicksand-medium text-md text-gray-900">Companies</Text>
-                <TextInput
-                  ref={locationInputRef}
-                  className="border border-black rounded-lg p-3 mt-2"
-                  placeholder="e.g. Google, Microsoft"
-                  returnKeyType="done"
-                  onSubmitEditing={(event) => addCompany(event.nativeEvent.text.trim())}
-                />
+                <View className="relative">
+                  <TextInput
+                    ref={locationInputRef}
+                    className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900 mt-2"
+                    placeholder="e.g. Google, Microsoft"
+                    returnKeyType="done"
+                    onSubmitEditing={(event) => addCompany(event.nativeEvent.text.trim())}
+                  />
+                  <View className="absolute right-3 top-5">
+                    <FontAwesome5 name="building" size={18} color="#22c55e" />
+                  </View>
+                </View>
+
                 <View className="flex-row flex-wrap gap-2 mt-3">
                   {tempFilters.companies?.map((company, index) => (
                     <RemovableBadge
@@ -254,7 +267,7 @@ const JobFiltersView = ({
             <View className="flex flex-row flex-wrap gap-2 mt-2">
               {experienceLevels.map((type, index) => (
                 <TouchableOpacity
-                  className={`${tempFilters.experience === type.value ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                  className={`${tempFilters.experience?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
                   onPress={() => addExperienceLevel(type.value!)}
                   key={index}
                 >
@@ -266,13 +279,19 @@ const JobFiltersView = ({
           <View className="divider" />
           <View>
             <Text className="font-quicksand-medium text-md text-gray-900">Skills</Text>
-            <TextInput
-              ref={locationInputRef}
-              className="border border-black rounded-lg p-3 mt-2"
-              placeholder="e.g. JavaScript, Python"
-              returnKeyType="done"
-              onSubmitEditing={(event) => addTag(event.nativeEvent.text.trim())}
-            />
+            <View className="relative">
+              <TextInput
+                ref={locationInputRef}
+                className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900 mt-2"
+                placeholder="e.g. JavaScript, Python"
+                returnKeyType="done"
+                onSubmitEditing={(event) => addTag(event.nativeEvent.text.trim())}
+              />
+              <View className="absolute right-3 top-5">
+                <FontAwesome5 name="wrench" size={16} color="#22c55e" />
+              </View>
+            </View>
+
             <View className="flex-row flex-wrap gap-2 mt-3">
               {tempFilters.tags.map((tag, index) => (
                 <RemovableBadge
@@ -292,24 +311,34 @@ const JobFiltersView = ({
           <View className="divider" />
           <View>
             <Text>Min Salary</Text>
-            <TextInput
-              ref={locationInputRef}
-              className="border border-black rounded-lg p-3 mt-2"
-              returnKeyType="done"
-              placeholder="e.g. 50000"
-              onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
-            />
+            <View className="relative">
+              <TextInput
+                ref={locationInputRef}
+                className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900 mt-2"
+                returnKeyType="done"
+                placeholder="e.g. 50000"
+                onSubmitEditing={(event) => handleMinSalary(event.nativeEvent.text)}
+              />
+              <View className="absolute right-3 top-5">
+                <Foundation name="dollar" size={20} color="#22c55e" />
+              </View>
+            </View>
           </View>
           <View className="divider" />
           <View>
             <Text>Max Salary</Text>
-            <TextInput
-              ref={locationInputRef}
-              className="border border-black rounded-lg p-3 mt-2"
-              placeholder="e.g. 150000"
-              returnKeyType="done"
-              onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
-            />
+            <View className="relative">
+              <TextInput
+                ref={locationInputRef}
+                className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 font-quicksand-medium text-gray-900 mt-2"
+                returnKeyType="done"
+                placeholder="e.g. 150000"
+                onSubmitEditing={(event) => handleMaxSalary(event.nativeEvent.text)}
+              />
+              <View className="absolute right-3 top-5">
+                <Foundation name="dollar" size={20} color="#22c55e" />
+              </View>
+            </View>
           </View>
           <View className="flex-col justify-center items-center gap-2 mb-20 mt-2">
             <TouchableOpacity
