@@ -1,5 +1,3 @@
-import { images } from "@/constants";
-import { getS3ProfileImage } from "@/lib/s3Urls";
 import { convertTo12Hour, getDecisionString, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -12,6 +10,7 @@ type Props = {
 };
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
+  console.log("InterviewCard interview:", interview);
   const renderInterviewDecision = (decision: string) => {
     const decisionString = getDecisionString(decision);
     return (
@@ -81,7 +80,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
         >
           <Text className="font-quicksand-bold text-xs text-emerald-700">{interview.interviewDate}</Text>
         </View>
-        {renderInterviewDecision(interview.decisionResult)}
+        {interview.decisionResult && renderInterviewDecision(interview.decisionResult)}
       </View>
       <View className="flex-row items-start gap-4">
         <View
@@ -94,15 +93,19 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
             elevation: 4,
           }}
         >
-          <Image
-            source={{
-              uri: interview?.candidateProfileImageUrl
-                ? getS3ProfileImage(interview.candidateProfileImageUrl)
-                : images.companyLogo,
-            }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
+          {interview?.candidateProfileImageUrl ? (
+            <Image
+              source={{
+                uri: interview?.candidateProfileImageUrl,
+              }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="w-full h-full bg-gray-100 border border-gray-300 rounded-full items-center justify-center">
+              <Feather name="user" size={20} color="#6b7280" />
+            </View>
+          )}
         </View>
         <View className="flex-1 -top-1">
           <Text className="font-quicksand-bold text-lg text-gray-900">

@@ -2,7 +2,7 @@ import BackBar from "@/components/BackBar";
 import CheckList from "@/components/CheckList";
 import InterviewersFlatList from "@/components/InterviewersFlatList";
 import InterviewFormatSummary from "@/components/InterviewFormatSummary";
-import { images, platformLogos } from "@/constants";
+import { images } from "@/constants";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour } from "@/lib/utils";
@@ -32,36 +32,6 @@ const InterviewDetailsForBusiness = () => {
       default:
         return null;
     }
-  };
-
-  console.log(interviewDetails?.interviewers);
-  const renderPlatformIcon = (platformType: string, platformColor: string) => {
-    if (platformType === "ZOOM") {
-      return <Image source={platformLogos.ZOOM} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "GOOGLE_MEET") {
-      return <Image source={platformLogos.GOOGLE_MEET} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "MICROSOFT_TEAMS") {
-      return <FontAwesome5 name="microsoft" size={16} color={platformColor} />;
-    }
-    if (platformType === "SKYPE") {
-      return <FontAwesome5 name="skype" size={16} color={platformColor} />;
-    }
-    if (platformType === "WEBEX") {
-      return <Image source={platformLogos.WEBEX} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "CODERPAD") {
-      return <Image source={platformLogos.CODERPAD} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "CODESIGNAL") {
-      return <Image source={platformLogos.CODESIGNAL} style={{ width: 20, height: 20, borderRadius: 4 }} />;
-    }
-    if (platformType === "OTHER") {
-      return <FontAwesome5 name="link" size={16} color={platformColor} />;
-    }
-    // fallback: always return a React element so callers expecting a ReactElement won't receive undefined
-    return <FontAwesome5 name="link" size={16} color={platformColor} />;
   };
 
   const renderDecisionButton = (result: string) => {

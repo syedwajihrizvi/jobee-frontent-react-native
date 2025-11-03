@@ -50,7 +50,7 @@ const TabsLayout = () => {
         name="jobs/index"
         options={{
           tabBarButton: isAuthenticated ? undefined : () => null,
-          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Feather name="briefcase" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

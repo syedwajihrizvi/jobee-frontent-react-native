@@ -14,7 +14,6 @@ type Props = {
 const { height, width } = Dimensions.get("window");
 
 const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interviewerDetails }: Props) => {
-  console.log("Interviewer Details in Modal:", interviewerDetails);
   const renderFirstName = () => {
     if (!interviewerDetails) return "Unknown Interviewer";
     return `${interviewerDetails.firstName} ${interviewerDetails.lastName}`;

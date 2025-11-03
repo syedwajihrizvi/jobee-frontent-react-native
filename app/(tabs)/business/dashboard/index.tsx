@@ -1,5 +1,6 @@
 import BusinessJobListings from "@/components/BusinessJobListings";
 import InterviewCard from "@/components/InterviewCard";
+import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { useApplicationsForBusinessProfileJobs } from "@/lib/services/useApplicationsForBusinessProfileJobs";
 import { useBusinessProfileInterviews } from "@/lib/services/useBusinessProfileInterviews";
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
@@ -9,7 +10,7 @@ import { BusinessUser } from "@/type";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Dashboard = () => {
@@ -45,6 +46,18 @@ const Dashboard = () => {
     return storeApplications.filter((app) => new Date(app.appliedAt) >= sevenDaysAgo).length;
   };
 
+  const renderProfileImage = () => {
+    if (user?.profileImageUrl)
+      return (
+        <Image source={{ uri: getS3BusinessProfileImage(user.profileImageUrl) }} className="w-16 h-16 rounded-full" />
+      );
+    return (
+      <View className="w-28 h-28 bg-gray-100 rounded-full items-center justify-center">
+        <Feather name="user" size={40} color="#6b7280" />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -75,8 +88,24 @@ const Dashboard = () => {
             <View className="px-3 py-4">
               <Text className="font-quicksand-bold text-2xl text-gray-900">Business Dashboard</Text>
               <Text className="font-quicksand-medium text-base text-gray-600">
-                Welcome {user?.firstName} {user?.lastName}! Manage your hiring process and track recruitment metrics
+                Welcome {user?.firstName} {user?.lastName}! Manage your hiring process and track recruitment metrics.
               </Text>
+            </View>
+            <View className="px-3 py-4">
+              <View className="bg-white rounded-2xl p-6 border border-gray-100 items-center justify-center">
+                <View>{renderProfileImage()}</View>
+                <Text className="font-quicksand-bold text-xl text-gray-900">
+                  {user?.firstName} {user?.lastName}
+                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                    {user?.title} @ {user?.companyName}
+                  </Text>
+                  {user?.companyLogo && (
+                    <Image source={{ uri: user.companyLogo }} className="w-5 h-5 rounded" resizeMode="contain" />
+                  )}
+                </View>
+              </View>
             </View>
             <View className="px-3 mb-4">
               <View
@@ -298,8 +327,8 @@ const Dashboard = () => {
               >
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
-                      <Feather name="calendar" size={20} color="#f59e0b" />
+                    <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+                      <Feather name="briefcase" size={20} color="#10b981" />
                     </View>
                     <Text className="font-quicksand-bold text-lg text-gray-900">Most Popular Jobs</Text>
                   </View>

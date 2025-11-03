@@ -283,6 +283,7 @@ export type BusinessUser = {
     email: string;
     companyName: string;
     companyId: number;
+    companyLogo: string;
     firstName: string;
     lastName: string;
     profileImageUrl: string;
@@ -295,7 +296,7 @@ export type BusinessUser = {
     phoneNumber: string;
 }
 
-export type InterviewerProfileSummary = {
+export type InterviewerProfileSummary = { 
     id: number;
     firstName: string;
     lastName: string;

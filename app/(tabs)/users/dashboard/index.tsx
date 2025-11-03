@@ -89,12 +89,12 @@ const Dashboard = () => {
                       resizeMode="contain"
                     />
                   ) : (
-                    <Feather name="user" size={20} color="#3b82f6" />
+                    <Feather name="user" size={20} color="black" />
                   )}
                 </View>
                 <View>
                   <Text className="font-quicksand-bold text-lg">{profileSummary.fullName}</Text>
-                  <Text className="font-quicksand-bold text-md text-gray-900">Profile Completion</Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600">{userProfile?.title}</Text>
                 </View>
               </View>
               <View className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
@@ -111,6 +111,7 @@ const Dashboard = () => {
                   </View>
                 </View>
               </View>
+              <Text className="font-quicksand-semibold text-md mb-1">Profile Completeness</Text>
               <View className="mb-3">
                 {isLoadingProfileCompleteness ? (
                   <ActivityIndicator size="small" color="#3b82f6" className="my-2" />
@@ -136,7 +137,6 @@ const Dashboard = () => {
                   </>
                 )}
               </View>
-
               <TouchableOpacity
                 className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex-row items-center justify-center gap-2"
                 onPress={() => router.push("/userProfile/editProfile")}
@@ -159,10 +159,10 @@ const Dashboard = () => {
               }}
             >
               <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
                   <MaterialIcons name="pie-chart" size={20} color="#10b981" />
                 </View>
-                <Text className="font-quicksand-bold text-lg text-gray-900">Application Overview</Text>
+                <Text className="font-quicksand-bold text-lg text-gray-900">Applications Overview</Text>
               </View>
               <Piechart
                 data={[
@@ -173,13 +173,13 @@ const Dashboard = () => {
               />
 
               <TouchableOpacity
-                className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mt-4 items-center"
+                className="bg-emerald-50 border border-green-200 rounded-xl p-3 mt-4 items-center"
                 onPress={() => router.push("/userProfile/appliedJobs")}
                 activeOpacity={0.7}
               >
                 <View className="flex-row items-center gap-2">
                   <Feather name="eye" size={14} color="#10b981" />
-                  <Text className="font-quicksand-semibold text-emerald-700">
+                  <Text className="font-quicksand-semibold text-green-700">
                     View All Applications ({profileSummary.totalApplications})
                   </Text>
                 </View>
