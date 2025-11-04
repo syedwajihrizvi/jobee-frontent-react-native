@@ -1,5 +1,6 @@
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
+import useNotificationStore from "@/store/notifications.store";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
@@ -8,7 +9,9 @@ import { Text, View } from "react-native";
 const TabsLayout = () => {
   const { isAuthenticated } = useAuthStore();
   const { unreadMessages } = useConversationStore();
-  console.log("Unread Messages in User Layout:", unreadMessages);
+  const { unReadCount } = useNotificationStore();
+  console.log("Unread notifications count in TabsLayout: ", unReadCount);
+  console.log("Notifications in store: ", useNotificationStore.getState().notifications);
   return (
     <Tabs
       screenOptions={{
@@ -92,6 +95,36 @@ const TabsLayout = () => {
         options={{
           tabBarButton: isAuthenticated ? undefined : () => null,
           tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications/index"
+        options={{
+          tabBarButton: isAuthenticated ? undefined : () => null,
+          tabBarIcon: ({ color, size }) => (
+            <View className="relative">
+              <Feather name="bell" size={size} color={color} />
+              {unReadCount > 0 && (
+                <View
+                  className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-5 h-5 items-center justify-center"
+                  style={{
+                    shadowColor: "#ef4444",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 3,
+                  }}
+                >
+                  <Text
+                    className="text-white font-quicksand-bold text-xs"
+                    style={{ fontSize: unReadCount > 99 ? 9 : 10 }}
+                  >
+                    {unReadCount > 99 ? "99+" : unReadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
         }}
       />
     </Tabs>

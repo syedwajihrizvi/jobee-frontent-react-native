@@ -9,6 +9,7 @@ type ConversationState = {
     setLoading: (loading: boolean) => void;
     setConversations: (conversations: Conversation[]) => void;
     setLastMessage: (message: Message | null) => void;
+    setUnreadMessages: (count: number) => void;
     reduceUnreadCount: () => void;
     increaseUnreadCount: () => void;
 }
@@ -21,9 +22,9 @@ const useConversationStore = create<ConversationState>((set) => ({
     setLastMessage: (message: Message | null) => set({ lastMessage: message }),
     setLoading: (loading: boolean) => set({ loading }),
     setConversations: (conversations: Conversation[]) => {
-        const unreadCount = conversations.filter(conv => !conv.lastMessageRead).length
-        set({ conversations, unreadMessages: unreadCount });
+        set({ conversations });
     },
+    setUnreadMessages: (count: number) => set({ unreadMessages: count }),
     reduceUnreadCount: () => set((state) => ({ unreadMessages: Math.max(0, state.unreadMessages - 1) })),
     increaseUnreadCount: () => set((state) => ({ unreadMessages: state.unreadMessages + 1 })),
     

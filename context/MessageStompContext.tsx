@@ -1,5 +1,6 @@
 import { sounds } from "@/constants";
 import { createMessageStompClient } from "@/lib/chat";
+import { useConversations } from "@/lib/services/useConversations";
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
 import { Message } from "@/type";
@@ -22,12 +23,22 @@ export const useStomp = () => useContext(MessageStompContext);
 
 export const MessageStompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, userType } = useAuthStore();
-  const { setConversations, setLastMessage } = useConversationStore();
+  const { setConversations, setLastMessage, setUnreadMessages, increaseUnreadCount } = useConversationStore();
   const [messageClient, setMessageClient] = useState<Client | null>(null);
   const player = useAudioPlayer(sounds.popSound);
   const [isConnected, setIsConnected] = useState(false);
+  const { data: conversations, isLoading } = useConversations("");
   const queryClient = useQueryClient();
   const stompClientRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!isLoading && conversations) {
+      console.log("Setting initial conversations in store: ", conversations);
+      setConversations(conversations);
+      const unreadCount = conversations.filter((conv) => !conv.lastMessageRead).length;
+      setUnreadMessages(unreadCount);
+    }
+  }, [conversations, isLoading, setConversations, setUnreadMessages]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -49,10 +60,11 @@ export const MessageStompProvider: React.FC<{ children: React.ReactNode }> = ({ 
             lastMessageRead: false, // Always false for new incoming messages
             wasLastMessageSender: msg.sentByUser,
           };
-
           const newConversations = [...currentConversations];
           newConversations[currentConversationIndex] = currentConversation;
+          console.log("Updating conversations in store with new message: ", newConversations);
           setConversations(newConversations);
+          if (msg.sentByUser === false) increaseUnreadCount();
         } else {
           queryClient.invalidateQueries({ queryKey: ["conversations"] });
         }

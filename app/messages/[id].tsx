@@ -16,7 +16,7 @@ const MessageChat = () => {
   const router = useRouter();
   const { client } = useStomp();
   const { user, userType } = useAuthStore();
-  const { conversations, setConversations, reduceUnreadCount, lastMessage } = useConversationStore();
+  const { conversations, setConversations, reduceUnreadCount, lastMessage, setUnreadMessages } = useConversationStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
@@ -45,7 +45,6 @@ const MessageChat = () => {
     };
   }, [id, name, role, conversationId]);
 
-  // Run use effect once to make any unread messages as read
   useEffect(() => {
     const conversation = conversations.find((c) => c.id === Number(conversationId));
     if (conversation && !conversation.lastMessageRead) {
@@ -54,6 +53,7 @@ const MessageChat = () => {
       const updatedConversations = conversations.filter((c) => c.id !== Number(conversationId));
       updatedConversations.unshift(updatedConversation);
       setConversations(updatedConversations);
+      setUnreadMessages(0);
     }
   }, []);
 

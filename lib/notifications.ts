@@ -21,8 +21,10 @@ export const createNotificationStompClient = ({ userId, userType, onNotification
             console.error('Notification Stomp Error: ', frame);
         }
     });
+    const endpoint = `/topic/notifications/${userType.toLocaleLowerCase()}/${userId}`;
+    console.log("Subscribing to notification endpoint: ", endpoint);
     stompClient.onConnect = () => {
-        const subscriptionEndpoint = `/topic/notifications/${userType.toLocaleLowerCase()}/${userId}`;
+        const subscriptionEndpoint = endpoint;
         stompClient.subscribe(subscriptionEndpoint, (message) => {
             const body = JSON.parse(message.body);
             onNotification(body);

@@ -645,6 +645,8 @@ type OneDrivePathContent = {
 export type SelectedUploadMethod = "IMAGE_UPLOAD" |"DIRECT_UPLOAD" | "GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | "LINK_INPUT" | null;
 
 export type Notification = {
+    id?: number;
     notificationType: 'REJECTION' | 'INTERVIEW_SCHEDULED' | 'INTERVIEW_RESULT',
     message: string;
+    read?: boolean;
 }

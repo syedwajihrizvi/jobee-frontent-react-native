@@ -232,12 +232,6 @@ const ScheduleInterview = () => {
         queryClient.invalidateQueries({
           queryKey: ["job", "business", Number(jobId)],
         });
-        // Send a notificaton to the candidate
-        const interviewScheduledNotif: Notification = {
-          notificationType: "INTERVIEW_SCHEDULED",
-          message: `Your interview for the position has been scheduled.`,
-        };
-        publishNotification(client, Number(candidateId), "user", interviewScheduledNotif);
         Alert.alert("Success", "Interview created successfully.");
         setInterviewDetails({ ...defaultInterviewForm });
         router.back();

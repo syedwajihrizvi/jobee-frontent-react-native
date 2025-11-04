@@ -5,21 +5,15 @@ import { useConversations } from "@/lib/services/useConversations";
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
 import { Redirect } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Messages = () => {
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState("");
-  const { conversations, setConversations } = useConversationStore();
+  const { conversations } = useConversationStore();
   const { data: messages, isLoading } = useConversations(search);
-
-  useEffect(() => {
-    if (messages && !isLoading && isAuthenticated && conversations.length === 0) {
-      setConversations(messages || []);
-    }
-  }, [messages, isLoading, setConversations, conversations, isAuthenticated]);
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
