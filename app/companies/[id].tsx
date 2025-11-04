@@ -1,4 +1,5 @@
 import BackBar from "@/components/BackBar";
+import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import { useCompany } from "@/lib/services/useCompany";
 import { useMostRecentJobsAtCompany } from "@/lib/services/useJobs";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
@@ -16,6 +17,8 @@ const CompanyInfo = () => {
   const { data: company, isLoading } = useCompany(Number(id));
   const { data: jobs, isLoading: isLoadingJobs } = useMostRecentJobsAtCompany(Number(id));
   const [jobCount, setJobCount] = useState(0);
+
+  console.log(company);
   useEffect(() => {
     const fetchJobCount = async () => {
       try {
@@ -38,7 +41,6 @@ const CompanyInfo = () => {
     if (!company) return;
     try {
       const result = await toggleFavoriteCompany(Number(company.id));
-      console.log("Toggling favorite company:", result);
       if (result) {
         const currFavorites = profileSummary?.favoriteCompanies || [];
         const index = currFavorites.findIndex((c) => c.id === Number(company.id));
@@ -54,7 +56,6 @@ const CompanyInfo = () => {
             favoriteCompanies: [company, ...currFavorites],
           });
         }
-        console.log("Successfully toggled favorite company");
       }
     } catch (error) {
       console.error("Error toggling favorite company:", error);
@@ -119,9 +120,7 @@ const CompanyInfo = () => {
       <BackBar label="Company Info" />
       <View className="px-4 pb-4 border-b border-gray-100 mt-4">
         <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 bg-blue-100 rounded-xl items-center justify-center">
-            <FontAwesome5 name="building" size={20} color="#3b82f6" />
-          </View>
+          <RenderCompanyLogo logoUrl={company?.logoUrl || ""} />
           <View className="flex-1">
             <Text className="font-quicksand-bold text-lg text-gray-900">{company?.name || "Company Name"}</Text>
             <Text className="font-quicksand-medium text-sm text-gray-600">Company Information</Text>

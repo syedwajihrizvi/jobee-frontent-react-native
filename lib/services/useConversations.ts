@@ -20,7 +20,6 @@ export const useConversations = (search: string) => {
             }
         });
         const data = await response.json();
-        console.log("Fetched messages:", data);
         return data as Conversation[];
     }
 

@@ -5,9 +5,12 @@ import ModalWithBg from "@/components/ModalWithBg";
 import PlatformButton from "@/components/PlatformButton";
 import RenderMeetingPlatformIcon from "@/components/RenderMeetingPlatformIcon";
 import { meetingPlatforms } from "@/constants";
+import { useNotificationStomp } from "@/context/NotificationStompContext";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
+import { publishNotification } from "@/lib/notifications";
 import {
   convert10DigitNumberToPhoneFormat,
+  validateMeetingLink,
   validatePhoneNumber,
   validateTime,
   validateTimes,
@@ -15,7 +18,7 @@ import {
 } from "@/lib/utils";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import useAuthStore from "@/store/auth.store";
-import { BusinessUser, CreateInterviewForm } from "@/type";
+import { BusinessUser, CreateInterviewForm, Notification } from "@/type";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,6 +47,7 @@ const ScheduleInterview = () => {
     meetingPlatform: "",
     preparationTipsFromInterviewer: [],
   };
+  const { client } = useNotificationStomp();
   const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
@@ -185,10 +189,10 @@ const ScheduleInterview = () => {
         Alert.alert("Error", "Please enter meeting link.");
         return;
       }
-      // if (!validateMeetingLink(meetingLink, meetingPlatformType)) {
-      //   Alert.alert("Error", "Please enter a valid meeting link.");
-      //   return;
-      // }
+      if (!validateMeetingLink(meetingLink, meetingPlatform)) {
+        Alert.alert("Error", "Please enter a valid meeting link.");
+        return;
+      }
     }
     if (interviewType === "PHONE") {
       if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
@@ -228,6 +232,12 @@ const ScheduleInterview = () => {
         queryClient.invalidateQueries({
           queryKey: ["job", "business", Number(jobId)],
         });
+        // Send a notificaton to the candidate
+        const interviewScheduledNotif: Notification = {
+          notificationType: "INTERVIEW_SCHEDULED",
+          message: `Your interview for the position has been scheduled.`,
+        };
+        publishNotification(client, Number(candidateId), "user", interviewScheduledNotif);
         Alert.alert("Success", "Interview created successfully.");
         setInterviewDetails({ ...defaultInterviewForm });
         router.back();
@@ -241,6 +251,14 @@ const ScheduleInterview = () => {
     } finally {
       setLoadingNewInterview(false);
     }
+  };
+
+  const publishInterviewNotificationToCandidate = () => {
+    const interviewScheduledNotif: Notification = {
+      notificationType: "INTERVIEW_SCHEDULED",
+      message: `Your interview for the position has been scheduled.`,
+    };
+    publishNotification(client, Number(candidateId), "USER", interviewScheduledNotif);
   };
 
   const addBusinessUserToConductors = () => {
@@ -449,6 +467,12 @@ const ScheduleInterview = () => {
             </View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Interview Details</Text>
           </View>
+          <TouchableOpacity
+            className="bg-green-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
+            onPress={publishInterviewNotificationToCandidate}
+          >
+            <Text className="font-quicksand-semibold text-md">Publish</Text>
+          </TouchableOpacity>
           <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
             Fill in the details below to schedule an interview with the candidate.
           </Text>

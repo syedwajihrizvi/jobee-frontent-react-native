@@ -1,4 +1,4 @@
-import { useStomp } from "@/context/StompContext";
+import { useStomp } from "@/context/MessageStompContext";
 import { fetchMessages, markMessageAsRead, publishMessage } from "@/lib/chat";
 import { getS3BusinessProfileImage, getS3ProfileImage } from "@/lib/s3Urls";
 import { formatMessageTimestamp } from "@/lib/utils";
@@ -62,9 +62,6 @@ const MessageChat = () => {
     if (lastMessage?.conversationId === Number(conversationId)) {
       setMessages((prevMessages) => [...prevMessages, lastMessage]);
       markMessageAsRead(Number(conversationId));
-      if (!lastMessage.sentByUser) {
-        reduceUnreadCount();
-      }
     }
   }, [lastMessage, conversationId, reduceUnreadCount]);
 

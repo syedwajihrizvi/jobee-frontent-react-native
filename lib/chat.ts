@@ -12,7 +12,7 @@ type Props = {
     onMessage: (msg: any) => void;
 }
 
-export const createStompClient = ({ userId, userType, onMessage }: Props) => {
+export const createMessageStompClient = ({ userId, userType, onMessage }: Props) => {
     const socker = new SockJS(SOCKET_URL);
     const stompClient = new Client({
         webSocketFactory: () => socker as WebSocket,

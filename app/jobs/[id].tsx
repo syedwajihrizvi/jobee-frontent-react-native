@@ -414,7 +414,7 @@ const JobDetails = () => {
               <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
                 <Feather name="file-text" size={16} color="#3b82f6" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Job Description</Text>
+              <Text className="font-quicksand-semibold text-lg text-gray-900">Job Description</Text>
             </View>
             <ExpandableText text={job?.description || ""} />
             <ViewMore label="View More About Job" onClick={handleJobBottomOpen} />
@@ -434,7 +434,7 @@ const JobDetails = () => {
                 <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center">
                   <FontAwesome5 name="building" size={16} color="#8b5cf6" />
                 </View>
-                <Text className="font-quicksand-bold text-xl text-gray-900">Company Overview</Text>
+                <Text className="font-quicksand-semibold text-lg text-gray-900">Company Overview</Text>
               </View>
 
               <TouchableOpacity
