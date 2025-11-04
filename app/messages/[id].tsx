@@ -1,34 +1,30 @@
-import { images } from "@/constants";
-import { createStompClient, fetchMessages, markMessageAsRead, publishMessage } from "@/lib/chat";
+import { useStomp } from "@/context/StompContext";
+import { fetchMessages, markMessageAsRead, publishMessage } from "@/lib/chat";
+import { getS3BusinessProfileImage, getS3ProfileImage } from "@/lib/s3Urls";
 import { formatMessageTimestamp } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
 import { Message } from "@/type";
 import { Feather } from "@expo/vector-icons";
-import { Client } from "@stomp/stompjs";
-import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Image, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MessageChat = () => {
-  const queryClient = useQueryClient();
-  const { id, name, role, conversationId } = useLocalSearchParams();
+  const { id, name, role, conversationId, profileImageUrl } = useLocalSearchParams();
   const router = useRouter();
+  const { client } = useStomp();
   const { user, userType } = useAuthStore();
-  const { conversations, setConversations } = useConversationStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const { conversations, setConversations, reduceUnreadCount, lastMessage } = useConversationStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
-  const [client, setClient] = useState<Client | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     const fetchChatMessages = async () => {
       try {
-        setIsLoading(true);
         const msgs = await fetchMessages({
           conversationId: Number(conversationId),
           otherPartyId: Number(id),
@@ -41,7 +37,6 @@ const MessageChat = () => {
         console.error("Error fetching messages:", error);
       } finally {
         console.log("Fetch messages aborted or completed");
-        setIsLoading(false);
       }
     };
     fetchChatMessages();
@@ -52,55 +47,26 @@ const MessageChat = () => {
 
   // Run use effect once to make any unread messages as read
   useEffect(() => {
-    console.log("SYED-DEBUG: Marking messages as read for conversation:", conversationId);
     const conversation = conversations.find((c) => c.id === Number(conversationId));
-    console.log("Found conversation:", conversation);
     if (conversation && !conversation.lastMessageRead) {
       markMessageAsRead(Number(conversationId));
-      console.log("Updating conversation to mark as read:", conversationId);
       const updatedConversation = { ...conversation, lastMessageRead: true };
       const updatedConversations = conversations.filter((c) => c.id !== Number(conversationId));
-      console.log("Update Conversation: ,", updatedConversation);
       updatedConversations.unshift(updatedConversation);
       setConversations(updatedConversations);
     }
   }, []);
 
   useEffect(() => {
-    const userParamType = userType === "user" ? "USER" : "BUSINESS";
-    const client = createStompClient({
-      userId: user!.id,
-      userType: userParamType,
-      onMessage: (msg: Message) => {
-        markMessageAsRead(Number(conversationId));
-        setMessages((prevMessages) => [...prevMessages, msg]);
-        const conversationIndex = conversations.findIndex((c) => c.id === Number(conversationId));
-        if (conversationIndex === -1) {
-          console.log("Invalidating conversations for incoming message:", msg);
-          queryClient.invalidateQueries({ queryKey: ["conversations"] });
-        } else {
-          console.log("Updating conversation for incoming message:", msg);
-          const updatedConversation = conversations[conversationIndex];
-          updatedConversation.lastMessageContent = msg.text;
-          updatedConversation.lastMessageTimestamp = msg.timestamp;
-          updatedConversation.lastMessageRead = true;
-          const updatedConversations = [...conversations];
-          updatedConversations.splice(conversationIndex, 1);
-          updatedConversations.unshift(updatedConversation);
-          setConversations(updatedConversations);
-        }
-        // setTimeout(() => {
-        //   flatListRef.current?.scrollToEnd({ animated: true });
-        // }, 100);
-      },
-    });
-    client.activate();
-    setClient(client);
-    return () => {
-      client.deactivate();
-      setClient(null);
-    };
-  }, [user, userType]);
+    // Check the latest incoming message for this conversation and see if it is updated
+    if (lastMessage?.conversationId === Number(conversationId)) {
+      setMessages((prevMessages) => [...prevMessages, lastMessage]);
+      markMessageAsRead(Number(conversationId));
+      if (!lastMessage.sentByUser) {
+        reduceUnreadCount();
+      }
+    }
+  }, [lastMessage, conversationId, reduceUnreadCount]);
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.sentByUser;
@@ -145,6 +111,21 @@ const MessageChat = () => {
     }
   };
 
+  const renderProfileImageUrl = () => {
+    if (profileImageUrl && profileImageUrl !== "null" && profileImageUrl !== "undefined") {
+      const uri =
+        role === "BUSINESS"
+          ? getS3BusinessProfileImage(profileImageUrl as string)
+          : getS3ProfileImage(profileImageUrl as string);
+      return <Image source={{ uri }} className="w-12 h-12 rounded-full border-2 border-gray-200" resizeMode="cover" />;
+    }
+    return (
+      <View className="w-12 h-12 rounded-full border-2 border-gray-200 items-center justify-center bg-gray-100">
+        <Feather name="user" size={30} color="black" />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="bg-white border-b border-gray-100">
@@ -155,11 +136,7 @@ const MessageChat = () => {
 
           <View className="flex-row items-center flex-1">
             <View className="relative mr-3">
-              <Image
-                source={{ uri: images.companyLogo }}
-                className="w-12 h-12 rounded-full border-2 border-gray-200"
-                resizeMode="cover"
-              />
+              {renderProfileImageUrl()}
               <View className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
             </View>
 

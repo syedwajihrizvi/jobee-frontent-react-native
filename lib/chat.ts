@@ -25,9 +25,7 @@ export const createStompClient = ({ userId, userType, onMessage }: Props) => {
         }
     });
     stompClient.onConnect = () => {
-        console.log('Stomp Client Connected');
         const subscriptionEndpoint = `/topic/messages/${userType.toLocaleLowerCase()}/${userId}`;
-        console.log('Subscribing to:', subscriptionEndpoint);
         stompClient.subscribe(subscriptionEndpoint, (message) => {
             const body = JSON.parse(message.body);
             onMessage(body);

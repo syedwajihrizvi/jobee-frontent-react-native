@@ -37,7 +37,7 @@ const UpcomingInterviews = () => {
             >
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-1">
-                  <CompanyInformation company={item.companyName} />
+                  <CompanyInformation companyName={item.companyName} companyLogoUrl={""} />
                 </View>
                 <View
                   className="bg-indigo-100 px-3 py-1 rounded-full"

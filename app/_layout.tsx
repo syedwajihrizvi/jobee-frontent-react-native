@@ -1,3 +1,4 @@
+import { StompProvider } from "@/context/StompContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
@@ -27,15 +28,17 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)/business" />
-          <Stack.Screen name="(tabs)/users" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="jobs/[id]" />
-        </Stack>
-      </GestureHandlerRootView>
+      <StompProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(tabs)/business" />
+            <Stack.Screen name="(tabs)/users" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="jobs/[id]" />
+          </Stack>
+        </GestureHandlerRootView>
+      </StompProvider>
     </QueryClientProvider>
   );
 }

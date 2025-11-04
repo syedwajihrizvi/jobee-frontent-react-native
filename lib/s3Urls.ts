@@ -28,3 +28,7 @@ export const getS3InterviewQuestionAudioUrl = (
 export const getS3InterviewQuestionAudioUrlUsingFileName = (fileName: string) => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/interview-prep/${fileName}`;
 };
+
+export const getS3CompanyLogoUrl = (companyLogoUrl: string) => {
+    return `https://${bucketName}.s3.${region}.amazonaws.com/company-logos/${companyLogoUrl}`;
+}

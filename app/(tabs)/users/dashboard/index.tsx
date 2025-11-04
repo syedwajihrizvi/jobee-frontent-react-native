@@ -1,4 +1,5 @@
 import Piechart from "@/components/Piechart";
+import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
@@ -6,7 +7,7 @@ import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
-import { AntDesign, Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
 
+  console.log(profileSummary?.lastApplication);
   const handleFavoriteCompany = async (companyId: number) => {
     try {
       const result = await toggleFavoriteCompany(Number(companyId));
@@ -214,9 +216,13 @@ const Dashboard = () => {
               {profileSummary.lastApplication && (
                 <View className="bg-purple-50 border border-purple-200 rounded-xl p-4">
                   <View className="flex-row items-center justify-between">
-                    <Text className="font-quicksand-bold text-md text-purple-700">
-                      {profileSummary.lastApplication.companyName}
-                    </Text>
+                    <View className="flex-row gap-1 items-center">
+                      <RenderCompanyLogo logoUrl={profileSummary.lastApplication.companyLogoUrl} />
+                      <Text className="font-quicksand-bold text-md text-purple-700">
+                        {profileSummary.lastApplication.companyName}
+                      </Text>
+                    </View>
+
                     <Text className="font-quicksand-semibold text-sm px-2 border border-purple-300 rounded-full text-purple-800">
                       {getApplicationStatus(profileSummary.lastApplication.status)}
                     </Text>
@@ -272,9 +278,7 @@ const Dashboard = () => {
                       onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
                     >
                       <View className="flex-row items-center gap-3">
-                        <View className="w-8 h-8 bg-gray-300 rounded items-center justify-center">
-                          <FontAwesome5 name="building" size={14} color="#6b7280" />
-                        </View>
+                        <RenderCompanyLogo logoUrl={company.logoUrl} />
                         <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
                       </View>
                       <TouchableOpacity onPress={() => handleFavoriteCompany(company.id)}>
@@ -319,7 +323,10 @@ const Dashboard = () => {
                             <Text className="font-quicksand-bold text-xs text-amber-800">{index + 1}</Text>
                           </View>
                           <View>
-                            <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
+                            <View className="flex-row gap-1 items-center">
+                              <RenderCompanyLogo logoUrl={company.logoUrl} />
+                              <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
+                            </View>
                             <Text className="font-quicksand-medium text-sm text-amber-700">
                               {company.jobCount} open position{company.jobCount !== 1 ? "s" : ""}
                             </Text>

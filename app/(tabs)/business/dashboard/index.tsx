@@ -1,5 +1,6 @@
 import BusinessJobListings from "@/components/BusinessJobListings";
 import InterviewCard from "@/components/InterviewCard";
+import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { useApplicationsForBusinessProfileJobs } from "@/lib/services/useApplicationsForBusinessProfileJobs";
 import { useBusinessProfileInterviews } from "@/lib/services/useBusinessProfileInterviews";
@@ -94,16 +95,17 @@ const Dashboard = () => {
             <View className="px-3 py-4">
               <View className="bg-white rounded-2xl p-6 border border-gray-100 items-center justify-center">
                 <View>{renderProfileImage()}</View>
-                <Text className="font-quicksand-bold text-xl text-gray-900">
-                  {user?.firstName} {user?.lastName}
-                </Text>
+                <View className="flex-row items-center gap-1">
+                  <Text className="font-quicksand-bold text-xl text-gray-900">
+                    {user?.firstName} {user?.lastName}
+                  </Text>
+                  <RenderCompanyLogo logoUrl={user?.companyLogo || ""} />
+                </View>
+
                 <View className="flex-row items-center gap-2">
                   <Text className="font-quicksand-medium text-sm text-gray-600">
                     {user?.title} @ {user?.companyName}
                   </Text>
-                  {user?.companyLogo && (
-                    <Image source={{ uri: user.companyLogo }} className="w-5 h-5 rounded" resizeMode="contain" />
-                  )}
                 </View>
               </View>
             </View>

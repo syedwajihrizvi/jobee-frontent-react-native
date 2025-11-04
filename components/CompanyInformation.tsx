@@ -1,16 +1,17 @@
-import { images } from "@/constants";
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import RenderCompanyLogo from "./RenderCompanyLogo";
 
-const CompanyInformation = ({ company }: { company: string }) => {
+type Props = {
+  companyName: string;
+  companyLogoUrl: string;
+};
+
+const CompanyInformation = ({ companyName, companyLogoUrl }: Props) => {
   return (
     <View className="flex-row items-center gap-2">
-      <Image
-        source={{ uri: images.companyLogo }}
-        className="size-8"
-        resizeMode="contain"
-      />
-      <Text className="font-quicksand-bold text-xl">{company}</Text>
+      <RenderCompanyLogo logoUrl={companyLogoUrl} />
+      <Text className="font-quicksand-bold text-xl">{companyName}</Text>
     </View>
   );
 };

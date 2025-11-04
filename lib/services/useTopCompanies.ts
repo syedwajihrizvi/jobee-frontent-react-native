@@ -11,7 +11,7 @@ export const useTopCompanies = () => {
             },
         });
         const data = await response.json();
-        return data as {id: number, name: string, jobCount: number}[];
+        return data as {id: number, name: string, jobCount: number, logoUrl: string}[];
     }
 
     return useQuery({

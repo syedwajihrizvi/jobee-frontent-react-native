@@ -1,13 +1,13 @@
 import BusinessJobListings from "@/components/BusinessJobListings";
 import FilterStatus from "@/components/FilterStatus";
 import JobFiltersView from "@/components/JobFiltersView";
+import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import SearchBar from "@/components/SearchBar";
-import { images } from "@/constants";
 import { useJobsByCompany } from "@/lib/services/useJobs";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, JobFilters } from "@/type";
 import React, { useState } from "react";
-import { ActivityIndicator, Dimensions, FlatList, Image, StatusBar, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, FlatList, StatusBar, Text, View } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -83,7 +83,7 @@ const Jobs = () => {
       >
         <View className="flex-row items-center gap-3 mb-4">
           <View className="items-center justify-center">
-            <Image source={{ uri: images.companyLogo }} className="size-12 rounded-full" resizeMode="contain" />
+            <RenderCompanyLogo logoUrl={user?.companyLogo || ""} />
           </View>
           <View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Jobs</Text>

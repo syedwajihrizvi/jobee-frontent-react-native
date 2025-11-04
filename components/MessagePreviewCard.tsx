@@ -32,7 +32,7 @@ const MessagePreviewCard = ({ message }: Props) => {
       }}
       onPress={() =>
         router.push(
-          `/messages/${message.participantId}?name=${message.participantName}&role=${message.participantRole}&conversationId=${message.id}`
+          `/messages/${message.participantId}?name=${message.participantName}&role=${message.participantRole}&conversationId=${message.id}&profileImageUrl=${message.participantProfileImageUrl}`
         )
       }
       activeOpacity={0.8}

@@ -1,17 +1,12 @@
 import { Job } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 const JobInfo = ({ job }: { job: Job }) => {
   // Mock data for demonstration - replace with actual job properties
   const mockData = {
-    department: "Engineering",
-    hiringManager: "Sarah Johnson",
-    postedAt: "2024-10-15",
-    deadline: "2024-11-30",
-    experienceLevel: "Mid-Level",
-    workEnvironment: "Hybrid",
     aiSummary: [
       "Competitive salary range with comprehensive benefits package",
       "Opportunity to work with cutting-edge technologies and frameworks",
@@ -19,6 +14,16 @@ const JobInfo = ({ job }: { job: Job }) => {
       "Flexible work arrangements with remote work options",
       "Professional development budget and learning opportunities",
     ],
+  };
+
+  const openMapWithAddress = () => {
+    const encodedAddress = encodeURIComponent(job?.location || "San Francisco, CA");
+    const url = Platform.select({
+      ios: `http://maps.apple.com/?q=${encodedAddress}`,
+      android: `geo:0,0?q=${encodedAddress}`,
+    });
+
+    Linking.openURL(url!);
   };
 
   return (
@@ -51,7 +56,11 @@ const JobInfo = ({ job }: { job: Job }) => {
         </View>
 
         <Text className="font-quicksand-medium text-sm text-gray-600 mb-3">{job?.location || "San Francisco, CA"}</Text>
-        <TouchableOpacity className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center" activeOpacity={0.8}>
+        <TouchableOpacity
+          className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center"
+          activeOpacity={0.8}
+          onPress={openMapWithAddress}
+        >
           <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center mb-2">
             <Feather name="map" size={20} color="#3b82f6" />
           </View>

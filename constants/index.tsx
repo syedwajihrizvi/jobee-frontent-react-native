@@ -1,10 +1,12 @@
 import coderpad from "@/assets/images/coderpad.png";
 import codesignal from "@/assets/images/codesignal.png";
+import companyLogo from "@/assets/images/companyLogo.png";
 import googleMeet from "@/assets/images/googlemeet.webp";
 import resumeImage from "@/assets/images/sampleResume.jpg";
 import webex from "@/assets/images/webex.png";
 import zoom from "@/assets/images/zoom.png";
 import beepSound from "@/assets/sounds/beep.mp3";
+import newMessageSound from "@/assets/sounds/newMessage.mp3";
 import popSound from "@/assets/sounds/pop.mp3";
 
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
@@ -13,7 +15,6 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { ReactNode } from "react";
 
 const placeholder = "https://placehold.co/600x400/png";
-const companyLogo = "https://placehold.co/40x40/png";
 
 export const platformLogos = {
   WEBEX: webex,
@@ -32,6 +33,7 @@ export const images = {
 export const sounds = {
   popSound,
   beepSound,
+  newMessageSound,
 };
 
 export const meetingPlatforms = [

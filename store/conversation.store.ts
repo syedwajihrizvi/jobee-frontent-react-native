@@ -1,18 +1,32 @@
-import { Conversation } from "@/type";
+import { Conversation, Message } from "@/type";
 import { create } from "zustand";
 
 type ConversationState = {
     loading: boolean;
+    unreadMessages: number;
     conversations: Conversation[];
+    lastMessage: Message | null;
     setLoading: (loading: boolean) => void;
     setConversations: (conversations: Conversation[]) => void;
+    setLastMessage: (message: Message | null) => void;
+    reduceUnreadCount: () => void;
+    increaseUnreadCount: () => void;
 }
 
 const useConversationStore = create<ConversationState>((set) => ({
     conversations: [],
     loading: false,
+    unreadMessages: 0,
+    lastMessage: null,
+    setLastMessage: (message: Message | null) => set({ lastMessage: message }),
     setLoading: (loading: boolean) => set({ loading }),
-    setConversations: (conversations: Conversation[]) => set({ conversations }),
+    setConversations: (conversations: Conversation[]) => {
+        const unreadCount = conversations.filter(conv => !conv.lastMessageRead).length
+        set({ conversations, unreadMessages: unreadCount });
+    },
+    reduceUnreadCount: () => set((state) => ({ unreadMessages: Math.max(0, state.unreadMessages - 1) })),
+    increaseUnreadCount: () => set((state) => ({ unreadMessages: state.unreadMessages + 1 })),
+    
 }))
 
 export default useConversationStore;

@@ -298,7 +298,7 @@ const JobDetails = () => {
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-1 mr-3">
-                <CompanyInformation company={job?.businessName!} />
+                <CompanyInformation companyName={job?.businessName!} companyLogoUrl={job?.companyLogoUrl!} />
               </View>
               <FavoriteJob jobId={job?.id!} />
             </View>

@@ -1,7 +1,9 @@
 import BackBar from "@/components/BackBar";
 import { useCompany } from "@/lib/services/useCompany";
 import { useMostRecentJobsAtCompany } from "@/lib/services/useJobs";
+import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { formatDate, getWorkArrangement } from "@/lib/utils";
+import useProfileSummaryStore from "@/store/profile-summary.store";
 import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -10,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const CompanyInfo = () => {
   const { id } = useLocalSearchParams();
+  const { isLoading: isLoadingProfileSummary, profileSummary } = useProfileSummaryStore();
   const { data: company, isLoading } = useCompany(Number(id));
   const { data: jobs, isLoading: isLoadingJobs } = useMostRecentJobsAtCompany(Number(id));
   const [jobCount, setJobCount] = useState(0);
@@ -25,6 +28,38 @@ const CompanyInfo = () => {
     };
     fetchJobCount();
   }, [id, company, isLoading]);
+
+  const checkIfCompanyIsFavorited = (companyId: number) => {
+    if (!profileSummary) return false;
+    return profileSummary?.favoriteCompanies.some((company) => company.id === companyId);
+  };
+
+  const handleFavoriteCompany = async () => {
+    if (!company) return;
+    try {
+      const result = await toggleFavoriteCompany(Number(company.id));
+      console.log("Toggling favorite company:", result);
+      if (result) {
+        const currFavorites = profileSummary?.favoriteCompanies || [];
+        const index = currFavorites.findIndex((c) => c.id === Number(company.id));
+        if (index > -1) {
+          const newFavorites = currFavorites.filter((c) => c.id !== Number(company.id));
+          useProfileSummaryStore.getState().setProfileSummary({
+            ...profileSummary!,
+            favoriteCompanies: newFavorites,
+          });
+        } else {
+          useProfileSummaryStore.getState().setProfileSummary({
+            ...profileSummary!,
+            favoriteCompanies: [company, ...currFavorites],
+          });
+        }
+        console.log("Successfully toggled favorite company");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite company:", error);
+    }
+  };
   // Mock data for demonstration - replace with actual company properties
   const mockData = {
     description:
@@ -91,9 +126,13 @@ const CompanyInfo = () => {
             <Text className="font-quicksand-bold text-lg text-gray-900">{company?.name || "Company Name"}</Text>
             <Text className="font-quicksand-medium text-sm text-gray-600">Company Information</Text>
           </View>
-          {company?.website && (
-            <TouchableOpacity className="p-2">
-              <Feather name="external-link" size={18} color="#3b82f6" />
+          {company && company.id && (
+            <TouchableOpacity
+              className="w-10 h-10 bg-red-50 rounded-full items-center justify-center border border-red-100"
+              onPress={handleFavoriteCompany}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="heart" size={16} color="#ef4444" solid={checkIfCompanyIsFavorited(company?.id!)} />
             </TouchableOpacity>
           )}
         </View>

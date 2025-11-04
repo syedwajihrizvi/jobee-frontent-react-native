@@ -13,6 +13,7 @@ export const useBusinessProfileInterviews = () => {
             }
         });
         const data = await response.json();
+        console.log("Fetched business profile interviews:", data);
         return data;
     }
 

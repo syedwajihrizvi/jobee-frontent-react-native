@@ -152,6 +152,7 @@ export type Job = {
     description: string,
     businessName: string,
     companyId: number,
+    companyLogoUrl: string,
     department: string,
     level: string,
     views: number,
@@ -421,6 +422,7 @@ export type Application = {
     id: number,
     jobId: number,
     companyName: string,
+    companyLogoUrl: string,
     jobTitle: string,
     status: string,
     appliedAt: string;

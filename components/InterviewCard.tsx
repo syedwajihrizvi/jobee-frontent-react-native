@@ -1,3 +1,4 @@
+import { getS3ProfileImage } from "@/lib/s3Urls";
 import { convertTo12Hour, getDecisionString, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -10,7 +11,6 @@ type Props = {
 };
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
-  console.log("InterviewCard interview:", interview);
   const renderInterviewDecision = (decision: string) => {
     const decisionString = getDecisionString(decision);
     return (
@@ -96,7 +96,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
           {interview?.candidateProfileImageUrl ? (
             <Image
               source={{
-                uri: interview?.candidateProfileImageUrl,
+                uri: getS3ProfileImage(interview?.candidateProfileImageUrl),
               }}
               className="w-full h-full"
               resizeMode="cover"

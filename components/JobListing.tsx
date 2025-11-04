@@ -98,7 +98,7 @@ const JobListing = ({
       <TouchableOpacity activeOpacity={0.7} onPress={() => router.push(`/jobs/${job.id}`)}>
         <View className="flex-row items-center justify-between mb-1">
           <View className="flex-1 mr-3">
-            <CompanyInformation company={job.businessName} />
+            <CompanyInformation companyName={job.businessName} companyLogoUrl={job.companyLogoUrl} />
           </View>
           <View className="flex-row items-center gap-3">
             {showStatus && status && (

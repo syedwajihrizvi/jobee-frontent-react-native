@@ -1,9 +1,15 @@
+import useAuthStore from "@/store/auth.store";
+import useConversationStore from "@/store/conversation.store";
 import { Feather } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Tabs } from "expo-router";
 import React from "react";
+import { Text, View } from "react-native";
 
 const TabsLayout = () => {
+  const { isAuthenticated } = useAuthStore();
+  const { unreadMessages } = useConversationStore();
+  console.log("Unread Messages in Business Layout:", unreadMessages);
   return (
     <Tabs
       screenOptions={{
@@ -51,7 +57,31 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="messages/index"
         options={{
-          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
+          tabBarButton: isAuthenticated ? undefined : () => null,
+          tabBarIcon: ({ color, size }) => (
+            <View className="relative">
+              <Feather name="message-circle" size={size} color={color} />
+              {unreadMessages > 0 && (
+                <View
+                  className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-5 h-5 items-center justify-center"
+                  style={{
+                    shadowColor: "#ef4444",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 3,
+                  }}
+                >
+                  <Text
+                    className="text-white font-quicksand-bold text-xs"
+                    style={{ fontSize: unreadMessages > 99 ? 9 : 10 }}
+                  >
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen

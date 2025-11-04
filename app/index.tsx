@@ -28,5 +28,9 @@ export default function Index() {
       </View>
     );
   }
-  return userType === "user" ? <Redirect href="./(tabs)/users/jobs" /> : <Redirect href="./(tabs)/business/jobs" />;
+  return userType === "user" ? (
+    <Redirect href="./(tabs)/users/jobs" />
+  ) : (
+    <Redirect href="./(tabs)/business/dashboard" />
+  );
 }
