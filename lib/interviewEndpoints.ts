@@ -39,7 +39,8 @@ export const createInterview = async (
         body: JSON.stringify(requestBody)
     })
     if (result.status !== 201) return null
-    return true
+    const data = await result.json()
+    return data as InterviewDetails
 }
 
 export const getMostRecentInterviewForJob = async (jobId: number) : Promise<InterviewDetails | null> => {

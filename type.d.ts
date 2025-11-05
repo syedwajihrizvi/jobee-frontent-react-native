@@ -462,6 +462,11 @@ export type CreateJobForm = {
     title: string;
     description: string;
     location: string;
+    department: string;
+    city: string;
+    streetAddress: string;
+    postalCode: string;
+    country: string;
     minSalary: string;
     maxSalary: string;
     experience: string;
@@ -646,7 +651,15 @@ export type SelectedUploadMethod = "IMAGE_UPLOAD" |"DIRECT_UPLOAD" | "GOOGLE_DRI
 
 export type Notification = {
     id?: number;
-    notificationType: 'REJECTION' | 'INTERVIEW_SCHEDULED' | 'INTERVIEW_RESULT',
+    notificationType: NotificationType,
     message: string;
     read?: boolean;
+    comapanyName?: string;
+    companyLogoUrl?: string;
+    timestamp: string;
+    companyId?: number;
+    jobId?: number;
+    applicationId?: number;
 }
+
+export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER"

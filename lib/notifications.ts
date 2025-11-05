@@ -1,8 +1,10 @@
 import { Notification } from "@/type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 const SOCKET_URL = 'http://192.168.2.29:8080/ws-notifications'
 
+const NOTIFICATIONS_API_URL = 'http://192.168.2.29:8080/user-notifications'
 type Props = {
     userId: number;
     userType: 'USER' | 'BUSINESS',
@@ -34,14 +36,14 @@ export const createNotificationStompClient = ({ userId, userType, onNotification
     return stompClient;
 }
 
-export const publishNotification = (stompClient: Client, recepientId: number, recepientType: string, notification: Notification) => {
+export const publishNotification = (stompClient: Client, recipientId: number, recipientType: string, notification: Notification) => {
     if (!stompClient || !stompClient.connected) {
         console.log('Stomp Client not connected');
         return false
     }
     const body = JSON.stringify({
-            recepientId,
-            recepientType,
+            recipientId,
+            recipientType: recipientType.toUpperCase(),
             ...notification
         })
     stompClient.publish({
@@ -51,3 +53,59 @@ export const publishNotification = (stompClient: Client, recepientId: number, re
     console.log('Publishing notification: ', notification);
 }
 
+
+export const publishNotificationWrapper = (
+    stompClient: Client | null, recepientId: number, recepientType: string, notification: Notification) => {
+    if (!stompClient) {
+        console.log('Stomp Client is null');
+        return;
+    }
+    publishNotification(stompClient, recepientId, recepientType, notification);
+}
+
+export const updateAllNotificationsStatus = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const result = await fetch(`${NOTIFICATIONS_API_URL}/mark-all-read`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    if (result.status !== 200) return null
+    const data = await result.json()
+    return data as Notification[]
+
+}
+
+export const updateNotificationStatusToRead = async (notificationId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false;
+    const result = await fetch(`${NOTIFICATIONS_API_URL}/${notificationId}/mark-read`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    console.log("Update notification status to read response status: ", result.status)
+    if (result.status !== 200) return false
+    return true
+
+}
+
+export const deleteAllReadNotificationsFromDB = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const result = await fetch(`${NOTIFICATIONS_API_URL}/delete-read`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    console.log("Delete all read notifications response status: ", result.status)
+    if (result.status !== 204) return false
+    return true
+}

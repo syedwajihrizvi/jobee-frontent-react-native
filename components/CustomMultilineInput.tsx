@@ -53,6 +53,7 @@ const CustomMultilineInput = ({
         numberOfLines={numberOfLines}
         placeholder={placeholder}
         value={value}
+        autoCapitalize="sentences"
         onKeyPress={handleKeyPress}
         onSubmitEditing={handleSubmitEditing}
         onChangeText={handleChangeText}

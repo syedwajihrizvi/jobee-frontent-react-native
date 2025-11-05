@@ -62,7 +62,6 @@ export const MessageStompProvider: React.FC<{ children: React.ReactNode }> = ({ 
           };
           const newConversations = [...currentConversations];
           newConversations[currentConversationIndex] = currentConversation;
-          console.log("Updating conversations in store with new message: ", newConversations);
           setConversations(newConversations);
           if (msg.sentByUser === false) increaseUnreadCount();
         } else {

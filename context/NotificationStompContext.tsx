@@ -20,7 +20,7 @@ export const useNotificationStomp = () => useContext(NotificationStompContext);
 
 export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, userType } = useAuthStore();
-  const { setNotifications } = useNotificationStore(); // Remove notifications from here
+  const { setNotifications, setLoading } = useNotificationStore(); // Remove notifications from here
   const [notificationClient, setNotificationClient] = useState<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { data: userNotifications, isLoading } = useUserNotifications();
@@ -30,10 +30,13 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
 
   useEffect(() => {
     if (!isLoading && userNotifications) {
+      setLoading(false);
       console.log("Setting initial notifications in store: ", userNotifications);
       setNotifications(userNotifications);
+    } else {
+      setLoading(true);
     }
-  }, [userNotifications, isLoading, setNotifications]);
+  }, [userNotifications, isLoading, setNotifications, setLoading]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -42,7 +45,6 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
       userId: user!.id,
       userType: userParamType,
       onNotification: (notif: any) => {
-        // Get fresh notifications from store instead of using stale closure
         const currentNotifications = useNotificationStore.getState().notifications;
         setNotifications([notif, ...currentNotifications]);
       },

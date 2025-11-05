@@ -1,9 +1,13 @@
 import BackBar from "@/components/BackBar";
+import CustomInput from "@/components/CustomInput";
+import CustomMultilineInput from "@/components/CustomMultilineInput";
+import ModalWithBg from "@/components/ModalWithBg";
 import { employmentTypes, experienceLevels, workArrangements } from "@/constants";
 import { createJob } from "@/lib/jobEndpoints";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
 import { BusinessUser, CreateJobForm } from "@/type";
+import { FontAwesome } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -27,6 +31,11 @@ const CreateJob = () => {
     title: "",
     location: "",
     description: "",
+    streetAddress: "",
+    city: "",
+    postalCode: "",
+    country: "",
+    department: "",
     minSalary: "",
     maxSalary: "",
     experience: "",
@@ -34,8 +43,10 @@ const CreateJob = () => {
     tags: [],
     setting: "",
     appDeadline: "",
+    state: "",
   };
   const { user: authUser } = useAuthStore();
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const { profileSummary, setProfileSummary } = useBusinessProfileSummaryStore();
   const [createJobForm, setCreateJobForm] = useState<CreateJobForm>(defaultJobForm);
   const [addingJob, setAddingJob] = useState(false);
@@ -66,8 +77,34 @@ const CreateJob = () => {
     });
   };
   const handleCreateJob = async () => {
-    const { title, location, description, minSalary, maxSalary, experience, employmentType, tags } = createJobForm;
-    if (!title || !location || !description || !minSalary || !maxSalary || !experience || !employmentType) {
+    const {
+      title,
+      streetAddress,
+      city,
+      postalCode,
+      country,
+      department,
+      description,
+      minSalary,
+      maxSalary,
+      experience,
+      employmentType,
+      tags,
+    } = createJobForm;
+    console.log("Creating job with form data: ", createJobForm);
+    if (
+      !title ||
+      !streetAddress ||
+      !city ||
+      !postalCode ||
+      !country ||
+      !department ||
+      !description ||
+      !minSalary ||
+      !maxSalary ||
+      !experience ||
+      !employmentType
+    ) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -91,7 +128,10 @@ const CreateJob = () => {
       setAddingJob(false);
       return;
     }
-    setAddingJob(true);
+    setShowConfirmationModal(true);
+  };
+
+  const handlePostJob = async () => {
     try {
       const result = await createJob(createJobForm, user?.id!);
       if (!result) {
@@ -110,6 +150,7 @@ const CreateJob = () => {
         totalJobsPosted: (profileSummary?.totalJobsPosted || 0) + 1,
       } as any);
       tagInputRef.current?.clear();
+      setShowConfirmationModal(false);
     } catch (error) {
       Alert.alert("Error", "Failed to create job. Please try again.");
       return;
@@ -142,36 +183,81 @@ const CreateJob = () => {
         >
           <View className="p-4 flex flex-col gap-4">
             <View className="form-input">
-              <Text className="form-input__label">Title</Text>
-              <TextInput
-                className="form-input__input"
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="Title"
+                placeholder="eg. Software Engineer"
                 autoCapitalize="words"
                 value={createJobForm.title}
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, title: text })}
-                placeholder="eg. Software Engineer"
               />
             </View>
             <View className="form-input">
-              <Text className="form-input__label">Location</Text>
-              <TextInput
-                className="form-input__input"
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="Street Address"
                 autoCapitalize="words"
-                value={createJobForm.location}
-                onChangeText={(text) => setCreateJobForm({ ...createJobForm, location: text })}
-                placeholder="eg. New York, NY"
+                placeholder="eg. 123 Main St"
+                value={createJobForm.streetAddress}
+                onChangeText={(text) => setCreateJobForm({ ...createJobForm, streetAddress: text })}
               />
             </View>
             <View className="form-input">
-              <Text className="form-input__label">Description</Text>
-              <TextInput
-                placeholder="eg. We are looking for a skilled software engineer to join our team..."
-                className="form-input__input"
-                autoCapitalize="sentences"
-                multiline={true}
-                blurOnSubmit={true}
-                textAlignVertical="top"
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="Country"
+                autoCapitalize="words"
+                placeholder="eg. United States"
+                value={createJobForm.country}
+                onChangeText={(text) => setCreateJobForm({ ...createJobForm, country: text })}
+              />
+            </View>
+            <View className="form-input">
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="City"
+                autoCapitalize="words"
+                placeholder="eg. New York City"
+                value={createJobForm.city}
+                onChangeText={(text) => setCreateJobForm({ ...createJobForm, city: text })}
+              />
+            </View>
+            <View className="form-input">
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="State/Province"
+                autoCapitalize="words"
+                placeholder="eg. New York"
+                value={createJobForm.state}
+                onChangeText={(text) => setCreateJobForm({ ...createJobForm, state: text })}
+              />
+            </View>
+            <View className="form-input">
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="Postal Code/ZIP"
+                placeholder="eg. 12345-6789 "
+                value={createJobForm.postalCode}
+                onChangeText={(text) => setCreateJobForm({ ...createJobForm, postalCode: text })}
+              />
+            </View>
+            <View className="form-input">
+              <CustomMultilineInput
+                label="Description"
+                numberOfLines={2}
                 value={createJobForm.description}
+                placeholder="eg. We are looking for a skilled software engineer to join our team..."
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, description: text })}
+              />
+            </View>
+            <View className="form-input">
+              <CustomInput
+                customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                label="Department"
+                autoCapitalize="words"
+                placeholder="eg. Engineering"
+                value={createJobForm.department}
+                onChangeText={(text) => setCreateJobForm({ ...createJobForm, department: text })}
               />
             </View>
             <View className="form-input">
@@ -283,21 +369,22 @@ const CreateJob = () => {
             </View>
             <View className="flex flex-row gap-2">
               <View className="w-1/2 form-input">
-                <Text className="form-input__label">Min Salary</Text>
-                <TextInput
+                <CustomInput
+                  placeholder="eg. 80000"
+                  keyboardType="numeric"
+                  customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                  label="Min Salary"
                   value={createJobForm.minSalary}
                   onChangeText={(text) => setCreateJobForm({ ...createJobForm, minSalary: text })}
-                  className="form-input__input"
-                  placeholder="eg. 80000"
                 />
               </View>
               <View className="w-1/2 form-input">
-                <Text className="form-input__label">Max Salary</Text>
-                <TextInput
+                <CustomInput
+                  placeholder="eg. 120000"
+                  customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                  label="Max Salary"
                   value={createJobForm.maxSalary}
                   onChangeText={(text) => setCreateJobForm({ ...createJobForm, maxSalary: text })}
-                  className="form-input__input"
-                  placeholder="eg. 120000"
                 />
               </View>
             </View>
@@ -305,7 +392,7 @@ const CreateJob = () => {
               <View className="form-input">
                 <Text className="form-input__label">Skills</Text>
                 <TextInput
-                  className="form-input__input"
+                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
                   onSubmitEditing={(event) => handleAddTag(event.nativeEvent.text.trim())}
                   ref={tagInputRef}
                   placeholder="eg. JavaScript, React, Node.js"
@@ -323,7 +410,7 @@ const CreateJob = () => {
             </View>
             <View className="flex-row justify-center items-center gap-2">
               <TouchableOpacity
-                className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center"
+                className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
                 onPress={handleCreateJob}
                 disabled={addingJob}
               >
@@ -333,13 +420,158 @@ const CreateJob = () => {
                   <Text className="font-quicksand-semibold text-md text-white">Create Job</Text>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity className="mt-6 apply-button px-6 py-3 w-1/2 rounded-full flex items-center justify-center">
+              <TouchableOpacity className="mt-6 bg-red-500 px-6 py-3 w-1/2 rounded-lg flex items-center justify-center">
                 <Text className="font-quicksand-semibold text-md text-white">Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ModalWithBg visible={showConfirmationModal} customHeight={0.85} customWidth={0.95}>
+        <View className="flex-1">
+          <View className="px-6 py-5 border-b border-gray-200 bg-white">
+            <View className="flex-row items-center gap-3">
+              <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                <FontAwesome name="briefcase" size={20} color="#16a34a" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-quicksand-bold text-xl text-gray-900">Confirm Job Posting</Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600">Review job details before posting</Text>
+              </View>
+            </View>
+          </View>
+
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="px-6 py-4 space-y-6 flex-col gap-4">
+              <View className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                <Text className="font-quicksand-bold text-lg text-blue-900">{createJobForm.title}</Text>
+                <View className="flex-row items-center gap-2">
+                  <FontAwesome name="map-marker" size={12} color="#3b82f6" />
+                  <Text className="font-quicksand-medium text-blue-800 text-sm">
+                    {createJobForm.streetAddress && `${createJobForm.streetAddress}, `}
+                    {createJobForm.city}
+                    {createJobForm.state && `, ${createJobForm.state}`}
+                    {createJobForm.country && `, ${createJobForm.country}`} ,
+                    {createJobForm.postalCode && ` ${createJobForm.postalCode}`}
+                  </Text>
+                </View>
+              </View>
+              <View>
+                <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Job Description</Text>
+                <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <Text className="font-quicksand-medium text-gray-700 leading-6">{createJobForm.description}</Text>
+                </View>
+              </View>
+              <View>
+                <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Salary Range</Text>
+                <View className="bg-green-50 p-4 rounded-xl border border-green-200 flex-row items-center gap-2">
+                  <Text className="font-quicksand-semibold text-green-800 text-sm">
+                    ${Number(createJobForm.minSalary).toLocaleString()} - $
+                    {Number(createJobForm.maxSalary).toLocaleString()} per year
+                  </Text>
+                </View>
+              </View>
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Employment Type</Text>
+                  <View className="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                    <Text className="font-quicksand-semibold text-purple-800 text-center text-sm">
+                      {employmentTypes.find((type) => type.value === createJobForm.employmentType)?.label}
+                    </Text>
+                  </View>
+                </View>
+                <View className="flex-1">
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Experience Level</Text>
+                  <View className="bg-orange-50 p-3 rounded-xl border border-orange-200">
+                    <Text className="font-quicksand-semibold text-orange-800 text-center text-sm">
+                      {experienceLevels.find((level) => level.value === createJobForm.experience)?.label}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              {createJobForm.setting && (
+                <View>
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Work Setting</Text>
+                  <View className="bg-indigo-50 p-4 rounded-xl border border-indigo-200 flex-row items-center gap-2">
+                    <FontAwesome name="laptop" size={16} color="#6366f1" />
+                    <Text className="font-quicksand-semibold text-indigo-800 text-sm">
+                      {workArrangements.find((arrangement) => arrangement.value === createJobForm.setting)?.label}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {createJobForm.appDeadline && (
+                <View>
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Application Deadline</Text>
+                  <View className="bg-red-50 p-4 rounded-xl border border-red-200 flex-row items-center gap-2">
+                    <FontAwesome name="calendar" size={16} color="#dc2626" />
+                    <Text className="font-quicksand-semibold text-red-800 text-sm">
+                      {formatDateForDisplay(createJobForm.appDeadline)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {createJobForm.tags.length > 0 && (
+                <View>
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Required Skills</Text>
+                  <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <View className="flex-row flex-wrap gap-2">
+                      {createJobForm.tags.map((tag, index) => (
+                        <View key={index} className="bg-blue-100 border border-blue-300 px-3 py-2 rounded-lg">
+                          <Text className="font-quicksand-semibold text-blue-800 text-sm">{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              )}
+              {createJobForm.department && (
+                <View>
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Department</Text>
+                  <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <Text className="font-quicksand-medium text-gray-700 text-sm">{createJobForm.department}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+
+          <View className="px-6 py-4 border-t border-gray-200 bg-white">
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                className="flex-1 bg-green-500 py-3 px-4 rounded-xl"
+                style={{
+                  shadowColor: "#16a34a",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={handlePostJob}
+                activeOpacity={0.8}
+                disabled={addingJob}
+              >
+                {addingJob ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text className="font-quicksand-bold text-white text-center text-base">Confirm</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 bg-gray-100 py-3 px-4 rounded-xl border border-gray-300"
+                onPress={() => setShowConfirmationModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text className="font-quicksand-bold text-gray-700 text-center text-base">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ModalWithBg>
     </SafeAreaView>
   );
 };

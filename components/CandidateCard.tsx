@@ -68,15 +68,21 @@ const CandidateCard = ({ item, handleCandidateCardPress }: Props) => {
       activeOpacity={0.8}
     >
       <View className="flex-row items-center gap-3">
-        <View className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200">
-          <Image
-            source={{
-              uri: item.profileImageUrl ? getS3ProfileImage(item.profileImageUrl) : "https://via.placeholder.com/150",
-            }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        </View>
+        {item.profileImageUrl ? (
+          <View className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200">
+            <Image
+              source={{
+                uri: item.profileImageUrl ? getS3ProfileImage(item.profileImageUrl) : "https://via.placeholder.com/150",
+              }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          </View>
+        ) : (
+          <View className="w-12 h-12 rounded-full border-2 border-gray-200 items-center justify-center bg-gray-100">
+            <Feather name="user" size={30} color="black" />
+          </View>
+        )}
         <View className="flex-1">
           <View className="flex-row items-start justify-between">
             <View className="flex-1">

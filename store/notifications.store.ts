@@ -8,6 +8,8 @@ type NotificationState = {
     setLoading: (loading: boolean) => void;
     setNotifications: (notifications: Notification[]) => void;
     markNotificationAsRead: (notificationId: number) => void;
+    markAllNotificationsAsRead: () => void;
+    deleteAllReadNotifications: () => void;
 }
 
 const useNotificationStore = create<NotificationState>((set) => ({
@@ -26,7 +28,17 @@ const useNotificationStore = create<NotificationState>((set) => ({
         const unReadCount = updatedNotifications.filter(notif => !notif.read).length
         return { notifications: updatedNotifications, unReadCount };
     }),
-    
+    markAllNotificationsAsRead: () => set((state) => {
+        const updatedNotifications = state.notifications.map((notif) =>
+            ({ ...notif, read: true })
+        );
+        return { notifications: updatedNotifications, unReadCount: 0 };
+    }),
+    deleteAllReadNotifications: () => set((state) => {
+        const updatedNotifications = state.notifications.filter((notif) => !notif.read);
+        const unReadCount = updatedNotifications.filter(notif => !notif.read).length
+        return { notifications: updatedNotifications, unReadCount };
+    }),
 }))
 
 export default useNotificationStore;
