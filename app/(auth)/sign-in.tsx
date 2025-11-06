@@ -80,7 +80,7 @@ const SignIn = () => {
       className="flex-1"
       showsVerticalScrollIndicator={false}
       enableOnAndroid
-      extraScrollHeight={150}
+      extraScrollHeight={100}
       keyboardShouldPersistTaps="handled"
       enableAutomaticScroll
     >

@@ -300,6 +300,7 @@ export type BusinessUser = {
     state: string;
     country: string;
     phoneNumber: string;
+    role: 'ADMIN' | 'RECRUITER' | 'EMPLOYEE'
 }
 
 export type InterviewerProfileSummary = { 

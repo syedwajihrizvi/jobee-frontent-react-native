@@ -25,7 +25,7 @@ const Dashboard = () => {
   const [viewingMostApplied, setViewingMostApplied] = useState(true);
   const [popularJobs, setPopularJobs] = useState(profileSummary?.mostAppliedJobs || []);
   const user = authUser as BusinessUser | null;
-
+  console.log(user?.role);
   useEffect(() => {
     if (!isLoadingApplications) {
       setApplications(applications || []);
