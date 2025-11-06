@@ -381,6 +381,7 @@ const CreateJob = () => {
               <View className="w-1/2 form-input">
                 <CustomInput
                   placeholder="eg. 120000"
+                  keyboardType="numeric"
                   customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                   label="Max Salary"
                   value={createJobForm.maxSalary}

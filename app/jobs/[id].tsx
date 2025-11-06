@@ -5,6 +5,7 @@ import CompanyInformation from "@/components/CompanyInformation";
 import ExpandableText from "@/components/ExpandableText";
 import FavoriteJob from "@/components/FavoriteJob";
 import JobInfo from "@/components/JobInfo";
+import ModalWithBg from "@/components/ModalWithBg";
 import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { addViewToJobs, applyToJob, checkJobMatchForUser } from "@/lib/jobEndpoints";
@@ -45,6 +46,7 @@ const JobDetails = () => {
     applicationId: number;
   } | null>(null);
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
+  const [showJobInfoModal, setShowJobInfoModal] = useState(false);
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
   const [selectedResume, setSelectedResume] = useState<string | null>(null);
@@ -417,7 +419,7 @@ const JobDetails = () => {
               <Text className="font-quicksand-semibold text-lg text-gray-900">Job Description</Text>
             </View>
             <ExpandableText text={job?.description || ""} />
-            <ViewMore label="View More About Job" onClick={handleJobBottomOpen} />
+            <ViewMore label="View More About Job" onClick={() => setShowJobInfoModal(true)} />
           </View>
           <View
             className="bg-white mx-4 mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
@@ -503,11 +505,6 @@ const JobDetails = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <BottomSheet ref={jobBottomRef} index={-1} snapPoints={["60%", "65%"]} enablePanDownToClose>
-        <BottomSheetView className="flex-1 bg-white">
-          {isLoading ? <ActivityIndicator /> : job ? <JobInfo job={job} /> : null}
-        </BottomSheetView>
-      </BottomSheet>
       {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (
         <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["40%"]} enablePanDownToClose>
           <BottomSheetView className="flex-1 bg-white">
@@ -583,6 +580,17 @@ const JobDetails = () => {
           )}
         </BottomSheetView>
       </BottomSheet>
+      <ModalWithBg visible={showJobInfoModal} customHeight={0.9} customWidth={0.95}>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
+            <Text className="font-quicksand-bold text-lg text-gray-800">Candidates For Job</Text>
+            <TouchableOpacity onPress={() => setShowJobInfoModal(false)} className="p-2">
+              <Feather name="x" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+          <JobInfo job={job!} />
+        </View>
+      </ModalWithBg>
     </SafeAreaView>
   );
 };

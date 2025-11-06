@@ -63,6 +63,7 @@ export const useJob = (id: number) => {
     const fetchJob = async () => {
         const response = await fetch(`${JOBS_API_URL}/${id}`)
         const data = await response.json()
+        console.log("Fetched job data:", data);
         return data
     }
     return useQuery<Job, Error>({

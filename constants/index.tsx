@@ -7,6 +7,7 @@ import webex from "@/assets/images/webex.png";
 import zoom from "@/assets/images/zoom.png";
 import beepSound from "@/assets/sounds/beep.mp3";
 import newMessageSound from "@/assets/sounds/newMessage.mp3";
+import newNotification from "@/assets/sounds/newNotification.mp3";
 import popSound from "@/assets/sounds/pop.mp3";
 
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
@@ -34,6 +35,7 @@ export const sounds = {
   popSound,
   beepSound,
   newMessageSound,
+  newNotification,
 };
 
 export const meetingPlatforms = [

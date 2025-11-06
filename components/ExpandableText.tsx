@@ -16,7 +16,7 @@ const ExpandableText = ({ text }: { text: string }) => {
 
   return (
     <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-      <Text className="font-quicksand-semibold text-md">{renderText()}</Text>
+      <Text className="font-quicksand-regular text-sm">{renderText()}</Text>
     </TouchableOpacity>
   );
 };

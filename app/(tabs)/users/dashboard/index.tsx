@@ -1,6 +1,8 @@
 import Piechart from "@/components/Piechart";
 import RenderCompanyLogo from "@/components/RenderCompanyLogo";
+import UserInterviewCard from "@/components/UserInterviewCard";
 import { getS3ProfileImage } from "@/lib/s3Urls";
+import { useProfileInterviews } from "@/lib/services/useProfile";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
@@ -18,8 +20,9 @@ const Dashboard = () => {
   const { user: userProfile } = useAuthStore();
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
+  const { data: interviews, isLoading: isLoadingInterviews } = useProfileInterviews(Number(userProfile?.id));
 
-  console.log(profileSummary?.lastApplication);
+  console.log("Interviews Data:", interviews);
   const handleFavoriteCompany = async (companyId: number) => {
     try {
       const result = await toggleFavoriteCompany(Number(companyId));
@@ -188,7 +191,7 @@ const Dashboard = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-4 items-center"
-                onPress={() => router.push("/users/jobs")}
+                onPress={() => router.push("/userProfile/interviews")}
                 activeOpacity={0.7}
               >
                 <View className="flex-row items-center gap-2">
@@ -197,6 +200,40 @@ const Dashboard = () => {
                 </View>
               </TouchableOpacity>
             </View>
+            {interviews && interviews.length > 0 && (
+              <View className="mx-6 mb-4">
+                <View
+                  className="bg-white rounded-2xl p-6 border border-gray-100"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
+                >
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center gap-3">
+                      <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
+                        <Feather name="calendar" size={20} color="#f59e0b" />
+                      </View>
+                      <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => router.push(`/userProfile/interviews?userId=${userProfile?.id}`)}
+                      activeOpacity={0.7}
+                    >
+                      <Feather name="chevron-right" size={16} color="#6b7280" />
+                    </TouchableOpacity>
+                  </View>
+                  <View className="gap-3">
+                    {interviews?.map((interview, index) => (
+                      <UserInterviewCard key={index} item={interview} withPadding={false} />
+                    ))}
+                  </View>
+                </View>
+              </View>
+            )}
             <View
               className="bg-white mx-6 mb-4 rounded-2xl p-6 border border-gray-100"
               style={{

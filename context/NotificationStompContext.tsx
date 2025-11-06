@@ -1,9 +1,11 @@
+import { sounds } from "@/constants";
 import { createNotificationStompClient } from "@/lib/notifications";
 import { useUserNotifications } from "@/lib/services/useUserNotifications";
 import useAuthStore from "@/store/auth.store";
 import useNotificationStore from "@/store/notifications.store";
 import { Client } from "@stomp/stompjs";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAudioPlayer } from "expo-audio";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 interface NotificationStompContextType {
@@ -24,6 +26,7 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
   const [notificationClient, setNotificationClient] = useState<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { data: userNotifications, isLoading } = useUserNotifications();
+  const player = useAudioPlayer(sounds.newNotification);
 
   const queryClient = useQueryClient();
   const stompClientRef = useRef<any>(null);
@@ -45,6 +48,8 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
       userId: user!.id,
       userType: userParamType,
       onNotification: (notif: any) => {
+        player.seekTo(0);
+        player.play();
         const currentNotifications = useNotificationStore.getState().notifications;
         setNotifications([notif, ...currentNotifications]);
       },

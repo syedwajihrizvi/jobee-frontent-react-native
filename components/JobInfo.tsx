@@ -1,20 +1,13 @@
+import { getAIJobInsights } from "@/lib/jobEndpoints";
 import { Job } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
-import React from "react";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const JobInfo = ({ job }: { job: Job }) => {
-  // Mock data for demonstration - replace with actual job properties
-  const mockData = {
-    aiSummary: [
-      "Competitive salary range with comprehensive benefits package",
-      "Opportunity to work with cutting-edge technologies and frameworks",
-      "Collaborative team environment with mentorship opportunities",
-      "Flexible work arrangements with remote work options",
-      "Professional development budget and learning opportunities",
-    ],
-  };
+  const [aiInsights, setAiInsights] = useState<string[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
 
   const openMapWithAddress = () => {
     const encodedAddress = encodeURIComponent(job?.location || "San Francisco, CA");
@@ -26,8 +19,26 @@ const JobInfo = ({ job }: { job: Job }) => {
     Linking.openURL(url!);
   };
 
+  useEffect(() => {
+    const fetchAIJobInsights = async () => {
+      setLoadingInsights(true);
+      try {
+        const res = await getAIJobInsights(job.id);
+        console.log("Fetched AI Job Insights:", res);
+        if (res) {
+          setAiInsights(res);
+        }
+      } catch (error) {
+        console.error("Error fetching AI job insights:", error);
+      } finally {
+        setLoadingInsights(false);
+      }
+    };
+    fetchAIJobInsights();
+  }, [job.id]);
+
   return (
-    <View className="flex-1 px-4">
+    <ScrollView className="flex-1 px-4">
       <View className="py-4 border-t border-gray-100">
         <View className="flex-row items-center gap-2 mb-3">
           <View className="w-6 h-6 bg-purple-100 rounded-lg items-center justify-center">
@@ -38,24 +49,34 @@ const JobInfo = ({ job }: { job: Job }) => {
             <Text className="font-quicksand-bold text-xs text-purple-700">AI</Text>
           </View>
         </View>
-        <View className="gap-2">
-          {mockData.aiSummary.map((insight, index) => (
-            <View key={index} className="flex-row items-start gap-2">
-              <View className="w-4 h-4 bg-emerald-100 rounded-full items-center justify-center mt-0.5">
-                <Feather name="check" size={10} color="#10b981" />
+        {loadingInsights ? (
+          <View className="h-[200px] w-full">
+            <Text className="font-quicksand-medium text-sm text-gray-700 mb-2">Loading insights...</Text>
+            <ActivityIndicator size="large" color="#8b5cf6" />
+          </View>
+        ) : (
+          <View className="gap-2">
+            {aiInsights.map((insight, index) => (
+              <View key={index} className="flex-row items-start gap-2">
+                <View className="w-4 h-4 bg-emerald-100 rounded-full items-center justify-center mt-0.5">
+                  <Feather name="check" size={10} color="#10b981" />
+                </View>
+                <Text className="font-quicksand-medium text-sm text-gray-700 flex-1 leading-5">{insight}</Text>
               </View>
-              <Text className="font-quicksand-medium text-sm text-gray-700 flex-1 leading-5">{insight}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </View>
       <View className="py-4 border-t border-gray-100">
         <View className="flex-row items-center gap-2 mb-3">
           <Feather name="map-pin" size={16} color="#3b82f6" />
           <Text className="font-quicksand-bold text-base text-gray-900">Location</Text>
         </View>
-
-        <Text className="font-quicksand-medium text-sm text-gray-600 mb-3">{job?.location || "San Francisco, CA"}</Text>
+        <View>
+          <Text className="font-quicksand-semibold text-sm text-gray-600 mb-3">
+            {job.streetAddress} | {job.city}, {job.state} {job.postalCode} | {job.country}
+          </Text>
+        </View>
         <TouchableOpacity
           className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center"
           activeOpacity={0.8}
@@ -80,7 +101,7 @@ const JobInfo = ({ job }: { job: Job }) => {
           </View>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

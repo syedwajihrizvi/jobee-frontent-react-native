@@ -159,6 +159,11 @@ export type Job = {
     businessAccountId: number,
     experience: number,
     location: string,
+    city: string,
+    state: string,
+    country: string,
+    streetAddress: string,
+    postalCode: string,
     employmentType: string,
     minSalary: number,
     maxSalary: number,
@@ -466,6 +471,7 @@ export type CreateJobForm = {
     city: string;
     streetAddress: string;
     postalCode: string;
+    state: string;
     country: string;
     minSalary: string;
     maxSalary: string;
