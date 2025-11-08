@@ -9,13 +9,11 @@ import { Modal, Text, TouchableOpacity, View } from "react-native";
 
 const FavoriteJob = ({ jobId }: { jobId: number }) => {
   const queryClient = useQueryClient();
-  const { user: authUser, setUser, isAuthenticated } = useAuthStore();
+  const { user: authUser, setUser, isAuthenticated, userType } = useAuthStore();
   const [showModal, setShowModal] = useState(false);
   const user = authUser as User | null;
   const isFavorite =
-    isAuthenticated &&
-    user &&
-    user.favoriteJobs.some((fav) => fav.id === jobId);
+    isAuthenticated && user && userType !== "business" && user.favoriteJobs.some((fav) => fav.id === jobId);
 
   const handlePress = async () => {
     if (!isAuthenticated) {
@@ -27,9 +25,7 @@ const FavoriteJob = ({ jobId }: { jobId: number }) => {
       if (result && user) {
         let newFavoriteJobs = [];
         if (isFavorite) {
-          newFavoriteJobs = [
-            ...user.favoriteJobs.filter((fav) => fav.id !== jobId),
-          ];
+          newFavoriteJobs = [...user.favoriteJobs.filter((fav) => fav.id !== jobId)];
         } else {
           newFavoriteJobs = [...user.favoriteJobs, { id: jobId }];
         }
@@ -47,16 +43,8 @@ const FavoriteJob = ({ jobId }: { jobId: number }) => {
 
   return (
     <>
-      <TouchableOpacity
-        onPress={handlePress}
-        className="p-2 rounded-full"
-        activeOpacity={1}
-      >
-        <AntDesign
-          name="star"
-          size={24}
-          color={isFavorite ? "gold" : "black"}
-        />
+      <TouchableOpacity onPress={handlePress} className="p-2 rounded-full" activeOpacity={1}>
+        <AntDesign name="star" size={24} color={isFavorite ? "gold" : "black"} />
       </TouchableOpacity>
       <Modal transparent animationType="fade" visible={showModal}>
         <View className="flex-1 bg-black/45 justify-center items-center">
@@ -73,12 +61,8 @@ const FavoriteJob = ({ jobId }: { jobId: number }) => {
               gap: 10,
             }}
           >
-            <Text className="font-quicksand-bold text-xl">
-              Sign in to use feature
-            </Text>
-            <Text className="font-quicksand-medium text-center">
-              You need to be signed in to favorite a job.
-            </Text>
+            <Text className="font-quicksand-bold text-xl">Sign in to use feature</Text>
+            <Text className="font-quicksand-medium text-center">You need to be signed in to favorite a job.</Text>
             <View className="flex flex-row items-center justify-center w-full gap-2">
               <TouchableOpacity
                 className="apply-button w-1/2 items-center justify-center h-14"

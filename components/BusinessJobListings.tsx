@@ -9,7 +9,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 const BusinessJobListings = ({ job }: { job: Job }) => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
-
+  console.log("Rendering job listing for job:", job);
   return (
     <TouchableOpacity
       className="mb-4 bg-white rounded-2xl p-5 border border-gray-100"
@@ -29,7 +29,9 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
           <View className="flex-row items-center gap-2 mb-2 flex-wrap">
             <View className="flex-row items-center gap-1">
               <Feather name="map-pin" size={14} color="#6b7280" />
-              <Text className="font-quicksand-medium text-sm text-gray-600">{job.location}</Text>
+              <Text className="font-quicksand-medium text-sm text-gray-600">
+                {job.location || `${job.city}, ${job.country}`}
+              </Text>
             </View>
             <View className="w-1 h-1 bg-gray-400 rounded-full" />
             <View className="flex-row items-center gap-1">

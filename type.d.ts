@@ -119,18 +119,21 @@ export type ApplicationsForBusinessUserState = {
     applications: ApplicationSummary[];
     isLoading: boolean;
     setIsLoading: (isLoading: boolean) => void;
-    setApplications: (applications: ApplicationSummary[]) => void
+    setApplications: (applications: ApplicationSummary[]) => void,
+    getApplicantsInLastNDays: (days: number) => number;
 };
 
 export type AuthState = {
     isAuthenticated: boolean;
     user: User | BusinessUser | null;
     userType: 'user' | 'business';
+    isReady: boolean;
     isLoading: boolean;
     setIsAuthenticated: (isAuthenticated: boolean) => void;
     setUser: (user: User | BusinessUser | null) => void;
     setUserType: (type: 'user' | 'business') => void;
     setIsLoading: (isLoading: boolean) => void;
+    setAuthReady: () => void;
     fetchAuthenticatedUser: () => Promise<void>;
     removeUser: () => void
 }

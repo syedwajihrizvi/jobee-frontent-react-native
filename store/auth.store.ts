@@ -7,11 +7,13 @@ const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isReady: false,
   userType: 'user',
   setUser: (user) => set({ user }),
   setUserType: (type) => set({ userType: type }),
   setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
   setIsLoading: (isLoading) => set({ isLoading }),
+  setAuthReady: () => set({ isReady: true }),
   fetchAuthenticatedUser: async () => {
     set({ isLoading: true });
     try {
@@ -21,8 +23,10 @@ const useAuthStore = create<AuthState>((set) => ({
         return;
       }
       const type = await AsyncStorage.getItem('userType');
+      console.log("User type in fetchAuthenticatedUser:", type);
       const userType = !type || type === 'user' ? 'user' : 'business';
-      set({ user, isAuthenticated: true, userType });
+      console.log("Determined userType in fetchAuthenticatedUser:", userType);
+      set({ user, isAuthenticated: true, userType, isReady: true });
     } catch (error) {
     } finally {
       set({ isLoading: false });

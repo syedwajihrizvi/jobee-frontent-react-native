@@ -76,6 +76,9 @@ const ManageUsers = () => {
     if (user?.role === "RECRUITER") {
       return userTypes.filter((t) => t.value !== "ADMIN");
     }
+    if (user?.role === "EMPLOYEE") {
+      return userTypes.filter((t) => t.value === "EMPLOYEE");
+    }
     return userTypes;
   };
 
@@ -262,7 +265,7 @@ const ManageUsers = () => {
               />
             </View>
             <View className="mb-6">
-              <Text className="font-quicksand-semibold text-sm text-gray-700 mb-3">User Role</Text>
+              <Text className="font-quicksand-semibold text-sm text-gray-700 mb-3">Invite As</Text>
               <View className="flex-row gap-2">
                 {renderUserTypes().map((type) => (
                   <TouchableOpacity

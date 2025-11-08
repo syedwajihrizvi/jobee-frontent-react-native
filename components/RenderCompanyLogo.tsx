@@ -8,17 +8,21 @@ type Props = {
   size?: number;
 };
 
-const RenderCompanyLogo = ({ logoUrl, size = 8 }: Props) => {
+const RenderCompanyLogo = ({ logoUrl, size = 4 }: Props) => {
+  const sizeInPixels = size * 8; // Assuming 1 unit = 8 pixels
   if (logoUrl) {
     return (
       <Image
         source={{ uri: getS3CompanyLogoUrl(logoUrl) }}
-        className={`size-${size} rounded-md`}
+        className="rounded-md"
+        style={{ width: sizeInPixels, height: sizeInPixels }}
         resizeMode="contain"
       />
     );
   }
-  return <Image source={images.companyLogo} className={`size-${size}`} resizeMode="contain" />;
+  return (
+    <Image source={images.companyLogo} resizeMode="contain" style={{ width: sizeInPixels, height: sizeInPixels }} />
+  );
 };
 
 export default RenderCompanyLogo;

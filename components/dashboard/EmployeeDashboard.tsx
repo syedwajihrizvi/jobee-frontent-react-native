@@ -1,6 +1,3 @@
-import BusinessJobListings from "@/components/BusinessJobListings";
-import InterviewCard from "@/components/InterviewCard";
-import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import { useApplicationsForBusinessProfileJobs } from "@/lib/services/useApplicationsForBusinessProfileJobs";
 import { useBusinessProfileInterviews } from "@/lib/services/useBusinessProfileInterviews";
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
@@ -9,12 +6,14 @@ import useBusinessProfileSummaryStore from "@/store/business-profile-summary.sto
 import { BusinessUser } from "@/type";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import InterviewCard from "../InterviewCard";
 import RenderBusinessProfileImage from "../RenderBusinessProfileImage";
+import RenderCompanyLogo from "../RenderCompanyLogo";
 
-const RecruiterDashboard = () => {
+const EmployeeDashboard = () => {
   const { isLoading: isLoadingUser, user: authUser } = useAuthStore();
   const { profileSummary } = useBusinessProfileSummaryStore();
   const { data: upcomingInterviews } = useBusinessProfileInterviews();
@@ -22,23 +21,13 @@ const RecruiterDashboard = () => {
   const { data: applications, isLoading: isLoadingApplications } = useApplicationsForBusinessProfileJobs({
     userId: authUser?.id,
   });
-  const [viewingMostApplied, setViewingMostApplied] = useState(true);
-  const [popularJobs, setPopularJobs] = useState(profileSummary?.mostAppliedJobs || []);
   const user = authUser as BusinessUser | null;
+
   useEffect(() => {
     if (!isLoadingApplications) {
       setApplications(applications || []);
     }
   }, [setApplications, isLoadingApplications, applications]);
-
-  useEffect(() => {
-    if (viewingMostApplied) {
-      setPopularJobs(profileSummary?.mostAppliedJobs || []);
-    } else {
-      setPopularJobs(profileSummary?.mostViewedJobs || []);
-    }
-  }, [viewingMostApplied, profileSummary]);
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -69,7 +58,7 @@ const RecruiterDashboard = () => {
             <View className="px-3 py-4">
               <Text className="font-quicksand-bold text-2xl text-gray-900">Business Dashboard</Text>
               <Text className="font-quicksand-medium text-base text-gray-600">
-                Welcome {user?.firstName} {user?.lastName}! Manage your hiring process and track recruitment metrics.
+                Welcome {user?.firstName} {user?.lastName}! Be a part of your company&apos;s hiring process.
               </Text>
             </View>
             <View className="px-3 py-4">
@@ -119,11 +108,11 @@ const RecruiterDashboard = () => {
                       shadowRadius: 6,
                       elevation: 4,
                     }}
-                    onPress={() => router.push("/businessJobs/createJob")}
+                    onPress={() => router.push("/businessProfile/manageUsers")}
                     activeOpacity={0.8}
                   >
                     <Entypo name="circle-with-plus" size={24} color="white" />
-                    <Text className="font-quicksand-bold text-white text-xs mt-2">Create Job</Text>
+                    <Text className="font-quicksand-bold text-white text-xs mt-2 text-center">Invite</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -175,14 +164,14 @@ const RecruiterDashboard = () => {
                   <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
                     <MaterialIcons name="analytics" size={20} color="#10b981" />
                   </View>
-                  <Text className="font-quicksand-bold text-lg text-gray-900">Your Posting Metrics</Text>
+                  <Text className="font-quicksand-bold text-lg text-gray-900">Jobs you are a part of</Text>
                 </View>
                 <View className="flex-row flex-wrap gap-3">
                   <View className="flex-1 min-w-[45%] bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <Text className="font-quicksand-bold text-2xl text-blue-700">
                       {profileSummary?.totalJobsPosted}
                     </Text>
-                    <Text className="font-quicksand-medium text-sm text-blue-600">Active Jobs</Text>
+                    <Text className="font-quicksand-medium text-sm text-blue-600">Jobs</Text>
                   </View>
                   <View className="flex-1 min-w-[45%] bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                     <Text className="font-quicksand-bold text-2xl text-emerald-700">
@@ -221,7 +210,7 @@ const RecruiterDashboard = () => {
                     <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center">
                       <Feather name="clock" size={20} color="#ef4444" />
                     </View>
-                    <Text className="font-quicksand-bold text-lg text-gray-900">Pending Applications</Text>
+                    <Text className="font-quicksand-bold text-lg text-gray-900">Review Applications</Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => router.push("/businessJobs/applications")}
@@ -252,97 +241,8 @@ const RecruiterDashboard = () => {
                     <Text className="font-quicksand-bold text-xl text-orange-900">{getApplicantsInLastNDays(7)}</Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-4"
-                  style={{
-                    shadowColor: "#ef4444",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
-                  onPress={() => router.push("/businessJobs/applications")}
-                  activeOpacity={0.8}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1 mr-3">
-                      <View className="flex-row items-center gap-2 mb-2">
-                        <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center">
-                          <Feather name="alert-circle" size={16} color="#dc2626" />
-                        </View>
-                        <Text className="font-quicksand-bold text-base text-red-900">Action Required</Text>
-                      </View>
-                      <Text className="font-quicksand-medium text-sm text-red-700 leading-5">
-                        {applications?.length! > 0
-                          ? `Review ${applications?.length} pending applications to keep your hiring process moving`
-                          : "No pending applications at the moment"}
-                      </Text>
-                    </View>
-
-                    <View className="items-center">
-                      <View
-                        className="w-12 h-12 bg-red-500 rounded-full items-center justify-center mb-2"
-                        style={{
-                          shadowColor: "#ef4444",
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.3,
-                          shadowRadius: 4,
-                          elevation: 3,
-                        }}
-                      >
-                        <Feather name="eye" size={20} color="white" />
-                      </View>
-                      <Text className="font-quicksand-semibold text-xs text-red-600">Review</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
               </View>
             </View>
-            {profileSummary && profileSummary.totalJobsPosted > 0 && (
-              <View className="px-3 mb-4">
-                <View
-                  className="bg-white rounded-2xl p-6 border border-gray-100"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 12,
-                    elevation: 6,
-                  }}
-                >
-                  <View className="flex-row items-center justify-between mb-4">
-                    <View className="flex-row items-center gap-3">
-                      <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
-                        <Feather name="briefcase" size={20} color="#10b981" />
-                      </View>
-                      <Text className="font-quicksand-bold text-lg text-gray-900">Most Popular Jobs</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => router.push("/businessJobs/interviews")}>
-                      <Feather name="chevron-right" size={16} color="#6b7280" />
-                    </TouchableOpacity>
-                  </View>
-                  <View className="flex-row gap-3 mb-4">
-                    <TouchableOpacity
-                      className={`px-3 py-1${viewingMostApplied ? " bg-green-100" : ""}  rounded-full`}
-                      onPress={() => setViewingMostApplied(true)}
-                    >
-                      <Text className="font-quicksand-medium text-sm text-green-700">Most Applied</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className={`px-3 py-1${viewingMostApplied ? "" : " bg-green-100"} rounded-full`}
-                      onPress={() => setViewingMostApplied(false)}
-                    >
-                      <Text className="font-quicksand-medium text-sm text-green-700">Most Viewed</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View className="gap-3">
-                    {popularJobs.map((job, index) => (
-                      <BusinessJobListings key={index} job={job} />
-                    ))}
-                  </View>
-                </View>
-              </View>
-            )}
             {upcomingInterviews && upcomingInterviews.length > 0 && (
               <View className="px-3 mb-4">
                 <View
@@ -385,4 +285,4 @@ const RecruiterDashboard = () => {
   );
 };
 
-export default RecruiterDashboard;
+export default EmployeeDashboard;

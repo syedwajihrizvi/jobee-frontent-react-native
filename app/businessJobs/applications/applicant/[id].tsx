@@ -13,7 +13,8 @@ import { useApplicant } from "@/lib/services/useProfile";
 import { addViewToProfile } from "@/lib/updateUserProfile";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
-import { User } from "@/type";
+import useAuthStore from "@/store/auth.store";
+import { BusinessUser, User } from "@/type";
 import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ApplicantForBusiness = () => {
   const queryClient = useQueryClient();
   const { id, jobId, candidateId } = useLocalSearchParams();
+  const { user: authUser } = useAuthStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { setApplications: setStoreApplications, applications: storeApplications } = useApplicantsForJobStore();
   const { applications, setApplications } = useApplicantsForUserJobs();
@@ -41,6 +43,7 @@ const ApplicantForBusiness = () => {
   const [makingShortListRequest, setMakingShortListRequest] = useState(false);
   const [isShortListed, setIsShortListed] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<string | undefined>();
+  const user = authUser as BusinessUser | null;
 
   useEffect(() => {
     if (applicationData && !isLoading) {
@@ -94,6 +97,108 @@ const ApplicantForBusiness = () => {
         },
       },
     ]);
+  };
+
+  const renderActionButtons = () => {
+    if (user?.role === "EMPLOYEE") {
+      if (application?.status === "INTERVIEW_SCHEDULED") {
+        return (
+          <TouchableOpacity
+            className="bg-amber-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+            onPress={() => {
+              const interviewIds = application.interviewIds || [];
+              if (interviewIds.length === 0) {
+                return router.push(`/businessJobs/applications/${application.jobId}`);
+              } else {
+                const latestInterviewId = interviewIds[interviewIds.length - 1];
+                return router.push(`/businessJobs/interviews/interview/${latestInterviewId}`);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Feather name="clock" size={14} color="white" />
+            <Text className="font-quicksand-bold text-white text-xs">Interview Scheduled</Text>
+          </TouchableOpacity>
+        );
+      } else if (application?.status === "REJECTED") {
+        return (
+          <TouchableOpacity
+            className="bg-red-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+            onPress={() => console.log("View interview details via bottom sheet")}
+            activeOpacity={0.8}
+          >
+            <Text className="font-quicksand-bold text-white text-xs">Candidate Already Rejected</Text>
+          </TouchableOpacity>
+        );
+      } else if (isShortListed) {
+        return (
+          <View
+            className="bg-green-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <Text className="font-quicksand-bold text-white text-xs">Shortlisted</Text>
+          </View>
+        );
+      } else {
+        return (
+          <RenderAppStatusButton
+            icon={<Feather name="star" size={12} color="white" />}
+            color="emerald"
+            loading={false}
+            label="Shortlist Candidate"
+            shadowColor="#10b981"
+            handlePress={() => handleShortList()}
+          />
+        );
+      }
+    } else {
+      return application?.status === "PENDING" ? (
+        <>
+          <RenderAppStatusButton
+            icon={<Feather name="calendar" size={12} color="white" />}
+            color="emerald"
+            loading={false}
+            label="Schedule Interview"
+            shadowColor="#10b981"
+            handlePress={() =>
+              router.push(
+                `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
+              )
+            }
+          />
+          <RenderAppStatusButton
+            icon={<Feather name="x" size={14} color="white" />}
+            loading={isUpdatingReject}
+            color="red"
+            label="Reject Candidate"
+            shadowColor="#3b82f6"
+            handlePress={handleRejectCandidate}
+          />
+        </>
+      ) : (
+        renderNonPendingStatus()
+      );
+    }
   };
 
   const renderNonPendingStatus = () => {
@@ -272,10 +377,24 @@ const ApplicantForBusiness = () => {
                   </View>
                 </View>
               </View>
-              <View className="mb-2">
+              <View>
                 <Text className="font-quicksand-bold text-lg text-gray-900">Professional Summary</Text>
                 <Text className="font-quicksand-medium text-base text-gray-700">{userProfile?.summary}</Text>
               </View>
+              {user?.role === "EMPLOYEE" && (
+                <View className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 flex-row gap-3">
+                  <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center mt-0.5">
+                    <Feather name="info" size={14} color="#3b82f6" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-quicksand-semibold text-sm text-blue-800 mb-1">Shortlisting Process</Text>
+                    <Text className="font-quicksand-medium text-xs text-blue-700 leading-4">
+                      When you shortlist a candidate, your recruiter will be notified to schedule an interview with
+                      them.
+                    </Text>
+                  </View>
+                </View>
+              )}
               <View className="flex-row flex-wrap gap-3">
                 <TouchableOpacity
                   className="bg-blue-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
@@ -310,32 +429,7 @@ const ApplicantForBusiness = () => {
                     <Text className="font-quicksand-bold text-white text-xs">Cover Letter</Text>
                   </TouchableOpacity>
                 )}
-                {application?.status === "PENDING" ? (
-                  <>
-                    <RenderAppStatusButton
-                      icon={<Feather name="calendar" size={12} color="white" />}
-                      color="emerald"
-                      loading={false}
-                      label="Schedule Interview"
-                      shadowColor="#10b981"
-                      handlePress={() =>
-                        router.push(
-                          `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
-                        )
-                      }
-                    />
-                    <RenderAppStatusButton
-                      icon={<Feather name="x" size={14} color="white" />}
-                      loading={isUpdatingReject}
-                      color="red"
-                      label="Reject Candidate"
-                      shadowColor="#3b82f6"
-                      handlePress={handleRejectCandidate}
-                    />
-                  </>
-                ) : (
-                  renderNonPendingStatus()
-                )}
+                {renderActionButtons()}
               </View>
             </View>
             <View className="mx-4 mt-4">
