@@ -22,10 +22,10 @@ export const useNotificationStomp = () => useContext(NotificationStompContext);
 
 export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, userType } = useAuthStore();
-  const { setNotifications, setLoading } = useNotificationStore(); // Remove notifications from here
+  const { setNotifications, setLoading } = useNotificationStore();
   const [notificationClient, setNotificationClient] = useState<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { data: userNotifications, isLoading } = useUserNotifications();
+  const { data: userNotifications, isLoading } = useUserNotifications(isAuthenticated);
   const player = useAudioPlayer(sounds.newNotification);
 
   const queryClient = useQueryClient();

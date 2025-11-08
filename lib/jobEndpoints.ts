@@ -158,18 +158,14 @@ export const getCandidatesForJob = async (jobId: number) => {
     return data as CandidateForJob[];
 }
 
-export const getAIJobInsights = async (jobId: number) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (token == null) return null;
+export const getAIJobInsights = async (jobId: number) => {4
     const result = await fetch(`${JOBS_API_URL}/${jobId}/ai-insights`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
+            'Content-Type': 'application/json'
         }
     })
     if (result.status !== 200) return null;
     const data = await result.json();
-    console.log("AI Insights Data: ", data);
     return data as string[];
 }

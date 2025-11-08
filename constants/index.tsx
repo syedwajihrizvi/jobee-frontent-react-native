@@ -9,6 +9,7 @@ import beepSound from "@/assets/sounds/beep.mp3";
 import newMessageSound from "@/assets/sounds/newMessage.mp3";
 import newNotification from "@/assets/sounds/newNotification.mp3";
 import popSound from "@/assets/sounds/pop.mp3";
+import successSound from "@/assets/sounds/success.mp3";
 
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -36,6 +37,7 @@ export const sounds = {
   beepSound,
   newMessageSound,
   newNotification,
+  successSound,
 };
 
 export const meetingPlatforms = [
@@ -135,6 +137,33 @@ export const userProfileLinks: {
   },
 ];
 
+export const adminOnlyProfileLinks: {
+  label: string;
+  icon: ReactNode;
+  subtitle?: string;
+  href: string;
+}[] = [
+  {
+    label: "Edit Company Profile",
+    subtitle: "View and manage your company details, size, location, media, and more.",
+    icon: <FontAwesome5 name="building" size={20} color="black" />,
+    href: "/businessProfile/companyProfile",
+  },
+];
+
+export const recruiterOnlyProfileLinks: {
+  label: string;
+  icon: ReactNode;
+  subtitle?: string;
+  href: string;
+}[] = [
+  {
+    label: "Invite or Remove Users",
+    subtitle: "Manage users associated with your company.",
+    icon: <Feather name="users" size={20} color="black" />,
+    href: "/businessProfile/manageUsers",
+  },
+];
 export const businessProfileLinks: {
   label: string;
   icon: ReactNode;
@@ -152,12 +181,6 @@ export const businessProfileLinks: {
     subtitle: "View the jobs you have posted.",
     icon: <Feather name="briefcase" size={20} color="black" />,
     href: "/businessProfile/myJobPostings",
-  },
-  {
-    label: "Edit Company Profile",
-    subtitle: "View and manage your company details, size, location, media, and more.",
-    icon: <FontAwesome5 name="building" size={20} color="black" />,
-    href: "/businessProfile/companyProfile",
   },
   {
     label: "Upcoming Interviews",

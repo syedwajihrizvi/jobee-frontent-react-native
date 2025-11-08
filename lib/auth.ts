@@ -1,4 +1,4 @@
-import { BusinessSignUpParams, SignInParams, UserSignUpParams } from "@/type";
+import { BusinessSignUpParams, SignInParams, SignUpViaCodeParams, UserSignUpParams } from "@/type";
 import Asyncstorage from "@react-native-async-storage/async-storage";
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -63,9 +63,25 @@ export const signUpBusiness = async (request: BusinessSignUpParams) => {
         },
         body: JSON.stringify({email,password, companyName})
     })
-    return result.status === 201
+    const data = await result.json()
+    return data;
 }
-    
+
+export const signUpBusinessViaCode = async (request: SignUpViaCodeParams) => {
+    const { companyCode, email, password, phoneNumber, firstName, lastName } = request
+    const result = await fetch(`${BUSINESS_ACCOUNTS_API_URL}/register-via-code`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({companyCode:companyCode.replace(" ","").toLowerCase(), email, password, phoneNumber, firstName, lastName})
+    })
+    console.log("Sign up via code response status:", result);
+    if (result.status !== 201) return null;
+    const data = await result.json()
+    return data;
+}
+
 export const signOut = async () => {
     await Asyncstorage.removeItem('x-auth-token')
     await Asyncstorage.setItem('profileReminderShown', "false");
@@ -144,3 +160,15 @@ export const registerForPushNotifications = async () => {
     }
 }
     
+export const sendInviteForJobee = async (email: string, phone: string, selectedUserType: string) => {
+    const token = await Asyncstorage.getItem('x-auth-token');
+    const result = await fetch(`${BUSINESS_ACCOUNTS_API_URL}/invite-member`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email, phone, selectedUserType })
+    })
+    return result.status === 200;
+}

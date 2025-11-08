@@ -20,9 +20,20 @@ interface BusinessSignUpParams {
     confirmPassword: string;
 }
 
+export type SignUpViaCodeParams = {
+    companyCode: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    password: string;
+    confirmPassword: string;
+}
+
 export type CustomInputProps = {
     placeholder: string;
     label: string?;
+    fontSize?: number;
     value?: string;
     multiline?: boolean;
     style?: object;

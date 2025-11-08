@@ -4,8 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 const MESSAGES_API_URL = 'http://192.168.2.29:8080/messages'
 
-export const useConversations = (search: string) => {
-    console.log("useConversations called with search:", search);
+export const useConversations = (search: string, isAuthenticated: boolean) => {
     const fetchMessages = async () => {
         const token = await AsyncStorage.getItem('x-auth-token');
         const queryParams = new URLSearchParams();
@@ -26,5 +25,6 @@ export const useConversations = (search: string) => {
     return useQuery<Conversation[], Error>({
         queryKey: ['conversations', search],
         queryFn: fetchMessages,
+        enabled: isAuthenticated,
     })
 }

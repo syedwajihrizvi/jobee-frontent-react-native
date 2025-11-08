@@ -9,6 +9,7 @@ const CustomInput = ({
   returnKeyType = "default",
   keyboardType = "default",
   autoCapitalize = "none",
+  fontSize = 14,
   multiline = false,
   autocorrect = true,
   fullWidth = false,
@@ -29,7 +30,7 @@ const CustomInput = ({
         className={customClass ? customClass : "form-input__input"}
         returnKeyType={returnKeyType as ReturnKeyTypeOptions}
         style={{
-          fontSize: 12,
+          fontSize,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.05,

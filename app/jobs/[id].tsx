@@ -73,6 +73,7 @@ const JobDetails = () => {
       setJobApplication(application || null);
     }
   }, [isLoadingJobApplications, jobApplications, jobId]);
+
   useEffect(() => {
     const addView = async () => {
       await addViewToJobs(Number(jobId));
@@ -81,6 +82,7 @@ const JobDetails = () => {
     addView();
   }, [jobId]);
 
+  console.log(job);
   useEffect(() => {
     if (user && (user as User).documents) {
       const resumes = (user as User).documents.filter((doc) => doc.documentType === UserDocumentType.RESUME);
@@ -123,13 +125,6 @@ const JobDetails = () => {
     } catch (error) {
       console.error("Error toggling favorite company:", error);
     }
-  };
-
-  const handleJobBottomOpen = () => {
-    companyBottomRef.current?.close();
-    applyBottomRef.current?.close();
-    viewApplicationBottomRef.current?.close();
-    jobBottomRef.current?.expand();
   };
 
   const handleApplyBottomOpen = () => {
@@ -267,6 +262,7 @@ const JobDetails = () => {
       </View>
     );
   };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 relative">
       <BackBar label="Job Details" />
@@ -583,7 +579,7 @@ const JobDetails = () => {
       <ModalWithBg visible={showJobInfoModal} customHeight={0.9} customWidth={0.95}>
         <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
-            <Text className="font-quicksand-bold text-lg text-gray-800">Candidates For Job</Text>
+            <Text className="font-quicksand-bold text-lg text-gray-800">Job Details</Text>
             <TouchableOpacity onPress={() => setShowJobInfoModal(false)} className="p-2">
               <Feather name="x" size={20} color="#6b7280" />
             </TouchableOpacity>

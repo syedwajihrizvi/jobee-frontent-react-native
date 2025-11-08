@@ -130,7 +130,7 @@ export const useApplicationById = (applicationId?: number) => {
   })
 }
 
-export const useJobsByCompany = (filters?: JobFilters, companyId?: number) => {
+export const useJobForBusinessAccount = (filters?: JobFilters, companyId?: number) => {
   const urlParams = new URLSearchParams()
   if (filters) {
     if (filters.search) urlParams.append('search', filters.search)
@@ -143,12 +143,14 @@ export const useJobsByCompany = (filters?: JobFilters, companyId?: number) => {
   if (companyId) urlParams.append('companyId', companyId.toString())
   const params = urlParams.toString()
   const fetchCompanyJobs = async ({ pageParam = 0} : QueryFunctionContext) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
     const pageSize = 6;
     const page = pageParam as number;
     const response = await fetch(`${JOBS_API_URL}/companies/${companyId}/jobs?${params}&pageNumber=${page}&pageSize=${pageSize}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'x-auth-token': `Bearer ${token}`
       },
     })
     const data : PagedResponse<Job> = await response.json()

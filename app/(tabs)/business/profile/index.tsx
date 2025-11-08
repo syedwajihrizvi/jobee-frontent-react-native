@@ -1,6 +1,6 @@
 import BackBar from "@/components/BackBar";
 import ProfileLink from "@/components/ProfileLink";
-import { businessProfileLinks, images } from "@/constants/index";
+import { adminOnlyProfileLinks, businessProfileLinks, recruiterOnlyProfileLinks } from "@/constants/index";
 import { signOut } from "@/lib/auth";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { updateBusinessProfileImage } from "@/lib/updateUserProfile";
@@ -22,6 +22,18 @@ const Profile = () => {
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
   const user = authUser as BusinessUser | null;
+
+  const getProfileLinks = () => {
+    let profileLinks = [...businessProfileLinks];
+    if (user?.role === "ADMIN") {
+      profileLinks = [...adminOnlyProfileLinks, ...profileLinks];
+    }
+    if (user?.role === "RECRUITER") {
+      profileLinks = [...recruiterOnlyProfileLinks, ...profileLinks];
+    }
+    return profileLinks;
+  };
+
   const handleProfileImagePicker = async () => {
     const result = await ImagePicker.requestCameraPermissionsAsync();
     if (!result.granted) {
@@ -103,15 +115,21 @@ const Profile = () => {
   };
 
   const renderProfileImage = () => {
-    if (!user || !user.profileImageUrl) {
-      return <Image source={{ uri: images.companyLogo }} className="size-14 rounded-full" resizeMode="contain" />;
-    } else if (uploadedProfileImage) {
+    console.log("Rendering profile image with user:", user);
+    if (uploadedProfileImage) {
       return (
         <Image
           source={{ uri: getS3BusinessProfileImage(uploadedProfileImage) }}
           className="size-14 rounded-full"
           resizeMode="contain"
         />
+      );
+    } else if (!user || !user.profileImageUrl) {
+      console.log("No profile image found, rendering default icon.");
+      return (
+        <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center">
+          <Feather name="user" size={30} color="#6b7280" />
+        </View>
       );
     }
     const uri = getS3BusinessProfileImage(user.profileImageUrl);
@@ -172,7 +190,7 @@ const Profile = () => {
                   onPress={() => console.log("Account Settings Pressed")}
                 />
               )}
-              {businessProfileLinks.map((link, index) => (
+              {getProfileLinks().map((link, index) => (
                 <ProfileLink
                   key={index}
                   icon={link.icon}

@@ -19,10 +19,12 @@ const JobInfo = ({ job }: { job: Job }) => {
     Linking.openURL(url!);
   };
 
+  console.log("Job Info Component Rendered with job:", job);
   useEffect(() => {
     const fetchAIJobInsights = async () => {
       setLoadingInsights(true);
       try {
+        console.log("Fetching AI Job Insights for job ID:", job.id);
         const res = await getAIJobInsights(job.id);
         console.log("Fetched AI Job Insights:", res);
         if (res) {
@@ -35,7 +37,7 @@ const JobInfo = ({ job }: { job: Job }) => {
       }
     };
     fetchAIJobInsights();
-  }, [job.id]);
+  }, []);
 
   return (
     <ScrollView className="flex-1 px-4">

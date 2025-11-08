@@ -3,9 +3,10 @@ import FilterStatus from "@/components/FilterStatus";
 import JobFiltersView from "@/components/JobFiltersView";
 import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import SearchBar from "@/components/SearchBar";
-import { useJobsByCompany } from "@/lib/services/useJobs";
+import { useJobForBusinessAccount } from "@/lib/services/useJobs";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, JobFilters } from "@/type";
+import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ActivityIndicator, Dimensions, FlatList, StatusBar, Text, View } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
@@ -32,7 +33,7 @@ const Jobs = () => {
   const [filterCount, setFilterCount] = useState(0);
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const { data: jobs, isLoading, fetchNextPage, hasNextPage } = useJobsByCompany(filters, user?.companyId);
+  const { data: jobs, isLoading, fetchNextPage, hasNextPage } = useJobForBusinessAccount(filters, user?.companyId);
 
   const openFilters = () => {
     slideX.value = withTiming(0, { duration: 300 });
@@ -88,7 +89,9 @@ const Jobs = () => {
           <View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Jobs</Text>
             <Text className="font-quicksand-medium text-sm text-gray-600">
-              View all your company&apos;s job listings
+              {user?.role === "ADMIN" && "View all your company's job listings"}
+              {user?.role === "RECRUITER" && "View all your job listings"}
+              {user?.role === "EMPLOYEE" && "View jobs whose hiring team you are part of"}
             </Text>
           </View>
         </View>
@@ -123,6 +126,30 @@ const Jobs = () => {
               fetchNextPage();
             }
           }}
+          ListEmptyComponent={() => (
+            <View className="flex-1 items-center justify-center px-6 py-20">
+              <View
+                className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
+                style={{
+                  shadowColor: "#3b82f6",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Feather name="briefcase" size={32} color="#3b82f6" />
+              </View>
+
+              <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Jobs Found</Text>
+
+              <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6 max-w-xs">
+                {filters.search || filterCount > 0
+                  ? "No jobs match your current search criteria. Try adjusting your filters or search terms."
+                  : "You haven't posted any jobs yet. Create your first job posting to get started."}
+              </Text>
+            </View>
+          )}
           ListFooterComponent={() => {
             return isLoading ? <ActivityIndicator size="small" color="green" /> : null;
           }}

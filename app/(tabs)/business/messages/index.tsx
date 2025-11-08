@@ -13,7 +13,7 @@ const Messages = () => {
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState("");
   const { conversations, setConversations } = useConversationStore();
-  const { data: messages, isLoading } = useConversations(search);
+  const { data: messages, isLoading } = useConversations(search, isAuthenticated);
 
   useEffect(() => {
     if (messages && !isLoading && isAuthenticated && conversations.length === 0) {

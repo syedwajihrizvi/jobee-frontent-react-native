@@ -1,6 +1,6 @@
 import BackBar from "@/components/BackBar";
+import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import SearchBar from "@/components/SearchBar";
-import { images } from "@/constants";
 import { useUserJobPostings } from "@/lib/services/useUserJobPostings";
 import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
@@ -10,7 +10,7 @@ import { BusinessUser } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const PendingApplications = () => {
@@ -21,7 +21,7 @@ const PendingApplications = () => {
   const { profileSummary } = useBusinessProfileSummaryStore();
   const [totalPendingApplications, setTotalPendingApplications] = useState(0);
   const [totalApplications, setTotalApplications] = useState(0);
-
+  const user = authUser as BusinessUser | null;
   useEffect(() => {
     const pendingCount = applications.filter((app) => app.status === "PENDING").length;
     setTotalPendingApplications(pendingCount);
@@ -47,7 +47,7 @@ const PendingApplications = () => {
       >
         <View className="flex-row items-center gap-3 mb-4">
           <View className="items-center justify-center">
-            <Image source={{ uri: images.companyLogo }} className="size-12 rounded-full" resizeMode="contain" />
+            <RenderCompanyLogo logoUrl={user?.companyLogo || ""} />
           </View>
           <View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Applications</Text>
@@ -149,6 +149,30 @@ const PendingApplications = () => {
         ListFooterComponent={() => {
           return isLoading ? <ActivityIndicator size="small" color="green" /> : null;
         }}
+        ListEmptyComponent={() => (
+          <View className="flex-1 items-center justify-center px-6 py-20">
+            <View
+              className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
+              style={{
+                shadowColor: "#3b82f6",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <Feather name="file-text" size={32} color="#3b82f6" />
+            </View>
+
+            <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">
+              No Pending Applications Found
+            </Text>
+            <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6 max-w-xs">
+              There are no pending applications for your job postings at the moment. Check back later or review all
+              applications.
+            </Text>
+          </View>
+        )}
       />
     </SafeAreaView>
   );

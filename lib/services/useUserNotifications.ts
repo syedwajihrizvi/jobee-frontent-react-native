@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 const USER_NOTIFICATIONS_URL = 'http://192.168.2.29:8080/user-notifications'
 
-export const useUserNotifications = () => {
+export const useUserNotifications = (isAuthenticated: boolean) => {
     const fetchNotifications = async () => {
         const token = await AsyncStorage.getItem('x-auth-token');
         const response = await fetch(`${USER_NOTIFICATIONS_URL}`, {
@@ -22,5 +22,6 @@ export const useUserNotifications = () => {
     return useQuery<Notification[], Error>({
         queryKey: ['user-notifications'],
         queryFn: fetchNotifications,
+        enabled: isAuthenticated,
     })
 }

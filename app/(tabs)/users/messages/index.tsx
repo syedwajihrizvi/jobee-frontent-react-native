@@ -13,7 +13,7 @@ const Messages = () => {
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState("");
   const { conversations } = useConversationStore();
-  const { data: messages, isLoading } = useConversations(search);
+  const { data: messages, isLoading } = useConversations(search, isAuthenticated);
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 

@@ -27,7 +27,7 @@ export const MessageStompProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [messageClient, setMessageClient] = useState<Client | null>(null);
   const player = useAudioPlayer(sounds.popSound);
   const [isConnected, setIsConnected] = useState(false);
-  const { data: conversations, isLoading } = useConversations("");
+  const { data: conversations, isLoading } = useConversations("", isAuthenticated);
   const queryClient = useQueryClient();
   const stompClientRef = useRef<any>(null);
 
