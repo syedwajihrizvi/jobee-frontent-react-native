@@ -178,6 +178,7 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
       },
     })
     const data = await response.json()
+    console.log("Fetched job for business:", data);
     return data
   }
   return useQuery<Job, Error>({

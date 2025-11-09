@@ -190,6 +190,7 @@ export type Job = {
     setting: string
     applications: Application[],
     totalShortListedCandidates: number,
+    hiringTeam: HiringTeamMemberForm[]
     appDeadline: string
 }
 
@@ -684,3 +685,10 @@ export type Notification = {
 }
 
 export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER"
+
+export type HiringTeamMemberForm = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    profileImageUrl?: string;
+}

@@ -1,17 +1,19 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
+import HiringTeamCard from "@/components/HiringTeamCard";
 import ModalWithBg from "@/components/ModalWithBg";
-import { employmentTypes, experienceLevels, workArrangements } from "@/constants";
+import { employmentTypes, experienceLevels, sounds, workArrangements } from "@/constants";
 import { createJob } from "@/lib/jobEndpoints";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
-import { BusinessUser, CreateJobForm } from "@/type";
-import { FontAwesome } from "@expo/vector-icons";
+import { BusinessUser, CreateJobForm, HiringTeamMemberForm } from "@/type";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAudioPlayer } from "expo-audio";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -45,16 +47,29 @@ const CreateJob = () => {
     appDeadline: "",
     state: "",
   };
-  const { user: authUser } = useAuthStore();
+  const { user: authUser, isReady } = useAuthStore();
+  const user = authUser as BusinessUser | null;
+  const addTeamSound = useAudioPlayer(sounds.popSound);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showAddHiringTeamModal, setShowAddHiringTeamModal] = useState(false);
+  const [hiringTeam, setHiringTeam] = useState<HiringTeamMemberForm[]>([]);
+  const [hiringTeamMemberForm, setHiringTeamMemberForm] = useState<HiringTeamMemberForm>({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
   const { profileSummary, setProfileSummary } = useBusinessProfileSummaryStore();
   const [createJobForm, setCreateJobForm] = useState<CreateJobForm>(defaultJobForm);
   const [addingJob, setAddingJob] = useState(false);
   const tagInputRef = useRef<TextInput>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const user = authUser as BusinessUser | null;
 
+  useEffect(() => {
+    if (!isReady || !user) return;
+    const { email, firstName, lastName } = user;
+    setHiringTeam([{ firstName, lastName, email }]);
+  }, [user, isReady]);
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
@@ -91,7 +106,6 @@ const CreateJob = () => {
       employmentType,
       tags,
     } = createJobForm;
-    console.log("Creating job with form data: ", createJobForm);
     if (
       !title ||
       !streetAddress ||
@@ -128,12 +142,15 @@ const CreateJob = () => {
       setAddingJob(false);
       return;
     }
+    if (hiringTeam.length === 0) {
+      Alert.alert("Warning", "You have not added any hiring team members. You can add them later.");
+    }
     setShowConfirmationModal(true);
   };
 
   const handlePostJob = async () => {
     try {
-      const result = await createJob(createJobForm, user?.id!);
+      const result = await createJob(createJobForm, user?.id!, hiringTeam);
       if (!result) {
         Alert.alert("Error", "Failed to create job. Please try again.");
         return;
@@ -169,6 +186,26 @@ const CreateJob = () => {
     tagInputRef.current?.clear();
   };
 
+  const handleAddTeamMember = () => {
+    console.log("Adding team member:", hiringTeamMemberForm);
+    const { firstName, lastName, email } = hiringTeamMemberForm;
+    if (!firstName || !lastName || !email) {
+      Alert.alert("Error", "Please fill in all fields for the team member");
+      return;
+    }
+    setHiringTeam([...hiringTeam, hiringTeamMemberForm]);
+    setHiringTeamMemberForm({
+      firstName: "",
+      lastName: "",
+      email: "",
+    });
+    addTeamSound.seekTo(0);
+    addTeamSound.play();
+  };
+
+  const removeTeamMember = (member: HiringTeamMemberForm) => {
+    setHiringTeam(hiringTeam.filter((m) => m !== member));
+  };
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackBar label="Create Job" />
@@ -235,6 +272,7 @@ const CreateJob = () => {
             <View className="form-input">
               <CustomInput
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                autoCapitalize="letters"
                 label="Postal Code/ZIP"
                 placeholder="eg. 12345-6789 "
                 value={createJobForm.postalCode}
@@ -409,6 +447,21 @@ const CreateJob = () => {
                 </View>
               )}
             </View>
+            <View className="flex flex-col gap-2">
+              <Text className="form-input__label">Hiring Team</Text>
+              <TouchableOpacity
+                className="flex-row items-center justify-center bg-green-50 w-1/2 px-4 py-2 rounded-lg border border-green-200 mb-3"
+                onPress={() => setShowAddHiringTeamModal(true)}
+              >
+                <Feather name="plus-circle" size={20} color="#10b981" />
+                <Text className="font-quicksand-semibold text-sm text-emerald-600 ml-2">Add Team Member</Text>
+              </TouchableOpacity>
+              <View>
+                {hiringTeam.map((member, index) => (
+                  <HiringTeamCard key={index} teamMember={member} handleRemove={() => removeTeamMember(member)} />
+                ))}
+              </View>
+            </View>
             <View className="flex-row justify-center items-center gap-2">
               <TouchableOpacity
                 className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
@@ -428,6 +481,48 @@ const CreateJob = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ModalWithBg visible={showAddHiringTeamModal}>
+        <View className="flex-1 bg-white rounded-xl p-6 gap-2">
+          <Text className="font-quicksand-bold text-xl text-gray-900 mb-4">Add Hiring Team Member</Text>
+          <CustomInput
+            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+            autoCapitalize="words"
+            label="First Name"
+            placeholder="eg. John"
+            value={hiringTeamMemberForm.firstName}
+            onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, firstName: text })}
+          />
+          <CustomInput
+            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+            autoCapitalize="words"
+            label="Last Name"
+            placeholder="eg. Doe"
+            value={hiringTeamMemberForm.lastName}
+            onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, lastName: text })}
+          />
+          <CustomInput
+            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+            label="Email"
+            placeholder="eg. john.doe@example.com"
+            value={hiringTeamMemberForm.email}
+            onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, email: text })}
+          />
+          <View className="flex-row items-center justify-center gap-2 w-full mt-4">
+            <TouchableOpacity
+              className="w-1/2 bg-green-500 px-4 py-2 rounded-lg items-center"
+              onPress={handleAddTeamMember}
+            >
+              <Text className="font-quicksand-semibold text-sm text-white">Add</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="w-1/2 bg-red-500 px-4 py-2 rounded-lg items-center"
+              onPress={() => setShowAddHiringTeamModal(false)}
+            >
+              <Text className="font-quicksand-semibold text-sm text-white">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ModalWithBg>
       <ModalWithBg visible={showConfirmationModal} customHeight={0.85} customWidth={0.95}>
         <View className="flex-1">
           <View className="px-6 py-5 border-b border-gray-200 bg-white">
@@ -536,6 +631,35 @@ const CreateJob = () => {
                   <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                     <Text className="font-quicksand-medium text-gray-700 text-sm">{createJobForm.department}</Text>
                   </View>
+                </View>
+              )}
+              {hiringTeam.length > 0 ? (
+                <View>
+                  <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Hiring Team</Text>
+                  <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <View className="space-y-3">
+                      {hiringTeam.map((member, index) => (
+                        <View key={index} className="flex-row items-center gap-3 py-2">
+                          <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                            <Text className="font-quicksand-bold text-blue-600 text-sm">
+                              {member.firstName.charAt(0)}
+                              {member.lastName.charAt(0)}
+                            </Text>
+                          </View>
+                          <View className="flex-1">
+                            <Text className="font-quicksand-semibold text-sm text-gray-900">
+                              {member.firstName} {member.lastName}
+                            </Text>
+                            <Text className="font-quicksand-medium text-xs text-gray-600">{member.email}</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <Text className="font-quicksand-semibold text-md">You did not specify a hiring team</Text>
                 </View>
               )}
             </View>
