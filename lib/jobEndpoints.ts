@@ -171,3 +171,21 @@ export const getAIJobInsights = async (jobId: number) => {4
     const data = await result.json();
     return data as string[];
 }
+
+export const getAIJobDescription = async (jobInfo: CreateJobForm) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const result = await fetch(`${JOBS_API_URL}/generate-ai-description`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(jobInfo)
+    })
+    if (result.status !== 200) return null;
+    const data = await result.json();
+    console.log("AI Generated Job Description:", data.aiGeneratedJobDescription);
+    return data.aiGeneratedJobDescription as string;
+
+}

@@ -264,7 +264,7 @@ const JobDetails = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 relative">
+    <SafeAreaView className="flex-1 bg-gray-50 relative pb-20">
       <BackBar label="Job Details" />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">

@@ -315,7 +315,7 @@ const RecruiterDashboard = () => {
                       <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
                         <Feather name="briefcase" size={20} color="#10b981" />
                       </View>
-                      <Text className="font-quicksand-bold text-lg text-gray-900">Most Popular Jobs</Text>
+                      <Text className="font-quicksand-bold text-lg text-gray-900">Your Most Popular Jobs</Text>
                     </View>
                     <TouchableOpacity onPress={() => router.push("/businessJobs/interviews")}>
                       <Feather name="chevron-right" size={16} color="#6b7280" />

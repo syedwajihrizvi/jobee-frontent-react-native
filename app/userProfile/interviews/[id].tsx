@@ -132,7 +132,8 @@ const InterviewDetails = () => {
           >
             <View className="flex-row items-start justify-between mb-2">
               <View className="flex-1 mr-3">
-                <CompanyInformation company={interviewDetails?.companyName!} />
+                {/* // TODO: Update companyLogoUrl when available */}
+                <CompanyInformation companyName={interviewDetails?.companyName!} companyLogoUrl={""} />
               </View>
             </View>
 

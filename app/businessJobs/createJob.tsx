@@ -3,12 +3,13 @@ import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
 import HiringTeamCard from "@/components/HiringTeamCard";
 import ModalWithBg from "@/components/ModalWithBg";
+import RemovableBadge from "@/components/RemovableBadge";
 import { employmentTypes, experienceLevels, sounds, workArrangements } from "@/constants";
-import { createJob } from "@/lib/jobEndpoints";
+import { createJob, getAIJobDescription } from "@/lib/jobEndpoints";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
 import { BusinessUser, CreateJobForm, HiringTeamMemberForm } from "@/type";
-import { Feather, FontAwesome } from "@expo/vector-icons";
+import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
@@ -50,6 +51,7 @@ const CreateJob = () => {
   const { user: authUser, isReady } = useAuthStore();
   const user = authUser as BusinessUser | null;
   const addTeamSound = useAudioPlayer(sounds.popSound);
+  const successSound = useAudioPlayer(sounds.successSound);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showAddHiringTeamModal, setShowAddHiringTeamModal] = useState(false);
   const [hiringTeam, setHiringTeam] = useState<HiringTeamMemberForm[]>([]);
@@ -61,6 +63,7 @@ const CreateJob = () => {
   const { profileSummary, setProfileSummary } = useBusinessProfileSummaryStore();
   const [createJobForm, setCreateJobForm] = useState<CreateJobForm>(defaultJobForm);
   const [addingJob, setAddingJob] = useState(false);
+  const [generatingAIDescription, setGeneratingAIDescription] = useState(false);
   const tagInputRef = useRef<TextInput>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -146,6 +149,37 @@ const CreateJob = () => {
       Alert.alert("Warning", "You have not added any hiring team members. You can add them later.");
     }
     setShowConfirmationModal(true);
+  };
+
+  const handleGenerateAIDescription = async () => {
+    Alert.alert("Confirmation", "Have you ensured all other fields are filled out correctly?", [
+      {
+        text: "No",
+        style: "cancel",
+        onPress: () => {
+          return;
+        },
+      },
+      {
+        text: "Yes",
+        onPress: async () => {
+          setGeneratingAIDescription(true);
+          try {
+            const res = await getAIJobDescription(createJobForm);
+            if (res) {
+              setCreateJobForm({ ...createJobForm, description: res });
+              Alert.alert("Success", "AI-generated job description has been added.");
+              successSound.seekTo(0);
+              successSound.play();
+            }
+          } catch (error) {
+            Alert.alert("Error", "Failed to generate job description. Please try again.");
+          } finally {
+            setGeneratingAIDescription(false);
+          }
+        },
+      },
+    ]);
   };
 
   const handlePostJob = async () => {
@@ -272,7 +306,7 @@ const CreateJob = () => {
             <View className="form-input">
               <CustomInput
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
-                autoCapitalize="letters"
+                autoCapitalize="characters"
                 label="Postal Code/ZIP"
                 placeholder="eg. 12345-6789 "
                 value={createJobForm.postalCode}
@@ -431,6 +465,7 @@ const CreateJob = () => {
               <View className="form-input">
                 <Text className="form-input__label">Skills</Text>
                 <TextInput
+                  autoCapitalize="words"
                   className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
                   onSubmitEditing={(event) => handleAddTag(event.nativeEvent.text.trim())}
                   ref={tagInputRef}
@@ -440,9 +475,16 @@ const CreateJob = () => {
               {createJobForm.tags.length > 0 && (
                 <View className="flex-row flex-wrap gap-2">
                   {createJobForm.tags.map((tag) => (
-                    <View key={tag} className="bg-green-100 px-3 py-1 rounded-full">
-                      <Text className="text-green-800 font-quicksand-medium">{tag}</Text>
-                    </View>
+                    <RemovableBadge
+                      key={tag}
+                      text={tag}
+                      handlePress={() => {
+                        setCreateJobForm({
+                          ...createJobForm,
+                          tags: createJobForm.tags.filter((t) => t !== tag),
+                        });
+                      }}
+                    />
                   ))}
                 </View>
               )}
@@ -636,7 +678,7 @@ const CreateJob = () => {
               {hiringTeam.length > 0 ? (
                 <View>
                   <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Hiring Team</Text>
-                  <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <View className="bg-gray-50 p-2 rounded-xl border border-gray-200">
                     <View className="space-y-3">
                       {hiringTeam.map((member, index) => (
                         <View key={index} className="flex-row items-center gap-3 py-2">
@@ -662,6 +704,28 @@ const CreateJob = () => {
                   <Text className="font-quicksand-semibold text-md">You did not specify a hiring team</Text>
                 </View>
               )}
+              <TouchableOpacity
+                className="flex-1 bg-green-500 py-3 px-4 rounded-xl items-center justify-center flex-row gap-2"
+                style={{
+                  shadowColor: "#16a34a",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={handleGenerateAIDescription}
+                activeOpacity={0.8}
+                disabled={generatingAIDescription}
+              >
+                {generatingAIDescription ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <>
+                    <Ionicons name="sparkles" size={18} color="#fbbf24" />
+                    <Text className="font-quicksand-bold text-white text-center text-base">Update With AI</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
           </ScrollView>
 
@@ -680,7 +744,7 @@ const CreateJob = () => {
                 activeOpacity={0.8}
                 disabled={addingJob}
               >
-                {addingJob ? (
+                {addingJob || generatingAIDescription ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
                   <Text className="font-quicksand-bold text-white text-center text-base">Confirm</Text>
