@@ -29,7 +29,6 @@ export const createInterview = async (
         timezone,
         previousInterviewId
     }
-    console.log("Creating interview with request body: ", requestBody)
     const result = await fetch(`${INTERVIEWS_API_URL}`, {
         method: 'POST',
         headers: {
@@ -150,4 +149,23 @@ export const getInterviewerProfileSummary = async (email: string) : Promise<Inte
     const data = await response.json()
     console.log(data)
     return data as InterviewerProfileSummary
+}
+
+export const markInterviewAsCompleted = async (interviewId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const response = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/mark-as-completed`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    return response.status === 200
+}
+
+export const rejectCandidateInterview = async (interviewId: number, reason: string, feedback: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    console.log("Rejecting candidate for interview id: ", interviewId, " reason: ", reason, " feedback: ", feedback)
 }

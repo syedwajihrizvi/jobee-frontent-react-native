@@ -453,6 +453,8 @@ export type Application = {
 export type ApplicationSummary = {
     id: number;
     fullName: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phoneNumber: string;
     profileImageUrl: string;

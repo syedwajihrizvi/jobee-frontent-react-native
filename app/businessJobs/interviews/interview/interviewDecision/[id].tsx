@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const InterviewDecision = () => {
   const { id, candidateName, candidateId, candidateProfileImage, jobId, applicantId } = useLocalSearchParams();
   const [showRejectModal, setShowRejectModal] = useState(false);
-  console.log(candidateProfileImage);
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Decision" />
@@ -87,7 +87,7 @@ const InterviewDecision = () => {
             onPress={() => {}}
             activeOpacity={0.8}
           >
-            <View className="flex-row items-center gap-4">
+            <View className="flex-row items-start gap-4">
               <View
                 className="w-16 h-16 bg-emerald-500 rounded-2xl items-center justify-center"
                 style={{
@@ -130,7 +130,7 @@ const InterviewDecision = () => {
             }
             activeOpacity={0.8}
           >
-            <View className="flex-row items-center gap-4">
+            <View className="flex-row items-start gap-4">
               <View
                 className="w-16 h-16 bg-blue-500 rounded-2xl items-center justify-center"
                 style={{
@@ -169,7 +169,7 @@ const InterviewDecision = () => {
             onPress={() => setShowRejectModal(true)}
             activeOpacity={0.8}
           >
-            <View className="flex-row items-center gap-4">
+            <View className="flex-row items-start gap-4">
               <View
                 className="w-16 h-16 bg-red-500 rounded-2xl items-center justify-center"
                 style={{
@@ -200,6 +200,7 @@ const InterviewDecision = () => {
       </ScrollView>
       <RejectCandidateModal
         candidateName={candidateName as string}
+        interviewId={Number(id)}
         visible={showRejectModal}
         handleClose={() => setShowRejectModal(false)}
       />

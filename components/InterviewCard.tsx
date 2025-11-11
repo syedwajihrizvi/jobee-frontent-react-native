@@ -1,9 +1,9 @@
-import { getS3ProfileImage } from "@/lib/s3Urls";
 import { convertTo12Hour, getDecisionString, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import RenderUserProfileImage from "./RenderUserProfileImage";
 
 type Props = {
   interview: InterviewDetails;
@@ -11,6 +11,7 @@ type Props = {
 };
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
+  console.log("Rendering InterviewCard for interview:", interview.candidateProfileImageUrl);
   const renderInterviewDecision = (decision: string) => {
     const decisionString = getDecisionString(decision);
     return (
@@ -54,6 +55,39 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
     );
   };
 
+  const renderInterviewDate = () => {
+    if (interview.status === "COMPLETED") {
+      return (
+        <View
+          className="bg-red-100 px-3 py-1 rounded-full"
+          style={{
+            shadowColor: "#6366f1",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+            elevation: 1,
+          }}
+        >
+          <Text className="font-quicksand-bold text-xs text-red-700">Completed {interview.interviewDate}</Text>
+        </View>
+      );
+    }
+    return (
+      <View
+        className="bg-emerald-100 px-3 py-1 rounded-full"
+        style={{
+          shadowColor: "#6366f1",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.2,
+          shadowRadius: 2,
+          elevation: 1,
+        }}
+      >
+        <Text className="font-quicksand-bold text-xs text-emerald-700">{interview.interviewDate}</Text>
+      </View>
+    );
+  };
+
   return (
     <TouchableOpacity
       className="mb-4 bg-white rounded-2xl p-5 border border-gray-100"
@@ -68,45 +102,16 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
       onPress={handlePress}
     >
       <View className="flex-row items-center justify-between mb-4">
-        <View
-          className="bg-emerald-100 px-3 py-1 rounded-full"
-          style={{
-            shadowColor: "#6366f1",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2,
-            shadowRadius: 2,
-            elevation: 1,
-          }}
-        >
-          <Text className="font-quicksand-bold text-xs text-emerald-700">{interview.interviewDate}</Text>
-        </View>
+        {renderInterviewDate()}
         {interview.decisionResult && renderInterviewDecision(interview.decisionResult)}
       </View>
       <View className="flex-row items-start gap-4">
-        <View
-          className="w-8 h-8 rounded-full overflow-hidden border-3 border-white"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.15,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-        >
-          {interview?.candidateProfileImageUrl ? (
-            <Image
-              source={{
-                uri: getS3ProfileImage(interview?.candidateProfileImageUrl),
-              }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-full h-full bg-gray-100 border border-gray-300 rounded-full items-center justify-center">
-              <Feather name="user" size={20} color="#6b7280" />
-            </View>
-          )}
-        </View>
+        <RenderUserProfileImage
+          profileImageUrl={interview.candidateProfileImageUrl}
+          profileImageSize={8}
+          fontSize={10}
+          fullName={interview.candidateName}
+        />
         <View className="flex-1 -top-1">
           <Text className="font-quicksand-bold text-lg text-gray-900">
             {interview?.candidateName || "Candidate Name"}

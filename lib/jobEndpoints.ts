@@ -6,10 +6,8 @@ const JOBS_API_URL = 'http://192.168.2.29:8080/jobs'
 const USER_PROFILE_API_URL = 'http://192.168.2.29:8080/profiles'
 
 export const applyToJob = async (application: CreateApplication) => {
-    return new Promise<Application | null>((resolve, reject) => {
-        setTimeout(async () => {
             const token = await AsyncStorage.getItem('x-auth-token');
-            if (token == null) return resolve(null);
+            if (token == null) return null;
             const result = await fetch(`${APPLICATION_API_URL}`, {
             method: 'POST',
             headers: {
@@ -19,11 +17,9 @@ export const applyToJob = async (application: CreateApplication) => {
             body: JSON.stringify(application)
             })
             if (result.status !== 201)
-                return resolve(null);
+                return null;
             const response = await result.json();
-            return resolve(response as Application);
-        }, 3000)
-    })
+            return response as Application;
 }
 
 export const quickApplyToJob = async (jobId: number) => {

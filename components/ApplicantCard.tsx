@@ -1,10 +1,10 @@
-import { getS3ProfileImage } from "@/lib/s3Urls";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
 import { ApplicationSummary } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import RenderUserProfileImage from "./RenderUserProfileImage";
 
 type Props = {
   item: ApplicationSummary;
@@ -43,30 +43,13 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
     >
       <View className="flex-row items-start justify-between mb-2">
         <View className="flex-row items-start gap-4 flex-1">
-          <View
-            className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200 items-center justify-center"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            {item.profileImageUrl ? (
-              <Image
-                source={{
-                  uri: getS3ProfileImage(item.profileImageUrl),
-                }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="w-12 h-12 rounded-full items-center justify-center">
-                <Feather name="user" size={30} color="black" />
-              </View>
-            )}
-          </View>
+          <RenderUserProfileImage
+            profileImageUrl={item.profileImageUrl}
+            profileImageSize={12}
+            fontSize={12}
+            firstName={item.firstName}
+            lastName={item.lastName}
+          />
           <View className="flex-1 mr-3">
             <Text className="font-quicksand-bold text-lg text-gray-900">{item.fullName}</Text>
             <Text className="font-quicksand-semibold text-base text-gray-700">{item.title}</Text>

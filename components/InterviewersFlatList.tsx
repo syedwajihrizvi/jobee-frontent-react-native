@@ -1,7 +1,6 @@
-import { getS3BusinessProfileImage } from "@/lib/s3Urls";
-import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import RenderBusinessProfileImage from "./RenderBusinessProfileImage";
 
 type Props = {
   interviewers: { name: string; email: string; title: string; profileImageUrl: string }[];
@@ -28,29 +27,20 @@ const InterviewersFlatList = ({ interviewers, otherInterviewers, onInterviewerSe
           onPress={() => onInterviewerSelect(item.email, item.name, item.profileImageUrl)}
           activeOpacity={0.7}
         >
-          <View
-            className="w-16 h-16 rounded-full mb-3 overflow-hidden items-center justify-center border-2 border-gray-200"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
+          <RenderBusinessProfileImage
+            profileImageUrl={item.profileImageUrl}
+            profileImageSize={16}
+            fullName={item.name}
+            fontSize={16}
+          />
+          <Text className="font-quicksand-semibold text-sm text-gray-900 text-center mt-1">{item.name}</Text>
+          <Text
+            className="font-quicksand-medium text-xs text-gray-500 text-center mt-1"
+            numberOfLines={2}
+            ellipsizeMode="tail"
           >
-            {item.profileImageUrl ? (
-              <Image
-                source={{ uri: getS3BusinessProfileImage(item.profileImageUrl) }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="w-12 h-12 rounded-full items-center justify-center">
-                <Feather name="user" size={30} color="black" />
-              </View>
-            )}
-          </View>
-          <Text className="font-quicksand-bold text-base text-gray-900 text-center">{item.name}</Text>
+            {item.title || "Interviewer"}
+          </Text>
         </TouchableOpacity>
       )}
       ItemSeparatorComponent={() => <View className="w-3" />}

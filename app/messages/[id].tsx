@@ -1,6 +1,7 @@
+import RenderBusinessProfileImage from "@/components/RenderBusinessProfileImage";
+import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import { useStomp } from "@/context/MessageStompContext";
 import { fetchMessages, markMessageAsRead, publishMessage } from "@/lib/chat";
-import { getS3BusinessProfileImage, getS3ProfileImage } from "@/lib/s3Urls";
 import { formatMessageTimestamp } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
@@ -8,7 +9,7 @@ import { Message } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { FlatList, Image, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MessageChat = () => {
@@ -21,6 +22,8 @@ const MessageChat = () => {
   const [message, setMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
+  const firstName = name ? (name as string).split(" ")[0] : "";
+  const lastName = name ? (name as string).split(" ")[1] : "";
   useEffect(() => {
     const controller = new AbortController();
     const fetchChatMessages = async () => {
@@ -109,17 +112,22 @@ const MessageChat = () => {
   };
 
   const renderProfileImageUrl = () => {
-    if (profileImageUrl && profileImageUrl !== "null" && profileImageUrl !== "undefined") {
-      const uri =
-        role === "BUSINESS"
-          ? getS3BusinessProfileImage(profileImageUrl as string)
-          : getS3ProfileImage(profileImageUrl as string);
-      return <Image source={{ uri }} className="w-12 h-12 rounded-full border-2 border-gray-200" resizeMode="cover" />;
+    if (role === "BUSINESS") {
+      return (
+        <RenderBusinessProfileImage
+          profileImageUrl={profileImageUrl as string}
+          firstName={firstName}
+          lastName={lastName}
+        />
+      );
     }
     return (
-      <View className="w-12 h-12 rounded-full border-2 border-gray-200 items-center justify-center bg-gray-100">
-        <Feather name="user" size={30} color="black" />
-      </View>
+      <RenderUserProfileImage
+        profileImageUrl={profileImageUrl === "null" ? undefined : (profileImageUrl as string)}
+        profileImageSize={12}
+        firstName={firstName}
+        lastName={lastName}
+      />
     );
   };
 

@@ -9,7 +9,6 @@ import { Text, TouchableOpacity, View } from "react-native";
 const BusinessJobListings = ({ job }: { job: Job }) => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
-  console.log("Rendering job listing for job:", job);
   return (
     <TouchableOpacity
       className="mb-4 bg-white rounded-2xl p-5 border border-gray-100"

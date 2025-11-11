@@ -105,6 +105,8 @@ export const getApplicationStatus = (status: string) => {
   switch(status) {
     case 'PENDING':
       return "Pending";
+    case 'INTERVIEW_COMPLETED':
+      return "Interview Completed";
     case 'INTERVIEW_SCHEDULED':
       return "Interview Scheduled";
     case 'OFFER_MADE':

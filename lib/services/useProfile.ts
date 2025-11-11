@@ -5,6 +5,7 @@ const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
 
 export const useApplicant = (applicantId?: number, jobId?: number, candidateId?: number) => {
+    console.log("RETRIGGERING useApplicant with:", { applicantId, jobId, candidateId });
     const fetchApplicant = async () => {
         if (!jobId && !candidateId) {
             const response = await fetch(`${APPLICATIONS_API_URL}/${applicantId}`, {
@@ -28,8 +29,7 @@ export const useApplicant = (applicantId?: number, jobId?: number, candidateId?:
                 return null;
             }
             const res = data[0]
-            console.log("Fetched applicant data:", res); // Debugging log
-            return data[0] as ApplicationDetailsForBusiness;
+            return res as ApplicationDetailsForBusiness;
         }
     }
     return useQuery<ApplicationDetailsForBusiness, Error>({

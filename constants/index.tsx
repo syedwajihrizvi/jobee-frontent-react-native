@@ -183,8 +183,8 @@ export const businessProfileLinks: {
     href: "/businessProfile/myJobPostings",
   },
   {
-    label: "Upcoming Interviews",
-    subtitle: "View and manage your upcoming interviews with candidates.",
+    label: "Interviews",
+    subtitle: "View interviews with candidates.",
     icon: <Feather name="calendar" size={20} color="black" />,
     href: "/businessProfile/interviews",
   },

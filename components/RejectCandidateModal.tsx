@@ -1,3 +1,4 @@
+import { rejectCandidateInterview } from "@/lib/interviewEndpoints";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Keyboard, Text, TouchableOpacity, View } from "react-native";
@@ -7,12 +8,12 @@ import ModalWithBg from "./ModalWithBg";
 
 type Props = {
   visible: boolean;
+  interviewId: number;
   handleClose: () => void;
   candidateName?: string;
-  onReject?: (reason: string, feedback: string) => void;
 };
 
-const RejectCandidateModal = ({ visible, handleClose, candidateName, onReject }: Props) => {
+const RejectCandidateModal = ({ visible, handleClose, candidateName, interviewId }: Props) => {
   const customFeedbackFooterRef = useRef<View>(null);
   const keyboardAwareScrollViewRef = useRef<KeyboardAwareScrollView>(null);
   const [selectedReason, setSelectedReason] = useState<string>("");
@@ -66,7 +67,7 @@ const RejectCandidateModal = ({ visible, handleClose, candidateName, onReject }:
     };
   }, []);
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!selectedReason) {
       Alert.alert("Error", "Please select a reason for rejection.");
       return;
@@ -78,14 +79,16 @@ const RejectCandidateModal = ({ visible, handleClose, candidateName, onReject }:
     }
 
     setIsSubmitting(true);
-
-    setTimeout(() => {
-      onReject?.(selectedReason, customFeedback);
+    try {
+      // Call API to reject candidate
+      await rejectCandidateInterview(interviewId, selectedReason, customFeedback);
+      console.log("Candidate rejected successfully");
+      Alert.alert("Success", "The candidate has been rejected.");
+      resetAndClose();
+    } catch (error) {
+    } finally {
       setIsSubmitting(false);
-      handleClose();
-      setSelectedReason("");
-      setCustomFeedback("");
-    }, 1000);
+    }
   };
 
   const resetAndClose = () => {

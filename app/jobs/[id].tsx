@@ -22,7 +22,7 @@ import {
 } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
-import { Company, CreateApplication, Job, User, UserDocument } from "@/type";
+import { Application, Company, CreateApplication, Job, User, UserDocument, UserProfileSummary } from "@/type";
 import { Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,9 +34,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
-  const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
+  const { user: authUser, isAuthenticated, isLoading: isLoadingUser, setUser } = useAuthStore();
   const user = authUser as User | null;
-  const { profileSummary } = useProfileSummaryStore();
+  const { profileSummary, setProfileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
   const { data: jobApplications, isLoading: isLoadingJobApplications } = useJobsByUserApplications(user?.id);
   const [jobApplication, setJobApplication] = useState<{
@@ -141,6 +141,11 @@ const JobDetails = () => {
     viewApplicationBottomRef.current?.expand();
   };
 
+  const updateUserApplications = (newApplications: Application[]) => {
+    const updatedApplications = [...newApplications, ...(user?.applications || [])];
+    setUser(user ? { ...user, applications: updatedApplications } : user);
+  };
+
   const handleSubmitApplication = async () => {
     if (!selectedResume) {
       Alert.alert("Please select a resume to proceeed.");
@@ -154,13 +159,23 @@ const JobDetails = () => {
         coverLetterDocumentId: selectedCoverLetter ? Number(selectedCoverLetter) : undefined,
       };
 
-      await applyToJob(applicationInfo);
-      queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
-      Alert.alert("Application submitted successfully!");
-      applyBottomRef.current?.close();
-      player.seekTo(0);
-      player.play();
-      await onActionSuccess();
+      const res = await applyToJob(applicationInfo);
+      if (res) {
+        queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
+        const updatedProfileSummary = {
+          ...profileSummary,
+          lastApplication: res,
+          totalApplications: (profileSummary?.totalApplications || 0) + 1,
+          totalInConsideration: (profileSummary?.totalInConsideration || 0) + 1,
+        };
+        setProfileSummary(updatedProfileSummary as UserProfileSummary);
+        updateUserApplications([res]);
+        Alert.alert("Application submitted successfully!");
+        applyBottomRef.current?.close();
+        player.seekTo(0);
+        player.play();
+        await onActionSuccess();
+      }
     } catch (error) {
       Alert.alert("Failed to submit application. Please try again.");
       return;

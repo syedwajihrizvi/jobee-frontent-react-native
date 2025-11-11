@@ -14,7 +14,6 @@ export const useApplicationsForBusinessProfileJobs = ({userId}: {userId: number 
             }
         })
         const data = await response.json();
-        console.log("Fetched applications for business profile jobs:", data);
         return data
     }
 

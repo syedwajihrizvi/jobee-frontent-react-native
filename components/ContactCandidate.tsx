@@ -1,12 +1,11 @@
-import { images } from "@/constants";
 import { createConversationBetweenUsers, fetchConversationBetweenUsers } from "@/lib/chat";
-import { getS3ProfileImage } from "@/lib/s3Urls";
 import { User } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, Image, Linking, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Linking, Text, TouchableOpacity, View } from "react-native";
+import RenderUserProfileImage from "./RenderUserProfileImage";
 
 type Props = {
   userProfile: User;
@@ -87,17 +86,7 @@ const ContactCandidate = ({ userProfile, customSMSBody, customEmailSubject }: Pr
       <View className="items-center py-2 border-b border-gray-100">
         <View className="w-12 h-1 bg-gray-300 rounded-full mb-4" />
         <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
-            <Image
-              source={{
-                uri: userProfile?.profileImageUrl
-                  ? getS3ProfileImage(userProfile?.profileImageUrl)
-                  : images.companyLogo,
-              }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
-          </View>
+          <RenderUserProfileImage user={userProfile} profileImageSize={12} fontSize={16} />
           <View>
             <Text className="font-quicksand-bold text-lg text-gray-900">
               Contact {userProfile?.firstName} {userProfile?.lastName}

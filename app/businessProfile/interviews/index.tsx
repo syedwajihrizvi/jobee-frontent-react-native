@@ -97,7 +97,7 @@ const Interviews = () => {
                       <Feather name="calendar" size={24} color="#6366f1" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-quicksand-bold text-xl text-gray-900">Your Upcoming Interviews</Text>
+                      <Text className="font-quicksand-bold text-xl text-gray-900">Your Interviews</Text>
                       <Text className="font-quicksand-medium text-sm text-gray-600">
                         View and manage all your interviews
                       </Text>

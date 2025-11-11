@@ -7,7 +7,7 @@ import { useBusinessProfileInterviews } from "@/lib/services/useBusinessProfileI
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
-import { BusinessUser } from "@/type";
+import { BusinessUser, InterviewDetails } from "@/type";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -17,7 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const AdminDashboard = () => {
   const { isLoading: isLoadingUser, user: authUser } = useAuthStore();
   const { profileSummary } = useBusinessProfileSummaryStore();
-  const { data: upcomingInterviews } = useBusinessProfileInterviews();
+  const { data: interviews, isLoading: isLoadingInterviews } = useBusinessProfileInterviews();
+  const [upcomingInterviews, setUpcomingInterviews] = useState<InterviewDetails[]>([]);
   const { setApplications, applications: storeApplications } = useApplicantsForUserJobs();
   const { data: applications, isLoading: isLoadingApplications } = useApplicationsForBusinessProfileJobs({
     userId: authUser?.id,
@@ -25,6 +26,14 @@ const AdminDashboard = () => {
   const [viewingMostApplied, setViewingMostApplied] = useState(true);
   const [popularJobs, setPopularJobs] = useState(profileSummary?.mostAppliedJobs || []);
   const user = authUser as BusinessUser | null;
+
+  useEffect(() => {
+    if (!isLoadingInterviews && interviews) {
+      const notCompletedInterviews = interviews.filter((interview) => interview.status !== "COMPLETED");
+      setUpcomingInterviews(notCompletedInterviews);
+    }
+  }, [interviews, isLoadingInterviews]);
+
   useEffect(() => {
     if (!isLoadingApplications) {
       setApplications(applications || []);
@@ -333,9 +342,6 @@ const AdminDashboard = () => {
                     </View>
                     <Text className="font-quicksand-bold text-lg text-gray-900">Most Popular Jobs</Text>
                   </View>
-                  <TouchableOpacity onPress={() => router.push("/businessJobs/interviews")}>
-                    <Feather name="chevron-right" size={16} color="#6b7280" />
-                  </TouchableOpacity>
                 </View>
                 <View className="flex-row gap-3 mb-4">
                   <TouchableOpacity
@@ -358,39 +364,38 @@ const AdminDashboard = () => {
                 </View>
               </View>
             </View>
-            <View className="px-3 mb-4">
-              <View
-                className="bg-white rounded-2xl p-6 border border-gray-100"
-                style={{
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 12,
-                  elevation: 6,
-                }}
-              >
-                <View className="flex-row items-center justify-between mb-4">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
-                      <Feather name="calendar" size={20} color="#f59e0b" />
+            {upcomingInterviews.length > 0 && (
+              <View className="px-3 mb-4">
+                <View
+                  className="bg-white rounded-2xl p-6 border border-gray-100"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
+                >
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center gap-3">
+                      <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
+                        <Feather name="calendar" size={20} color="#f59e0b" />
+                      </View>
+                      <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
                     </View>
-                    <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
                   </View>
-                  <TouchableOpacity onPress={() => router.push("/businessJobs/interviews")}>
-                    <Feather name="chevron-right" size={16} color="#6b7280" />
-                  </TouchableOpacity>
-                </View>
-                <View className="gap-3">
-                  {upcomingInterviews?.map((interview, index) => (
-                    <InterviewCard
-                      interview={interview}
-                      key={index}
-                      handlePress={() => router.push(`/businessJobs/interviews/interview/${interview.id}`)}
-                    />
-                  ))}
+                  <View className="gap-3">
+                    {upcomingInterviews?.map((interview, index) => (
+                      <InterviewCard
+                        interview={interview}
+                        key={index}
+                        handlePress={() => router.push(`/businessJobs/interviews/interview/${interview.id}`)}
+                      />
+                    ))}
+                  </View>
                 </View>
               </View>
-            </View>
+            )}
           </>
         )}
       </ScrollView>

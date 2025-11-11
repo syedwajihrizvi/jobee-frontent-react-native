@@ -31,7 +31,7 @@ export const CollapsibleSection = ({
       <View className="flex-row justify-between items-center">
         <View className="flex-row items-center gap-3">
           <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center">{icon}</View>
-          <Text className="font-quicksand-bold text-lg text-gray-900">{title}</Text>
+          <Text className="font-quicksand-semibold text-lg text-gray-900">{title}</Text>
         </View>
         <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center">
           <Feather name={isOpen ? "chevron-up" : "chevron-down"} size={16} color="#6b7280" />

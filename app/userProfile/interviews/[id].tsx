@@ -23,7 +23,7 @@ const InterviewDetails = () => {
   const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] = useState(false);
   const [interviewerDetails, setInterviewerDetails] = useState<InterviewerProfileSummary | null>(null);
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(interviewId));
-  console.log("interviewDetails", interviewDetails);
+
   const handlePrepareWithJobee = () => {
     if (interviewDetails?.preparationStatus === "NOT_STARTED") {
       setShowInterviewPrepModal(true);
@@ -51,11 +51,9 @@ const InterviewDetails = () => {
   const handlePrepareWithJobeeConfirm = async () => {
     setIsSendingInterviewPrepRequest(true);
     try {
-      const res = await prepareForInterview(Number(interviewId));
-      if (res) {
-        Alert.alert("Success", "You are all set! We will notify you once we are ready. Approximately 5 minutes");
-        handleShowInterviewPrepModalClose();
-      }
+      await prepareForInterview(Number(interviewId));
+      Alert.alert("Success", "You are all set! We will notify you once your prep ready!");
+      handleShowInterviewPrepModalClose();
     } catch (error) {
       Alert.alert("Error", "Something went wrong. Please try again later.");
     } finally {

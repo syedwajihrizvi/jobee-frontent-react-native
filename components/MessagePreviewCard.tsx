@@ -1,11 +1,11 @@
-import { getS3BusinessProfileImage, getS3ProfileImage } from "@/lib/s3Urls";
 import { formatDate } from "@/lib/utils";
 import { Conversation } from "@/type";
-import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import RenderBusinessProfileImage from "./RenderBusinessProfileImage";
 import RenderSlicedText from "./RenderSlicedText";
+import RenderUserProfileImage from "./RenderUserProfileImage";
 
 type Props = {
   message: Conversation;
@@ -15,9 +15,25 @@ type Props = {
 const MessagePreviewCard = ({ message }: Props) => {
   const renderProfileImageUrl = () => {
     if (message.participantRole === "BUSINESS") {
-      return getS3BusinessProfileImage(message.participantProfileImageUrl);
+      return (
+        <RenderBusinessProfileImage
+          profileImageUrl={message.participantProfileImageUrl}
+          profileImageSize={12}
+          fontSize={14}
+          firstName={message.participantName.split(" ")[0]}
+          lastName={message.participantName.split(" ")[1]}
+        />
+      );
     }
-    return getS3ProfileImage(message.participantProfileImageUrl);
+    return (
+      <RenderUserProfileImage
+        profileImageSize={12}
+        profileImageUrl={message.participantProfileImageUrl}
+        fontSize={14}
+        firstName={message.participantName.split(" ")[0]}
+        lastName={message.participantName.split(" ")[1]}
+      />
+    );
   };
 
   return (
@@ -39,17 +55,7 @@ const MessagePreviewCard = ({ message }: Props) => {
     >
       <View className="flex-row items-start gap-3">
         <View className="relative">
-          {message.participantProfileImageUrl ? (
-            <Image
-              source={{ uri: renderProfileImageUrl() }}
-              className="w-12 h-12 rounded-full border-2 border-gray-200"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="w-12 h-12 rounded-full border-2 border-gray-200 items-center justify-center bg-gray-100">
-              <Feather name="user" size={30} color="black" />
-            </View>
-          )}
+          {renderProfileImageUrl()}
           <View className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
         </View>
         <View className="flex-1">

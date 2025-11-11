@@ -7,7 +7,6 @@ import RenderMeetingPlatformIcon from "@/components/RenderMeetingPlatformIcon";
 import { meetingPlatforms } from "@/constants";
 import { useNotificationStomp } from "@/context/NotificationStompContext";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
-import { publishNotificationWrapper } from "@/lib/notifications";
 import {
   convert10DigitNumberToPhoneFormat,
   validateMeetingLink,
@@ -18,7 +17,7 @@ import {
 } from "@/lib/utils";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import useAuthStore from "@/store/auth.store";
-import { BusinessUser, CreateInterviewForm, Notification } from "@/type";
+import { BusinessUser, CreateInterviewForm } from "@/type";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
@@ -218,7 +217,6 @@ const ScheduleInterview = () => {
         Number(previousInterviewId)
       );
       if (res) {
-        const { jobTitle, companyName } = res;
         const applicationIndex = applications.findIndex((app) => app.id === Number(applicantId));
         if (applicationIndex !== -1) {
           setApplicationStatus(Number(applicantId), "INTERVIEW_SCHEDULED");
@@ -454,78 +452,6 @@ const ScheduleInterview = () => {
             </View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Interview Details</Text>
           </View>
-          <TouchableOpacity
-            className="bg-green-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
-            onPress={() =>
-              publishNotificationWrapper(client, Number(candidateId), "USER", {
-                notificationType: "INTERVIEW_SCHEDULED",
-                message: `You have been selected for an interview with ${user?.companyName}.`,
-              } as Notification)
-            }
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-semibold text-md">Schedule</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-green-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
-            onPress={() =>
-              publishNotificationWrapper(client, Number(candidateId), "USER", {
-                notificationType: "INTERVIEW_REMINDER",
-                message: `Reminder for your interview with ${user?.companyName}.`,
-              } as Notification)
-            }
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-semibold text-md">Remind</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-red-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
-            onPress={() =>
-              publishNotificationWrapper(client, Number(candidateId), "USER", {
-                notificationType: "REJECTION",
-                message: `Your application to ${user?.companyName} for Job has been rejected.`,
-              } as Notification)
-            }
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-semibold text-md">Reject</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-red-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
-            onPress={() =>
-              publishNotificationWrapper(client, Number(candidateId), "USER", {
-                notificationType: "INTERVIEW_PREP_READY",
-                message: `Your interview preparation materials are ready for review.`,
-              } as Notification)
-            }
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-semibold text-md">Prepare</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-blue-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
-            onPress={() =>
-              publishNotificationWrapper(client, Number(candidateId), "USER", {
-                notificationType: "INTERVIEW_RESULT",
-                message: `Your interview result is ready.`,
-              } as Notification)
-            }
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-semibold text-md">Result</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-orange-500 p-2 rounded-lg w-1/4 items-center justify-center mb-4"
-            onPress={() =>
-              publishNotificationWrapper(client, Number(candidateId), "USER", {
-                notificationType: "GENERAL",
-                message: `General notification regarding anything.`,
-              } as Notification)
-            }
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-semibold text-md">General</Text>
-          </TouchableOpacity>
           <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
             Fill in the details below to schedule an interview with the candidate.
           </Text>

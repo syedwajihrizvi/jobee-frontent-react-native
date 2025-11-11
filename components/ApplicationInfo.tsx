@@ -11,7 +11,6 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
   if (isLoading) {
     return (
       <View className="flex-1 bg-white">
-        {/* Bottom Sheet Handle */}
         <View className="items-center py-3">
           <View className="w-12 h-1 bg-gray-300 rounded-full" />
         </View>
@@ -89,8 +88,6 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
             </View>
           </View>
         </View>
-
-        {/* Interview Button */}
         {application?.interviewId && (
           <TouchableOpacity
             className="bg-blue-500 border border-blue-600 rounded-xl p-4 flex-row items-center justify-center gap-2"

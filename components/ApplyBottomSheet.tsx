@@ -57,8 +57,6 @@ const ApplyBottomSheet = ({
               <AntDesign name="info" size={18} color="black" />
             </TouchableOpacity>
           </View>
-
-          {/* Resume Section */}
           <View className="mb-6">
             <Text className="font-quicksand-bold text-lg mb-2">Resume</Text>
             <View className="flex-row gap-3">

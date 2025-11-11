@@ -251,7 +251,11 @@ const Dashboard = () => {
                 <Text className="font-quicksand-bold text-lg text-gray-900">Last Application</Text>
               </View>
               {profileSummary.lastApplication && (
-                <View className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <TouchableOpacity
+                  className="bg-purple-50 border border-purple-200 rounded-xl p-4"
+                  onPress={() => router.push(`/jobs/${profileSummary.lastApplication?.jobId}`)}
+                  activeOpacity={0.7}
+                >
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row gap-1 items-center">
                       <RenderCompanyLogo logoUrl={profileSummary.lastApplication.companyLogoUrl} />
@@ -271,14 +275,9 @@ const Dashboard = () => {
                     <Text className="font-quicksand-bold text-sm text-purple-900">
                       Applied on {formatDate(profileSummary.lastApplication.appliedAt)}
                     </Text>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/jobs/${profileSummary.lastApplication?.jobId}`)}
-                      activeOpacity={0.7}
-                    >
-                      <Feather name="chevron-right" size={16} color="#6b7280" />
-                    </TouchableOpacity>
+                    <Feather name="chevron-right" size={16} color="#6b7280" />
                   </View>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
             <View

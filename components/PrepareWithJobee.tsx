@@ -28,9 +28,7 @@ const PrepareWithJobee = ({
             gap: 10,
           }}
         >
-          <Text className="font-quicksand-bold text-lg">
-            Prepare with Jobee
-          </Text>
+          <Text className="font-quicksand-bold text-lg">Prepare with Jobee</Text>
           <Text className="font-quicksand-semibold text-base text-center">
             We will get you ready for you interview with {company}!
           </Text>
@@ -39,13 +37,10 @@ const PrepareWithJobee = ({
               className="apply-button w-1/2 items-center justify-center h-14"
               onPress={handlePrepareWithJobeeConfirm}
             >
-              <Text className="font-quicksand-bold">Prepare</Text>
+              <Text className="font-quicksand-bold text-white">Prepare</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              className="apply-button w-1/2 items-center justify-center h-14"
-              onPress={handleClose}
-            >
-              <Text className="font-quicksand-bold">Cancel</Text>
+            <TouchableOpacity className="apply-button w-1/2 items-center justify-center h-14" onPress={handleClose}>
+              <Text className="font-quicksand-bold text-white">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

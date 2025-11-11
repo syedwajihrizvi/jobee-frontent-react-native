@@ -282,6 +282,7 @@ const Applications = () => {
 
     const { icon, color, bgColor, title, subtitle } = getEmptyStateContent();
 
+    console.log("Store Applications: " + storeApplications);
     return (
       <View className="flex-1 justify-center items-center p-6">
         <View
@@ -561,7 +562,7 @@ const Applications = () => {
           </View>
         ) : (
           <FlatList
-            data={applicants}
+            data={storeApplications}
             renderItem={({ item }) => (
               <ApplicantCard item={item} isShortListed={!!(item.id && isShortListed(item.id))} />
             )}
@@ -750,7 +751,7 @@ const Applications = () => {
                 <View className="flex-row flex-wrap gap-4 mt-2">
                   {appliedWithinOptions.map((option) => (
                     <TouchableOpacity
-                      key={option.value}
+                      key={option.label}
                       className={renderYesClass(tempFilters.applicationDateRange === option.value)}
                       onPress={() => setApplicationDateRange(option.value)}
                     >

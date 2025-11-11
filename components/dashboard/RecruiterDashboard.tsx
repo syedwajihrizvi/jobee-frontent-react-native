@@ -317,9 +317,6 @@ const RecruiterDashboard = () => {
                       </View>
                       <Text className="font-quicksand-bold text-lg text-gray-900">Your Most Popular Jobs</Text>
                     </View>
-                    <TouchableOpacity onPress={() => router.push("/businessJobs/interviews")}>
-                      <Feather name="chevron-right" size={16} color="#6b7280" />
-                    </TouchableOpacity>
                   </View>
                   <View className="flex-row gap-3 mb-4">
                     <TouchableOpacity
@@ -362,9 +359,6 @@ const RecruiterDashboard = () => {
                       </View>
                       <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
                     </View>
-                    <TouchableOpacity onPress={() => router.push("/businessJobs/interviews")}>
-                      <Feather name="chevron-right" size={16} color="#6b7280" />
-                    </TouchableOpacity>
                   </View>
                   <View className="gap-3">
                     {upcomingInterviews?.map((interview, index) => (

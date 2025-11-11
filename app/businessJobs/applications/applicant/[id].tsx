@@ -3,24 +3,26 @@ import BackBar from "@/components/BackBar";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import ContactCandidate from "@/components/ContactCandidate";
 import DocumentModal from "@/components/DocumentModal";
-import RenderAppStatusButton from "@/components/RenderAppStatusButton";
+import ModalWithBg from "@/components/ModalWithBg";
+import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import UserVideoIntro from "@/components/UserVideoIntro";
 import { shortListCandidate, unshortListCandidate } from "@/lib/jobEndpoints";
-import { getS3ProfileImage, getS3VideoIntroUrl } from "@/lib/s3Urls";
+import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { updateApplicationStatus } from "@/lib/services/applicationEndpoints";
 import { useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { useApplicant } from "@/lib/services/useProfile";
 import { addViewToProfile } from "@/lib/updateUserProfile";
+import { getApplicationStatus } from "@/lib/utils";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, User } from "@/type";
-import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Feather, FontAwesome, FontAwesome5, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ApplicantForBusiness = () => {
@@ -28,6 +30,7 @@ const ApplicantForBusiness = () => {
   const { id, jobId, candidateId } = useLocalSearchParams();
   const { user: authUser } = useAuthStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const [showActionsModal, setShowActionsModal] = useState(false);
   const { setApplications: setStoreApplications, applications: storeApplications } = useApplicantsForJobStore();
   const { applications, setApplications } = useApplicantsForUserJobs();
   const { data: applicationData, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
@@ -159,94 +162,7 @@ const ApplicantForBusiness = () => {
             <Text className="font-quicksand-bold text-white text-xs">Shortlisted</Text>
           </View>
         );
-      } else {
-        return (
-          <RenderAppStatusButton
-            icon={<Feather name="star" size={12} color="white" />}
-            color="emerald"
-            loading={false}
-            label="Shortlist Candidate"
-            shadowColor="#10b981"
-            handlePress={() => handleShortList()}
-          />
-        );
       }
-    } else {
-      return application?.status === "PENDING" ? (
-        <>
-          <RenderAppStatusButton
-            icon={<Feather name="calendar" size={12} color="white" />}
-            color="emerald"
-            loading={false}
-            label="Schedule Interview"
-            shadowColor="#10b981"
-            handlePress={() =>
-              router.push(
-                `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
-              )
-            }
-          />
-          <RenderAppStatusButton
-            icon={<Feather name="x" size={14} color="white" />}
-            loading={isUpdatingReject}
-            color="red"
-            label="Reject Candidate"
-            shadowColor="#3b82f6"
-            handlePress={handleRejectCandidate}
-          />
-        </>
-      ) : (
-        renderNonPendingStatus()
-      );
-    }
-  };
-
-  const renderNonPendingStatus = () => {
-    if (!application) return null;
-    switch (application.status) {
-      case "REJECTED":
-        return (
-          <TouchableOpacity
-            className="bg-red-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
-            style={{
-              shadowColor: "#f59e0b",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            onPress={() => console.log("View interview details via bottom sheet")}
-            activeOpacity={0.8}
-          >
-            <Text className="font-quicksand-bold text-white text-sm">Candidate Already Rejected</Text>
-          </TouchableOpacity>
-        );
-      case "INTERVIEW_SCHEDULED":
-        return (
-          <TouchableOpacity
-            className="bg-amber-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
-            style={{
-              shadowColor: "#f59e0b",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-            onPress={() => {
-              const interviewIds = application.interviewIds || [];
-              if (interviewIds.length === 0) {
-                return router.push(`/businessJobs/applications/${application.jobId}`);
-              } else {
-                const latestInterviewId = interviewIds[interviewIds.length - 1];
-                return router.push(`/businessJobs/interviews/interview/${latestInterviewId}`);
-              }
-            }}
-            activeOpacity={0.8}
-          >
-            <Feather name="clock" size={14} color="white" />
-            <Text className="font-quicksand-bold text-white text-sm">Interview Scheduled</Text>
-          </TouchableOpacity>
-        );
     }
   };
 
@@ -341,34 +257,19 @@ const ApplicantForBusiness = () => {
             >
               <View className="flex-row items-start justify-between mb-2">
                 <View className="flex-row items-start gap-4 flex-1">
-                  <View
-                    className="w-16 h-16 rounded-full overflow-hidden items-center justify-center border-2 border-gray-200"
-                    style={{
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                  >
-                    {userProfile?.profileImageUrl ? (
-                      <Image
-                        source={{
-                          uri: getS3ProfileImage(userProfile?.profileImageUrl),
-                        }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View className="w-12 h-12 rounded-full items-center justify-center">
-                        <Feather name="user" size={30} color="black" />
-                      </View>
-                    )}
-                  </View>
+                  <RenderUserProfileImage user={userProfile} fontSize={20} profileImageSize={14} />
                   <View className="flex-1">
-                    <Text className="font-quicksand-bold text-xl text-gray-900">
-                      {userProfile?.firstName} {userProfile?.lastName}
-                    </Text>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="font-quicksand-bold text-xl text-gray-900">
+                        {userProfile?.firstName} {userProfile?.lastName}
+                      </Text>
+                      {user?.role !== "EMPLOYEE" && (
+                        <TouchableOpacity className="flex-row gap-1" onPress={() => setShowActionsModal(true)}>
+                          <SimpleLineIcons name="options-vertical" size={16} color="#6b7280" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
                     <Text className="font-quicksand-semibold text-base text-gray-700">{userProfile?.title}</Text>
                     <View className="flex-row items-center gap-1">
                       <Feather name="map-pin" size={14} color="#6b7280" />
@@ -377,8 +278,8 @@ const ApplicantForBusiness = () => {
                   </View>
                 </View>
               </View>
-              <View>
-                <Text className="font-quicksand-bold text-lg text-gray-900">Professional Summary</Text>
+              <View className="mb-2">
+                <Text className="font-quicksand-semibold text-lg text-gray-900">Professional Summary</Text>
                 <Text className="font-quicksand-medium text-base text-gray-700">{userProfile?.summary}</Text>
               </View>
               {user?.role === "EMPLOYEE" && (
@@ -397,38 +298,43 @@ const ApplicantForBusiness = () => {
               )}
               <View className="flex-row flex-wrap gap-3">
                 <TouchableOpacity
-                  className="bg-blue-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
+                  className="bg-white border-2 border-gray-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
                   style={{
-                    shadowColor: "#3b82f6",
+                    shadowColor: "#000",
                     shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
+                    shadowOpacity: 0.1,
                     shadowRadius: 4,
                     elevation: 3,
                   }}
                   onPress={handleResumePress}
                   activeOpacity={0.8}
                 >
-                  <Feather name="file-text" size={12} color="white" />
-                  <Text className="font-quicksand-bold text-white text-xs">View Resume</Text>
+                  <View className="w-5 h-5 bg-gray-100 rounded-full items-center justify-center">
+                    <Feather name="file-text" size={14} color="#1f2937" />
+                  </View>
+                  <Text className="font-quicksand-semibold text-gray-900 text-sm">View Resume</Text>
                 </TouchableOpacity>
 
                 {application?.coverLetterUrl && (
                   <TouchableOpacity
-                    className="bg-purple-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
+                    className="bg-white border-2 border-gray-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
                     style={{
-                      shadowColor: "#8b5cf6",
+                      shadowColor: "#000",
                       shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
+                      shadowOpacity: 0.1,
                       shadowRadius: 4,
                       elevation: 3,
                     }}
                     onPress={handleCoverLetterPress}
                     activeOpacity={0.8}
                   >
-                    <Feather name="mail" size={12} color="white" />
-                    <Text className="font-quicksand-bold text-white text-xs">Cover Letter</Text>
+                    <View className="w-5 h-5 bg-gray-100 rounded-full items-center justify-center">
+                      <Feather name="mail" size={14} color="#1f2937" />
+                    </View>
+                    <Text className="font-quicksand-semibold text-gray-900 text-sm">Cover Letter</Text>
                   </TouchableOpacity>
                 )}
+
                 {renderActionButtons()}
               </View>
             </View>
@@ -674,6 +580,175 @@ const ApplicantForBusiness = () => {
           handleClose={() => setViewingDocument(undefined)}
         />
       )}
+      <ModalWithBg visible={showActionsModal} customHeight={0.6} customWidth={0.9}>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
+            <Text className="font-quicksand-bold text-lg text-gray-800">Candidate Actions</Text>
+            <TouchableOpacity onPress={() => setShowActionsModal(false)} className="p-2">
+              <Feather name="x" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView className="flex-1 px-6 py-4">
+            {application?.status === "PENDING" && user?.role !== "EMPLOYEE" && (
+              <TouchableOpacity
+                className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex-row items-center gap-4"
+                style={{
+                  shadowColor: "#22c55e",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+                onPress={() => {
+                  setShowActionsModal(false);
+                  router.push(
+                    `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application.userProfile.id}`
+                  );
+                }}
+                activeOpacity={0.7}
+              >
+                <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                  <Feather name="calendar" size={20} color="#22c55e" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-quicksand-bold text-base text-gray-900">Schedule Interview</Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                    Set up an interview with this candidate
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={16} color="#6b7280" />
+              </TouchableOpacity>
+            )}
+            {application?.status === "PENDING" && (
+              <TouchableOpacity
+                className={`border rounded-xl p-4 mb-4 flex-row items-center gap-4 ${
+                  isShortListed ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"
+                }`}
+                style={{
+                  shadowColor: isShortListed ? "#ef4444" : "#3b82f6",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+                onPress={() => {
+                  setShowActionsModal(false);
+
+                  console.log(isShortListed ? "Unshortlist" : "Shortlist");
+                  if (isShortListed) {
+                    handleUnshortList();
+                  } else {
+                    handleShortList();
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  className={`w-12 h-12 rounded-full items-center justify-center ${
+                    isShortListed ? "bg-red-100" : "bg-blue-100"
+                  }`}
+                >
+                  <Feather
+                    name={isShortListed ? "x" : "star"}
+                    size={20}
+                    color={isShortListed ? "#ef4444" : "#3b82f6"}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-quicksand-bold text-base text-gray-900">
+                    {isShortListed ? "Remove from Shortlist" : "Add to Shortlist"}
+                  </Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                    {isShortListed
+                      ? "Remove this candidate from your shortlist"
+                      : "Mark this candidate as a top prospect"}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={16} color="#6b7280" />
+              </TouchableOpacity>
+            )}
+            {application?.status === "PENDING" && user?.role !== "EMPLOYEE" && (
+              <TouchableOpacity
+                className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 flex-row items-center gap-4"
+                style={{
+                  shadowColor: "#ef4444",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+                onPress={() => {
+                  setShowActionsModal(false);
+                  handleRejectCandidate();
+                }}
+                activeOpacity={0.7}
+              >
+                <View className="w-12 h-12 bg-red-100 rounded-full items-center justify-center">
+                  <Feather name="x-circle" size={20} color="#ef4444" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-quicksand-bold text-base text-gray-900">Reject Candidate</Text>
+                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                    Decline this application permanently
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={16} color="#6b7280" />
+              </TouchableOpacity>
+            )}
+            {application?.status !== "PENDING" && (
+              <View className="bg-gray-50 border border-gray-200 rounded-xl p-6 items-center">
+                <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
+                  <Feather name="info" size={24} color="#6b7280" />
+                </View>
+                <Text className="font-quicksand-bold text-base text-gray-900 text-center mb-2">
+                  No Actions Available
+                </Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600 text-center">
+                  This candidate&apos;s application status is &quot;
+                  {application?.status.toLowerCase().replace("_", " ")}&quot; and cannot be modified.
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+          <View className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <View className="flex-row items-center gap-3">
+              <RenderUserProfileImage user={userProfile} profileImageSize={12} fontSize={16} />
+              <View className="flex-1">
+                <Text className="font-quicksand-bold text-sm text-gray-900">
+                  {userProfile?.firstName} {userProfile?.lastName}
+                </Text>
+                <Text className="font-quicksand-medium text-xs text-gray-600">Applied for {application?.jobTitle}</Text>
+              </View>
+              <View
+                className={`px-2 py-1 rounded-lg ${
+                  application?.status === "PENDING"
+                    ? "bg-yellow-100"
+                    : application?.status === "REJECTED"
+                      ? "bg-red-100"
+                      : application?.status === "INTERVIEW_SCHEDULED"
+                        ? "bg-blue-100"
+                        : "bg-gray-100"
+                }`}
+              >
+                <Text
+                  className={`font-quicksand-bold text-xs ${
+                    application?.status === "PENDING"
+                      ? "text-yellow-800"
+                      : application?.status === "REJECTED"
+                        ? "text-red-800"
+                        : application?.status === "INTERVIEW_SCHEDULED"
+                          ? "text-blue-800"
+                          : "text-gray-800"
+                  }`}
+                >
+                  {getApplicationStatus(application?.status || "")}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ModalWithBg>
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}

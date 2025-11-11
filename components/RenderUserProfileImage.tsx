@@ -1,10 +1,10 @@
-import { getS3BusinessProfileImage } from "@/lib/s3Urls";
-import { BusinessUser } from "@/type";
+import { getS3ProfileImage } from "@/lib/s3Urls";
+import { User } from "@/type";
 import React from "react";
 import { Image, Text, View } from "react-native";
 
 type Props = {
-  user?: BusinessUser | undefined | null;
+  user?: User | undefined;
   profileImageUrl?: string;
   profileImageSize?: number;
   fontSize?: number;
@@ -13,7 +13,7 @@ type Props = {
   fullName?: string;
 };
 
-const RenderBusinessProfileImage = ({
+const RenderUserProfileImage = ({
   user,
   profileImageUrl,
   profileImageSize = 16,
@@ -22,9 +22,7 @@ const RenderBusinessProfileImage = ({
   lastName,
   fullName,
 }: Props) => {
-  console.log("Rendering business profile image for:", profileImageUrl);
-  const imgUrl = user?.profileImageUrl || profileImageUrl || "";
-  console.log("Using image URL:", imgUrl);
+  const imgUrl = user?.profileImageUrl || profileImageUrl || null;
   let fn = user?.firstName || firstName || "";
   let ln = user?.lastName || lastName || "";
   if (fullName && (!firstName || !lastName)) {
@@ -32,10 +30,10 @@ const RenderBusinessProfileImage = ({
     fn = nameParts[0];
     ln = nameParts.length > 1 ? nameParts[1] : "";
   }
-  if (imgUrl)
+  if (imgUrl != null)
     return (
       <Image
-        source={{ uri: getS3BusinessProfileImage(imgUrl) }}
+        source={{ uri: getS3ProfileImage(imgUrl) }}
         className={`w-${profileImageSize} h-${profileImageSize} rounded-full`}
       />
     );
@@ -49,4 +47,4 @@ const RenderBusinessProfileImage = ({
   );
 };
 
-export default RenderBusinessProfileImage;
+export default RenderUserProfileImage;
