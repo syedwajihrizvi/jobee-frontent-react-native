@@ -20,7 +20,6 @@ const SignUpViaCode = () => {
 
   const handleSignUpViaCode = async () => {
     const { companyCode, email, phoneNumber, password, confirmPassword } = signUpForm;
-    console.log("Sign up via code form data:", signUpForm);
     if (!companyCode || !email || !phoneNumber || !password || !confirmPassword) {
       Alert.alert("Please fill in all fields");
       return;
@@ -43,8 +42,6 @@ const SignUpViaCode = () => {
     } finally {
       setIsLoading(false);
     }
-
-    console.log("Sign up via code form data:", signUpForm);
   };
 
   return (

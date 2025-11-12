@@ -1,4 +1,4 @@
-import { convertTo12Hour, getInterviewStyle } from "@/lib/utils";
+import { convertTo12Hour, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
 import { InterviewSummary } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -12,6 +12,31 @@ type Props = {
 };
 
 const UserInterviewCard = ({ item, withPadding = true }: Props) => {
+  const renderInterviewStatus = (status: string) => {
+    const style =
+      interviewStatusStyles[status as keyof typeof interviewStatusStyles] || interviewStatusStyles["SCHEDULED"];
+    return (
+      <View className="flex-row items-center justify-between pt-3 border-t border-gray-100 w-full">
+        <View className="flex-row items-center gap-2">
+          <View className={`w-2 h-2 ${style.bgColor} rounded-full`}></View>
+          <Text className="font-quicksand-medium text-sm text-gray-600">{style.text}</Text>
+        </View>
+        <View
+          className={`w-8 h-8 ${style.chevronColor} rounded-full items-center justify-center`}
+          style={{
+            shadowColor: style.chevronShadowColor,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <Feather name="chevron-right" size={16} color="#6366f1" />
+        </View>
+      </View>
+    );
+  };
+
   return (
     <TouchableOpacity
       className={`${withPadding ? "mx-4" : ""} mb-4 bg-white rounded-2xl p-5 border border-gray-100`}
@@ -101,22 +126,7 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
         </View>
       </View>
       <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
-        <View className="flex-row items-center gap-2">
-          <View className="w-2 h-2 bg-emerald-500 rounded-full"></View>
-          <Text className="font-quicksand-medium text-sm text-gray-600">Interview scheduled</Text>
-        </View>
-        <View
-          className="w-8 h-8 bg-indigo-100 rounded-full items-center justify-center"
-          style={{
-            shadowColor: "#6366f1",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          <Feather name="chevron-right" size={16} color="#6366f1" />
-        </View>
+        {renderInterviewStatus(item.status)}
       </View>
     </TouchableOpacity>
   );

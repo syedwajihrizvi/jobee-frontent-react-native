@@ -8,12 +8,11 @@ import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
 import SearchBar from "@/components/SearchBar";
 import { sounds } from "@/constants";
 import { quickApplyToJob } from "@/lib/jobEndpoints";
-import { useJobs, useRecommendedJobs, useUserAppliedJobs } from "@/lib/services/useJobs";
+import { useJobs, useRecommendedJobs } from "@/lib/services/useJobs";
 import { hasUserAppliedToJob, onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import useProfileSummaryStore from "@/store/profile-summary.store";
-import { Application, JobFilters, User, UserProfileSummary } from "@/type";
-import { useQueryClient } from "@tanstack/react-query";
+import useUserStore from "@/store/user.store";
+import { Application, JobFilters, User } from "@/type";
 import { useAudioPlayer } from "expo-audio";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -24,7 +23,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const screenWidth = Dimensions.get("window").width;
 
 const Jobs = () => {
-  const { profileSummary, setProfileSummary } = useProfileSummaryStore();
   const { companyName } = useLocalSearchParams();
   const defaultFilters: JobFilters = {
     search: "",
@@ -39,7 +37,6 @@ const Jobs = () => {
     workArrangements: [],
   };
   const player = useAudioPlayer(sounds.popSound);
-  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<JobFilters>({ ...defaultFilters });
 
   const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
@@ -49,18 +46,17 @@ const Jobs = () => {
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const { data: jobs, isLoading, fetchNextPage, hasNextPage } = useJobs(filters);
-  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated, setUser, isReady } = useAuthStore();
+  const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated, isReady } = useAuthStore();
   const user = authUser as User | null;
   const { data: recommendedJobs, isLoading: isLoadingRecommended } = useRecommendedJobs(
     isAuthenticated && isReady && userType !== "business"
   );
-  const { data: appliedJobs, isLoading: isAppliedJobsLoading } = useUserAppliedJobs();
+  const { setApplications, applications } = useUserStore();
   const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(
     !user?.profileComplete && isAuthenticated
   );
-  const [localApplyJobs, setLocalApplyJobs] = useState<number[]>(appliedJobs || []);
   const slideX = useSharedValue(screenWidth);
 
   useEffect(() => {
@@ -119,10 +115,6 @@ const Jobs = () => {
     setShowQuickApplyModal(true);
   };
 
-  const updateUserApplications = (newApplications: Application[]) => {
-    const updatedApplications = [...newApplications, ...(user?.applications || [])];
-    setUser(user ? { ...user, applications: updatedApplications } : user);
-  };
   const handleUnAuthenticatedQuickApply = () => {
     setQuickApplyJob(null);
     setShowQuickApplyModal(false);
@@ -133,19 +125,7 @@ const Jobs = () => {
     if (apply && quickApplyJob) {
       const res = await quickApplyToJob(quickApplyJob);
       if (res != null) {
-        queryClient.invalidateQueries({
-          queryKey: ["job", quickApplyJob, "application"],
-        });
-        queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
-        const updatedProfileSummary = {
-          ...profileSummary,
-          lastApplication: res,
-          totalApplications: (profileSummary?.totalApplications || 0) + 1,
-          totalInConsideration: (profileSummary?.totalInConsideration || 0) + 1,
-        };
-        setProfileSummary(updatedProfileSummary as UserProfileSummary);
-        setLocalApplyJobs((prev) => [...prev, quickApplyJob]);
-        updateUserApplications([res]);
+        setApplications([res, ...applications]);
         player.seekTo(0);
         player.play();
         await onActionSuccess();
@@ -156,12 +136,7 @@ const Jobs = () => {
   };
 
   const canQuickApply = (jobId: number) => {
-    return (
-      !isAppliedJobsLoading &&
-      !appliedJobs?.includes(jobId) &&
-      !localApplyJobs.includes(jobId) &&
-      !hasUserAppliedToJob(user, jobId)
-    );
+    return !hasUserAppliedToJob(applications, jobId);
   };
 
   return (
@@ -178,9 +153,6 @@ const Jobs = () => {
             isViewingRecommended={isViewingRecommended}
             handleViewAll={() => setIsViewRecommended(!isViewingRecommended)}
             handleBatchQuickApplySuccess={async (newApplications: Application[]) => {
-              const newJobIds = newApplications.map((app) => app.jobId);
-              setLocalApplyJobs((prev) => [...prev, ...newJobIds]);
-              updateUserApplications(newApplications);
               player.seekTo(0);
               player.play();
               await onActionSuccess();
@@ -207,9 +179,9 @@ const Jobs = () => {
             isViewingRecommended
               ? recommendedJobs?.map((item) => item.job)
               : jobs?.pages.flatMap((page) => page.jobs) || []
-          } // Simulating multiple job listings
+          }
           renderItem={({ item, index }) => {
-            let userApplication = hasUserAppliedToJob(user, item.id);
+            let userApplication = hasUserAppliedToJob(applications, item.id);
             let showFavorite = userApplication ? false : true;
             return (
               <JobListing

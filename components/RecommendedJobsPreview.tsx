@@ -1,10 +1,9 @@
 import { quickApplyBatch } from "@/lib/jobEndpoints";
 import { calculateRemainingTime } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import useProfileSummaryStore from "@/store/profile-summary.store";
-import { Application, Job, User, UserProfileSummary } from "@/type";
+import useUserStore from "@/store/user.store";
+import { Application, Job, User } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -26,22 +25,24 @@ const RecommendedJobsPreview = ({
   handleBatchQuickApplySuccess,
 }: Props) => {
   const { user: authUser, setUser } = useAuthStore();
-  const { profileSummary, setProfileSummary } = useProfileSummaryStore();
   const user = authUser as User | null;
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedToRecommended, setAppliedToRecommended] = useState(false);
+  const { applications, setApplications } = useUserStore();
   const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const height = useSharedValue(0);
   useEffect(() => {
-    const interval = setInterval(() => {
+    const updateTime = () => {
       if (!user?.canQuickApplyBatch && user?.nextQuickApplyBatchTime) {
         const remainingTime = calculateRemainingTime(user?.nextQuickApplyBatchTime);
         const { hours, minutes } = remainingTime;
         setTimeRemaining({ hours, minutes });
       }
-    }, 60000);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 30000);
     return () => clearInterval(interval);
   }, [user?.nextQuickApplyBatchTime, user?.canQuickApplyBatch]);
 
@@ -92,8 +93,6 @@ const RecommendedJobsPreview = ({
           try {
             const res = await quickApplyBatch(jobIds);
             if (res) {
-              queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
-              queryClient.invalidateQueries({ queryKey: ["jobs", "appliedJobs"] });
               setAppliedToRecommended(true);
               const updatedUser = {
                 ...user,
@@ -101,12 +100,7 @@ const RecommendedJobsPreview = ({
                 quickAppliedAt: new Date().toISOString(),
               } as User;
               setUser(updatedUser);
-              setProfileSummary({
-                ...profileSummary,
-                totalApplications: (profileSummary?.totalApplications || 0) + res?.length,
-                totalInConsideration: (profileSummary?.totalInConsideration || 0) + res?.length,
-                lastApplication: res[res.length - 1],
-              } as UserProfileSummary);
+              setApplications([...res, ...applications]);
               handleBatchQuickApplySuccess(res || []);
               setIsSubmitting(false);
             }

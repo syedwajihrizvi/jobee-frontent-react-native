@@ -1,4 +1,4 @@
-import { ApplicantFilters, Application, ApplicationSummary, InterviewDetails, Job, JobFilters, PagedResponse } from '@/type';
+import { ApplicantFilters, Application, ApplicationSummary, InterviewDetails, Job, JobApplicationStatus, JobFilters, PagedResponse } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getEducationLevel, getExperienceLevel } from '../utils';
@@ -63,14 +63,12 @@ export const useJob = (id: number) => {
     const fetchJob = async () => {
         const response = await fetch(`${JOBS_API_URL}/${id}`)
         const data = await response.json()
-        console.log("Fetched job data:", data);
         return data
     }
     return useQuery<Job, Error>({
         queryKey: ['job', id],
         queryFn: fetchJob,
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        enabled: !!id, // Only fetch if id is defined
+        enabled: !!id,
     })
 }
 
@@ -101,7 +99,7 @@ export const useJobsByUserApplications = (userId?: number) => {
     return data
   }
 
-  return useQuery<{job: Job, status: string, appliedAt: string, applicationId: number}[], Error>({
+  return useQuery<JobApplicationStatus[], Error>({
     queryKey: ['jobs', 'applications', userId],
     queryFn: fetchAppliedJobs,
     staleTime: 1000 * 60 * 5,
@@ -178,7 +176,6 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
       },
     })
     const data = await response.json()
-    console.log("Fetched job for business:", data);
     return data
   }
   return useQuery<Job, Error>({
@@ -324,7 +321,6 @@ export const useJobApplication = (jobId: number) => {
         'x-auth-token': `Bearer ${token}`
       },
     })
-    console.log("Response status:", response.status);
     const data = await response.json()
     return data
   }

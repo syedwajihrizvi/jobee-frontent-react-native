@@ -97,6 +97,139 @@ const InterviewDetails = () => {
     }
   };
 
+  const renderInterviewDecision = () => {
+    if (interviewDetails?.decisionResult === "PENDING") {
+      return (
+        <View
+          className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-blue-100"
+          style={{
+            shadowColor: "#3b82f6",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 6,
+          }}
+        >
+          <View className="flex-row items-center gap-3 mb-4">
+            <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center">
+              <Feather name="clock" size={24} color="#3b82f6" />
+            </View>
+            <View className="flex-1">
+              <Text className="font-quicksand-bold text-blue-600 text-xl">Interview Completed</Text>
+              <Text className="font-quicksand-medium text-sm text-gray-600">Awaiting hiring team decision</Text>
+            </View>
+          </View>
+          <View className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-bold text-blue-800 text-base text-center leading-6">
+              Thank you for completing your interview! Our hiring team is reviewing all candidates and will notify you
+              of their decision soon.
+            </Text>
+          </View>
+          <View className="mb-4">
+            <View className="flex-row items-center gap-2 mb-3">
+              <Feather name="info" size={16} color="#6b7280" />
+              <Text className="font-quicksand-bold text-base text-gray-900">What happens next?</Text>
+            </View>
+            <View className="space-y-2">
+              <View className="flex-row items-start gap-3">
+                <View className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                <Text className="font-quicksand-medium text-gray-700 text-sm leading-5 flex-1">
+                  Our team will review your interview performance
+                </Text>
+              </View>
+              <View className="flex-row items-start gap-3">
+                <View className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                <Text className="font-quicksand-medium text-gray-700 text-sm leading-5 flex-1">
+                  You&apos;ll receive an email notification with our decision
+                </Text>
+              </View>
+              <View className="flex-row items-start gap-3">
+                <View className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                <Text className="font-quicksand-medium text-gray-700 text-sm leading-5 flex-1">
+                  If selected, we&apos;ll discuss next steps and potential start dates
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <View className="flex-row items-start gap-2">
+              <Feather name="thumbs-up" size={16} color="#16a34a" />
+              <View className="flex-1">
+                <Text className="font-quicksand-semibold text-green-800 text-sm mb-1">Great Job!</Text>
+                <Text className="font-quicksand-medium text-green-700 text-xs leading-4">
+                  You&apos;ve taken an important step in your career journey. Stay positive and continue pursuing your
+                  goals!
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      );
+    } else if (interviewDetails?.decisionResult === "REJECTED") {
+      return (
+        <View
+          className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-red-100"
+          style={{
+            shadowColor: "#ef4444",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 6,
+          }}
+        >
+          <View className="flex-row items-center gap-3 mb-2">
+            <View className="flex-1">
+              <Text className="font-quicksand-bold text-red-600 text-xl">Interview Decision</Text>
+            </View>
+          </View>
+          <View className="bg-red-50 border border-red-200 rounded-xl p-2 mb-2">
+            <Text className="font-quicksand-bold text-red-800 text-sm text-center leading-6">
+              We appreciate your time and interest in this position. After careful consideration, we have decided to
+              move forward with another candidate.
+            </Text>
+          </View>
+          {interviewDetails.rejectionReason && (
+            <View className="mb-2">
+              <View className="flex-row items-center gap-2 mb-2">
+                <Feather name="info" size={16} color="#6b7280" />
+                <Text className="font-quicksand-bold text-base text-gray-900">Reason for Decision</Text>
+              </View>
+              <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <Text className="font-quicksand-medium text-gray-700 text-sm leading-5">
+                  {interviewDetails.rejectionReason}
+                </Text>
+              </View>
+            </View>
+          )}
+          {interviewDetails.rejectionFeedback && (
+            <View className="mb-2">
+              <View className="flex-row items-center gap-2 mb-2">
+                <Feather name="message-square" size={16} color="#6b7280" />
+                <Text className="font-quicksand-bold text-base text-gray-900">Additional Feedback</Text>
+              </View>
+              <View className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <Text className="font-quicksand-medium text-blue-800 text-sm leading-5">
+                  {interviewDetails.rejectionFeedback}
+                </Text>
+              </View>
+            </View>
+          )}
+          <View className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <View className="flex-row items-start gap-2">
+              <Feather name="heart" size={16} color="#16a34a" />
+              <View className="flex-1">
+                <Text className="font-quicksand-semibold text-green-800 text-sm mb-1">Keep Going!</Text>
+                <Text className="font-quicksand-medium text-green-700 text-xs leading-4">
+                  This decision doesn nt define your abilities. Keep applying and stay confident in your journey!
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      );
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Details" />
@@ -117,7 +250,7 @@ const InterviewDetails = () => {
           <Text className="font-quicksand-semibold text-lg text-gray-700">Loading interview details...</Text>
         </View>
       ) : (
-        <ScrollView className="flex-1 mb-10" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View
             className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
             style={{
@@ -130,11 +263,12 @@ const InterviewDetails = () => {
           >
             <View className="flex-row items-start justify-between mb-2">
               <View className="flex-1 mr-3">
-                {/* // TODO: Update companyLogoUrl when available */}
-                <CompanyInformation companyName={interviewDetails?.companyName!} companyLogoUrl={""} />
+                <CompanyInformation
+                  companyName={interviewDetails?.companyName!}
+                  companyLogoUrl={interviewDetails?.companyLogoUrl!}
+                />
               </View>
             </View>
-
             <Text className="font-quicksand-bold text-2xl text-gray-900 leading-8 mb-2">{interviewDetails?.title}</Text>
 
             <Text className="font-quicksand-medium text-base text-gray-600 leading-6 mb-2">
@@ -157,6 +291,7 @@ const InterviewDetails = () => {
               <Text className="font-quicksand-bold text-emerald-700 text-sm">View Job Posting</Text>
             </TouchableOpacity>
           </View>
+          {interviewDetails?.status === "COMPLETED" && renderInterviewDecision()}
           <View
             className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
             style={{
@@ -251,54 +386,56 @@ const InterviewDetails = () => {
           <View className="flex-1" />
         </ScrollView>
       )}
-      <View
-        className="bg-white border-t border-gray-200 px-4 pt-4 pb-8 absolute bottom-0 w-full"
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 10,
-        }}
-      >
-        <View className="flex-row gap-3">
-          <TouchableOpacity
-            className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
-            style={{
-              shadowColor: "#6366f1",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.2,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-            disabled={isSendingInterviewPrepRequest}
-            onPress={handlePrepareWithJobee}
-            activeOpacity={0.8}
-          >
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="sparkles" size={18} color="#fbbf24" />
-              <Text className="font-quicksand-bold text-white text-base">{renderInterviewPrepText()}</Text>
-            </View>
-          </TouchableOpacity>
+      {interviewDetails?.status === "SCHEDULED" && (
+        <View
+          className="bg-white border-t border-gray-200 px-4 pt-4 pb-8 absolute bottom-0 w-full"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 10,
+          }}
+        >
+          <View className="flex-row gap-3">
+            <TouchableOpacity
+              className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+              style={{
+                shadowColor: "#6366f1",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              disabled={isSendingInterviewPrepRequest}
+              onPress={handlePrepareWithJobee}
+              activeOpacity={0.8}
+            >
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="sparkles" size={18} color="#fbbf24" />
+                <Text className="font-quicksand-bold text-white text-base">{renderInterviewPrepText()}</Text>
+              </View>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center gap-2">
-              <Feather name="calendar" size={16} color="#6b7280" />
-              <Text className="font-quicksand-bold text-gray-700 text-base">Reschedule</Text>
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="calendar" size={16} color="#6b7280" />
+                <Text className="font-quicksand-bold text-gray-700 text-base">Reschedule</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
 
       <PrepareWithJobee
         visible={showInterviewPrepModal}

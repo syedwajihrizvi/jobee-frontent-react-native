@@ -200,6 +200,8 @@ const InterviewDecision = () => {
       </ScrollView>
       <RejectCandidateModal
         candidateName={candidateName as string}
+        applicantId={Number(applicantId)}
+        jobId={Number(jobId)}
         interviewId={Number(id)}
         visible={showRejectModal}
         handleClose={() => setShowRejectModal(false)}

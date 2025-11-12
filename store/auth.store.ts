@@ -23,9 +23,7 @@ const useAuthStore = create<AuthState>((set) => ({
         return;
       }
       const type = await AsyncStorage.getItem('userType');
-      console.log("User type in fetchAuthenticatedUser:", type);
       const userType = !type || type === 'user' ? 'user' : 'business';
-      console.log("Determined userType in fetchAuthenticatedUser:", userType);
       set({ user, isAuthenticated: true, userType, isReady: true });
     } catch (error) {
     } finally {

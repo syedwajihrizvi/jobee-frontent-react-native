@@ -92,7 +92,6 @@ export const signOut = async () => {
 export const getCurrentUser = async () => {
     const accountType = await Asyncstorage.getItem('userType')
     if (!accountType) return null
-    console.log("Account type in getCurrentUser:", accountType);
     const targetUrl = accountType === "user" ? PROFILES_API_URL : BUSINESS_ACCOUNTS_API_URL;
     const token = await Asyncstorage.getItem('x-auth-token')
     if (!token) return null
@@ -121,7 +120,6 @@ export const getUserProfileDashboardSummary = async () => {
     })
     if (response.status === 200) {
         const data = await response.json()
-        console.log(data)
         return data
     }
 }
@@ -137,7 +135,6 @@ export const getBusinessUserProfileDashboardSummary = async () => {
     })
     if (response.status === 200) {
         const data = await response.json()
-        console.log(data)
         return data
     }
 }

@@ -1,17 +1,17 @@
-import Piechart from "@/components/Piechart";
 import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import UserInterviewCard from "@/components/UserInterviewCard";
 import { getS3ProfileImage } from "@/lib/s3Urls";
-import { useProfileInterviews } from "@/lib/services/useProfile";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
 import { useTopCompanies } from "@/lib/services/useTopCompanies";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
+import useUserStore from "@/store/user.store";
+import { Application, InterviewSummary } from "@/type";
 import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,9 +20,35 @@ const Dashboard = () => {
   const { user: userProfile } = useAuthStore();
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
-  const { data: interviews, isLoading: isLoadingInterviews } = useProfileInterviews(Number(userProfile?.id));
+  const { interviews, isLoadingInterviews: isLoadingInterviews, applications, isLoadingApplications } = useUserStore();
+  const [upcomingInterviews, setUpcomingInterviews] = useState<InterviewSummary[]>();
+  const [profileSummaryStats, setProfileSummaryStats] = useState({
+    totalInConsideration: 0,
+    totalRejections: 0,
+    totalApplications: 0,
+    totalInterviews: 0,
+  });
+  const [lastApplication, setLastApplication] = useState<Application | null>(null);
 
-  console.log("Interviews Data:", interviews);
+  useEffect(() => {
+    if (interviews && !isLoadingInterviews) {
+      const upcoming = interviews.filter((interview) => interview.status === "SCHEDULED");
+      setUpcomingInterviews(upcoming.slice(0, 3));
+      setProfileSummaryStats({ ...profileSummaryStats, totalInterviews: interviews.length });
+    }
+    if (applications && !isLoadingApplications) {
+      const inConsideration = applications.filter((app) => app.status !== "IN_CONSIDERATION");
+      const rejections = applications.filter((app) => app.status === "REJECTED");
+      setProfileSummaryStats({
+        ...profileSummaryStats,
+        totalInConsideration: inConsideration.length,
+        totalRejections: rejections.length,
+        totalApplications: applications.length,
+      });
+      setLastApplication(applications.length > 0 ? applications[0] : null);
+    }
+  }, [interviews, isLoadingInterviews, applications, isLoadingApplications]);
+
   const handleFavoriteCompany = async (companyId: number) => {
     try {
       const result = await toggleFavoriteCompany(Number(companyId));
@@ -169,14 +195,26 @@ const Dashboard = () => {
                 </View>
                 <Text className="font-quicksand-bold text-lg text-gray-900">Applications Overview</Text>
               </View>
-              <Piechart
-                data={[
-                  { label: "Pending", value: profileSummary.totalInConsideration, color: "#3b82f6" },
-                  { label: "Rejected", value: profileSummary.totalRejections, color: "#ef4444" },
-                  { label: "In Consideration", value: profileSummary.totalInterviews, color: "#10b981" },
-                ]}
-              />
-
+              <View className="gap-2">
+                <View className="flex-row items-center gap-2">
+                  <Feather name="check-circle" size={16} color="#3b82f6" />
+                  <Text className="font-quicksand-semibold text-md">
+                    {profileSummaryStats.totalInConsideration} Pending
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Feather name="clock" size={16} color="#10b981" />
+                  <Text className="font-quicksand-semibold text-md">
+                    {profileSummaryStats.totalInterviews} In consideration
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Feather name="x-circle" size={16} color="#ef4444" />
+                  <Text className="font-quicksand-semibold text-md">
+                    {profileSummaryStats.totalRejections} Rejected
+                  </Text>
+                </View>
+              </View>
               <TouchableOpacity
                 className="bg-emerald-50 border border-green-200 rounded-xl p-3 mt-4 items-center"
                 onPress={() => router.push("/userProfile/appliedJobs")}
@@ -184,9 +222,7 @@ const Dashboard = () => {
               >
                 <View className="flex-row items-center gap-2">
                   <Feather name="eye" size={14} color="#10b981" />
-                  <Text className="font-quicksand-semibold text-green-700">
-                    View All Applications ({profileSummary.totalApplications})
-                  </Text>
+                  <Text className="font-quicksand-semibold text-green-700">View All Applications</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
@@ -200,7 +236,7 @@ const Dashboard = () => {
                 </View>
               </TouchableOpacity>
             </View>
-            {interviews && interviews.length > 0 && (
+            {upcomingInterviews && upcomingInterviews.length > 0 && (
               <View className="mx-6 mb-4">
                 <View
                   className="bg-white rounded-2xl p-6 border border-gray-100"
@@ -227,7 +263,7 @@ const Dashboard = () => {
                     </TouchableOpacity>
                   </View>
                   <View className="gap-3">
-                    {interviews?.map((interview, index) => (
+                    {upcomingInterviews?.map((interview, index) => (
                       <UserInterviewCard key={index} item={interview} withPadding={false} />
                     ))}
                   </View>
@@ -250,30 +286,28 @@ const Dashboard = () => {
                 </View>
                 <Text className="font-quicksand-bold text-lg text-gray-900">Last Application</Text>
               </View>
-              {profileSummary.lastApplication && (
+              {lastApplication && (
                 <TouchableOpacity
                   className="bg-purple-50 border border-purple-200 rounded-xl p-4"
-                  onPress={() => router.push(`/jobs/${profileSummary.lastApplication?.jobId}`)}
+                  onPress={() => router.push(`/jobs/${lastApplication?.job.id}`)}
                   activeOpacity={0.7}
                 >
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row gap-1 items-center">
-                      <RenderCompanyLogo logoUrl={profileSummary.lastApplication.companyLogoUrl} />
+                      <RenderCompanyLogo logoUrl={lastApplication.job.companyLogoUrl} />
                       <Text className="font-quicksand-bold text-md text-purple-700">
-                        {profileSummary.lastApplication.companyName}
+                        {lastApplication.job.businessName}
                       </Text>
                     </View>
 
                     <Text className="font-quicksand-semibold text-sm px-2 border border-purple-300 rounded-full text-purple-800">
-                      {getApplicationStatus(profileSummary.lastApplication.status)}
+                      {getApplicationStatus(lastApplication.status)}
                     </Text>
                   </View>
-                  <Text className="font-quicksand-medium text-md text-purple-700">
-                    {profileSummary.lastApplication.jobTitle}
-                  </Text>
+                  <Text className="font-quicksand-medium text-md text-purple-700">{lastApplication.job.title}</Text>
                   <View className="flex-row items-center justify-between">
                     <Text className="font-quicksand-bold text-sm text-purple-900">
-                      Applied on {formatDate(profileSummary.lastApplication.appliedAt)}
+                      Applied on {formatDate(lastApplication.appliedAt)}
                     </Text>
                     <Feather name="chevron-right" size={16} color="#6b7280" />
                   </View>

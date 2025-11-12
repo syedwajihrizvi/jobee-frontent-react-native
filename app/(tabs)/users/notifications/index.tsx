@@ -8,6 +8,7 @@ import {
 import useNotificationStore from "@/store/notifications.store";
 import { Notification } from "@/type";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,6 +31,8 @@ const Notifications = () => {
         return { name: "calendar", color: "#3b82f6", bgColor: "#dbeafe" };
       case "INTERVIEW_RESULT":
         return { name: "file-text", color: "#8b5cf6", bgColor: "#ede9fe" };
+      case "INTERVIEW_COMPLETED":
+        return { name: "check-circle", color: "#10b981", bgColor: "#d1fae5" };
       case "REJECTION":
         return { name: "x-circle", color: "#ef4444", bgColor: "#fee2e2" };
       case "GENERAL":
@@ -62,6 +65,8 @@ const Notifications = () => {
         return "#bfdbfe";
       case "INTERVIEW_RESULT":
         return "#c4b5fd";
+      case "INTERVIEW_COMPLETED":
+        return "#a7f3d0";
       case "REJECTION":
         return "#fecaca";
       case "GENERAL":
@@ -98,6 +103,17 @@ const Notifications = () => {
     console.log("Notification pressed: ", notification);
     markNotificationAsRead(notification.id!);
     updateNotificationStatusToRead(notification.id!);
+    const { notificationType, context } = notification;
+    if (
+      notificationType === "INTERVIEW_SCHEDULED" ||
+      notificationType === "INTERVIEW_COMPLETED" ||
+      notificationType === "REJECTION"
+    ) {
+      const { interviewId } = context;
+      if (interviewId) {
+        router.push(`/userProfile/interviews/${interviewId}`);
+      }
+    }
     // TODO: Navigate to relevant screen based on notification type
   };
 
@@ -117,6 +133,8 @@ const Notifications = () => {
   const renderNotificationItem = ({ item }: { item: Notification }) => {
     const iconData = getNotificationIcon(item.notificationType);
     const borderColor = getBorderColor(item.notificationType, item.read || false);
+    const context = item.context || {};
+    const { companyLogoUrl } = context;
     return (
       <TouchableOpacity
         className="bg-white"
@@ -137,8 +155,8 @@ const Notifications = () => {
       >
         <View className="p-4">
           <View className="flex-row items-start gap-3">
-            {item.companyLogoUrl ? (
-              <RenderCompanyLogo logoUrl={item.companyLogoUrl || ""} size={12} />
+            {companyLogoUrl ? (
+              <RenderCompanyLogo logoUrl={companyLogoUrl || ""} size={12} />
             ) : (
               <View
                 className="w-12 h-12 items-center justify-center"

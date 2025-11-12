@@ -40,8 +40,6 @@ const CustomMultilineInput = ({
       onChangeText(text.trim());
       return; // Don't update the text
     }
-
-    console.log("Text changed:", text, text.length);
     onChangeText(text);
   };
 

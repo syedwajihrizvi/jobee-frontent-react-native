@@ -136,7 +136,6 @@ export const getInterviewerProfileSummary = async (email: string) : Promise<Inte
     if (token == null) return null
     const queryParams = new URLSearchParams({ email });
     const url = `${BUSINESS_PROFILES_API_URL}?${queryParams.toString()}`
-    console.log("Fetching interviewer profile from URL: ", url)
     const response = await fetch(`${BUSINESS_PROFILES_API_URL}?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
@@ -144,10 +143,8 @@ export const getInterviewerProfileSummary = async (email: string) : Promise<Inte
             'x-auth-token': `Bearer ${token}`
         }
     })
-    console.log("Response status: ", response.status)
     if (response.status !== 200) return null
     const data = await response.json()
-    console.log(data)
     return data as InterviewerProfileSummary
 }
 
@@ -167,5 +164,16 @@ export const markInterviewAsCompleted = async (interviewId: number) => {
 export const rejectCandidateInterview = async (interviewId: number, reason: string, feedback: string) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return false
-    console.log("Rejecting candidate for interview id: ", interviewId, " reason: ", reason, " feedback: ", feedback)
+    const res = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/reject-candidate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            reason,
+            feedback
+        })
+    })
+    return res.status === 200
 }

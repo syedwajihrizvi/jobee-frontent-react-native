@@ -22,9 +22,7 @@ const RenderBusinessProfileImage = ({
   lastName,
   fullName,
 }: Props) => {
-  console.log("Rendering business profile image for:", profileImageUrl);
   const imgUrl = user?.profileImageUrl || profileImageUrl || "";
-  console.log("Using image URL:", imgUrl);
   let fn = user?.firstName || firstName || "";
   let ln = user?.lastName || lastName || "";
   if (fullName && (!firstName || !lastName)) {

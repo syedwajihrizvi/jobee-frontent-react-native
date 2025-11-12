@@ -163,8 +163,8 @@ const Profile = () => {
               ))}
               <ProfileLink
                 icon={<Feather name="calendar" size={20} />}
-                label="Upcoming Interviews"
-                subtitle="View and manage your scheduled interviews"
+                label="Interviews"
+                subtitle="View and manage your interviews"
                 onPress={() => router.push(`/userProfile/interviews?userId=${(user as User)?.id}`)}
                 rightIcon={true}
               />

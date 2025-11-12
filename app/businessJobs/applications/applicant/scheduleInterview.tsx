@@ -221,7 +221,6 @@ const ScheduleInterview = () => {
         if (applicationIndex !== -1) {
           setApplicationStatus(Number(applicantId), "INTERVIEW_SCHEDULED");
         }
-        // Update application in the store
         queryClient.invalidateQueries({
           queryKey: ["applicant", Number(applicantId)],
         });

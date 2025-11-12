@@ -14,7 +14,7 @@ const QuickApplyModal = ({
   label: string;
   canQuickApply: boolean;
   handleClose: (apply: boolean, signedIn: boolean) => void;
-  handleUnAuthenticatedQuickApply: () => void;
+  handleUnAuthenticatedQuickApply?: () => void;
 }) => {
   const { isAuthenticated } = useAuthStore();
 

@@ -20,6 +20,7 @@ const JobListing = ({
   job,
   showFavorite = true,
   showStatus = false,
+  showViewDetails = true,
   status,
   showQuickApply = true,
   canQuickApply = true,
@@ -28,6 +29,7 @@ const JobListing = ({
 }: {
   job: Job;
   showFavorite?: boolean;
+  showViewDetails?: boolean;
   showStatus?: boolean;
   status?: string;
   appliedAt?: string;
@@ -36,6 +38,7 @@ const JobListing = ({
   handleQuickApply?: () => void;
 }) => {
   const { isAuthenticated } = useAuthStore();
+
   const renderQuickApply = () => {
     if (appliedAt && isAuthenticated) {
       return (
@@ -83,7 +86,6 @@ const JobListing = ({
   };
 
   const statusColors = getStatusColor(getApplicationStatus(status || ""));
-
   return (
     <View
       className="w-full bg-white rounded-2xl p-5 my-2 border border-gray-100"
@@ -132,7 +134,7 @@ const JobListing = ({
                 ? "Be the first to apply"
                 : job.applicants === 1
                   ? "1 applicant"
-                  : `${job.applicants} applications`}
+                  : `${job.applicationCount} applications`}
             </Text>
           </View>
         </View>
@@ -181,23 +183,25 @@ const JobListing = ({
       )}
       <View className="flex-row items-center justify-between">
         {showQuickApply && renderQuickApply()}
-        <TouchableOpacity
-          onPress={() => router.push(`/jobs/${job.id}`)}
-          className="bg-gray-100 rounded-xl px-4 py-2 border border-gray-200"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-          activeOpacity={0.7}
-        >
-          <View className="flex-row items-center gap-2">
-            <Feather name="eye" size={14} color="#6b7280" />
-            <Text className="font-quicksand-semibold text-sm text-gray-700">View Details</Text>
-          </View>
-        </TouchableOpacity>
+        {showViewDetails && (
+          <TouchableOpacity
+            onPress={() => router.push(`/jobs/${job.id}`)}
+            className="bg-gray-100 rounded-xl px-4 py-2 border border-gray-200"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center gap-2">
+              <Feather name="eye" size={14} color="#6b7280" />
+              <Text className="font-quicksand-semibold text-sm text-gray-700">View Details</Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

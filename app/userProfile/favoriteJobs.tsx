@@ -23,7 +23,14 @@ const FavoriteJobs = () => {
           data={jobs || []}
           renderItem={({ item, index }: { item: Job; index: number }) => (
             <TouchableOpacity className="p-1" activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.id}`)}>
-              <JobListing showFavorite={false} key={index} job={item} />
+              <JobListing
+                showFavorite={false}
+                showStatus={true}
+                key={index}
+                job={item}
+                showQuickApply={false}
+                showViewDetails={false}
+              />
             </TouchableOpacity>
           )}
           ItemSeparatorComponent={() => <View className="divider" />}

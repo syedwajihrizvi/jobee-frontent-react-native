@@ -1,5 +1,7 @@
 import { rejectCandidateInterview } from "@/lib/interviewEndpoints";
+import useApplicantsForJobStore from "@/store/applicants.store";
 import { Feather } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Keyboard, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -9,12 +11,16 @@ import ModalWithBg from "./ModalWithBg";
 type Props = {
   visible: boolean;
   interviewId: number;
+  applicantId: number;
+  jobId: number;
   handleClose: () => void;
   candidateName?: string;
 };
 
-const RejectCandidateModal = ({ visible, handleClose, candidateName, interviewId }: Props) => {
+const RejectCandidateModal = ({ visible, handleClose, candidateName, interviewId, applicantId, jobId }: Props) => {
   const customFeedbackFooterRef = useRef<View>(null);
+  const queryClient = useQueryClient();
+  const { applications, setApplicationStatus } = useApplicantsForJobStore();
   const keyboardAwareScrollViewRef = useRef<KeyboardAwareScrollView>(null);
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customFeedback, setCustomFeedback] = useState<string>("");
@@ -80,10 +86,24 @@ const RejectCandidateModal = ({ visible, handleClose, candidateName, interviewId
 
     setIsSubmitting(true);
     try {
-      // Call API to reject candidate
-      await rejectCandidateInterview(interviewId, selectedReason, customFeedback);
-      console.log("Candidate rejected successfully");
-      Alert.alert("Success", "The candidate has been rejected.");
+      const selectedReasonDesc = rejectionReasons.find((reason) => reason.id === selectedReason)?.title || "";
+      const res = await rejectCandidateInterview(interviewId, selectedReasonDesc, customFeedback);
+      if (res) {
+        Alert.alert("Success", "The candidate has been rejected.");
+        const applicationIndex = applications.findIndex((app) => app.id === Number(applicantId));
+        if (applicationIndex !== -1) {
+          setApplicationStatus(Number(applicantId), "REJECTED");
+        }
+        queryClient.invalidateQueries({
+          queryKey: ["applicant", Number(applicantId)],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["interviews", "job", Number(jobId)],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["job", "business", Number(jobId)],
+        });
+      }
       resetAndClose();
     } catch (error) {
     } finally {

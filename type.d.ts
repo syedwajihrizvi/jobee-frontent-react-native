@@ -58,12 +58,6 @@ export type UserProfileSummary = {
     fullName: string;
     profileViews: number;
     profileViews: number;
-    lastApplicationDate: string;
-    totalInConsideration: number;
-    totalRejections: number;
-    totalApplications: number;
-    totalInterviews: number;
-    lastApplication: Application| null;
     favoriteCompanies: Company[];
 }
 
@@ -188,7 +182,7 @@ export type Job = {
     createdAt: string,
     employmentType: string,
     setting: string
-    applications: Application[],
+    applicationCount: number,
     totalShortListedCandidates: number,
     hiringTeam: HiringTeamMemberForm[]
     appDeadline: string
@@ -441,10 +435,7 @@ export type CreateApplication = {
 
 export type Application = {
     id: number,
-    jobId: number,
-    companyName: string,
-    companyLogoUrl: string,
-    jobTitle: string,
+    job: Job,
     status: string,
     appliedAt: string;
     interviewId: number | null
@@ -525,8 +516,11 @@ export type InterviewDetails = {
     jobTitle: string;
     jobId: number;
     companyName: string;
+    companyLogoUrl: string;
     description: string;
     interviewDate: string;
+    rejectionReason: string;
+    rejectionFeedback: string;
     startTime: string;
     endTime: string;
     applicationId: number;
@@ -555,6 +549,7 @@ export type InterviewDetails = {
 export type InterviewSummary = {
     id: number;
     title: string;
+    status: string;
     interviewDate: string;
     jobTitle: string;
     description: string;
@@ -684,9 +679,26 @@ export type Notification = {
     companyId?: number;
     jobId?: number;
     applicationId?: number;
+    context: NotificationContext;
 }
 
-export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER"
+export type JobApplicationStatus = {
+    job: Job;
+    status: string;
+    appliedAt: string;
+    applicationId: number;
+}
+
+export type NotificationContext = {
+    applicationId?: number;
+    companyId?: number;
+    companyLogoUrl?: string;
+    jobId?: number;
+    interviewId?: number;
+    companyName?: string;
+    jobTitle?: string;
+}
+export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED"
 
 export type HiringTeamMemberForm = {
     firstName: string;

@@ -1,5 +1,4 @@
-import { Feather } from "@expo/vector-icons";
-import React from "react";
+import React, { ReactNode } from "react";
 import { Text, TouchableOpacity } from "react-native";
 
 type Props = {
@@ -7,22 +6,12 @@ type Props = {
   count: number;
   label: string;
   isActive: boolean;
-  iconName: keyof typeof Feather.glyphMap;
-  iconColor: string;
+  icon: ReactNode;
   theme: string;
   shadowColor: string;
 };
 
-const InterviewFilterButton = ({
-  handlePress,
-  count,
-  label,
-  isActive,
-  iconName,
-  iconColor,
-  theme,
-  shadowColor,
-}: Props) => {
+const InterviewFilterButton = ({ handlePress, count, label, isActive, icon, theme, shadowColor }: Props) => {
   const renderButtonClass = () => {
     if (!isActive) {
       return `bg-white border border-${theme}-300 px-3 py-2 rounded-xl flex-row items-center gap-2`;
@@ -43,7 +32,7 @@ const InterviewFilterButton = ({
       activeOpacity={0.8}
       onPress={handlePress}
     >
-      <Feather name={iconName} size={12} color={iconColor} />
+      {icon}
       <Text className={`font-quicksand-bold text-${theme}-800 text-xs`}>
         {label} ({count})
       </Text>

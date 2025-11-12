@@ -1,20 +1,18 @@
 import BackBar from "@/components/BackBar";
 import UserInterviewCard from "@/components/UserInterviewCard";
-import { useProfileInterviews } from "@/lib/services/useProfile";
+import useUserStore from "@/store/user.store";
 import { Feather } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// TODO: Use InterivewCard instead
 const UpcomingInterviews = () => {
-  const { userId } = useLocalSearchParams();
-  const { data: interviews, isLoading } = useProfileInterviews(Number(userId));
-
+  const { interviews, isLoadingInterviews: isLoading } = useUserStore();
+  const completedInterviews = interviews?.filter((interview) => interview.status === "COMPLETED");
   return (
     <SafeAreaView>
-      <BackBar label="Upcoming Interviews" />
+      <BackBar label="Interviews" />
       {isLoading ? (
         <ActivityIndicator size="large" className="mt-10" />
       ) : (
@@ -52,9 +50,9 @@ const UpcomingInterviews = () => {
                     <Text className="font-quicksand-medium text-sm text-blue-700">Total Interviews</Text>
                   </View>
                   <View className="flex-1 bg-green-50 rounded-xl p-4 border border-green-100">
-                    <Text className="font-quicksand-bold text-2xl text-green-600">{interviews?.length}</Text>
+                    <Text className="font-quicksand-bold text-2xl text-green-600">{completedInterviews?.length}</Text>
                     <Text className="font-quicksand-medium text-sm text-green-700">
-                      Completed Interview{`${interviews?.length > 1 ? "s" : ""}`}
+                      Completed Interview{`${completedInterviews?.length > 1 ? "s" : ""}`}
                     </Text>
                   </View>
                 </View>

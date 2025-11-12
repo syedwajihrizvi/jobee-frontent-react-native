@@ -87,7 +87,6 @@ const InterviewDetailsForBusiness = () => {
   };
 
   const handleMarkAsCompleted = async () => {
-    console.log("Marking interview as completed for: ", id);
     setIsUpdating(true);
     setInterview({ ...interview, status: "COMPLETED" } as InterviewDetails);
     setIsUpdating(false);
@@ -97,7 +96,6 @@ const InterviewDetailsForBusiness = () => {
       if (!res) {
         setInterview({ ...interview, status: "SCHEDULED" } as InterviewDetails);
       }
-      console.log("Interview marked as completed: ", res);
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["interviewDetails", Number(id)] });
       queryClient.invalidateQueries({ queryKey: ["business-profile-interviews"] });
@@ -105,7 +103,6 @@ const InterviewDetailsForBusiness = () => {
       const jobId = interview?.jobId;
       const candidateId = interview?.candidateId;
       queryClient.invalidateQueries({ queryKey: ["applicant", applicantId, jobId, candidateId] });
-      console.log("SYED-Updating application status in store for applicantId:", applicantId);
       setApplicationStatus(applicantId!, "INTERVIEWED_COMPLETED");
       // Update the applicants store
     } catch (error) {

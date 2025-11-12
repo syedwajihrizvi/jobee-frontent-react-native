@@ -246,9 +246,9 @@ export const onActionSuccess = async () => {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 }
 
-export const hasUserAppliedToJob = (user: User | null, jobId: number) : Application | undefined => {
-    let application = (user as User)?.applications.find(
-      (app) => app.jobId === jobId
+export const hasUserAppliedToJob = (applications: Application[], jobId: number) : Application | undefined => {
+    let application = applications.find(
+      (app) => app.job.id === jobId
     );
     return application;  
 }

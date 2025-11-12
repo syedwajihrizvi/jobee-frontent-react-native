@@ -11,7 +11,6 @@ type Props = {
 };
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
-  console.log("Rendering InterviewCard for interview:", interview.candidateProfileImageUrl);
   const renderInterviewDecision = (decision: string) => {
     const decisionString = getDecisionString(decision);
     return (

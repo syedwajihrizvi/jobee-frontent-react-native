@@ -1,76 +1,80 @@
 import BackBar from "@/components/BackBar";
 import InterviewFilterButton from "@/components/InterviewFilterButton";
 import JobListing from "@/components/JobListing";
-import { useJobsByUserApplications } from "@/lib/services/useJobs";
-import useAuthStore from "@/store/auth.store";
-import { Job } from "@/type";
-import { Feather } from "@expo/vector-icons";
+import useUserStore from "@/store/user.store";
+import { Application } from "@/type";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type AppliedJobsFilter = "Pending" | "Rejected" | "Offered" | "Interviewed" | "Interview Scheduled" | null;
+type AppliedJobsFilter =
+  | "Pending"
+  | "Rejected"
+  | "Offered"
+  | "Interviewed"
+  | "Interview Scheduled"
+  | "Interview Completed"
+  | null;
 const AppliedJobs = () => {
-  const { user } = useAuthStore();
-  const { data, isLoading: isLoadingJobs } = useJobsByUserApplications(user?.id);
-
-  const [jobs, setJobs] = useState(data || []);
+  const { isLoadingApplications, applications } = useUserStore();
+  const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
   const [filter, setFilter] = useState<AppliedJobsFilter>(null);
   const [showFilters, setShowFilters] = useState(false);
-
   const getCountOfJobsByStatus = (status: string) => {
     if (status === "PENDING") {
-      return data ? data.filter((j) => j.status === "PENDING").length : 0;
+      return applications ? applications.filter((j) => j.status === "PENDING").length : 0;
     } else if (status === "INTERVIEW_SCHEDULED") {
-      return data ? data.filter((j) => j.status === "INTERVIEW_SCHEDULED").length : 0;
+      return applications ? applications.filter((j) => j.status === "INTERVIEW_SCHEDULED").length : 0;
+    } else if (status === "INTERVIEW_COMPLETED") {
+      return applications ? applications.filter((j) => j.status === "INTERVIEW_COMPLETED").length : 0;
     } else if (status === "INTERVIEWED") {
-      return data ? data.filter((j) => j.status === "INTERVIEWED").length : 0;
+      return applications ? applications.filter((j) => j.status === "INTERVIEWED").length : 0;
     } else if (status === "OFFERED") {
-      return data ? data.filter((j) => j.status === "OFFERED").length : 0;
+      return applications ? applications.filter((j) => j.status === "OFFERED").length : 0;
     } else if (status === "REJECTED") {
-      return data ? data.filter((j) => j.status === "REJECTED").length : 0;
+      return applications ? applications.filter((j) => j.status === "REJECTED").length : 0;
     }
-    return data ? data.length : 0;
+    return applications ? applications.length : 0;
   };
 
   useEffect(() => {
-    if (data && !isLoadingJobs) {
-      let filteredJobs = [...data];
+    if (applications && !isLoadingApplications) {
+      let filtered = [...applications];
       if (filter) {
         if (filter === "Pending") {
-          filteredJobs = filteredJobs.filter((j) => j.status === "PENDING");
+          filtered = filtered.filter((j) => j.status === "PENDING");
         } else if (filter === "Interview Scheduled") {
-          filteredJobs = filteredJobs.filter((j) => j.status === "INTERVIEW_SCHEDULED");
+          filtered = filtered.filter((j) => j.status === "INTERVIEW_SCHEDULED");
+        } else if (filter === "Interview Completed") {
+          filtered = filtered.filter((j) => j.status === "INTERVIEW_COMPLETED");
         } else if (filter === "Interviewed") {
-          filteredJobs = filteredJobs.filter((j) => j.status === "INTERVIEWED");
+          filtered = filtered.filter((j) => j.status === "INTERVIEWED");
         } else if (filter === "Offered") {
-          filteredJobs = filteredJobs.filter((j) => j.status === "OFFERED");
+          filtered = filtered.filter((j) => j.status === "OFFERED");
         } else if (filter === "Rejected") {
-          filteredJobs = filteredJobs.filter((j) => j.status === "REJECTED");
+          filtered = filtered.filter((j) => j.status === "REJECTED");
         }
       }
-      setJobs(filteredJobs);
+      setFilteredApplications([...filtered]);
     }
-  }, [data, isLoadingJobs, filter]);
+  }, [applications, isLoadingApplications, filter]);
 
-  const renderJobsSelectedFor = () => {
-    const totalJobs = !jobs || jobs.length === 0 ? 0 : jobs.filter((job) => job.status === "SELECTED").length;
-    if (totalJobs === 0) {
-      return (
-        <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-          <Text className="font-quicksand-bold text-2xl text-emerald-600">
-            {getCountOfJobsByStatus("INTERVIEW_SCHEDULED")}
-          </Text>
-          <Text className="font-quicksand-medium text-sm text-emerald-700">Interviews so far</Text>
-        </View>
-      );
+  const getIcon = (filter: AppliedJobsFilter, size: number = 12) => {
+    switch (filter) {
+      case "Pending":
+        return <Feather name="clock" size={size} color="#3b82f6" />;
+      case "Interview Scheduled":
+        return <Feather name="calendar" size={size} color="#f59e0b" />;
+      case "Interview Completed":
+        return <Feather name="check-circle" size={size} color="#8b5cf6" />;
+      case "Offered":
+        return <MaterialIcons name="celebration" size={size} color="#10b981" />;
+      case "Rejected":
+        return <Feather name="x-circle" size={size} color="#ef4444" />;
+      default:
+        return <Feather name="briefcase" size={size} color="#6b7280" />;
     }
-    return (
-      <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-        <Text className="font-quicksand-bold text-2xl text-emerald-600">{totalJobs}</Text>
-        <Text className="font-quicksand-medium text-sm text-emerald-700">{`Interview${totalJobs > 1 ? "s" : ""}`}</Text>
-      </View>
-    );
   };
 
   const renderEmptyComponent = () => {
@@ -78,42 +82,42 @@ const AppliedJobs = () => {
       switch (filter) {
         case "Pending":
           return {
-            icon: "clock",
+            icon: getIcon("Pending", 40),
             title: "No Pending Applications",
             description: "You don't have any applications currently pending review.",
             color: "#3b82f6",
           };
         case "Interview Scheduled":
           return {
-            icon: "calendar",
+            icon: getIcon("Interview Scheduled", 40),
             title: "No Scheduled Interviews",
             description: "You don't have any interviews scheduled at the moment.",
             color: "#f59e0b",
           };
-        case "Interviewed":
+        case "Interview Completed":
           return {
-            icon: "users",
+            icon: getIcon("Interview Completed", 40),
             title: "No Completed Interviews",
             description: "You haven't completed any interviews yet.",
             color: "#8b5cf6",
           };
         case "Offered":
           return {
-            icon: "check-circle",
+            icon: getIcon("Offered", 40),
             title: "No Job Offers",
             description: "You haven't received any job offers yet. Keep applying!",
             color: "#10b981",
           };
         case "Rejected":
           return {
-            icon: "x-circle",
+            icon: getIcon("Rejected", 40),
             title: "No Rejections",
             description: "Great news! You don't have any rejections.",
             color: "#ef4444",
           };
         default:
           return {
-            icon: "briefcase",
+            icon: getIcon("Pending"),
             title: "No Applied Jobs",
             description: "You haven't applied to any jobs yet. Start exploring opportunities!",
             color: "#6b7280",
@@ -131,7 +135,7 @@ const AppliedJobs = () => {
             backgroundColor: `${config.color}15`, // 15% opacity
           }}
         >
-          <Feather name={config.icon as any} size={40} color={config.color} />
+          {config.icon}
         </View>
 
         <Text className="font-quicksand-bold text-xl text-gray-900 text-center mb-3">{config.title}</Text>
@@ -186,13 +190,13 @@ const AppliedJobs = () => {
   return (
     <SafeAreaView className="relative flex-1 bg-white">
       <BackBar label="Applied Jobs" />
-      {isLoadingJobs ? (
+      {isLoadingApplications ? (
         <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
         <FlatList
           className="w-full p-2"
-          data={jobs || []}
-          renderItem={({ item, index }: { item: { job: Job; status: string; appliedAt: string }; index: number }) => (
+          data={filteredApplications || []}
+          renderItem={({ item, index }: { item: Application; index: number }) => (
             <JobListing
               key={index}
               job={item.job}
@@ -204,6 +208,7 @@ const AppliedJobs = () => {
               appliedAt={item.appliedAt}
             />
           )}
+          keyExtractor={(_, index) => index.toString()}
           ListHeaderComponent={() => (
             <>
               <View
@@ -256,11 +261,10 @@ const AppliedJobs = () => {
                   <View className="flex-row flex-wrap gap-2 mt-3">
                     <InterviewFilterButton
                       handlePress={() => setFilter(null)}
-                      count={data ? data.length : 0}
+                      count={applications ? applications.length : 0}
                       label="All"
                       isActive={filter == null}
-                      iconName="list"
-                      iconColor="#6366f1"
+                      icon={null}
                       theme="indigo"
                       shadowColor="#6366f1"
                     />
@@ -269,8 +273,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("PENDING")}
                       label="Pending"
                       isActive={filter === "Pending"}
-                      iconName="clock"
-                      iconColor="#3b82f6"
+                      icon={getIcon("Pending")}
                       theme="blue"
                       shadowColor="#3b82f6"
                     />
@@ -279,18 +282,25 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("INTERVIEW_SCHEDULED")}
                       label="Interview Scheduled"
                       isActive={filter === "Interview Scheduled"}
-                      iconName="calendar"
-                      iconColor="#f59e0b"
+                      icon={getIcon("Interview Scheduled")}
                       theme="amber"
                       shadowColor="#f59e0b"
+                    />
+                    <InterviewFilterButton
+                      handlePress={() => setFilter("Interview Completed")}
+                      count={getCountOfJobsByStatus("INTERVIEW_COMPLETED")}
+                      label="Interview Completed"
+                      isActive={filter === "Interview Completed"}
+                      icon={getIcon("Interview Completed")}
+                      theme="purple"
+                      shadowColor="#8b5cf6"
                     />
                     <InterviewFilterButton
                       handlePress={() => setFilter("Rejected")}
                       count={getCountOfJobsByStatus("REJECTED")}
                       label="Rejected"
                       isActive={filter === "Rejected"}
-                      iconName="x-circle"
-                      iconColor="#ef4444"
+                      icon={getIcon("Rejected")}
                       theme="red"
                       shadowColor="#ef4444"
                     />
@@ -299,8 +309,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("OFFERED")}
                       label="Offered"
                       isActive={filter === "Offered"}
-                      iconName="check-circle"
-                      iconColor="#10b981"
+                      icon={getIcon("Offered")}
                       theme="green"
                       shadowColor="#10b981"
                     />

@@ -10,7 +10,7 @@ import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { addViewToJobs, applyToJob, checkJobMatchForUser } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
-import { useJob, useJobsByUserApplications } from "@/lib/services/useJobs";
+import { useJob } from "@/lib/services/useJobs";
 import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import {
   formatDate,
@@ -22,10 +22,10 @@ import {
 } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
-import { Application, Company, CreateApplication, Job, User, UserDocument, UserProfileSummary } from "@/type";
+import useUserStore from "@/store/user.store";
+import { Application, Company, CreateApplication, User, UserDocument } from "@/type";
 import { Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -34,17 +34,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
-  const { user: authUser, isAuthenticated, isLoading: isLoadingUser, setUser } = useAuthStore();
+  const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
+  const { applications, setApplications, isLoadingApplications } = useUserStore();
   const user = authUser as User | null;
-  const { profileSummary, setProfileSummary } = useProfileSummaryStore();
+  const { profileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
-  const { data: jobApplications, isLoading: isLoadingJobApplications } = useJobsByUserApplications(user?.id);
-  const [jobApplication, setJobApplication] = useState<{
-    job: Job;
-    status: string;
-    appliedAt: string;
-    applicationId: number;
-  } | null>(null);
+
+  const [jobApplication, setJobApplication] = useState<Application | null>(null);
+
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
   const [showJobInfoModal, setShowJobInfoModal] = useState(false);
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
@@ -63,16 +60,14 @@ const JobDetails = () => {
   } | null>(null);
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
   const userHasResume = user && user.documents && user.documents.some((doc) => doc.documentType === "RESUME");
-  const queryClient = useQueryClient();
   const player = useAudioPlayer(sounds.popSound);
 
   useEffect(() => {
-    if (!isLoadingJobApplications && jobApplications) {
-      // find the application for the current job
-      const application = jobApplications.find((app) => app.job.id === Number(jobId));
+    if (!isLoadingApplications && applications) {
+      const application = applications.find((app) => app.job.id === Number(jobId));
       setJobApplication(application || null);
     }
-  }, [isLoadingJobApplications, jobApplications, jobId]);
+  }, [isLoadingApplications, applications, jobId]);
 
   useEffect(() => {
     const addView = async () => {
@@ -82,7 +77,6 @@ const JobDetails = () => {
     addView();
   }, [jobId]);
 
-  console.log(job);
   useEffect(() => {
     if (user && (user as User).documents) {
       const resumes = (user as User).documents.filter((doc) => doc.documentType === UserDocumentType.RESUME);
@@ -104,7 +98,6 @@ const JobDetails = () => {
   const handleFavoriteCompany = async (company: Company) => {
     try {
       const result = await toggleFavoriteCompany(Number(company.id));
-      console.log("Toggling favorite company:", result);
       if (result) {
         const currFavorites = profileSummary?.favoriteCompanies || [];
         const index = currFavorites.findIndex((c) => c.id === Number(company.id));
@@ -141,11 +134,6 @@ const JobDetails = () => {
     viewApplicationBottomRef.current?.expand();
   };
 
-  const updateUserApplications = (newApplications: Application[]) => {
-    const updatedApplications = [...newApplications, ...(user?.applications || [])];
-    setUser(user ? { ...user, applications: updatedApplications } : user);
-  };
-
   const handleSubmitApplication = async () => {
     if (!selectedResume) {
       Alert.alert("Please select a resume to proceeed.");
@@ -161,15 +149,7 @@ const JobDetails = () => {
 
       const res = await applyToJob(applicationInfo);
       if (res) {
-        queryClient.invalidateQueries({ queryKey: ["jobs", "applications"] });
-        const updatedProfileSummary = {
-          ...profileSummary,
-          lastApplication: res,
-          totalApplications: (profileSummary?.totalApplications || 0) + 1,
-          totalInConsideration: (profileSummary?.totalInConsideration || 0) + 1,
-        };
-        setProfileSummary(updatedProfileSummary as UserProfileSummary);
-        updateUserApplications([res]);
+        setApplications([res, ...applications]);
         Alert.alert("Application submitted successfully!");
         applyBottomRef.current?.close();
         player.seekTo(0);
@@ -333,11 +313,11 @@ const JobDetails = () => {
                       <Feather name="users" size={12} color="#10b981" />
                     </View>
                     <Text className="font-quicksand-semibold text-sm text-emerald-700">
-                      {job?.applicants === 0
+                      {job?.applicationCount === 0
                         ? "Be the first to apply"
-                        : job?.applicants === 1
+                        : job?.applicationCount === 1
                           ? "1 applicant"
-                          : `${job?.applicants} applications`}
+                          : `${job?.applicationCount} applications`}
                     </Text>
                   </View>
                   <View className="flex-row gap-1 items-center justify-center py-1">
@@ -519,7 +499,7 @@ const JobDetails = () => {
       {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (
         <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["40%"]} enablePanDownToClose>
           <BottomSheetView className="flex-1 bg-white">
-            <ApplicationInfo applicationId={jobApplication.applicationId} />
+            <ApplicationInfo applicationId={jobApplication.id} />
           </BottomSheetView>
         </BottomSheet>
       )}

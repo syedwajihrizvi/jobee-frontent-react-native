@@ -38,6 +38,48 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
     );
   }
 
+  const renderApplicationStatusMessage = () => {
+    switch (application.status) {
+      case "PENDING":
+        return (
+          <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
+              You have already applied to this job. Our team is reviewing your application and will get back to you
+              soon.
+            </Text>
+          </View>
+        );
+      case "INTERVIEW_SCHEDULED":
+        return (
+          <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
+              Your interview has been scheduled. Please check your interview details on the interview page.
+            </Text>
+          </View>
+        );
+      case "INTERVIEW_COMPLETED":
+        return (
+          <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
+              You successfully completed your interview. We are reviewing your performance.
+            </Text>
+          </View>
+        );
+      case "OFFERED":
+        return "Congratulations! You have received a job offer. Please check your email for details.";
+      case "REJECTED":
+        return (
+          <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-red-800 leading-6">
+              We regret to inform you that your application was not successful. Thank you for applying.
+            </Text>
+          </View>
+        );
+      default:
+        return "Your application status is currently unavailable.";
+    }
+  };
+
   const statusColors = getStatusColor(getApplicationStatus(application.status || ""));
 
   return (
@@ -57,12 +99,7 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
         </View>
       </View>
       <View className="flex-1 p-4">
-        {/* Status Message */}
-        <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
-          <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
-            You have already applied to this job. Our team is reviewing your application and will get back to you soon.
-          </Text>
-        </View>
+        {renderApplicationStatusMessage()}
         <View className="bg-gray-50 rounded-xl p-4 mb-4">
           <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Application Details</Text>
 

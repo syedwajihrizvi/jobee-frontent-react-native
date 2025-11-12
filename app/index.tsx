@@ -1,14 +1,15 @@
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
+import useUserStore from "@/store/user.store";
 import { Redirect } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 export default function Index() {
   const { isLoading: isLoadingAuthUser, fetchAuthenticatedUser, userType, isAuthenticated } = useAuthStore();
-  const { isLoading: isLoadingProfileSummary, fetchProfileSummary } = useProfileSummaryStore();
-  const { isLoading: isLoadingBusinessSummary, fetchProfileSummary: fetchBusinessProfileSummary } =
-    useBusinessProfileSummaryStore();
+  const { fetchProfileSummary } = useProfileSummaryStore();
+  const { fetchUserData } = useUserStore();
+  const { fetchProfileSummary: fetchBusinessProfileSummary } = useBusinessProfileSummaryStore();
   useEffect(() => {
     fetchAuthenticatedUser();
   }, [fetchAuthenticatedUser]);
@@ -16,11 +17,11 @@ export default function Index() {
   useEffect(() => {
     if (isAuthenticated && userType === "user") {
       fetchProfileSummary();
+      fetchUserData();
     } else if (isAuthenticated && userType === "business") {
       fetchBusinessProfileSummary();
     }
-  }, [fetchProfileSummary, fetchBusinessProfileSummary, userType, isAuthenticated]);
-
+  }, [fetchProfileSummary, fetchBusinessProfileSummary, fetchUserData, userType, isAuthenticated]);
   if (isLoadingAuthUser) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
