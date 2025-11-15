@@ -1,5 +1,5 @@
 import { formatDate, getApplicationStatus } from "@/lib/utils";
-import { ApplicationSummary } from "@/type";
+import { Application } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -7,7 +7,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 import RenderUserProfileImage from "./RenderUserProfileImage";
 
 type Props = {
-  item: ApplicationSummary;
+  jobId: number;
+  item: Application;
   isShortListed: boolean;
 };
 
@@ -26,7 +27,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const ApplicantCard = ({ item, isShortListed }: Props) => {
+const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
   const statusColors = getStatusColor(item.status);
   return (
     <TouchableOpacity
@@ -39,7 +40,7 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
         elevation: 6,
       }}
       activeOpacity={0.7}
-      onPress={() => router.push(`/businessJobs/applications/applicant/${item.id}`)}
+      onPress={() => router.push(`/businessJobs/applications/applicant/${item.id}?jobId=${jobId}`)}
     >
       <View className="flex-row items-start justify-between mb-2">
         <View className="flex-row items-start gap-4 flex-1">
@@ -76,7 +77,7 @@ const ApplicantCard = ({ item, isShortListed }: Props) => {
         </View>
       </View>
       <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
-        <Text className="font-quicksand-bold text-sm text-gray-900 mb-2">Professional Summary</Text>
+        <Text className="font-quicksand-bold text-sm text-gray-900">Professional Summary</Text>
         <Text className="font-quicksand-medium text-sm text-gray-700 leading-5" numberOfLines={3}>
           {item.profileSummary || "No summary provided by the applicant."}
         </Text>

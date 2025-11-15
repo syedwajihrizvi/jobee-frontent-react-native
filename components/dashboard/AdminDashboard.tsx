@@ -1,24 +1,31 @@
 import BusinessJobListings from "@/components/BusinessJobListings";
-import InterviewCard from "@/components/InterviewCard";
 import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { useApplicationsForBusinessProfileJobs } from "@/lib/services/useApplicationsForBusinessProfileJobs";
-import { useBusinessProfileInterviews } from "@/lib/services/useBusinessProfileInterviews";
+import { formatSWord } from "@/lib/utils";
 import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
-import { BusinessUser, InterviewDetails } from "@/type";
+import useBusinessInterviewsStore from "@/store/businessInterviews.store";
+import { BusinessUser, InterviewFilter, InterviewFilters } from "@/type";
 import { Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const filter: InterviewFilters = {
+  status: "SCHEDULED" as InterviewFilter,
+};
 const AdminDashboard = () => {
   const { isLoading: isLoadingUser, user: authUser } = useAuthStore();
   const { profileSummary } = useBusinessProfileSummaryStore();
-  const { data: interviews, isLoading: isLoadingInterviews } = useBusinessProfileInterviews();
-  const [upcomingInterviews, setUpcomingInterviews] = useState<InterviewDetails[]>([]);
+  const {
+    hasValidCachedInterviews,
+    refreshInterviewsForJobAndFilter,
+    getTotalCountForJobAndFilter,
+    isLoadingInterviewsForJobAndFilter,
+  } = useBusinessInterviewsStore();
   const { setApplications, applications: storeApplications } = useApplicantsForUserJobs();
   const { data: applications, isLoading: isLoadingApplications } = useApplicationsForBusinessProfileJobs({
     userId: authUser?.id,
@@ -28,11 +35,12 @@ const AdminDashboard = () => {
   const user = authUser as BusinessUser | null;
 
   useEffect(() => {
-    if (!isLoadingInterviews && interviews) {
-      const notCompletedInterviews = interviews.filter((interview) => interview.status !== "COMPLETED");
-      setUpcomingInterviews(notCompletedInterviews);
+    const cacheValid = hasValidCachedInterviews(filter);
+    if (!cacheValid) {
+      refreshInterviewsForJobAndFilter(filter);
     }
-  }, [interviews, isLoadingInterviews]);
+    // Initially we should atleasy load upcoming interviews so we can show their count on dashboard
+  }, []);
 
   useEffect(() => {
     if (!isLoadingApplications) {
@@ -67,6 +75,42 @@ const AdminDashboard = () => {
     );
   };
 
+  const renderUpcomingInterviewsText = () => {
+    if (interviewCount === 0) {
+      return (
+        <View className="items-center py-4">
+          <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-3">
+            <Feather name="calendar" size={24} color="#6b7280" />
+          </View>
+          <Text className="font-quicksand-bold text-base text-gray-900 mb-1">No Upcoming Interviews</Text>
+          <Text className="font-quicksand-medium text-sm text-gray-600 text-center">
+            Schedule interviews with candidates to see them here.
+          </Text>
+        </View>
+      );
+    } else {
+      return (
+        <View className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1">
+              <View className="flex-row items-center gap-2 mb-2">
+                <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
+                  <Feather name="clock" size={16} color="#f59e0b" />
+                </View>
+                <Text className="font-quicksand-bold text-base text-amber-800">Interviews Scheduled</Text>
+              </View>
+              <Text className="font-quicksand-medium text-sm text-amber-700">
+                You have {interviewCount} upcoming {formatSWord("interview", interviewCount)} scheduled.
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
+  };
+
+  const isLoadingInterviews = isLoadingInterviewsForJobAndFilter(filter);
+  const interviewCount = getTotalCountForJobAndFilter(filter);
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -337,6 +381,37 @@ const AdminDashboard = () => {
               >
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
+                      <Feather name="calendar" size={20} color="#f59e0b" />
+                    </View>
+                    <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => router.push("/businessProfile/interviews?status=SCHEDULED")}>
+                    <Feather name="chevron-right" size={16} color="#6b7280" />
+                  </TouchableOpacity>
+                </View>
+                <View>
+                  {isLoadingInterviews ? (
+                    <ActivityIndicator size="large" color="#f59e0b" />
+                  ) : (
+                    renderUpcomingInterviewsText()
+                  )}
+                </View>
+              </View>
+            </View>
+            <View className="px-3 mb-4">
+              <View
+                className="bg-white rounded-2xl p-6 border border-gray-100"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 12,
+                  elevation: 6,
+                }}
+              >
+                <View className="flex-row items-center justify-between mb-4">
+                  <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
                       <Feather name="briefcase" size={20} color="#10b981" />
                     </View>
@@ -364,38 +439,6 @@ const AdminDashboard = () => {
                 </View>
               </View>
             </View>
-            {upcomingInterviews.length > 0 && (
-              <View className="px-3 mb-4">
-                <View
-                  className="bg-white rounded-2xl p-6 border border-gray-100"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 12,
-                    elevation: 6,
-                  }}
-                >
-                  <View className="flex-row items-center justify-between mb-4">
-                    <View className="flex-row items-center gap-3">
-                      <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
-                        <Feather name="calendar" size={20} color="#f59e0b" />
-                      </View>
-                      <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
-                    </View>
-                  </View>
-                  <View className="gap-3">
-                    {upcomingInterviews?.map((interview, index) => (
-                      <InterviewCard
-                        interview={interview}
-                        key={index}
-                        handlePress={() => router.push(`/businessJobs/interviews/interview/${interview.id}`)}
-                      />
-                    ))}
-                  </View>
-                </View>
-              </View>
-            )}
           </>
         )}
       </ScrollView>

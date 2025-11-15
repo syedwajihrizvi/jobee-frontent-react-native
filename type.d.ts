@@ -205,6 +205,8 @@ export type ApplicantFilters = {
     locations: string[];
     skills: string[];
     educations: string;
+    shortListed?: boolean;
+    applicationStatus?: string;
     experiences: string;
     hasVideoIntro?: boolean;
     hasCoverLetter?: boolean;
@@ -220,8 +222,6 @@ export type CandidateForJob = {
     location: string;
     matchScore: number;
 }
-
-export type InterviewFilter = 'Upcoming' | 'Completed' | 'Pending Decision' | 'Hired' | 'Next Round' | 'Rejected'
 
 export type ProfileLinks = {
     icon: React.ReactNode;
@@ -438,7 +438,19 @@ export type Application = {
     job: Job,
     status: string,
     appliedAt: string;
-    interviewId: number | null
+    interviewId: number | null,
+    fullName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    profileImageUrl: string;
+    location: string;
+    appliedAt: string;
+    profileSummary: string;
+    title: string;
+    shortListed: boolean;
+    status: string;
 }
 
 export type ApplicationSummary = {
@@ -700,9 +712,33 @@ export type NotificationContext = {
 }
 export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED"
 
+type ApplicationStatusFilter =
+  | "PENDING"
+  | "SHORTLISTED"
+  | "REJECTED"
+  | "OFFERED"
+  | "INTERVIEW_SCHEDULED"
+  | "INTERVIEW_COMPLETED"
+  | null;
+
 export type HiringTeamMemberForm = {
     firstName: string;
     lastName: string;
     email: string;
     profileImageUrl?: string;
 }
+
+export type InterviewFilters = {
+    search?: string;
+    dateRangeInDays?: number;
+    status?: InterviewFilter;
+    decisionResult?: string;
+    jobId?: number;
+}
+
+export type InterviewFilter =
+  | "PENDING"
+  | "REJECTED"
+  | "SCHEDULED"
+  | "COMPLETED"
+  | null;

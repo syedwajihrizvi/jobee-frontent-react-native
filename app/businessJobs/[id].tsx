@@ -14,7 +14,7 @@ const BusinessJobDetails = () => {
   const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(
     Number(jobId)
   );
-
+  console.log("Job data:", job);
   const getApplicationRate = () => {
     if (!job?.views || job.views === 0) return 0;
     return Math.round((job.applicants / job.views) * 100);
@@ -116,7 +116,7 @@ const BusinessJobDetails = () => {
               <ActionButton
                 color="bg-gray-500"
                 shadowColor="#6b7280"
-                handlePress={() => router.push(`/businessJobs/interviews/${jobId}`)}
+                handlePress={() => router.push(`/businessJobs/interviews/${jobId}?jobTitle=${job.title}`)}
                 icon={<Feather name="calendar" size={16} color="white" />}
                 label={job.interviews === 1 ? "Interview" : "Interviews"}
               />

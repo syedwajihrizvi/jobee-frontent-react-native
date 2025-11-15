@@ -5,7 +5,6 @@ import ModalWithBg from "@/components/ModalWithBg";
 import PlatformButton from "@/components/PlatformButton";
 import RenderMeetingPlatformIcon from "@/components/RenderMeetingPlatformIcon";
 import { meetingPlatforms } from "@/constants";
-import { useNotificationStomp } from "@/context/NotificationStompContext";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
 import {
   convert10DigitNumberToPhoneFormat,
@@ -15,7 +14,7 @@ import {
   validateTimes,
   validInterviewDate,
 } from "@/lib/utils";
-import useApplicantsForJobStore from "@/store/applicants.store";
+import useApplicationStore from "@/store/applications.store";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, CreateInterviewForm } from "@/type";
 import { Feather, FontAwesome } from "@expo/vector-icons";
@@ -46,11 +45,10 @@ const ScheduleInterview = () => {
     meetingPlatform: "",
     preparationTipsFromInterviewer: [],
   };
-  const { client } = useNotificationStomp();
   const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
+  const { setApplicationStatus } = useApplicationStore();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
-  const { applications, setApplicationStatus } = useApplicantsForJobStore();
   const conductorNameRef = useRef<TextInput>(null);
   const conductorEmailRef = useRef<TextInput>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -217,19 +215,10 @@ const ScheduleInterview = () => {
         Number(previousInterviewId)
       );
       if (res) {
-        const applicationIndex = applications.findIndex((app) => app.id === Number(applicantId));
-        if (applicationIndex !== -1) {
-          setApplicationStatus(Number(applicantId), "INTERVIEW_SCHEDULED");
-        }
         queryClient.invalidateQueries({
           queryKey: ["applicant", Number(applicantId)],
         });
-        queryClient.invalidateQueries({
-          queryKey: ["interviews", "job", Number(jobId)],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["job", "business", Number(jobId)],
-        });
+        setApplicationStatus(Number(jobId), Number(applicantId), "INTERVIEW_SCHEDULED");
         Alert.alert("Success", "Interview created successfully.");
         setInterviewDetails({ ...defaultInterviewForm });
         router.back();

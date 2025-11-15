@@ -1,5 +1,6 @@
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
+import useBusinessUserStore from "@/store/businessUser.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
 import { Redirect } from "expo-router";
@@ -9,6 +10,7 @@ export default function Index() {
   const { isLoading: isLoadingAuthUser, fetchAuthenticatedUser, userType, isAuthenticated } = useAuthStore();
   const { fetchProfileSummary } = useProfileSummaryStore();
   const { fetchUserData } = useUserStore();
+  const { fetchBusinessUserData } = useBusinessUserStore();
   const { fetchProfileSummary: fetchBusinessProfileSummary } = useBusinessProfileSummaryStore();
   useEffect(() => {
     fetchAuthenticatedUser();
@@ -20,8 +22,16 @@ export default function Index() {
       fetchUserData();
     } else if (isAuthenticated && userType === "business") {
       fetchBusinessProfileSummary();
+      fetchBusinessUserData();
     }
-  }, [fetchProfileSummary, fetchBusinessProfileSummary, fetchUserData, userType, isAuthenticated]);
+  }, [
+    fetchProfileSummary,
+    fetchBusinessProfileSummary,
+    fetchUserData,
+    fetchBusinessUserData,
+    userType,
+    isAuthenticated,
+  ]);
   if (isLoadingAuthUser) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

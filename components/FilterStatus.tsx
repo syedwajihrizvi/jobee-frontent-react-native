@@ -15,7 +15,7 @@ type Props = {
 const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", handleClearFilters }: Props) => {
   return (
     <View
-      className="mx-4 mb-2 bg-white rounded-xl p-3 border border-gray-200"
+      className="bg-white rounded-xl p-3 border border-gray-200"
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },

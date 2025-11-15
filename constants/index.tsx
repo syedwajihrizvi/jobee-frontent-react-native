@@ -228,3 +228,89 @@ export const appliedWithinOptions = [
   { label: "14 days", value: 14 },
   { label: "30 days", value: 30 },
 ];
+
+export const applicationStatusOptions = [
+  {
+    label: "Shortlisted",
+    value: "SHORTLISTED",
+    textColor: "#10b981", // Emerald 500
+    bgColor: "#ecfdf5", // Emerald 50
+    activeBgColor: "#10b981", // Emerald 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Pending",
+    value: "PENDING",
+    textColor: "#3b82f6", // Blue 500
+    bgColor: "#eff6ff", // Blue 50
+    activeBgColor: "#3b82f6", // Blue 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Interview Scheduled",
+    value: "INTERVIEW_SCHEDULED",
+    textColor: "#f59e0b", // Amber 500
+    bgColor: "#fffbeb", // Amber 50
+    activeBgColor: "#f59e0b", // Amber 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Interview Completed",
+    value: "INTERVIEW_COMPLETED",
+    textColor: "#8b5cf6", // Purple 500
+    bgColor: "#faf5ff", // Purple 50
+    activeBgColor: "#8b5cf6", // Purple 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Offered",
+    value: "OFFER_MADE",
+    textColor: "#10b981", // Emerald 500
+    bgColor: "#ecfdf5", // Emerald 50
+    activeBgColor: "#10b981", // Emerald 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Rejected",
+    value: "REJECTED",
+    textColor: "#ef4444", // Red 500
+    bgColor: "#fef2f2", // Red 50
+    activeBgColor: "#ef4444", // Red 500
+    activeTextColor: "#ffffff", // White
+  },
+];
+
+export const interviewFilterOptions = [
+  {
+    label: "Upcoming",
+    value: "SCHEDULED",
+    textColor: "#f59e0b", // Amber 500
+    bgColor: "#fffbeb", // Amber 50
+    activeBgColor: "#f59e0b", // Amber 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Completed",
+    value: "COMPLETED",
+    textColor: "#8b5cf6", // Purple 500
+    bgColor: "#faf5ff", // Purple 50
+    activeBgColor: "#8b5cf6", // Purple 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Pending Decision",
+    value: "PENDING",
+    textColor: "#10b981", // Emerald 500
+    bgColor: "#ecfdf5", // Emerald 50
+    activeBgColor: "#10b981", // Emerald 500
+    activeTextColor: "#ffffff", // White
+  },
+  {
+    label: "Rejected",
+    value: "REJECTED",
+    textColor: "#ef4444", // Red 500
+    bgColor: "#fef2f2", // Red 50
+    activeBgColor: "#ef4444", // Red 500
+    activeTextColor: "#ffffff", // White
+  },
+];

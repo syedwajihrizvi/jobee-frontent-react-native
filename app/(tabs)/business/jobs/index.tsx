@@ -73,7 +73,7 @@ const Jobs = () => {
         <SearchBar placeholder="Search for Jobs..." onSubmit={(text) => handleSearchSubmit(text)} />
       </View>
       <View
-        className="mx-4 mb-3 mt-3 bg-white rounded-2xl p-5 border border-gray-100"
+        className="mx-4 mt-3 bg-white rounded-2xl p-5 border border-gray-100"
         style={{
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
@@ -107,12 +107,14 @@ const Jobs = () => {
           </View>
         </View>
       </View>
-      <FilterStatus
-        filterCount={filterCount}
-        filters={filters}
-        openFilters={openFilters}
-        handleClearFilters={handleClearFilters}
-      />
+      <View className="mx-4 my-2">
+        <FilterStatus
+          filterCount={filterCount}
+          filters={filters}
+          openFilters={openFilters}
+          handleClearFilters={handleClearFilters}
+        />
+      </View>
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" className="mt-20" />
       ) : (

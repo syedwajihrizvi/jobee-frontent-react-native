@@ -8,6 +8,7 @@ import { markInterviewAsCompleted } from "@/lib/interviewEndpoints";
 import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour } from "@/lib/utils";
 import useApplicantsForJobStore from "@/store/applicants.store";
+import useBusinessUserStore from "@/store/businessUser.store";
 import { InterviewDetails } from "@/type";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,11 +20,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const InterviewDetailsForBusiness = () => {
   const queryClient = useQueryClient();
   const { id } = useLocalSearchParams();
-  const {
-    setApplications: setStoreApplications,
-    applications: storeApplications,
-    setApplicationStatus,
-  } = useApplicantsForJobStore();
+  const { setApplicationStatus } = useApplicantsForJobStore();
+  const { setInterviewStatus } = useBusinessUserStore();
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(id));
   const [interview, setInterview] = useState<InterviewDetails | null>(interviewDetails || null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -96,15 +94,11 @@ const InterviewDetailsForBusiness = () => {
       if (!res) {
         setInterview({ ...interview, status: "SCHEDULED" } as InterviewDetails);
       }
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["interviewDetails", Number(id)] });
-      queryClient.invalidateQueries({ queryKey: ["business-profile-interviews"] });
       const applicantId = interview?.applicationId;
-      const jobId = interview?.jobId;
-      const candidateId = interview?.candidateId;
-      queryClient.invalidateQueries({ queryKey: ["applicant", applicantId, jobId, candidateId] });
+      queryClient.invalidateQueries({ queryKey: ["interviewDetails", Number(id)] });
+      queryClient.invalidateQueries({ queryKey: ["applicant", applicantId] });
       setApplicationStatus(applicantId!, "INTERVIEWED_COMPLETED");
-      // Update the applicants store
+      setInterviewStatus(Number(id), "COMPLETED");
     } catch (error) {
       console.log("Error marking interview as completed: ", error);
       setInterview({ ...interview, status: "SCHEDULED" } as InterviewDetails);

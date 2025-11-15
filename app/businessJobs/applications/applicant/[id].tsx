@@ -9,12 +9,10 @@ import UserVideoIntro from "@/components/UserVideoIntro";
 import { shortListCandidate, unshortListCandidate } from "@/lib/jobEndpoints";
 import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { updateApplicationStatus } from "@/lib/services/applicationEndpoints";
-import { useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import { useApplicant } from "@/lib/services/useProfile";
 import { addViewToProfile } from "@/lib/updateUserProfile";
 import { getApplicationStatus } from "@/lib/utils";
-import useApplicantsForJobStore from "@/store/applicants.store";
-import useApplicantsForUserJobs from "@/store/applicantsForUserJobs";
+import useApplicationStore from "@/store/applications.store";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser, User } from "@/type";
 import { Feather, FontAwesome, FontAwesome5, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
@@ -27,15 +25,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const ApplicantForBusiness = () => {
   const queryClient = useQueryClient();
-  const { id, jobId, candidateId } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const { user: authUser } = useAuthStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [showActionsModal, setShowActionsModal] = useState(false);
-  const { setApplications: setStoreApplications, applications: storeApplications } = useApplicantsForJobStore();
-  const { applications, setApplications } = useApplicantsForUserJobs();
-  const { data: applicationData, isLoading } = useApplicant(Number(id), Number(jobId), Number(candidateId));
+  const {
+    addToShortListedApplications,
+    removeFromShortListedApplications,
+    isCandidateShortListed,
+    setApplicationStatus,
+  } = useApplicationStore();
+  const { data: applicationData, isLoading } = useApplicant(Number(id));
   const [application, setApplication] = useState(applicationData);
-  const { data: shortListedCandidates } = useShortListedCandidatesForJob(Number(application?.jobId));
   const { userProfile } = application || {};
   const [isUpdatingReject, setIsUpdatingReject] = useState(false);
   const [showSkills, setShowSkills] = useState(false);
@@ -44,21 +45,15 @@ const ApplicantForBusiness = () => {
   const [showProjects, setShowProjects] = useState(false);
   const [showCertificates, setShowCertificates] = useState(false);
   const [makingShortListRequest, setMakingShortListRequest] = useState(false);
-  const [isShortListed, setIsShortListed] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<string | undefined>();
   const user = authUser as BusinessUser | null;
+  const isShortListed = isCandidateShortListed(Number(application?.jobId), Number(application?.id));
 
   useEffect(() => {
     if (applicationData && !isLoading) {
       setApplication(applicationData);
     }
   }, [applicationData, isLoading]);
-
-  useEffect(() => {
-    if (shortListedCandidates && application) {
-      setIsShortListed(shortListedCandidates?.includes(application?.id) || false);
-    }
-  }, [shortListedCandidates, application]);
 
   useEffect(() => {
     const addProfileView = async () => {
@@ -84,13 +79,10 @@ const ApplicantForBusiness = () => {
             if (res) {
               Alert.alert("Candidate Rejected", "The candidate has been rejected successfully.");
               setApplication((prev) => (prev ? { ...prev, status: "REJECTED" } : prev));
-              const index = storeApplications.findIndex((app) => app.id === application?.id);
-              if (index > -1) {
-                const updatedApplications = [...storeApplications];
-                setStoreApplications(updatedApplications);
-              }
-              const updatedPendingApplications = applications.filter((app) => app.id !== application?.id);
-              setApplications(updatedPendingApplications);
+              setApplicationStatus(Number(application?.jobId), Number(application?.id), "REJECTED");
+              queryClient.invalidateQueries({
+                queryKey: ["applicant", Number(application?.id)],
+              });
             }
           } catch (error) {
             console.log("Error rejecting candidate: ", error);
@@ -147,7 +139,7 @@ const ApplicantForBusiness = () => {
             <Text className="font-quicksand-bold text-white text-xs">Candidate Already Rejected</Text>
           </TouchableOpacity>
         );
-      } else if (isShortListed) {
+      } else if (isCandidateShortListed(Number(application?.jobId), Number(application?.id))) {
         return (
           <View
             className="bg-green-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
@@ -167,18 +159,24 @@ const ApplicantForBusiness = () => {
   };
 
   const handleShortList = async () => {
+    const jobId = Number(application?.jobId);
+    const applicationId = Number(id);
     if (!application) return;
     setMakingShortListRequest(true);
     try {
-      const result = await shortListCandidate({
-        applicationId: application.id,
-      });
+      let result;
+      if (isShortListed) {
+        result = await unshortListCandidate({ applicationId });
+      } else {
+        result = await shortListCandidate({ applicationId });
+      }
       if (result) {
-        Alert.alert("Success", "Candidate added to shortlist successfully.");
-        setIsShortListed(true);
-        queryClient.invalidateQueries({
-          queryKey: [application.jobId, "shortlist"],
-        });
+        Alert.alert("Success", `Candidate ${isShortListed ? "unshortlisted" : "shortlisted"} successfully.`);
+        if (!isShortListed) {
+          addToShortListedApplications(jobId, applicationId);
+        } else {
+          removeFromShortListedApplications(jobId, applicationId);
+        }
       } else {
         Alert.alert("Error", "Failed to add candidate to shortlist.");
       }
@@ -195,29 +193,6 @@ const ApplicantForBusiness = () => {
 
   const handleCoverLetterPress = () => {
     setViewingDocument(application?.coverLetterUrl);
-  };
-
-  const handleUnshortList = async () => {
-    if (!application) return;
-    setMakingShortListRequest(true);
-    try {
-      const result = await unshortListCandidate({
-        applicationId: application.id,
-      });
-      if (result) {
-        Alert.alert("Success", "Candidate removed from shortlist successfully.");
-        setIsShortListed(false);
-        queryClient.invalidateQueries({
-          queryKey: [application.jobId, "shortlist"],
-        });
-      } else {
-        Alert.alert("Error", "Failed to remove candidate from shortlist.");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to remove candidate from shortlist.");
-    } finally {
-      setMakingShortListRequest(false);
-    }
   };
 
   return (
@@ -338,7 +313,7 @@ const ApplicantForBusiness = () => {
                 {renderActionButtons()}
               </View>
             </View>
-            <View className="mx-4 mt-4">
+            <View className="mx-4 mt-4 gap-4">
               <CollapsibleSection
                 title="Skills"
                 icon={<Ionicons name="bulb" size={16} color="#f59e0b" />}
@@ -552,7 +527,7 @@ const ApplicantForBusiness = () => {
                     shadowRadius: 6,
                     elevation: 4,
                   }}
-                  onPress={isShortListed ? handleUnshortList : handleShortList}
+                  onPress={handleShortList}
                   disabled={makingShortListRequest}
                   activeOpacity={0.8}
                 >
@@ -634,13 +609,7 @@ const ApplicantForBusiness = () => {
                 }}
                 onPress={() => {
                   setShowActionsModal(false);
-
-                  console.log(isShortListed ? "Unshortlist" : "Shortlist");
-                  if (isShortListed) {
-                    handleUnshortList();
-                  } else {
-                    handleShortList();
-                  }
+                  handleShortList();
                 }}
                 activeOpacity={0.7}
               >

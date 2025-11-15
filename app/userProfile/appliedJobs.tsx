@@ -1,25 +1,18 @@
 import BackBar from "@/components/BackBar";
 import InterviewFilterButton from "@/components/InterviewFilterButton";
 import JobListing from "@/components/JobListing";
+import RenderInterviewFilterIcon from "@/components/RenderInterviewFilterIcon";
 import useUserStore from "@/store/user.store";
-import { Application } from "@/type";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Application, InterviewFilter } from "@/type";
+import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type AppliedJobsFilter =
-  | "Pending"
-  | "Rejected"
-  | "Offered"
-  | "Interviewed"
-  | "Interview Scheduled"
-  | "Interview Completed"
-  | null;
 const AppliedJobs = () => {
   const { isLoadingApplications, applications } = useUserStore();
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
-  const [filter, setFilter] = useState<AppliedJobsFilter>(null);
+  const [filter, setFilter] = useState<InterviewFilter>(null);
   const [showFilters, setShowFilters] = useState(false);
   const getCountOfJobsByStatus = (status: string) => {
     if (status === "PENDING") {
@@ -60,64 +53,47 @@ const AppliedJobs = () => {
     }
   }, [applications, isLoadingApplications, filter]);
 
-  const getIcon = (filter: AppliedJobsFilter, size: number = 12) => {
-    switch (filter) {
-      case "Pending":
-        return <Feather name="clock" size={size} color="#3b82f6" />;
-      case "Interview Scheduled":
-        return <Feather name="calendar" size={size} color="#f59e0b" />;
-      case "Interview Completed":
-        return <Feather name="check-circle" size={size} color="#8b5cf6" />;
-      case "Offered":
-        return <MaterialIcons name="celebration" size={size} color="#10b981" />;
-      case "Rejected":
-        return <Feather name="x-circle" size={size} color="#ef4444" />;
-      default:
-        return <Feather name="briefcase" size={size} color="#6b7280" />;
-    }
-  };
-
   const renderEmptyComponent = () => {
     const getEmptyStateConfig = () => {
       switch (filter) {
         case "Pending":
           return {
-            icon: getIcon("Pending", 40),
+            icon: <RenderInterviewFilterIcon filter="Pending" size={40} />,
             title: "No Pending Applications",
             description: "You don't have any applications currently pending review.",
             color: "#3b82f6",
           };
         case "Interview Scheduled":
           return {
-            icon: getIcon("Interview Scheduled", 40),
+            icon: <RenderInterviewFilterIcon filter="Interview Scheduled" size={40} />,
             title: "No Scheduled Interviews",
             description: "You don't have any interviews scheduled at the moment.",
             color: "#f59e0b",
           };
         case "Interview Completed":
           return {
-            icon: getIcon("Interview Completed", 40),
+            icon: <RenderInterviewFilterIcon filter="Interview Completed" size={40} />,
             title: "No Completed Interviews",
             description: "You haven't completed any interviews yet.",
             color: "#8b5cf6",
           };
         case "Offered":
           return {
-            icon: getIcon("Offered", 40),
+            icon: <RenderInterviewFilterIcon filter="Offered" size={40} />,
             title: "No Job Offers",
             description: "You haven't received any job offers yet. Keep applying!",
             color: "#10b981",
           };
         case "Rejected":
           return {
-            icon: getIcon("Rejected", 40),
+            icon: <RenderInterviewFilterIcon filter="Rejected" size={40} />,
             title: "No Rejections",
             description: "Great news! You don't have any rejections.",
             color: "#ef4444",
           };
         default:
           return {
-            icon: getIcon("Pending"),
+            icon: <RenderInterviewFilterIcon filter="Pending" size={40} />,
             title: "No Applied Jobs",
             description: "You haven't applied to any jobs yet. Start exploring opportunities!",
             color: "#6b7280",
@@ -273,7 +249,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("PENDING")}
                       label="Pending"
                       isActive={filter === "Pending"}
-                      icon={getIcon("Pending")}
+                      icon={<RenderInterviewFilterIcon filter="Pending" />}
                       theme="blue"
                       shadowColor="#3b82f6"
                     />
@@ -282,7 +258,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("INTERVIEW_SCHEDULED")}
                       label="Interview Scheduled"
                       isActive={filter === "Interview Scheduled"}
-                      icon={getIcon("Interview Scheduled")}
+                      icon={<RenderInterviewFilterIcon filter="Interview Scheduled" />}
                       theme="amber"
                       shadowColor="#f59e0b"
                     />
@@ -291,7 +267,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("INTERVIEW_COMPLETED")}
                       label="Interview Completed"
                       isActive={filter === "Interview Completed"}
-                      icon={getIcon("Interview Completed")}
+                      icon={<RenderInterviewFilterIcon filter="Interview Completed" />}
                       theme="purple"
                       shadowColor="#8b5cf6"
                     />
@@ -300,7 +276,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("REJECTED")}
                       label="Rejected"
                       isActive={filter === "Rejected"}
-                      icon={getIcon("Rejected")}
+                      icon={<RenderInterviewFilterIcon filter="Rejected" />}
                       theme="red"
                       shadowColor="#ef4444"
                     />
@@ -309,7 +285,7 @@ const AppliedJobs = () => {
                       count={getCountOfJobsByStatus("OFFERED")}
                       label="Offered"
                       isActive={filter === "Offered"}
-                      icon={getIcon("Offered")}
+                      icon={<RenderInterviewFilterIcon filter="Offered" />}
                       theme="green"
                       shadowColor="#10b981"
                     />

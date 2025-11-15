@@ -3,7 +3,6 @@ import { Text, TouchableOpacity } from "react-native";
 
 type Props = {
   handlePress: () => void;
-  count: number;
   label: string;
   isActive: boolean;
   icon: ReactNode;
@@ -11,7 +10,7 @@ type Props = {
   shadowColor: string;
 };
 
-const InterviewFilterButton = ({ handlePress, count, label, isActive, icon, theme, shadowColor }: Props) => {
+const InterviewFilterButton = ({ handlePress, label, isActive, icon, theme, shadowColor }: Props) => {
   const renderButtonClass = () => {
     if (!isActive) {
       return `bg-white border border-${theme}-300 px-3 py-2 rounded-xl flex-row items-center gap-2`;
@@ -33,9 +32,7 @@ const InterviewFilterButton = ({ handlePress, count, label, isActive, icon, them
       onPress={handlePress}
     >
       {icon}
-      <Text className={`font-quicksand-bold text-${theme}-800 text-xs`}>
-        {label} ({count})
-      </Text>
+      <Text className={`font-quicksand-bold text-${theme}-800 text-xs`}>{label}</Text>
     </TouchableOpacity>
   );
 };

@@ -48,7 +48,7 @@ export const  convertTo12Hour =(time24: string): string => {
 
   return `${hour}:${minute} ${ampm}`;
 }
-export const isApplied = (user: User, jobId: string) => user?.applications.find(app => app.jobId === Number(jobId))
+export const isApplied = (user: User, jobId: string) => user?.applications.find(app => app.job.id === Number(jobId))
 
 export const getUserDocumentById = (id: number, user: User): UserDocument | undefined => {
     return user?.documents.find(doc => doc.id === id);
@@ -779,3 +779,42 @@ export const validInterviewDate = (date: string) => {
 
   return parsedDate >= today;
 };
+
+export const formatSWord = (word: string, count: number) => {
+  return count === 1 ? word : `${word}s`;
+}
+
+export const getApplicationFilterText = (filter: string, count: number) => {
+  switch(filter) {
+    case "SHORTLISTED":
+      return `${count} ${formatSWord("Shortlisted Application", count)}`;
+    case "REJECTED":
+      return `${count} ${formatSWord("Rejected Application", count)}`;
+    case "PENDING":
+      return `${count} ${formatSWord("Pending Application", count)}`;
+    case "INTERVIEW_SCHEDULED":
+      return `${count} ${formatSWord("Applicant", count)} to Interview`;
+    case "INTERVIEW_COMPLETED":
+      return `${count} ${formatSWord("Applicant", count)} Interviewed`;
+    case "OFFER_MADE":
+      return `${count} ${formatSWord("Applicant", count)} Offered position`;
+    default:
+      return `${count} ${formatSWord("Total Application", count)}`;
+  }
+}
+
+export const getInterviewFilterText = (filter: string, count: number) => {
+  switch(filter) {
+    case "SCHEDULED":
+      return `${count} ${formatSWord("Scheduled Interview", count)}`;
+    case "COMPLETED":
+      return `${count} ${formatSWord("Completed Interview", count)}`;
+    case "PENDING":
+      return `${count} ${formatSWord("Interview", count)} Pending Decision`;
+    case "REJECTED":
+      return `${count} ${formatSWord("Candidate", count)} Rejected after Interview`;
+    default:
+      return `${count} ${formatSWord("Total Interview", count)}`;
+    
+  }
+}

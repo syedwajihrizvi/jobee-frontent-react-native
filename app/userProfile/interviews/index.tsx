@@ -1,10 +1,10 @@
 import BackBar from "@/components/BackBar";
+import NoInterviews from "@/components/NoInterviews";
 import UserInterviewCard from "@/components/UserInterviewCard";
 import useUserStore from "@/store/user.store";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React from "react";
-import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const UpcomingInterviews = () => {
@@ -59,60 +59,7 @@ const UpcomingInterviews = () => {
               </View>
             ) : null
           }
-          ListEmptyComponent={() => {
-            return (
-              <View className="flex-1 items-center justify-center px-6 py-20">
-                <View
-                  className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 8,
-                    elevation: 2,
-                  }}
-                >
-                  <Feather name="calendar" size={32} color="#9ca3af" />
-                </View>
-
-                <Text className="font-quicksand-bold text-xl text-gray-900 mb-3 text-center">
-                  No Interviews Scheduled
-                </Text>
-
-                <Text className="font-quicksand-medium text-sm text-gray-600 text-center leading-6 mb-6">
-                  You do not have any upcoming interviews at the moment.{"\n"}
-                  Keep applying to jobs and check back here for updates!
-                </Text>
-
-                <View className="flex-row gap-3">
-                  <TouchableOpacity
-                    className="bg-indigo-500 px-6 py-3 rounded-xl flex-row items-center gap-2"
-                    style={{
-                      shadowColor: "#6366f1",
-                      shadowOffset: { width: 0, height: 3 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 6,
-                      elevation: 4,
-                    }}
-                    onPress={() => router.push("/users/jobs")}
-                    activeOpacity={0.8}
-                  >
-                    <Feather name="search" size={16} color="white" />
-                    <Text className="font-quicksand-bold text-white text-sm">Browse Jobs</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    className="bg-gray-100 border border-gray-200 px-6 py-3 rounded-xl flex-row items-center gap-2"
-                    onPress={() => router.back()}
-                    activeOpacity={0.8}
-                  >
-                    <Feather name="arrow-left" size={16} color="#6b7280" />
-                    <Text className="font-quicksand-bold text-gray-700 text-sm">Go Back</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            );
-          }}
+          ListEmptyComponent={() => <NoInterviews filter={null} />}
           ItemSeparatorComponent={() => <View className="divider" />}
         />
       )}

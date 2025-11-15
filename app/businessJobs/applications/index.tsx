@@ -84,16 +84,16 @@ const PendingApplications = () => {
           >
             <View className="flex-row items-start justify-between mb-3">
               <View className="flex-1 mr-3">
-                <View className="flex flex-row items-center justify-between mb-2">
-                  <Text className="font-quicksand-bold text-xl text-gray-900 leading-6">{item.title}</Text>
-                  <View className="flex-row items-center justify-between  border-gray-100">
-                    <View className="flex-row items-center gap-2">
-                      <View className="flex-row items-center gap-1">
-                        <Feather name="calendar" size={14} color="#6b7280" />
-                        <Text className="font-quicksand-medium text-sm text-gray-600">
-                          Posted: {formatDate(item.createdAt)}
-                        </Text>
-                      </View>
+                <Text className="font-quicksand-bold text-xl text-gray-900 leading-6 mb-1" numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <View className="flex-row items-center justify-between mb-1">
+                  <View className="flex-row items-center gap-2">
+                    <View className="flex-row items-center gap-1">
+                      <Feather name="calendar" size={14} color="#6b7280" />
+                      <Text className="font-quicksand-medium text-sm text-gray-600">
+                        Posted: {formatDate(item.createdAt)}
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -101,7 +101,9 @@ const PendingApplications = () => {
                 <View className="flex-row items-center gap-2 mb-2 flex-wrap">
                   <View className="flex-row items-center gap-1">
                     <Feather name="map-pin" size={14} color="#6b7280" />
-                    <Text className="font-quicksand-medium text-sm text-gray-600">{item.location}</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-600">
+                      {item.location || `${item.city}, ${item.country}`}
+                    </Text>
                   </View>
                   <View className="w-1 h-1 bg-gray-400 rounded-full" />
                   <View className="flex-row items-center gap-1">

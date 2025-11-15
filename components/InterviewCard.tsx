@@ -102,7 +102,9 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
     >
       <View className="flex-row items-center justify-between mb-4">
         {renderInterviewDate()}
-        {interview.decisionResult && renderInterviewDecision(interview.decisionResult)}
+        {interview.status === "COMPLETED" &&
+          interview.decisionResult &&
+          renderInterviewDecision(interview.decisionResult)}
       </View>
       <View className="flex-row items-start gap-4">
         <RenderUserProfileImage
