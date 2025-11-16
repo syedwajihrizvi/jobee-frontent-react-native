@@ -1,9 +1,9 @@
 import { getCurrentUser } from '@/lib/auth';
-import { AuthState } from '@/type';
+import { AuthState, User } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-const useAuthStore = create<AuthState>((set) => ({
+const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
@@ -14,6 +14,12 @@ const useAuthStore = create<AuthState>((set) => ({
   setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setAuthReady: () => set({ isReady: true }),
+  resetCanBatchQuickApply: () => {
+    const state = get();
+    const newTime = Date.now() + 6 * 60 * 60 * 1000;
+    const updatedUser = {...(state.user as User), canQuickApplyBatch: false, nextQuickApplyBatchTime: newTime.toString()} as User
+    set({ user: updatedUser });
+  },
   fetchAuthenticatedUser: async () => {
     set({ isLoading: true });
     try {

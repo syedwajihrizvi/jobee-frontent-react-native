@@ -1,188 +1,58 @@
 import BackBar from "@/components/BackBar";
-import InterviewFilterButton from "@/components/InterviewFilterButton";
 import JobListing from "@/components/JobListing";
-import RenderInterviewFilterIcon from "@/components/RenderInterviewFilterIcon";
+import { applicationStatusOptions } from "@/constants";
+import { getApplicationStatusFilterTextForUser } from "@/lib/utils";
 import useUserStore from "@/store/user.store";
-import { Application, InterviewFilter } from "@/type";
+import useUserJobsStore from "@/store/userJobsStore";
+import { ApplicationStatusFilter, Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const AppliedJobs = () => {
-  const { isLoadingApplications, applications } = useUserStore();
-  const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
-  const [filter, setFilter] = useState<InterviewFilter>(null);
+  const { isLoadingApplications: isLoadingAllApplications } = useUserStore();
+  const {
+    fetchAppliedJobsForUserAndFilter,
+    getAppliedJobsByFilter,
+    getTotalCountForAppliedJobsByFilter,
+    getPaginationForAppliedJobsByFilter,
+    isLoadingAppliedJobsForFilter,
+    hasValidAppliedJobsCache,
+    refreshAppliedJobsForUserAndFilter,
+  } = useUserJobsStore();
+  const [filter, setFilter] = useState<ApplicationStatusFilter>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const getCountOfJobsByStatus = (status: string) => {
-    if (status === "PENDING") {
-      return applications ? applications.filter((j) => j.status === "PENDING").length : 0;
-    } else if (status === "INTERVIEW_SCHEDULED") {
-      return applications ? applications.filter((j) => j.status === "INTERVIEW_SCHEDULED").length : 0;
-    } else if (status === "INTERVIEW_COMPLETED") {
-      return applications ? applications.filter((j) => j.status === "INTERVIEW_COMPLETED").length : 0;
-    } else if (status === "INTERVIEWED") {
-      return applications ? applications.filter((j) => j.status === "INTERVIEWED").length : 0;
-    } else if (status === "OFFERED") {
-      return applications ? applications.filter((j) => j.status === "OFFERED").length : 0;
-    } else if (status === "REJECTED") {
-      return applications ? applications.filter((j) => j.status === "REJECTED").length : 0;
-    }
-    return applications ? applications.length : 0;
-  };
+
+  const applications = getAppliedJobsByFilter(filter);
+  const totalCount = getTotalCountForAppliedJobsByFilter(filter);
+  const paginatedApplications = getPaginationForAppliedJobsByFilter(filter);
+  const isLoadingApplicationsForFilter = isLoadingAppliedJobsForFilter(filter);
+  const hasValidCache = hasValidAppliedJobsCache(filter);
 
   useEffect(() => {
-    if (applications && !isLoadingApplications) {
-      let filtered = [...applications];
-      if (filter) {
-        if (filter === "Pending") {
-          filtered = filtered.filter((j) => j.status === "PENDING");
-        } else if (filter === "Interview Scheduled") {
-          filtered = filtered.filter((j) => j.status === "INTERVIEW_SCHEDULED");
-        } else if (filter === "Interview Completed") {
-          filtered = filtered.filter((j) => j.status === "INTERVIEW_COMPLETED");
-        } else if (filter === "Interviewed") {
-          filtered = filtered.filter((j) => j.status === "INTERVIEWED");
-        } else if (filter === "Offered") {
-          filtered = filtered.filter((j) => j.status === "OFFERED");
-        } else if (filter === "Rejected") {
-          filtered = filtered.filter((j) => j.status === "REJECTED");
-        }
-      }
-      setFilteredApplications([...filtered]);
+    if (!hasValidCache) {
+      refreshAppliedJobsForUserAndFilter(filter);
     }
-  }, [applications, isLoadingApplications, filter]);
+  }, []);
 
-  const renderEmptyComponent = () => {
-    const getEmptyStateConfig = () => {
-      switch (filter) {
-        case "Pending":
-          return {
-            icon: <RenderInterviewFilterIcon filter="Pending" size={40} />,
-            title: "No Pending Applications",
-            description: "You don't have any applications currently pending review.",
-            color: "#3b82f6",
-          };
-        case "Interview Scheduled":
-          return {
-            icon: <RenderInterviewFilterIcon filter="Interview Scheduled" size={40} />,
-            title: "No Scheduled Interviews",
-            description: "You don't have any interviews scheduled at the moment.",
-            color: "#f59e0b",
-          };
-        case "Interview Completed":
-          return {
-            icon: <RenderInterviewFilterIcon filter="Interview Completed" size={40} />,
-            title: "No Completed Interviews",
-            description: "You haven't completed any interviews yet.",
-            color: "#8b5cf6",
-          };
-        case "Offered":
-          return {
-            icon: <RenderInterviewFilterIcon filter="Offered" size={40} />,
-            title: "No Job Offers",
-            description: "You haven't received any job offers yet. Keep applying!",
-            color: "#10b981",
-          };
-        case "Rejected":
-          return {
-            icon: <RenderInterviewFilterIcon filter="Rejected" size={40} />,
-            title: "No Rejections",
-            description: "Great news! You don't have any rejections.",
-            color: "#ef4444",
-          };
-        default:
-          return {
-            icon: <RenderInterviewFilterIcon filter="Pending" size={40} />,
-            title: "No Applied Jobs",
-            description: "You haven't applied to any jobs yet. Start exploring opportunities!",
-            color: "#6b7280",
-          };
-      }
-    };
-
-    const config = getEmptyStateConfig();
-
-    return (
-      <View className="flex-1 justify-center items-center px-6 py-12">
-        <View
-          className="w-24 h-24 rounded-full items-center justify-center mb-6"
-          style={{
-            backgroundColor: `${config.color}15`, // 15% opacity
-          }}
-        >
-          {config.icon}
-        </View>
-
-        <Text className="font-quicksand-bold text-xl text-gray-900 text-center mb-3">{config.title}</Text>
-
-        <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6">
-          {config.description}
-        </Text>
-        {!filter && (
-          <TouchableOpacity
-            className="bg-indigo-500 rounded-xl px-6 py-3 flex-row items-center gap-2"
-            style={{
-              shadowColor: "#6366f1",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.2,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-            onPress={() => {
-              // Navigate to job search or home
-              // router.push('/jobs') or router.back()
-            }}
-            activeOpacity={0.8}
-          >
-            <Feather name="search" size={16} color="white" />
-            <Text className="font-quicksand-bold text-white text-base">Browse Jobs</Text>
-          </TouchableOpacity>
-        )}
-        {filter === "Rejected" && (
-          <TouchableOpacity
-            className="bg-emerald-500 rounded-xl px-6 py-3 flex-row items-center gap-2"
-            style={{
-              shadowColor: "#10b981",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.2,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-            onPress={() => {
-              // Navigate to job search
-              // router.push('/jobs')
-            }}
-            activeOpacity={0.8}
-          >
-            <Feather name="arrow-right" size={16} color="white" />
-            <Text className="font-quicksand-bold text-white text-base">Keep Applying</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
+  useEffect(() => {
+    if (!hasValidCache) {
+      refreshAppliedJobsForUserAndFilter(filter);
+    }
+  }, [filter]);
 
   return (
     <SafeAreaView className="relative flex-1 bg-white">
       <BackBar label="Applied Jobs" />
-      {isLoadingApplications ? (
+      {isLoadingAllApplications ? (
         <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
         <FlatList
-          className="w-full p-2"
-          data={filteredApplications || []}
-          renderItem={({ item, index }: { item: Application; index: number }) => (
-            <JobListing
-              key={index}
-              job={item.job}
-              showFavorite={false}
-              showStatus={true}
-              showQuickApply={true}
-              canQuickApply={false}
-              status={item.status}
-              appliedAt={item.appliedAt}
-            />
+          className="w-full px-4"
+          data={applications}
+          renderItem={({ item }: { item: Job }) => (
+            <JobListing job={item} showQuickApply={true} canQuickApply={false} />
           )}
           keyExtractor={(_, index) => index.toString()}
           ListHeaderComponent={() => (
@@ -202,7 +72,9 @@ const AppliedJobs = () => {
                     <Feather name="folder" size={24} color="#6366f1" />
                   </View>
                   <View>
-                    <Text className="font-quicksand-bold text-xl text-gray-900">Job Applications</Text>
+                    <Text className="font-quicksand-bold text-xl text-gray-900">
+                      {getApplicationStatusFilterTextForUser(filter || "", totalCount)}
+                    </Text>
                     <Text className="font-quicksand-medium text-sm text-gray-600">
                       View the status of your job applications
                     </Text>
@@ -235,66 +107,44 @@ const AppliedJobs = () => {
                 </View>
                 {showFilters && (
                   <View className="flex-row flex-wrap gap-2 mt-3">
-                    <InterviewFilterButton
-                      handlePress={() => setFilter(null)}
-                      count={applications ? applications.length : 0}
-                      label="All"
-                      isActive={filter == null}
-                      icon={null}
-                      theme="indigo"
-                      shadowColor="#6366f1"
-                    />
-                    <InterviewFilterButton
-                      handlePress={() => setFilter("Pending")}
-                      count={getCountOfJobsByStatus("PENDING")}
-                      label="Pending"
-                      isActive={filter === "Pending"}
-                      icon={<RenderInterviewFilterIcon filter="Pending" />}
-                      theme="blue"
-                      shadowColor="#3b82f6"
-                    />
-                    <InterviewFilterButton
-                      handlePress={() => setFilter("Interview Scheduled")}
-                      count={getCountOfJobsByStatus("INTERVIEW_SCHEDULED")}
-                      label="Interview Scheduled"
-                      isActive={filter === "Interview Scheduled"}
-                      icon={<RenderInterviewFilterIcon filter="Interview Scheduled" />}
-                      theme="amber"
-                      shadowColor="#f59e0b"
-                    />
-                    <InterviewFilterButton
-                      handlePress={() => setFilter("Interview Completed")}
-                      count={getCountOfJobsByStatus("INTERVIEW_COMPLETED")}
-                      label="Interview Completed"
-                      isActive={filter === "Interview Completed"}
-                      icon={<RenderInterviewFilterIcon filter="Interview Completed" />}
-                      theme="purple"
-                      shadowColor="#8b5cf6"
-                    />
-                    <InterviewFilterButton
-                      handlePress={() => setFilter("Rejected")}
-                      count={getCountOfJobsByStatus("REJECTED")}
-                      label="Rejected"
-                      isActive={filter === "Rejected"}
-                      icon={<RenderInterviewFilterIcon filter="Rejected" />}
-                      theme="red"
-                      shadowColor="#ef4444"
-                    />
-                    <InterviewFilterButton
-                      handlePress={() => setFilter("Offered")}
-                      count={getCountOfJobsByStatus("OFFERED")}
-                      label="Offered"
-                      isActive={filter === "Offered"}
-                      icon={<RenderInterviewFilterIcon filter="Offered" />}
-                      theme="green"
-                      shadowColor="#10b981"
-                    />
+                    {applicationStatusOptions
+                      .filter((option) => option.value !== "SHORTLISTED")
+                      .map((option) => {
+                        const isActive = filter === option.value;
+                        return (
+                          <TouchableOpacity
+                            key={option.label}
+                            className="px-3 py-2 rounded-lg"
+                            style={{
+                              backgroundColor: filter === option.value ? option.activeBgColor : option.bgColor,
+                            }}
+                            onPress={() => setFilter((isActive ? null : option.value) as ApplicationStatusFilter)}
+                          >
+                            <Text
+                              className="font-quicksand-semibold text-xs"
+                              style={{
+                                color: filter === option.value ? option.activeTextColor : option.textColor,
+                              }}
+                            >
+                              {option.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
                   </View>
                 )}
               </View>
             </>
           )}
-          ListEmptyComponent={() => renderEmptyComponent()}
+          onEndReached={() => {
+            if (paginatedApplications?.hasMore) {
+              const nextPage = (paginatedApplications?.currentPage || 0) + 1;
+              fetchAppliedJobsForUserAndFilter(filter, nextPage);
+            }
+          }}
+          ListFooterComponent={() => {
+            return isLoadingApplicationsForFilter ? <ActivityIndicator size="large" color="#8b5cf6" /> : null;
+          }}
           ItemSeparatorComponent={() => <View className="divider" />}
         />
       )}

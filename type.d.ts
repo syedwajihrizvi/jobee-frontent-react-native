@@ -127,6 +127,7 @@ export type AuthState = {
     setUser: (user: User | BusinessUser | null) => void;
     setUserType: (type: 'user' | 'business') => void;
     setIsLoading: (isLoading: boolean) => void;
+    resetCanBatchQuickApply: () => void;
     setAuthReady: () => void;
     fetchAuthenticatedUser: () => Promise<void>;
     removeUser: () => void
@@ -199,6 +200,7 @@ export type JobFilters = {
     experience: string[];
     employmentTypes?: string[];
     workArrangements?: string[];
+    postedByAccountId?: number;
 }
 
 export type ApplicantFilters = {
@@ -436,6 +438,7 @@ export type CreateApplication = {
 export type Application = {
     id: number,
     job: Job,
+    jobId: number,
     status: string,
     appliedAt: string;
     interviewId: number | null,

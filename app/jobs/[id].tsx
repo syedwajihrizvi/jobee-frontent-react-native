@@ -23,6 +23,7 @@ import {
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
+import useUserJobsStore from "@/store/userJobsStore";
 import { Application, Company, CreateApplication, User, UserDocument } from "@/type";
 import { Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -35,13 +36,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
   const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
-  const { applications, setApplications, isLoadingApplications } = useUserStore();
+  const { applications, setApplications, isLoadingApplications, setLastApplication } = useUserStore();
   const user = authUser as User | null;
   const { profileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
 
   const [jobApplication, setJobApplication] = useState<Application | null>(null);
-
+  const { addAppliedJob } = useUserJobsStore();
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
   const [showJobInfoModal, setShowJobInfoModal] = useState(false);
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
@@ -64,7 +65,7 @@ const JobDetails = () => {
 
   useEffect(() => {
     if (!isLoadingApplications && applications) {
-      const application = applications.find((app) => app.job.id === Number(jobId));
+      const application = applications.find((app) => app.jobId === Number(jobId));
       setJobApplication(application || null);
     }
   }, [isLoadingApplications, applications, jobId]);
@@ -113,7 +114,6 @@ const JobDetails = () => {
             favoriteCompanies: [company, ...currFavorites],
           });
         }
-        console.log("Successfully toggled favorite company");
       }
     } catch (error) {
       console.error("Error toggling favorite company:", error);
@@ -149,7 +149,15 @@ const JobDetails = () => {
 
       const res = await applyToJob(applicationInfo);
       if (res) {
-        setApplications([res, ...applications]);
+        const newApplication = {
+          id: res.id,
+          appliedAt: res.appliedAt,
+          jobId: Number(jobId),
+          status: res.status,
+        } as Application;
+        setLastApplication(newApplication);
+        setApplications([newApplication, ...applications]);
+        addAppliedJob(res.job);
         Alert.alert("Application submitted successfully!");
         applyBottomRef.current?.close();
         player.seekTo(0);
@@ -293,7 +301,7 @@ const JobDetails = () => {
               <View className="flex-1 mr-3">
                 <CompanyInformation companyName={job?.businessName!} companyLogoUrl={job?.companyLogoUrl!} />
               </View>
-              <FavoriteJob jobId={job?.id!} />
+              {job && <FavoriteJob job={job} />}
             </View>
             <View className="flex-row items-start justify-between mb-1">
               <View className="flex-1 mr-4">
@@ -481,19 +489,21 @@ const JobDetails = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            className="bg-gray-100 rounded-xl p-1 border border-gray-200"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-            activeOpacity={0.7}
-          >
-            <FavoriteJob jobId={job?.id!} />
-          </TouchableOpacity>
+          {job && (
+            <TouchableOpacity
+              className="bg-gray-100 rounded-xl p-1 border border-gray-200"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+              activeOpacity={0.7}
+            >
+              <FavoriteJob job={job} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (

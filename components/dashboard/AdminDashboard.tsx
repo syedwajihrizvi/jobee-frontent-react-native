@@ -39,7 +39,7 @@ const AdminDashboard = () => {
     if (!cacheValid) {
       refreshInterviewsForJobAndFilter(filter);
     }
-    // Initially we should atleasy load upcoming interviews so we can show their count on dashboard
+    // Initially we should atleast load upcoming interviews so we can show their count on dashboard
   }, []);
 
   useEffect(() => {

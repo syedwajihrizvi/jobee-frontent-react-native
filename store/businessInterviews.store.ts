@@ -86,7 +86,6 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
         }
     } ,
     getInterviewsForJobAndFilter: (filter) => {
-        console.log("Getting interviews for job ID and filter:", filter);
         const filterKey = createFilterKey(filter);
         const state = get();
         return state.interviewsByJobIdAndFilter[filterKey];

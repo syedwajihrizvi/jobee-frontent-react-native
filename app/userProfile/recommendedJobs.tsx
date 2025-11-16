@@ -1,53 +1,41 @@
 import BackBar from "@/components/BackBar";
 import JobListing from "@/components/JobListing";
+import { formatSWord } from "@/lib/utils";
 import useUserJobsStore from "@/store/userJobsStore";
-import { Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const FavoriteJobs = () => {
-  const {
-    isLoadingFavoriteJobs,
-    hasValidFavoriteJobsCache,
-    fetchFavoriteJobsForUserAndFilter,
-    refreshFavoriteJobs,
-    getPaginationForFavoriteJobs,
-    getTotalCountForFavoriteJobs,
-    getFavoriteJobs,
-  } = useUserJobsStore();
+const RecommendedJobs = () => {
+  const { refreshRecommendedJobs, getRecommendedJobs, isLoadingRecommendedJobs, hasValidRecommendedJobsCache } =
+    useUserJobsStore();
 
-  const isLoading = isLoadingFavoriteJobs();
-  const jobs = getFavoriteJobs();
-  const pagination = getPaginationForFavoriteJobs();
-  const totalCount = getTotalCountForFavoriteJobs();
+  const jobs = getRecommendedJobs();
+  const isLoading = isLoadingRecommendedJobs();
+  const totalCount = jobs?.length || 0;
+
   useEffect(() => {
-    const cacheValid = hasValidFavoriteJobsCache();
+    const cacheValid = hasValidRecommendedJobsCache();
     if (!cacheValid) {
-      refreshFavoriteJobs();
+      refreshRecommendedJobs();
     }
   }, []);
 
+  jobs.map((job) => console.log(job.match));
   return (
-    <SafeAreaView className="relative flex-1 bg-white">
-      <BackBar label="My Favorite Jobs" />
+    <SafeAreaView className="flex-1 bg-white">
+      <BackBar label="Recommended Jobs" />
       <FlatList
-        className="w-full px-4"
+        className="w-full p-2"
         showsVerticalScrollIndicator={false}
         data={jobs || []}
-        renderItem={({ item, index }: { item: Job; index: number }) => (
-          <TouchableOpacity className="p-1" activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.id}`)}>
-            <JobListing key={index} job={item} />
+        renderItem={({ item, index }) => (
+          <TouchableOpacity className="p-1" activeOpacity={0.2} onPress={() => router.push(`/jobs/${item.job.id}`)}>
+            <JobListing key={index} job={item.job} matchScore={item.match} />
           </TouchableOpacity>
         )}
-        onEndReached={() => {
-          if (pagination?.hasMore) {
-            const nextPage = pagination?.currentPage + 1;
-            fetchFavoriteJobsForUserAndFilter(nextPage);
-          }
-        }}
         ItemSeparatorComponent={() => <View className="divider" />}
         ListHeaderComponent={() =>
           totalCount > 0 ? (
@@ -66,9 +54,11 @@ const FavoriteJobs = () => {
                   <Feather name="folder" size={24} color="#6366f1" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-quicksand-bold text-xl text-gray-900">{totalCount} Favorite Jobs</Text>
+                  <Text className="font-quicksand-bold text-xl text-gray-900">
+                    {totalCount} Recommended {formatSWord("Job", totalCount)}
+                  </Text>
                   <Text className="font-quicksand-medium text-sm text-gray-600">
-                    View jobs you have favorited for easy access later.
+                    View jobs you might be interested in.
                   </Text>
                 </View>
               </View>
@@ -94,4 +84,4 @@ const FavoriteJobs = () => {
   );
 };
 
-export default FavoriteJobs;
+export default RecommendedJobs;

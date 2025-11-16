@@ -33,7 +33,6 @@ export const MessageStompProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   useEffect(() => {
     if (!isLoading && conversations) {
-      console.log("Setting initial conversations in store: ", conversations);
       setConversations(conversations);
       const unreadCount = conversations.filter((conv) => !conv.lastMessageRead).length;
       setUnreadMessages(unreadCount);

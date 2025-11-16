@@ -1,19 +1,19 @@
 import { favoriteJob } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
-import { User } from "@/type";
+import useUserJobsStore from "@/store/userJobsStore";
+import { Job, User } from "@/type";
 import { AntDesign } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 
-const FavoriteJob = ({ jobId }: { jobId: number }) => {
-  const queryClient = useQueryClient();
+const FavoriteJob = ({ job }: { job: Job }) => {
   const { user: authUser, setUser, isAuthenticated, userType } = useAuthStore();
+  const { addJobToFavorites, removeJobFromFavorites } = useUserJobsStore();
   const [showModal, setShowModal] = useState(false);
   const user = authUser as User | null;
   const isFavorite =
-    isAuthenticated && user && userType !== "business" && user.favoriteJobs.some((fav) => fav.id === jobId);
+    isAuthenticated && user && userType !== "business" && user.favoriteJobs.some((fav) => fav.id === job.id);
 
   const handlePress = async () => {
     if (!isAuthenticated) {
@@ -21,19 +21,20 @@ const FavoriteJob = ({ jobId }: { jobId: number }) => {
       return;
     }
     try {
-      const result = await favoriteJob(jobId);
+      const result = await favoriteJob(job.id);
       if (result && user) {
         let newFavoriteJobs = [];
         if (isFavorite) {
-          newFavoriteJobs = [...user.favoriteJobs.filter((fav) => fav.id !== jobId)];
+          newFavoriteJobs = [...user.favoriteJobs.filter((fav) => fav.id !== job.id)];
+          removeJobFromFavorites(job.id);
         } else {
-          newFavoriteJobs = [...user.favoriteJobs, { id: jobId }];
+          newFavoriteJobs = [...user.favoriteJobs, { id: job.id }];
+          addJobToFavorites(job);
         }
         const updatedUser = {
           ...user,
           favoriteJobs: newFavoriteJobs,
         };
-        queryClient.invalidateQueries({ queryKey: ["jobs", "favorites"] });
         setUser(updatedUser);
       }
     } catch (error) {

@@ -83,7 +83,6 @@ const Profile = () => {
     setUploadingUserProfileImage(true);
     try {
       const response = await updateBusinessProfileImage(image);
-      console.log("Update Business Profile Image Response:", response);
       if (response) {
         Alert.alert("Success", "Profile image updated successfully.");
         console.log("Updated Profile Image URL:", response.profileImageUrl);

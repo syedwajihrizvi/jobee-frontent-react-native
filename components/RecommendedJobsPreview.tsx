@@ -2,6 +2,7 @@ import { quickApplyBatch } from "@/lib/jobEndpoints";
 import { calculateRemainingTime } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useUserStore from "@/store/user.store";
+import useUserJobsStore from "@/store/userJobsStore";
 import { Application, Job, User } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -21,10 +22,10 @@ const RecommendedJobsPreview = ({
   recommendedJobs,
   isLoadingRecommended,
   isViewingRecommended,
-  handleViewAll,
   handleBatchQuickApplySuccess,
 }: Props) => {
   const { user: authUser, setUser } = useAuthStore();
+  const { addAppliedJobs } = useUserJobsStore();
   const user = authUser as User | null;
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,6 +33,7 @@ const RecommendedJobsPreview = ({
   const { applications, setApplications } = useUserStore();
   const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const height = useSharedValue(0);
+
   useEffect(() => {
     const updateTime = () => {
       if (!user?.canQuickApplyBatch && user?.nextQuickApplyBatchTime) {
@@ -94,13 +96,22 @@ const RecommendedJobsPreview = ({
             const res = await quickApplyBatch(jobIds);
             if (res) {
               setAppliedToRecommended(true);
+              const newApplications: Application[] = res.map((application) => {
+                return {
+                  id: application.id,
+                  appliedAt: application.appliedAt,
+                  jobId: application.job.id,
+                  status: application.status,
+                } as Application;
+              });
               const updatedUser = {
                 ...user,
                 canQuickApplyBatch: false,
-                quickAppliedAt: new Date().toISOString(),
+                nextQuickApplyBatchTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
               } as User;
               setUser(updatedUser);
-              setApplications([...res, ...applications]);
+              addAppliedJobs(recommendedJobs?.map((r) => r.job) || []);
+              setApplications([...newApplications, ...applications]);
               handleBatchQuickApplySuccess(res || []);
               setIsSubmitting(false);
             }
@@ -230,7 +241,7 @@ const RecommendedJobsPreview = ({
               <Text className="font-quicksand-bold text-lg text-gray-900 text-center">Recommended Jobs Cooldown</Text>
 
               <Text className="font-quicksand-medium text-sm text-gray-600 text-center leading-5 px-4 mb-6">
-                We are preparing fresh, personalized recommendations for you. New batch available at in{" "}
+                We are preparing fresh, personalized recommendations for you. New batch available in{" "}
                 {timeRemaining.hours} hours and {timeRemaining.minutes} minutes.
               </Text>
               <View className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-4">
@@ -320,21 +331,6 @@ const RecommendedJobsPreview = ({
                   </TouchableOpacity>
                 </View>
               </View>
-              <TouchableOpacity
-                className="bg-gray-600 border border-gray-700 rounded-xl px-6 py-3 flex-row items-center gap-2"
-                style={{
-                  shadowColor: "#374151",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 4,
-                  elevation: 3,
-                }}
-                onPress={() => router.push("/users/jobs")}
-                activeOpacity={0.8}
-              >
-                <Feather name="search" size={16} color="white" />
-                <Text className="font-quicksand-semibold text-white text-sm">Browse All Jobs Instead</Text>
-              </TouchableOpacity>
               <View className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-3 w-full">
                 <View className="flex-row items-start gap-2">
                   <Feather name="info" size={14} color="#3b82f6" />
@@ -349,7 +345,7 @@ const RecommendedJobsPreview = ({
               </View>
             </ScrollView>
           )}
-          {user?.canQuickApplyBatch && isLoadingRecommended ? (
+          {user?.canQuickApplyBatch && isLoadingRecommended && (
             <View className="items-center py-8">
               <View
                 className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center mb-3"
@@ -365,7 +361,8 @@ const RecommendedJobsPreview = ({
               </View>
               <Text className="font-quicksand-medium text-gray-600">Finding your perfect matches...</Text>
             </View>
-          ) : recommendedJobs && recommendedJobs?.length > 0 ? (
+          )}
+          {user?.canQuickApplyBatch && !isLoadingRecommended && recommendedJobs && recommendedJobs.length > 0 && (
             <FlatList
               data={recommendedJobs?.slice(0, Math.min(recommendedJobs.length, 3))}
               keyExtractor={(item) => item.job.id.toString()}
@@ -452,59 +449,22 @@ const RecommendedJobsPreview = ({
                     shadowRadius: 6,
                     elevation: 4,
                   }}
-                  onPress={handleViewAll}
+                  onPress={() => router.push("/userProfile/recommendedJobs")}
                   activeOpacity={0.8}
                 >
                   <View className="flex-row items-center gap-2">
                     <Feather name={isViewingRecommended ? "x" : "eye"} size={16} color="white" />
                     <Text className="font-quicksand-bold text-white text-base">
-                      {isViewingRecommended ? "Show All Jobs" : `View All ${recommendedJobs.length} Recommendations`}
+                      {isViewingRecommended ? "Show All Jobs" : `View All ${recommendedJobs?.length} Recommendations`}
                     </Text>
                   </View>
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View className="h-2" />}
-              ListEmptyComponent={() => (
-                <ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
-                  <View
-                    className="w-16 h-16 bg-blue-100 rounded-full items-center justify-center mb-4"
-                    style={{
-                      shadowColor: "#3b82f6",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 8,
-                      elevation: 4,
-                    }}
-                  >
-                    <Feather name="upload" size={24} color="#3b82f6" />
-                  </View>
-                  <Text className="font-quicksand-bold text-gray-800 text-center mb-2">
-                    Get Personalized Recommendations
-                  </Text>
-                  <Text className="font-quicksand-medium text-sm text-gray-600 text-center leading-5 px-4">
-                    Upload your resume to receive AI-powered job recommendations tailored to your skills and experience.
-                  </Text>
-                  <TouchableOpacity
-                    className="bg-blue-500 rounded-xl px-6 py-3 mt-4"
-                    style={{
-                      shadowColor: "#3b82f6",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                    onPress={() => router.push("/userProfile/manageDocs")}
-                    activeOpacity={0.8}
-                  >
-                    <View className="flex-row items-center gap-2">
-                      <Feather name="upload" size={16} color="white" />
-                      <Text className="font-quicksand-bold text-white text-sm">Upload Resume</Text>
-                    </View>
-                  </TouchableOpacity>
-                </ScrollView>
-              )}
             />
-          ) : (
+          )}
+
+          {!isLoadingRecommended && recommendedJobs?.length === 0 && user?.primaryResume == null && (
             <ScrollView contentContainerStyle={{ alignItems: "center" }} showsVerticalScrollIndicator={false}>
               <View
                 className="w-16 h-16 bg-blue-100 rounded-full items-center justify-center mb-4"

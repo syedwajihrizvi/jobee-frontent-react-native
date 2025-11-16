@@ -19,6 +19,7 @@ export const formatTime = (time: string) => {
 }
 
 export const calculateRemainingTime = (nextApplyTime: string | undefined) => {
+  console.log("Next Apply Time:", nextApplyTime);
   if (!nextApplyTime) return { hours: 0, minutes: 0, progress: 100 };
 
   const nextApplyDate = new Date(nextApplyTime);
@@ -248,7 +249,7 @@ export const onActionSuccess = async () => {
 
 export const hasUserAppliedToJob = (applications: Application[], jobId: number) : Application | undefined => {
     let application = applications.find(
-      (app) => app.job.id === jobId
+      (app) => app.jobId === jobId
     );
     return application;  
 }
@@ -803,6 +804,26 @@ export const getApplicationFilterText = (filter: string, count: number) => {
   }
 }
 
+export const getApplicationStatusFilterTextForUser = (status: string, count: number) => {
+  switch(status) {
+    case "PENDING":
+      return `${count} ${formatSWord("Application", count)} Pending Review`;
+    case "INTERVIEW_SCHEDULED":
+      return `${count} ${formatSWord("Interview", count)} Scheduled`;
+    case "INTERVIEW_COMPLETED":
+      return `${count} ${formatSWord("Interview", count)} Completed`;
+    case "OFFER_MADE":
+      return `${count} ${formatSWord("Offer", count)} Made`;
+    case "OFFER_ACCEPTED":
+      return `${count} ${formatSWord("Offer", count)} Accepted`;
+    case "OFFER_REJECTED":
+      return `${count} ${formatSWord("Offer", count)} Rejected`;
+    case "REJECTED":
+      return `${count} ${formatSWord("Application", count)} Rejected`;
+    default:
+      return `${count} ${formatSWord("Total Application", count)}`;
+  }
+}
 export const getInterviewFilterText = (filter: string, count: number) => {
   switch(filter) {
     case "SCHEDULED":

@@ -14,7 +14,6 @@ const BusinessJobDetails = () => {
   const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(
     Number(jobId)
   );
-  console.log("Job data:", job);
   const getApplicationRate = () => {
     if (!job?.views || job.views === 0) return 0;
     return Math.round((job.applicants / job.views) * 100);

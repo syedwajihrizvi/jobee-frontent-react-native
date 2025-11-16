@@ -189,7 +189,6 @@ const CreateJob = () => {
         Alert.alert("Error", "Failed to create job. Please try again.");
         return;
       }
-      console.log("Job created successfully:", result);
       Alert.alert("Success", "Job created successfully");
       setCreateJobForm({ ...defaultJobForm });
       queryClient.invalidateQueries({

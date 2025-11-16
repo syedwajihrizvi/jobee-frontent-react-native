@@ -40,8 +40,6 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
   const stompClientRef = useRef<any>(null);
 
   const handleNewNotification = ({ notificationType, context }: Notification) => {
-    console.log("SYED-DEBUG: Processing new notification of type ", notificationType);
-    console.log("SYED-DEBUG: Notification context: ", context);
     if (notificationType === "REJECTION") {
       const { applicationId, interviewId } = context;
       if (applicationId) {
@@ -52,24 +50,17 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
         queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
       }
     } else if (notificationType === "INTERVIEW_COMPLETED") {
-      console.log("SYED-DEBUG: Handling INTERVIEW_COMPLETED notification");
       const { applicationId, interviewId } = context;
-      console.log("SYED-DEBUG: applicationId:", applicationId, "interviewId:", interviewId);
       if (applicationId) {
-        console.log("SYED-DEBUG: Setting application status to INTERVIEW_COMPLETED for applicationId:", applicationId);
         setApplicationStatus(applicationId, "INTERVIEW_COMPLETED");
       }
       if (interviewId) {
-        console.log("SYED-DEBUG: Setting interview status to COMPLETED for interviewId:", interviewId);
         setInterviewToStatus(interviewId, "COMPLETED");
         queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
       }
     } else if (notificationType === "INTERVIEW_SCHEDULED") {
-      console.log("SYED-DEBUG: Handling INTERVIEW_SCHEDULED notification");
-      const { applicationId, interviewId } = context;
-      console.log("SYED-DEBUG: applicationId:", applicationId, "interviewId:", interviewId);
+      const { applicationId } = context;
       if (applicationId) {
-        console.log("SYED-DEBUG: Setting application status to INTERVIEW_SCHEDULED for applicationId:", applicationId);
         setApplicationStatus(applicationId, "INTERVIEW_SCHEDULED");
       }
       refetchInterviews();

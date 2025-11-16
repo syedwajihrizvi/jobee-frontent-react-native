@@ -1,10 +1,11 @@
-import { ApplicantFilters, Application, InterviewDetails, InterviewFilters, PagedResponse } from "@/type";
+import { ApplicantFilters, Application, ApplicationStatusFilter, InterviewDetails, InterviewFilters, Job, JobFilters, PagedResponse } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getEducationLevel, getExperienceLevel } from "./utils";
 
 const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
 const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
+const USER_PROFILE_API_URL = `http://192.168.2.29:8080/profiles`;
 
 export const getUserInterviews = async () => {
     const token = await AsyncStorage.getItem('x-auth-token')
@@ -30,6 +31,19 @@ export const getUserApplications = async () => {
     })
     const data = await response.json()
     return data as Application[];
+}
+
+export const getLastUserApplication = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    if (!token) return null
+    const response = await fetch(`${APPLICATIONS_API_URL}/users/last-application`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json()
+    return data as Application | null;
 }
 
 export const getBusinessUserInterviews = async () => {
@@ -129,5 +143,105 @@ export const getInterviewsForJobAndFilter = async (page: number, pageSize: numbe
         }
     })
     const data = await response.json() as PagedResponse<InterviewDetails>;
+    return data;
+}
+
+const createJobQueryParams = (filter?: JobFilters) => {
+    const queryParams = new URLSearchParams()
+    if (filter?.search) {
+        queryParams.append('search', filter.search)
+    }
+    if (filter?.locations) {
+        filter.locations.forEach(location => queryParams.append('locations', location))
+    }
+    if (filter?.companies) {
+        filter.companies.forEach(company => queryParams.append('companies', company))
+    }
+    if (filter?.tags) {
+        filter.tags.forEach(tag => queryParams.append('tags', tag))
+    }
+    if (filter?.minSalary !== undefined) {
+        queryParams.append('minSalary', filter.minSalary.toString())
+    }
+    if (filter?.maxSalary !== undefined) {
+        queryParams.append('maxSalary', filter.maxSalary.toString())
+    }
+    if (filter?.employmentTypes) {
+        filter.employmentTypes.forEach(type => queryParams.append('employmentTypes', type))
+    }
+    if (filter?.workArrangements) {
+        filter.workArrangements.forEach(arrangement => queryParams.append('workArrangements', arrangement))
+    }
+    if (filter?.experience) {
+        filter.experience.forEach(exp => queryParams.append('experience', exp))
+    }
+    return queryParams.toString();
+}
+
+export const getJobsForBusinessAndFilter = async (page: number, pageSize: number, filter?: JobFilters) => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    const params = createJobQueryParams(filter);
+    const response = await fetch(`${JOBS_API_URL}/businesses?${params}&pageNumber=${page}&pageSize=${pageSize}`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json() as PagedResponse<Job>;
+    return data;
+}
+    
+
+export const getJobsForUserAndFilter = async (page: number, pageSize: number, filter?: JobFilters) => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    const params = createJobQueryParams(filter);
+    const response = await fetch(`${JOBS_API_URL}?${params}&pageNumber=${page}&pageSize=${pageSize}`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json() as PagedResponse<Job>;
+    return data;
+}
+
+export const getRecommendedJobs = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    const response = await fetch(`${USER_PROFILE_API_URL}/recommended-jobs`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json() as { job: Job, match: number }[];
+    return data;
+}
+
+export const getFavoriteJobsForUser = async (page: number, pageSize: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    const response = await fetch(`${USER_PROFILE_API_URL}/favorite-jobs?pageNumber=${page}&pageSize=${pageSize}`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json() as PagedResponse<Job>;
+    return data;
+}
+
+export const getAppliedJobsForUserAndFilter = async (page: number, pageSize: number, filter?: ApplicationStatusFilter) => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    const queryParams = new URLSearchParams()
+    if (filter) {
+        queryParams.append('applicationStatus', filter)
+    }
+    const params = queryParams.toString()
+    const response = await fetch(`${USER_PROFILE_API_URL}/appliedJobs?${params}&pageNumber=${page}&pageSize=${pageSize}`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json() as PagedResponse<Job>;
     return data;
 }

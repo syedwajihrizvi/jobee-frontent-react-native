@@ -10,8 +10,6 @@ const TabsLayout = () => {
   const { isAuthenticated } = useAuthStore();
   const { unreadMessages } = useConversationStore();
   const { unReadCount } = useNotificationStore();
-  console.log("Unread notifications count in TabsLayout: ", unReadCount);
-  console.log("Notifications in store: ", useNotificationStore.getState().notifications);
   return (
     <Tabs
       screenOptions={{

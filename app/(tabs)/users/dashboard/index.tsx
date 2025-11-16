@@ -8,7 +8,7 @@ import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
-import { Application, InterviewSummary } from "@/type";
+import { InterviewSummary } from "@/type";
 import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -20,7 +20,16 @@ const Dashboard = () => {
   const { user: userProfile } = useAuthStore();
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
   const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
-  const { interviews, isLoadingInterviews: isLoadingInterviews, applications, isLoadingApplications } = useUserStore();
+  const {
+    interviews,
+    isLoadingInterviews: isLoadingInterviews,
+    applications,
+    isLoadingApplications,
+    hasValidLastApplication,
+    fetchLastApplication,
+    lastApplication,
+    isLoadingLastApplication,
+  } = useUserStore();
   const [upcomingInterviews, setUpcomingInterviews] = useState<InterviewSummary[]>();
   const [profileSummaryStats, setProfileSummaryStats] = useState({
     totalInConsideration: 0,
@@ -28,8 +37,12 @@ const Dashboard = () => {
     totalApplications: 0,
     totalInterviews: 0,
   });
-  const [lastApplication, setLastApplication] = useState<Application | null>(null);
 
+  useEffect(() => {
+    if (!hasValidLastApplication()) {
+      fetchLastApplication();
+    }
+  }, []);
   useEffect(() => {
     if (interviews && !isLoadingInterviews) {
       const upcoming = interviews.filter((interview) => interview.status === "SCHEDULED");
@@ -45,7 +58,6 @@ const Dashboard = () => {
         totalRejections: rejections.length,
         totalApplications: applications.length,
       });
-      setLastApplication(applications.length > 0 ? applications[0] : null);
     }
   }, [interviews, isLoadingInterviews, applications, isLoadingApplications]);
 
@@ -286,7 +298,7 @@ const Dashboard = () => {
                 </View>
                 <Text className="font-quicksand-bold text-lg text-gray-900">Last Application</Text>
               </View>
-              {lastApplication && (
+              {lastApplication && !isLoadingLastApplication && (
                 <TouchableOpacity
                   className="bg-purple-50 border border-purple-200 rounded-xl p-4"
                   onPress={() => router.push(`/jobs/${lastApplication?.job.id}`)}
