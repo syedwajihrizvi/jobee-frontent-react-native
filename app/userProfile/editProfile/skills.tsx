@@ -197,7 +197,7 @@ const Skills = () => {
           ) : (
             <>
               <TouchableOpacity
-                className="bg-green-500 rounded-xl px-6 py-4 flex-row items-center justify-center mb-6"
+                className="bg-emerald-500 rounded-xl px-6 py-4 flex-row items-center justify-center mb-6"
                 style={{
                   shadowColor: "#22c55e",
                   shadowOffset: { width: 0, height: 2 },
@@ -238,7 +238,7 @@ const Skills = () => {
                           onPress={() => handleEditSkill(userSkill)}
                         >
                           <View className="flex-row items-center justify-between mb-3">
-                            <View className="bg-green-100 px-2 py-1 rounded-full">
+                            <View className="bg-emerald-100 px-2 py-1 rounded-full">
                               <Text className="font-quicksand-bold text-md text-green-700">{userSkill.skill.name}</Text>
                             </View>
                             <Feather name="edit-2" size={14} color="#6b7280" />
@@ -279,7 +279,7 @@ const Skills = () => {
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">
                     Showcase your expertise by adding skills that highlight your professional abilities
                   </Text>
-                  <TouchableOpacity className="bg-green-500 px-6 py-3 rounded-xl" onPress={handleAddSkill}>
+                  <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={handleAddSkill}>
                     <Text className="font-quicksand-semibold text-white text-sm">Add Your First Skill</Text>
                   </TouchableOpacity>
                 </View>
@@ -387,16 +387,16 @@ const Skills = () => {
                         }}
                       />
                       {skillForm.experience && !isNaN(Number(skillForm.experience)) && (
-                        <View className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <View className="mt-3 p-3 bg-emerald-50 border border-green-200 rounded-lg">
                           <View className="flex-row items-center justify-between">
                             <Text className="font-quicksand-medium text-sm text-green-700">Experience Level:</Text>
                             <Text className="font-quicksand-bold text-sm text-green-800">
                               {getExperienceLevel(Number(skillForm.experience)).label}
                             </Text>
                           </View>
-                          <View className="w-full bg-green-200 rounded-full h-2 mt-2">
+                          <View className="w-full bg-emerald-200 rounded-full h-2 mt-2">
                             <View
-                              className={`h-2 rounded-full bg-green-600`}
+                              className={`h-2 rounded-full bg-emerald-600`}
                               style={{
                                 width: `${Math.min((Number(skillForm.experience) / 5) * 100, 100)}%`,
                               }}

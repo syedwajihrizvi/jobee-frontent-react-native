@@ -491,7 +491,7 @@ const CreateJob = () => {
             <View className="flex flex-col gap-2">
               <Text className="form-input__label">Hiring Team</Text>
               <TouchableOpacity
-                className="flex-row items-center justify-center bg-green-50 w-1/2 px-4 py-2 rounded-lg border border-green-200 mb-3"
+                className="flex-row items-center justify-center bg-emerald-50 w-1/2 px-4 py-2 rounded-lg border border-green-200 mb-3"
                 onPress={() => setShowAddHiringTeamModal(true)}
               >
                 <Feather name="plus-circle" size={20} color="#10b981" />
@@ -550,7 +550,7 @@ const CreateJob = () => {
           />
           <View className="flex-row items-center justify-center gap-2 w-full mt-4">
             <TouchableOpacity
-              className="w-1/2 bg-green-500 px-4 py-2 rounded-lg items-center"
+              className="w-1/2 bg-emerald-500 px-4 py-2 rounded-lg items-center"
               onPress={handleAddTeamMember}
             >
               <Text className="font-quicksand-semibold text-sm text-white">Add</Text>
@@ -568,7 +568,7 @@ const CreateJob = () => {
         <View className="flex-1">
           <View className="px-6 py-5 border-b border-gray-200 bg-white">
             <View className="flex-row items-center gap-3">
-              <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+              <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                 <FontAwesome name="briefcase" size={20} color="#16a34a" />
               </View>
               <View className="flex-1">
@@ -605,7 +605,7 @@ const CreateJob = () => {
               </View>
               <View>
                 <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Salary Range</Text>
-                <View className="bg-green-50 p-4 rounded-xl border border-green-200 flex-row items-center gap-2">
+                <View className="bg-emerald-50 p-4 rounded-xl border border-green-200 flex-row items-center gap-2">
                   <Text className="font-quicksand-semibold text-green-800 text-sm">
                     ${Number(createJobForm.minSalary).toLocaleString()} - $
                     {Number(createJobForm.maxSalary).toLocaleString()} per year
@@ -704,7 +704,7 @@ const CreateJob = () => {
                 </View>
               )}
               <TouchableOpacity
-                className="flex-1 bg-green-500 py-3 px-4 rounded-xl items-center justify-center flex-row gap-2"
+                className="flex-1 bg-emerald-500 py-3 px-4 rounded-xl items-center justify-center flex-row gap-2"
                 style={{
                   shadowColor: "#16a34a",
                   shadowOffset: { width: 0, height: 3 },
@@ -731,7 +731,7 @@ const CreateJob = () => {
           <View className="px-6 py-4 border-t border-gray-200 bg-white">
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-green-500 py-3 px-4 rounded-xl"
+                className="flex-1 bg-emerald-500 py-3 px-4 rounded-xl"
                 style={{
                   shadowColor: "#16a34a",
                   shadowOffset: { width: 0, height: 3 },

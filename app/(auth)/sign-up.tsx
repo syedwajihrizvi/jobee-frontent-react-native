@@ -107,7 +107,7 @@ const SignUp = () => {
           }}
         >
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-lg items-center ${type === "user" ? "bg-green-500" : "bg-transparent"}`}
+            className={`flex-1 py-3 rounded-lg items-center ${type === "user" ? "bg-emerald-500" : "bg-transparent"}`}
             style={{
               shadowColor: type === "user" ? "#10b981" : "transparent",
               shadowOffset: { width: 0, height: 2 },
@@ -127,7 +127,7 @@ const SignUp = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-lg items-center ${type === "business" ? "bg-green-500" : "bg-transparent"}`}
+            className={`flex-1 py-3 rounded-lg items-center ${type === "business" ? "bg-emerald-500" : "bg-transparent"}`}
             style={{
               shadowColor: type === "business" ? "#10b981" : "transparent",
               shadowOffset: { width: 0, height: 2 },
@@ -268,7 +268,7 @@ const SignUp = () => {
       </View>
       <CustomButton
         text={type === "user" ? "Create Account" : "Create Business Account"}
-        customClass="bg-green-500 py-4 rounded-xl"
+        customClass="bg-emerald-500 py-4 rounded-xl"
         onClick={type === "user" ? handleSignUpForUser : handleSignUpForBusiness}
         isLoading={isLoading}
       />

@@ -193,7 +193,7 @@ const CompleteProfile = () => {
           <View
             key={idx}
             className={`h-2 rounded-full transition-all duration-300 ${
-              idx === step ? "w-8 bg-green-500" : idx < step ? "w-2 bg-green-300" : "w-2 bg-gray-300"
+              idx === step ? "w-8 bg-emerald-500" : idx < step ? "w-2 bg-emerald-300" : "w-2 bg-gray-300"
             }`}
           />
         ))}

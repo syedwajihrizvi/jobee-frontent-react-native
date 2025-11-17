@@ -20,6 +20,7 @@ const createFilterKey = (filters: JobFilters) => {
 
 interface BusinessJobState {
     businessJobsByIdAndFilter: Record<string, Job[]>;
+    pendingApplicationsByJobId: Record<string, number>;
     loadingJobStates: Record<string, boolean>;
     totalCounts: Record<string, number>;
     pagination: Record<string, { currentPage: number, hasMore: boolean}>;
@@ -29,6 +30,7 @@ interface BusinessJobState {
 
     getInterviewsForJobAndFilter(filter: JobFilters): Job[];
     getTotalCountForJobAndFilter(filter: JobFilters): number;
+    getPendingApplicationsForJob(jobId: number): number;
     getPaginationForJobAndFilter(filter: JobFilters): { currentPage: number, hasMore: boolean } | undefined;
     isLoadingJobsForBusinessAndFilter(filter: JobFilters): boolean;
 
@@ -42,6 +44,7 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
     totalCounts: {},
     lastFetchedJobs: {},
     pagination: {},
+    pendingApplicationsByJobId: {},
 
     fetchJobsForBusinessAndFilter: async (filter, page = 0) => {
         const filterKey = createFilterKey(filter);
@@ -59,6 +62,14 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
             const { content: newJobs, totalElements, hasMore } = response;
             const existingJobs = state.businessJobsByIdAndFilter[filterKey] || [];
             const updatedJobs = [...existingJobs, ...newJobs];
+            newJobs.forEach((job) => {
+                set((state) => ({
+                    pendingApplicationsByJobId: {
+                        ...state.pendingApplicationsByJobId,
+                        [job.id]: job.pendingApplicationsSize || 0,
+                    }
+                }))
+            })
             set((state) => ({
                 businessJobsByIdAndFilter: {
                     ...state.businessJobsByIdAndFilter,
@@ -104,6 +115,10 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
         const filterKey = createFilterKey(filter);
         const state = get();
         return state.totalCounts[filterKey] || 0;
+    },
+    getPendingApplicationsForJob: (jobId) => {
+        const state = get();
+        return state.pendingApplicationsByJobId[jobId] || 0;
     },
     getPaginationForJobAndFilter: (filter) => {
         const filterKey = createFilterKey(filter);

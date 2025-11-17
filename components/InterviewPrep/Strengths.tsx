@@ -9,7 +9,7 @@ const Strengths = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) =
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-3"
+          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 8 },
@@ -22,7 +22,7 @@ const Strengths = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) =
         </View>
 
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-9 mb-4">Your Key Strengths</Text>
-        <View className="bg-green-50 rounded-xl p-4 border border-green-200">
+        <View className="bg-emerald-50 rounded-xl p-4 border border-green-200">
           <View className="flex-row items-center gap-2 mb-2">
             <Feather name="target" size={16} color="#22c55e" />
             <Text className="font-quicksand-bold text-green-800 text-sm">Interview Strategy</Text>
@@ -45,7 +45,7 @@ const Strengths = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) =
         }}
       >
         <View className="flex-row items-center justify-center gap-3">
-          <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+          <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
             <Text className="font-quicksand-bold text-green-600 text-lg">{interviewPrep?.strengths?.length || 0}</Text>
           </View>
           <Text className="font-quicksand-semibold text-gray-700 text-base">

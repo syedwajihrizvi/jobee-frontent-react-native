@@ -83,7 +83,7 @@ const Details = ({ interviewDetails }: { interviewDetails: InterviewDetails | un
 
         <View className="gap-4">
           <View className="flex-row items-center gap-4 p-3 bg-gray-50 rounded-xl">
-            <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center">
+            <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
               <Feather name="calendar" size={16} color="#22c55e" />
             </View>
             <View className="flex-1">

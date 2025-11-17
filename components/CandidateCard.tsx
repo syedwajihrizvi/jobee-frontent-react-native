@@ -21,7 +21,7 @@ const CandidateCard = ({ item, handleCandidateCardPress }: Props) => {
       };
     if (matchScore >= 75)
       return {
-        bgColor: "bg-green-100",
+        bgColor: "bg-emerald-100",
         borderColor: "border-green-300",
         textColor: "text-green-700",
         icon: "thumbs-up",

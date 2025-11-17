@@ -1,30 +1,41 @@
-import ActionButton from "@/components/ActionButton";
 import BackBar from "@/components/BackBar";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
-import { useJobsForBusiness, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
+import { useJobsForBusiness } from "@/lib/services/useJobs";
 import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
+import useApplicationStore from "@/store/applications.store";
+import useBusinessJobsStore from "@/store/businessJobs.store";
 import { Feather, Fontisto, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const BusinessJobDetails = () => {
   const { id: jobId, companyId } = useLocalSearchParams();
   const { data: job, isLoading } = useJobsForBusiness(Number(companyId), Number(jobId));
-  const { data: shortListedCandidates, isLoading: loadingShortListedCandidates } = useShortListedCandidatesForJob(
-    Number(jobId)
-  );
-  const getApplicationRate = () => {
-    if (!job?.views || job.views === 0) return 0;
-    return Math.round((job.applicants / job.views) * 100);
-  };
+  const {
+    isLoadingShortListedStatesForJob,
+    getShortListedApplicationsForJob,
+    hasValidShortListedCache,
+    refreshShortListedApplicationsForJob,
+  } = useApplicationStore();
+  const { getPendingApplicationsForJob } = useBusinessJobsStore();
+  useEffect(() => {
+    if (jobId && !hasValidShortListedCache(Number(jobId))) {
+      refreshShortListedApplicationsForJob(Number(jobId));
+    }
+  }, [jobId]);
+
+  const isLoadingShortlist = isLoadingShortListedStatesForJob(Number(jobId));
+  const shortListedCandidates = getShortListedApplicationsForJob(Number(jobId));
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <BackBar label="Job Management" />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
-            className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+            className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 4 },
@@ -40,7 +51,7 @@ const BusinessJobDetails = () => {
       ) : job ? (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -95,34 +106,9 @@ const BusinessJobDetails = () => {
                 </View>
               </View>
             </View>
-            <View className="flex-row flex-wrap gap-3">
-              <ActionButton
-                icon={<Feather name="users" size={16} color="white" />}
-                color="bg-blue-500"
-                shadowColor="#3b82f6"
-                handlePress={() => router.push(`/businessJobs/applications/${jobId}`)}
-                label={job.applicants === 1 ? "Applicant" : "Applicants"}
-              />
-              {!loadingShortListedCandidates && (
-                <ActionButton
-                  color="bg-emerald-500"
-                  shadowColor="#10b981"
-                  handlePress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}
-                  icon={<Feather name="star" size={16} color="white" />}
-                  label="Shortlisted"
-                />
-              )}
-              <ActionButton
-                color="bg-gray-500"
-                shadowColor="#6b7280"
-                handlePress={() => router.push(`/businessJobs/interviews/${jobId}?jobTitle=${job.title}`)}
-                icon={<Feather name="calendar" size={16} color="white" />}
-                label={job.interviews === 1 ? "Interview" : "Interviews"}
-              />
-            </View>
           </View>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -155,17 +141,19 @@ const BusinessJobDetails = () => {
                 <Text className="font-quicksand-bold text-2xl text-emerald-800">{job.applicants}</Text>
               </View>
 
-              <View className="flex-1 bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <View className="flex-1 bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <View className="flex-row items-center gap-2 mb-2">
-                  <Feather name="percent" size={16} color="#8b5cf6" />
-                  <Text className="font-quicksand-semibold text-sm text-purple-700">Rate</Text>
+                  <Feather name="clock" size={16} color="#f59e0b" />
+                  <Text className="font-quicksand-semibold text-sm text-amber-700">Pending</Text>
                 </View>
-                <Text className="font-quicksand-bold text-2xl text-purple-800">{getApplicationRate()}%</Text>
+                <Text className="font-quicksand-bold text-2xl text-amber-800">
+                  {getPendingApplicationsForJob(Number(job.id))}
+                </Text>
               </View>
             </View>
           </View>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -175,7 +163,7 @@ const BusinessJobDetails = () => {
             }}
           >
             <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+              <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
                 <Feather name="file-text" size={20} color="#6366f1" />
               </View>
               <Text className="font-quicksand-bold text-xl text-gray-900">Job Description</Text>
@@ -184,7 +172,7 @@ const BusinessJobDetails = () => {
             <Text className="font-quicksand-medium text-base text-gray-700 leading-6">{job.description}</Text>
           </View>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -219,7 +207,7 @@ const BusinessJobDetails = () => {
             </View>
           </View>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -292,7 +280,7 @@ const BusinessJobDetails = () => {
         >
           <View className="flex-row gap-3">
             <TouchableOpacity
-              className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+              className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
               style={{
                 shadowColor: "#6366f1",
                 shadowOffset: { width: 0, height: 3 },

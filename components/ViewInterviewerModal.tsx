@@ -52,7 +52,7 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
           >
             {loadingInterviewer ? (
               <View className="flex-1 justify-center items-center gap-6 px-8 py-16">
-                <View className="w-20 h-20 bg-green-100 rounded-full items-center justify-center mb-4">
+                <View className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-4">
                   <ActivityIndicator size="large" color="#22c55e" />
                 </View>
                 <Text className="font-quicksand-bold text-xl text-gray-800 text-center">Finding Your Interviewer</Text>
@@ -85,7 +85,7 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
                       </View>
                     )}
                     {interviewerDetails?.verified && (
-                      <View className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full items-center justify-center border-4 border-white">
+                      <View className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full items-center justify-center border-4 border-white">
                         <Entypo name="check" size={12} color="white" />
                       </View>
                     )}
@@ -228,7 +228,7 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
                                 onPress={() => console.log("Website pressed")}
                               >
                                 <View
-                                  className="w-12 h-12 bg-green-50 rounded-xl items-center justify-center"
+                                  className="w-12 h-12 bg-emerald-50 rounded-xl items-center justify-center"
                                   style={{
                                     shadowColor: "#22c55e",
                                     shadowOffset: { width: 0, height: 2 },
@@ -271,7 +271,7 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
           <View className="px-6 py-4 border-t border-gray-100 bg-gray-50">
             <TouchableOpacity
               onPress={() => handleClose(false)}
-              className="bg-green-500 py-4 rounded-xl items-center"
+              className="bg-emerald-500 py-4 rounded-xl items-center"
               style={{
                 shadowColor: "#22c55e",
                 shadowOffset: { width: 0, height: 2 },

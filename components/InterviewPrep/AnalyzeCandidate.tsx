@@ -17,7 +17,7 @@ const AnalyzeCandidate = () => {
             elevation: 15,
           }}
         >
-          <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center">
+          <View className="w-20 h-20 bg-emerald-500 rounded-full items-center justify-center">
             <Ionicons name="person-circle" size={20} color="white" />
           </View>
         </View>
@@ -50,8 +50,8 @@ const AnalyzeCandidate = () => {
           </Text>
         </View>
         <View className="gap-4">
-          <View className="flex-row items-start gap-4 p-4 bg-green-50 rounded-xl">
-            <View className="w-8 h-8 bg-green-500 rounded-full items-center justify-center">
+          <View className="flex-row items-start gap-4 p-4 bg-emerald-50 rounded-xl">
+            <View className="w-8 h-8 bg-emerald-500 rounded-full items-center justify-center">
               <Feather name="trending-up" size={16} color="white" />
             </View>
             <View className="flex-1">

@@ -62,7 +62,7 @@ const PendingApplications = () => {
             <Text className="font-quicksand-bold text-2xl text-blue-600">{totalApplications}</Text>
             <Text className="font-quicksand-medium text-sm text-blue-700">Total Applications</Text>
           </View>
-          <View className="flex-1 bg-green-50 rounded-xl p-4 border border-green-100">
+          <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-green-100">
             <Text className="font-quicksand-bold text-2xl text-green-600">{totalPendingApplications}</Text>
             <Text className="font-quicksand-medium text-sm text-green-700">Pending Applications</Text>
           </View>

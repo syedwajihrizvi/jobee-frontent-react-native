@@ -355,7 +355,7 @@ const ScheduleInterview = () => {
     const isSelected = interviewDetails.interviewType === type;
     return {
       container: `px-4 py-3 rounded-xl flex-row items-center gap-2 border ${
-        isSelected ? "bg-green-500 border-green-500" : "bg-white border-gray-300"
+        isSelected ? "bg-emerald-500 border-green-500" : "bg-white border-gray-300"
       }`,
       text: `font-quicksand-semibold text-sm ${isSelected ? "text-white" : "text-gray-700"}`,
       shadow: isSelected
@@ -435,7 +435,7 @@ const ScheduleInterview = () => {
           }}
         >
           <View className="flex-row items-center gap-3 mb-3">
-            <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+            <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
               <Feather name="calendar" size={20} color="#6366f1" />
             </View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Interview Details</Text>
@@ -1003,7 +1003,7 @@ const ScheduleInterview = () => {
       >
         <View className="flex-row gap-3">
           <TouchableOpacity
-            className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+            className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 3 },
@@ -1242,7 +1242,7 @@ const ScheduleInterview = () => {
         <View className="flex-1">
           <View className="px-6 py-5 border-b border-gray-200 bg-white">
             <View className="flex-row items-center gap-3">
-              <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+              <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                 <FontAwesome name="calendar-check-o" size={20} color="#16a34a" />
               </View>
               <View className="flex-1">
@@ -1451,7 +1451,7 @@ const ScheduleInterview = () => {
           <View className="px-6 py-4 border-t border-gray-200 bg-white">
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+                className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
                 style={{
                   shadowColor: "#16a34a",
                   shadowOffset: { width: 0, height: 3 },

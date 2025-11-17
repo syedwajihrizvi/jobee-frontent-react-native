@@ -13,7 +13,7 @@ const AllSet = ({ isSubmitting, handleDone }: Props) => {
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="flex-1 items-center justify-start px-6">
         <View
-          className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-8"
+          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-8"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 8 },
@@ -22,7 +22,7 @@ const AllSet = ({ isSubmitting, handleDone }: Props) => {
             elevation: 12,
           }}
         >
-          <View className="w-16 h-16 bg-green-500 rounded-full items-center justify-center">
+          <View className="w-16 h-16 bg-emerald-500 rounded-full items-center justify-center">
             <Feather name="check" size={40} color="white" />
           </View>
         </View>
@@ -68,7 +68,7 @@ const AllSet = ({ isSubmitting, handleDone }: Props) => {
               </Text>
             </View>
             <View className="flex-row items-center gap-3">
-              <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center">
+              <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
                 <Feather name="target" size={16} color="#22c55e" />
               </View>
               <Text className="font-quicksand-medium text-gray-700 text-sm flex-1">
@@ -80,7 +80,7 @@ const AllSet = ({ isSubmitting, handleDone }: Props) => {
 
         <View className="w-full">
           <TouchableOpacity
-            className={`py-4 rounded-xl items-center justify-center ${isSubmitting ? "bg-gray-400" : "bg-green-500"}`}
+            className={`py-4 rounded-xl items-center justify-center ${isSubmitting ? "bg-gray-400" : "bg-emerald-500"}`}
             style={{
               shadowColor: isSubmitting ? "#9ca3af" : "#22c55e",
               shadowOffset: { width: 0, height: 4 },

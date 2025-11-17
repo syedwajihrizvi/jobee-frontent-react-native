@@ -68,7 +68,7 @@ const AppliedJobs = () => {
                 }}
               >
                 <View className="flex-row items-center gap-3">
-                  <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                  <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                     <Feather name="folder" size={24} color="#6366f1" />
                   </View>
                   <View>

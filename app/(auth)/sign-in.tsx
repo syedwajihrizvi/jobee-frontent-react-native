@@ -99,7 +99,7 @@ const SignIn = () => {
           }}
         >
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-lg items-center ${type === "user" ? "bg-green-500" : "bg-transparent"}`}
+            className={`flex-1 py-3 rounded-lg items-center ${type === "user" ? "bg-emerald-500" : "bg-transparent"}`}
             style={{
               shadowColor: type === "user" ? "#6366f1" : "transparent",
               shadowOffset: { width: 0, height: 2 },
@@ -119,7 +119,7 @@ const SignIn = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`flex-1 py-3 rounded-lg items-center ${type === "business" ? "bg-green-500" : "bg-transparent"}`}
+            className={`flex-1 py-3 rounded-lg items-center ${type === "business" ? "bg-emerald-500" : "bg-transparent"}`}
             style={{
               shadowColor: type === "business" ? "#6366f1" : "transparent",
               shadowOffset: { width: 0, height: 2 },
@@ -177,7 +177,7 @@ const SignIn = () => {
 
       <CustomButton
         text={type === "user" ? "Sign In" : "Sign In to Dashboard"}
-        customClass="bg-green-500 py-4 rounded-xl"
+        customClass="bg-emerald-500 py-4 rounded-xl"
         onClick={type === "user" ? handleSignInForUser : handleSignInForBusiness}
         isLoading={isLoading}
       />

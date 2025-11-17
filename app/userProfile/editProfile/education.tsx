@@ -171,7 +171,7 @@ const Educations = () => {
           ) : (
             <View className="flex flex-col gap-4">
               <TouchableOpacity
-                className="bg-green-500 rounded-xl px-6 py-4 flex-row items-center justify-center mb-2"
+                className="bg-emerald-500 rounded-xl px-6 py-4 flex-row items-center justify-center mb-2"
                 style={{
                   shadowColor: "#22c55e",
                   shadowOffset: { width: 0, height: 2 },
@@ -240,7 +240,7 @@ const Educations = () => {
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">
                     Showcase your academic experience to attract potential employers and highlight your qualifications.
                   </Text>
-                  <TouchableOpacity className="bg-green-500 px-6 py-3 rounded-xl" onPress={() => {}}>
+                  <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={() => {}}>
                     <Text className="font-quicksand-semibold text-white text-sm">Add Your First Education</Text>
                   </TouchableOpacity>
                 </View>

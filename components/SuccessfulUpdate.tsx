@@ -46,7 +46,7 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
   return (
     <View className="flex-1 items-center justify-center gap-6 px-6 pb-10">
       <View
-        className="w-20 h-20 bg-green-100 rounded-full items-center justify-center"
+        className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center"
         style={{
           shadowColor: "#22c55e",
           shadowOffset: { width: 0, height: 4 },
@@ -55,7 +55,7 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
           elevation: 8,
         }}
       >
-        <View className="w-16 h-16 bg-green-500 rounded-full items-center justify-center">
+        <View className="w-16 h-16 bg-emerald-500 rounded-full items-center justify-center">
           <Feather name="check" size={32} color="white" />
         </View>
       </View>
@@ -69,7 +69,7 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
 
       <View className="w-full gap-3">
         <TouchableOpacity
-          className="bg-green-500 py-4 rounded-xl flex-row items-center justify-center"
+          className="bg-emerald-500 py-4 rounded-xl flex-row items-center justify-center"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 2 },

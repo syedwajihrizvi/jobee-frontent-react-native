@@ -178,7 +178,7 @@ const AnswerReview = ({
                   </View>
                   <View className="px-6 py-4 border-t border-gray-200">
                     <View className="flex-row gap-3">
-                      <TouchableOpacity onPress={handleCloseModal} className="flex-1 bg-green-500 py-3 rounded-xl">
+                      <TouchableOpacity onPress={handleCloseModal} className="flex-1 bg-emerald-500 py-3 rounded-xl">
                         <Text className="font-quicksand-semibold text-white text-center">Done</Text>
                       </TouchableOpacity>
                     </View>

@@ -181,7 +181,7 @@ const AdminDashboard = () => {
 
                 <View className="flex-row gap-3">
                   <TouchableOpacity
-                    className="flex-1 bg-green-500 rounded-xl p-4 items-center"
+                    className="flex-1 bg-emerald-500 rounded-xl p-4 items-center"
                     style={{
                       shadowColor: "#22c55e",
                       shadowOffset: { width: 0, height: 3 },
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
               >
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+                    <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
                       <Feather name="briefcase" size={20} color="#10b981" />
                     </View>
                     <Text className="font-quicksand-bold text-lg text-gray-900">Most Popular Jobs</Text>
@@ -420,13 +420,13 @@ const AdminDashboard = () => {
                 </View>
                 <View className="flex-row gap-3 mb-4">
                   <TouchableOpacity
-                    className={`px-3 py-1${viewingMostApplied ? " bg-green-100" : ""}  rounded-full`}
+                    className={`px-3 py-1${viewingMostApplied ? " bg-emerald-100" : ""}  rounded-full`}
                     onPress={() => setViewingMostApplied(true)}
                   >
                     <Text className="font-quicksand-medium text-sm text-green-700">Most Applied</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    className={`px-3 py-1${viewingMostApplied ? "" : " bg-green-100"} rounded-full`}
+                    className={`px-3 py-1${viewingMostApplied ? "" : " bg-emerald-100"} rounded-full`}
                     onPress={() => setViewingMostApplied(false)}
                   >
                     <Text className="font-quicksand-medium text-sm text-green-700">Most Viewed</Text>

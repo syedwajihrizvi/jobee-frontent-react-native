@@ -148,7 +148,7 @@ const ManageDocuments = () => {
         label="Manage Documents"
         optionalThirdItem={
           <TouchableOpacity
-            className="w-10 h-10 rounded-full bg-green-500 items-center justify-center"
+            className="w-10 h-10 rounded-full bg-emerald-500 items-center justify-center"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 2 },
@@ -167,7 +167,7 @@ const ManageDocuments = () => {
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
-            className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+            className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 4 },
@@ -202,7 +202,7 @@ const ManageDocuments = () => {
               }}
             >
               <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                   <Feather name="folder" size={24} color="#6366f1" />
                 </View>
                 <View>

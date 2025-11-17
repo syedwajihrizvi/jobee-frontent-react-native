@@ -272,7 +272,7 @@ const JobDetails = () => {
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
-            className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+            className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 4 },
@@ -393,7 +393,7 @@ const JobDetails = () => {
                 contentContainerStyle={{ paddingRight: 20, marginBottom: 8 }}
               >
                 {job.tags.map((tag, index) => (
-                  <View key={index} className="bg-green-50 border border-green-200 px-3 py-1 mr-1 rounded-full">
+                  <View key={index} className="bg-emerald-50 border border-green-200 px-3 py-1 mr-1 rounded-full">
                     <Text className="font-quicksand-medium text-xs text-green-700">{tag.name}</Text>
                   </View>
                 ))}
@@ -470,7 +470,7 @@ const JobDetails = () => {
       >
         <View className="flex-row items-center gap-3">
           <TouchableOpacity
-            className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+            className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 3 },
@@ -534,7 +534,7 @@ const JobDetails = () => {
           ) : (
             <View className="flex-1 justify-center items-center px-6">
               <View
-                className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-6"
+                className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-6"
                 style={{
                   shadowColor: "#6366f1",
                   shadowOffset: { width: 0, height: 4 },
@@ -555,7 +555,7 @@ const JobDetails = () => {
 
               <View className="flex-row gap-3 w-full">
                 <TouchableOpacity
-                  className="flex-1 bg-green-500 rounded-xl py-3 items-center"
+                  className="flex-1 bg-emerald-500 rounded-xl py-3 items-center"
                   style={{
                     shadowColor: "#6366f1",
                     shadowOffset: { width: 0, height: 2 },

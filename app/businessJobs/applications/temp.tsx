@@ -9,7 +9,7 @@ import { getCandidatesForJob } from "@/lib/jobEndpoints";
 import { useApplicantsForJob, useShortListedCandidatesForJob } from "@/lib/services/useJobs";
 import useApplicantsForJobStore from "@/store/applicants.store";
 import useApplicationStore from "@/store/applications.store";
-import { ApplicantFilters, CandidateForJob } from "@/type";
+import { ApplicantFilters, Application, CandidateForJob } from "@/type";
 import { Feather, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -46,7 +46,7 @@ const Applications = () => {
   const [showFindCandidatesModal, setShowFindCandidatesModal] = useState(false);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [candidates, setCandidates] = useState<CandidateForJob[]>([]);
-  const { fetchApplicationsForJob, getApplicationsForJob } = useApplicationStore();
+  const { fetchApplicationsForJob } = useApplicationStore();
   const { applications: storeApplications, setApplications: setStoreApplications } = useApplicantsForJobStore();
   const { data: applicantsData, isLoading } = useApplicantsForJob(Number(id), filters);
   const { data: shortListedApplicants } = useShortListedCandidatesForJob(Number(id));
@@ -180,7 +180,7 @@ const Applications = () => {
 
   const renderYesClass = (active: boolean) => {
     return active
-      ? "bg-green-100 border border-green-500 px-3 py-1 rounded-xl items-center justify-center"
+      ? "bg-emerald-100 border border-green-500 px-3 py-1 rounded-xl items-center justify-center"
       : "bg-gray-100 border border-gray-300 px-3 py-1 rounded-xl items-center justify-center";
   };
 
@@ -382,7 +382,7 @@ const Applications = () => {
 
           <TouchableOpacity
             className={`rounded-xl px-4 py-3 flex-row items-center gap-2 ${
-              filterCount > 0 ? "bg-green-500" : "bg-gray-100 border border-gray-200"
+              filterCount > 0 ? "bg-emerald-500" : "bg-gray-100 border border-gray-200"
             }`}
             style={{
               shadowColor: filterCount > 0 ? "#6366f1" : "#000",
@@ -438,7 +438,9 @@ const Applications = () => {
         </TouchableOpacity>
         <TouchableOpacity
           className={`px-4 py-2 rounded-full flex-row items-center gap-1 border ${
-            applicationStatusFilter === "reviewed" ? "bg-green-500 border-green-500" : "bg-green-50 border-green-200"
+            applicationStatusFilter === "reviewed"
+              ? "bg-emerald-500 border-green-500"
+              : "bg-emerald-50 border-green-200"
           }`}
           style={{
             shadowColor: applicationStatusFilter === "reviewed" ? "#22c55e" : "transparent",
@@ -458,7 +460,7 @@ const Applications = () => {
             Reviewed
           </Text>
           {applicationStatusFilter === "reviewed" && (
-            <View className="w-5 h-5 bg-green-400 rounded-full items-center justify-center">
+            <View className="w-5 h-5 bg-emerald-400 rounded-full items-center justify-center">
               <Feather name="check" size={12} color="white" />
             </View>
           )}
@@ -551,7 +553,7 @@ const Applications = () => {
         {isLoading ? (
           <View className="flex-1 justify-center items-center">
             <View
-              className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+              className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
               style={{
                 shadowColor: "#6366f1",
                 shadowOffset: { width: 0, height: 4 },
@@ -568,7 +570,7 @@ const Applications = () => {
           <FlatList
             data={storeApplications}
             renderItem={({ item }) => (
-              <ApplicantCard item={item} isShortListed={!!(item.id && isShortListed(item.id))} />
+              <ApplicantCard item={item as Application} isShortListed={!!(item.id && isShortListed(item.id))} />
             )}
             ListEmptyComponent={() => renderEmptyComponent()}
             showsVerticalScrollIndicator={false}

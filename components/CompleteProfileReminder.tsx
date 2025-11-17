@@ -58,7 +58,7 @@ const CompleteProfileReminder = ({ onComplete, onLater }: { onComplete: () => vo
 
             <View className="gap-3 mb-6">
               <View className="flex-row items-center gap-3">
-                <View className="w-6 h-6 bg-green-100 rounded-full items-center justify-center">
+                <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
                   <Feather name="check" size={14} color="#22c55e" />
                 </View>
                 <Text className="text-gray-700 font-quicksand-medium text-sm flex-1">
@@ -66,7 +66,7 @@ const CompleteProfileReminder = ({ onComplete, onLater }: { onComplete: () => vo
                 </Text>
               </View>
               <View className="flex-row items-center gap-3">
-                <View className="w-6 h-6 bg-green-100 rounded-full items-center justify-center">
+                <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
                   <Feather name="check" size={14} color="#22c55e" />
                 </View>
                 <Text className="text-gray-700 font-quicksand-medium text-sm flex-1">
@@ -74,7 +74,7 @@ const CompleteProfileReminder = ({ onComplete, onLater }: { onComplete: () => vo
                 </Text>
               </View>
               <View className="flex-row items-center gap-3">
-                <View className="w-6 h-6 bg-green-100 rounded-full items-center justify-center">
+                <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
                   <Feather name="check" size={14} color="#22c55e" />
                 </View>
                 <Text className="text-gray-700 font-quicksand-medium text-sm flex-1">
@@ -85,7 +85,7 @@ const CompleteProfileReminder = ({ onComplete, onLater }: { onComplete: () => vo
 
             <View className="gap-3">
               <TouchableOpacity
-                className="bg-green-500 py-4 rounded-xl items-center justify-center"
+                className="bg-emerald-500 py-4 rounded-xl items-center justify-center"
                 style={{
                   shadowColor: "#22c55e",
                   shadowOffset: { width: 0, height: 3 },

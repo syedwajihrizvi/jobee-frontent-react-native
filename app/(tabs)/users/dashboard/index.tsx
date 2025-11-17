@@ -202,7 +202,7 @@ const Dashboard = () => {
               }}
             >
               <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
                   <MaterialIcons name="pie-chart" size={20} color="#10b981" />
                 </View>
                 <Text className="font-quicksand-bold text-lg text-gray-900">Applications Overview</Text>
@@ -217,7 +217,7 @@ const Dashboard = () => {
                 <View className="flex-row items-center gap-2">
                   <Feather name="clock" size={16} color="#10b981" />
                   <Text className="font-quicksand-semibold text-md">
-                    {profileSummaryStats.totalInterviews} In consideration
+                    {profileSummaryStats.totalInterviews} In Consideration
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">

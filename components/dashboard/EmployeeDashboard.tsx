@@ -100,7 +100,7 @@ const EmployeeDashboard = () => {
 
                 <View className="flex-row gap-3">
                   <TouchableOpacity
-                    className="flex-1 bg-green-500 rounded-xl p-4 items-center"
+                    className="flex-1 bg-emerald-500 rounded-xl p-4 items-center"
                     style={{
                       shadowColor: "#22c55e",
                       shadowOffset: { width: 0, height: 3 },

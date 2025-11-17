@@ -204,7 +204,7 @@ export const getJobLevelColor = (
       return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" };
     }
     if (normalizedStatus.includes("accepted") || normalizedStatus.includes("hired")) {
-      return { bg: "bg-green-100", text: "text-green-700", border: "border-green-200" };
+      return { bg: "bg-emerald-100", text: "text-green-700", border: "border-green-200" };
     }
     if (normalizedStatus.includes("rejected") || normalizedStatus.includes("declined")) {
       return { bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
@@ -436,7 +436,7 @@ export const getMatchConfig = (percentage: number) => {
       progressBarBg: 'bg-emerald-200' // lighter background
     };
     if (percentage >= 75) return {
-      bgColor: 'bg-green-500',
+      bgColor: 'bg-emerald-500',
       borderColor: 'border-green-600',
       shadowColor: '#16a34a',
       textColor: 'text-white',
@@ -445,7 +445,7 @@ export const getMatchConfig = (percentage: number) => {
       gradientFrom: 'from-green-400',
       gradientTo: 'to-green-500',
       progressBarColor: '#4ade80', // green-400 for contrast
-      progressBarBg: 'bg-green-200'
+      progressBarBg: 'bg-emerald-200'
     };
     if (percentage >= 60) return {
       bgColor: 'bg-yellow-500',
@@ -635,7 +635,7 @@ export const getFileIcon = (mimeType: string) => {
   if (mimeType === "application/pdf") {
     return { name: "file-text", color: "#ef4444", bgColor: "bg-red-100" };
   } else if (mimeType.startsWith("image/")) {
-    return { name: "image", color: "#10b981", bgColor: "bg-green-100" };
+    return { name: "image", color: "#10b981", bgColor: "bg-emerald-100" };
   } else if (mimeType === "application/vnd.google-apps.document") {
     return { name: "file-text", color: "#3b82f6", bgColor: "bg-blue-100" };
   } else if (mimeType.includes("word") || mimeType.includes("document")) {

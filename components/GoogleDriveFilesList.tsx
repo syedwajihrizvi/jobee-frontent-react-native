@@ -56,7 +56,7 @@ const OAuthFileList = ({
                   if (mimeType === "application/pdf") {
                     return { name: "file-text", color: "#ef4444", bgColor: "bg-red-100" };
                   } else if (mimeType.startsWith("image/")) {
-                    return { name: "image", color: "#10b981", bgColor: "bg-green-100" };
+                    return { name: "image", color: "#10b981", bgColor: "bg-emerald-100" };
                   } else if (mimeType === "application/vnd.google-apps.document") {
                     return { name: "file-text", color: "#3b82f6", bgColor: "bg-blue-100" };
                   } else if (mimeType.includes("word") || mimeType.includes("document")) {
@@ -123,7 +123,7 @@ const OAuthFileList = ({
 
                       <View className="items-center">
                         {isSelected ? (
-                          <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
+                          <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
                             <Feather name="check" size={14} color="white" />
                           </View>
                         ) : (
@@ -137,7 +137,7 @@ const OAuthFileList = ({
               ListFooterComponent={() =>
                 nextPageToken ? (
                   <TouchableOpacity
-                    className="bg-green-500 rounded-xl p-4 flex-row items-center justify-center gap-3 mb-4"
+                    className="bg-emerald-500 rounded-xl p-4 flex-row items-center justify-center gap-3 mb-4"
                     style={{
                       shadowColor: "#3b82f6",
                       shadowOffset: { width: 0, height: 2 },
@@ -191,7 +191,7 @@ const OAuthFileList = ({
 
           <TouchableOpacity
             className={`flex-1 rounded-xl py-4 items-center justify-center ${
-              selectedGoogleDriveFile ? "bg-green-500" : "bg-gray-300"
+              selectedGoogleDriveFile ? "bg-emerald-500" : "bg-gray-300"
             }`}
             style={{
               shadowColor: selectedGoogleDriveFile ? "#3b82f6" : "#000",

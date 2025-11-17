@@ -279,7 +279,7 @@ const Notifications = () => {
 
         <TouchableOpacity
           className={`flex-1 py-2 px-4 rounded-xl border-2 ${
-            filterStatus === "READ" ? "bg-green-500 border-green-500" : "bg-white border-gray-200"
+            filterStatus === "READ" ? "bg-emerald-500 border-emerald-500" : "bg-white border-gray-200"
           }`}
           style={{
             shadowColor: filterStatus === "READ" ? "#22c55e" : "#000",
@@ -307,7 +307,7 @@ const Notifications = () => {
     if (unReadCount === 0) {
       return (
         <View className="flex-col gap-4 px-4">
-          <View className="py-3 bg-green-50 border-b border-green-100 items-center">
+          <View className="py-3 bg-emerald-50 border-b border-emerald-100 items-center">
             <Text className="font-quicksand-bold text-sm text-gray-700">No new notifications</Text>
           </View>
           {renderNotificationFilters()}

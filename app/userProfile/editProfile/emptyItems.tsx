@@ -17,7 +17,7 @@ const EmptyItems = ({ title, subTitle, buttonText, handlePress }: Props) => {
       </View>
       <Text className="font-quicksand-bold text-gray-800 text-lg mb-2">{title}</Text>
       <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">{subTitle}</Text>
-      <TouchableOpacity className="bg-green-500 px-6 py-3 rounded-xl" onPress={handlePress}>
+      <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={handlePress}>
         <Text className="font-quicksand-semibold text-white text-sm">{buttonText}</Text>
       </TouchableOpacity>
     </View>

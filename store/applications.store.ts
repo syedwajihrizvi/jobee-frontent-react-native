@@ -1,11 +1,9 @@
 import { getCandidatesForJob } from "@/lib/jobEndpoints";
 import { getApplicationsForJob, getShortListedApplicationsForJob } from "@/lib/userEndpoints";
 import { ApplicantFilters, Application, CandidateForJob } from "@/type";
-import {
-    create
-} from "zustand";
+import { create } from "zustand";
 
-const createFilterKey = (jobId: number, filters: ApplicantFilters) => {
+const createApplicationsFilterKey = (jobId: number, filters: ApplicantFilters) => {
   const parts = [
     jobId.toString(),
     filters.locations.sort().join(','),
@@ -24,9 +22,11 @@ const createFilterKey = (jobId: number, filters: ApplicantFilters) => {
 interface ApplicationsState {
     applicationsByJobAndFilter: Record<string, Application[]>;
     shortListedApplicationsByJob: Record<number, number[]>;
+
     loadingApplicationStates: Record<string, boolean>;
     loadingShortListedStates: Record<number, boolean>;
     loadingCandidatesStates: Record<number, boolean>;
+
     candidatesForJob: Record<number, CandidateForJob[]>;
     totalCounts: Record<string, number>
     pagination: Record<string, {
@@ -71,12 +71,15 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
     // State variables in interface order
     applicationsByJobAndFilter: {},
     shortListedApplicationsByJob: {},
+
     loadingApplicationStates: {},
     loadingShortListedStates: {},
     loadingCandidatesStates: {},
+
     candidatesForJob: {},
     totalCounts: {},
     pagination: {},
+
     lastFetchApplicants: {},
     lastFetchedShortListedApplicants: {},
     lastFetchedCandidates: {},
@@ -103,9 +106,8 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
             }))
         }
     },
-
     fetchApplicationsForJob: async (jobId, filters, page = 0) => {
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         const state = get();
         if (state.loadingApplicationStates[filterKey]) return;
         set((state) => ({
@@ -146,7 +148,6 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
             }))  
         }
     },
-
     fetchCandidatesForJob: async (jobId) => {
         const state = get();
         if (state.loadingCandidatesStates[jobId]) return;
@@ -174,39 +175,33 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         }
     },
 
-    // Getter methods in interface order
     getApplicationsForJob: (jobId, filters) => {
         const state = get();
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         return state.applicationsByJobAndFilter[filterKey];
     },
-
     getShortListedApplicationsForJob: (jobId) => {
         const state = get();
         return state.shortListedApplicationsByJob[jobId];
     },
-
     getCandidatesForJob: (jobId) => {
         const state = get();
         return state.candidatesForJob[jobId];
     },
-
     getPaginationForJobAndFilter: (jobId, filters) => {
         const state = get();
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         return state.pagination[filterKey];
     },
-
     getApplicationsCountForJob: (jobId, filters) => {
         const state = get();
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         return state.totalCounts[filterKey];
     },
-
     // Loading state methods in interface order
     isLoadingApplicationStatesForJob: (jobId, filters) => {
         const state = get();
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         return state.loadingApplicationStates[filterKey] || false;
     },
 
@@ -219,11 +214,10 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const state = get();
         return state.loadingCandidatesStates[jobId] || false;
     },
-
     // Cache validation methods in interface order
     hasValidApplicantCache: (jobId, filters) => {
         const state = get();
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         const CACHE_DURATION = 5 * 60 * 1000;
         const lastFetched = state.lastFetchApplicants[filterKey];
         if (!lastFetched) return false;
@@ -248,10 +242,9 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const isFresh = Date.now() - lastFetched < CACHE_DURATION;
         return isFresh;
     },
-
     // Refresh methods in interface order
     refreshApplicationsForJobAndFilter: async (jobId, filters) => {
-        const filterKey = createFilterKey(jobId, filters);
+        const filterKey = createApplicationsFilterKey(jobId, filters);
         const newState = get();
         delete newState.applicationsByJobAndFilter[filterKey];
         delete newState.pagination[filterKey];
@@ -291,7 +284,6 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         }
         await newState.fetchCandidatesForJob(jobId);
     },
-
     addToShortListedApplications: (jobId, applicationId) => {
         const state = get();
         const existingList = state.shortListedApplicationsByJob[jobId] || [];

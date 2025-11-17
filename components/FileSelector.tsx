@@ -432,7 +432,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                 </View>
               </View>
             </View>
-            <View className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 w-full">
+            <View className="bg-emerald-50 border border-green-200 rounded-xl px-4 py-3 mb-4 w-full">
               <View className="flex-row items-center justify-center gap-2">
                 <Feather name="check-circle" size={16} color="#22c55e" />
                 <Text className="font-quicksand-semibold text-green-700 text-sm">Image ready for upload!</Text>
@@ -496,7 +496,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
           }}
         >
           <View className="items-center">
-            <View className="w-16 h-16 bg-green-100 rounded-2xl items-center justify-center mb-2">
+            <View className="w-16 h-16 bg-emerald-100 rounded-2xl items-center justify-center mb-2">
               <Feather name={getFileIcon(file.name || "")} size={28} color="#22c55e" />
             </View>
             <Text className="font-quicksand-bold text-lg text-gray-800 text-center mb-1" numberOfLines={2}>
@@ -505,7 +505,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
             <Text className="font-quicksand-medium text-sm text-gray-500">
               {file.size ? formatFileSize(file.size) : "Size unknown"}
             </Text>
-            <View className="bg-green-50 border border-green-200 rounded-xl px-3 py-2 mt-2 mb-2">
+            <View className="bg-emerald-50 border border-green-200 rounded-xl px-3 py-2 mt-2 mb-2">
               <View className="flex-row items-center gap-2">
                 <Feather name="check-circle" size={14} color="#22c55e" />
                 <Text className="font-quicksand-semibold text-green-700 text-xs">Resume uploaded successfully!</Text>
@@ -600,7 +600,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
               <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">📁 Direct Upload</Text>
               <View className="gap-3">
                 <TouchableOpacity
-                  className="bg-green-500 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                  className="bg-emerald-500 rounded-xl p-4 flex-row items-center justify-center gap-3"
                   style={{
                     shadowColor: "#22c55e",
                     shadowOffset: { width: 0, height: 3 },
@@ -681,7 +681,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                     </Text>
                   </View>
                   {isConnectedToGoogleDrive && googleDriveFile && activeOAuthProvider === "GOOGLE_DRIVE" && (
-                    <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
+                    <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
                       <Feather name="check" size={12} color="white" />
                     </View>
                   )}
@@ -729,7 +729,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                     </Text>
                   </View>
                   {isConnectedToDropbox && dropboxFile && activeOAuthProvider === "DROPBOX" && (
-                    <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
+                    <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
                       <Feather name="check" size={12} color="white" />
                     </View>
                   )}
@@ -777,7 +777,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                     </Text>
                   </View>
                   {isConnectedToOneDrive && oneDriveFile && activeOAuthProvider === "ONEDRIVE" && (
-                    <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
+                    <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
                       <Feather name="check" size={12} color="white" />
                     </View>
                   )}
@@ -807,7 +807,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
       </View>
       <View className="flex-row gap-3">
         <TouchableOpacity
-          className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+          className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 3 },
@@ -915,7 +915,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                   >
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center gap-3">
-                        <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                        <View className="w-10 h-10 bg-emerald-100 rounded-lg items-center justify-center">
                           <Feather name="image" size={18} color="#22c55e" />
                         </View>
                         <View className="flex-1">
@@ -940,7 +940,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                   >
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center gap-3">
-                        <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                        <View className="w-10 h-10 bg-emerald-100 rounded-lg items-center justify-center">
                           <Feather name="upload" size={18} color="#22c55e" />
                         </View>
                         <View className="flex-1">
@@ -1052,7 +1052,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
               <View className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 {uploadedDocument?.assets?.[0] && (
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                    <View className="w-10 h-10 bg-emerald-100 rounded-lg items-center justify-center">
                       <Feather name="upload" size={18} color="#22c55e" />
                     </View>
                     <View className="flex-1">
@@ -1066,7 +1066,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
                 )}
                 {selectedImage?.assets?.[0] && (
                   <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 bg-green-100 rounded-lg items-center justify-center">
+                    <View className="w-10 h-10 bg-emerald-100 rounded-lg items-center justify-center">
                       <Feather name="image" size={18} color="#22c55e" />
                     </View>
                     <View className="flex-1">
@@ -1141,7 +1141,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
           </View>
           <View className="flex-row gap-3 mt-4">
             <TouchableOpacity
-              className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+              className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
               style={{
                 shadowColor: "#22c55e",
                 shadowOffset: { width: 0, height: 3 },

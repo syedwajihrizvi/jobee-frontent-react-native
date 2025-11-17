@@ -7,7 +7,7 @@ type Props = {
 };
 const BadgeWithIcon = ({ text, icon }: Props) => {
   return (
-    <View className="bg-green-200 px-2 py-1 rounded-lg items-center justify-center flex-row gap-2">
+    <View className="bg-emerald-200 px-2 py-1 rounded-lg items-center justify-center flex-row gap-2">
       {icon}
       <Text className="font-quicksand-semibold text-md text-green-800">{text}</Text>
     </View>

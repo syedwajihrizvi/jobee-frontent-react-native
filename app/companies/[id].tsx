@@ -107,7 +107,7 @@ const CompanyInfo = () => {
 
   const getCompanySizeCategory = (employees: number | undefined) => {
     if (!employees) return { label: "Unknown", color: "text-gray-600", bg: "bg-gray-100" };
-    if (employees < 50) return { label: "Startup", color: "text-green-600", bg: "bg-green-100" };
+    if (employees < 50) return { label: "Startup", color: "text-green-600", bg: "bg-emerald-100" };
     if (employees < 200) return { label: "Small", color: "text-blue-600", bg: "bg-blue-100" };
     if (employees < 1000) return { label: "Medium", color: "text-yellow-600", bg: "bg-yellow-100" };
     return { label: "Large", color: "text-purple-600", bg: "bg-purple-100" };
@@ -265,7 +265,7 @@ const CompanyInfo = () => {
 
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row items-center gap-1">
-                      <View className="w-4 h-4 bg-green-100 rounded-full items-center justify-center">
+                      <View className="w-4 h-4 bg-emerald-100 rounded-full items-center justify-center">
                         <Feather name="briefcase" size={8} color="#21c48f" />
                       </View>
                       <Text className="font-quicksand-medium text-xs text-green-600">Quick Apply Available</Text>

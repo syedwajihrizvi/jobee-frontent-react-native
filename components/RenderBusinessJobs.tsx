@@ -95,7 +95,6 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
   const isLoading = isLoadingJobsForBusinessAndFilter(filters);
   const jobs = getInterviewsForJobAndFilter(filters);
   const pagination = getPaginationForJobAndFilter(filters);
-
   return (
     <>
       <StatusBar hidden={true} />

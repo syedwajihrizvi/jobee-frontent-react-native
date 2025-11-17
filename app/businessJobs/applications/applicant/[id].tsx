@@ -142,7 +142,7 @@ const ApplicantForBusiness = () => {
       } else if (isCandidateShortListed(Number(application?.jobId), Number(application?.id))) {
         return (
           <View
-            className="bg-green-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+            className="bg-emerald-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
             style={{
               shadowColor: "#f59e0b",
               shadowOffset: { width: 0, height: 2 },
@@ -567,7 +567,7 @@ const ApplicantForBusiness = () => {
           <ScrollView className="flex-1 px-6 py-4">
             {application?.status === "PENDING" && user?.role !== "EMPLOYEE" && (
               <TouchableOpacity
-                className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex-row items-center gap-4"
+                className="bg-emerald-50 border border-green-200 rounded-xl p-4 mb-4 flex-row items-center gap-4"
                 style={{
                   shadowColor: "#22c55e",
                   shadowOffset: { width: 0, height: 2 },
@@ -583,7 +583,7 @@ const ApplicantForBusiness = () => {
                 }}
                 activeOpacity={0.7}
               >
-                <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                   <Feather name="calendar" size={20} color="#22c55e" />
                 </View>
                 <View className="flex-1">

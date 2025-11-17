@@ -151,7 +151,7 @@ const InterviewDetails = () => {
               </View>
             </View>
           </View>
-          <View className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <View className="bg-emerald-50 border border-green-200 rounded-xl p-4">
             <View className="flex-row items-start gap-2">
               <Feather name="thumbs-up" size={16} color="#16a34a" />
               <View className="flex-1">
@@ -214,7 +214,7 @@ const InterviewDetails = () => {
               </View>
             </View>
           )}
-          <View className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <View className="bg-emerald-50 border border-green-200 rounded-xl p-4">
             <View className="flex-row items-start gap-2">
               <Feather name="heart" size={16} color="#16a34a" />
               <View className="flex-1">
@@ -236,7 +236,7 @@ const InterviewDetails = () => {
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
-            className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+            className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
             style={{
               shadowColor: "#6366f1",
               shadowOffset: { width: 0, height: 4 },
@@ -365,7 +365,7 @@ const InterviewDetails = () => {
             }}
           >
             <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+              <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
                 <Feather name="users" size={20} color="#22c55e" />
               </View>
               <View>
@@ -399,7 +399,7 @@ const InterviewDetails = () => {
         >
           <View className="flex-row gap-3">
             <TouchableOpacity
-              className="flex-1 bg-green-500 rounded-xl py-4 items-center justify-center"
+              className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
               style={{
                 shadowColor: "#6366f1",
                 shadowOffset: { width: 0, height: 3 },

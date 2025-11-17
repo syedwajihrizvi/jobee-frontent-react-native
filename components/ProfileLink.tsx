@@ -29,7 +29,7 @@ const ProfileLink = ({
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1 gap-4">
-          <View className="w-10 h-10 bg-green-100 rounded-xl items-center justify-center">{icon}</View>
+          <View className="w-10 h-10 bg-emerald-100 rounded-xl items-center justify-center">{icon}</View>
           <View className="flex-1">
             <Text className="font-quicksand-bold text-base text-gray-800 mb-1">{label}</Text>
             {subtitle && (

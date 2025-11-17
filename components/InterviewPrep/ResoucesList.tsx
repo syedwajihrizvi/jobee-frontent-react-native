@@ -33,7 +33,7 @@ const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation 
       case "video":
         return { bg: "bg-red-50", border: "border-red-200", icon: "#ef4444", accent: "bg-red-500" };
       case "website":
-        return { bg: "bg-green-50", border: "border-green-200", icon: "#22c55e", accent: "bg-green-500" };
+        return { bg: "bg-emerald-50", border: "border-green-200", icon: "#22c55e", accent: "bg-emerald-500" };
       case "pdf":
         return { bg: "bg-orange-50", border: "border-orange-200", icon: "#f97316", accent: "bg-orange-500" };
       case "course":

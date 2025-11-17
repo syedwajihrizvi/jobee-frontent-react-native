@@ -51,7 +51,7 @@ const EditProfile = () => {
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center flex-1 gap-4">
-                    <View className="w-10 h-10 bg-green-100 rounded-xl items-center justify-center">
+                    <View className="w-10 h-10 bg-emerald-100 rounded-xl items-center justify-center">
                       <Feather name={section.icon as any} size={18} color="#22c55e" />
                     </View>
                     <View className="flex-1">

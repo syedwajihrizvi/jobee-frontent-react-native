@@ -338,7 +338,7 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
           </Text>
         )}
 
-        <View className="flex flex-row items-center justify-start gap-2 mb-4 w-full bg-green-500 rounded-full px-2 py-1">
+        <View className="flex flex-row items-center justify-start gap-2 mb-4 w-full bg-emerald-500 rounded-full px-2 py-1">
           <TouchableOpacity onPress={handlePlaybackAnswer}>
             <Feather
               name={listeningToAnswer ? `pause-circle` : `play-circle`}

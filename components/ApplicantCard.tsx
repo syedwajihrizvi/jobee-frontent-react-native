@@ -88,7 +88,7 @@ const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
           <Text className="font-quicksand-medium text-sm text-gray-600">Applied on {formatDate(item.appliedAt)}</Text>
         </View>
         <View
-          className="w-8 h-8 bg-green-100 rounded-full items-center justify-center"
+          className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center"
           style={{
             shadowColor: "#6366f1",
             shadowOffset: { width: 0, height: 2 },

@@ -196,7 +196,7 @@ const ManageUsers = () => {
           </View>
 
           <TouchableOpacity
-            className="bg-green-500 px-4 py-2 rounded-xl flex-row items-center gap-2"
+            className="bg-emerald-500 px-4 py-2 rounded-xl flex-row items-center gap-2"
             style={{
               shadowColor: "#3b82f6",
               shadowOffset: { width: 0, height: 2 },
@@ -236,7 +236,7 @@ const ManageUsers = () => {
         >
           <View>
             <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">
+              <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
                 <Feather name="user-plus" size={20} color="#4ade80" />
               </View>
               <Text className="font-quicksand-bold text-lg text-gray-900">Invite New User</Text>
@@ -292,7 +292,7 @@ const ManageUsers = () => {
             </View>
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-green-500 py-3 px-4 rounded-xl"
+                className="flex-1 bg-emerald-500 py-3 px-4 rounded-xl"
                 style={{
                   shadowColor: "#3b82f6",
                   shadowOffset: { width: 0, height: 3 },

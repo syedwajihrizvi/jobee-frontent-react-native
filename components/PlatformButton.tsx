@@ -30,7 +30,7 @@ const PlatformButton = ({ label, onPress, icon, bgColor, textColor, isSelected }
       activeOpacity={0.8}
     >
       {isSelected && (
-        <View className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full items-center justify-center border-2 border-white">
+        <View className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full items-center justify-center border-2 border-white">
           <Feather name="check" size={10} color="white" />
         </View>
       )}

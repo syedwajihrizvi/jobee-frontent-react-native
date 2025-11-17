@@ -81,7 +81,7 @@ const Summary = () => {
         ) : (
           <View className="py-3 px-6">
             <TouchableOpacity
-              className="bg-green-500 rounded-xl px-6 py-4 flex-row items-center justify-center mb-6"
+              className="bg-emerald-500 rounded-xl px-6 py-4 flex-row items-center justify-center mb-6"
               style={{
                 shadowColor: "#22c55e",
                 shadowOffset: { width: 0, height: 2 },

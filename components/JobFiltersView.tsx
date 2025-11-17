@@ -186,7 +186,7 @@ const JobFiltersView = ({
             <View className="flex-row flex-wrap gap-2 mt-3">
               {tempFilters.locations.map((location, index) => (
                 <TouchableOpacity key={index}>
-                  <View className="bg-green-100 px-3 py-1 rounded-full">
+                  <View className="bg-emerald-100 px-3 py-1 rounded-full">
                     <Text className="text-green-800 font-quicksand-medium">{location}</Text>
                   </View>
                 </TouchableOpacity>
@@ -235,7 +235,7 @@ const JobFiltersView = ({
             <View className="flex flex-row flex-wrap gap-2 mt-2">
               {employmentTypes.map((type) => (
                 <TouchableOpacity
-                  className={`${tempFilters.employmentTypes?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                  className={`${tempFilters.employmentTypes?.includes(type.value) ? "bg-emerald-500" : "bg-emerald-200"} px-3 py-1 rounded-full`}
                   onPress={() => addEmploymentType(type.value)}
                   activeOpacity={1}
                   key={type.value}
@@ -251,7 +251,7 @@ const JobFiltersView = ({
             <View className="flex flex-row flex-wrap gap-2 mt-2">
               {workArrangements.map((type) => (
                 <TouchableOpacity
-                  className={`${tempFilters.workArrangements?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                  className={`${tempFilters.workArrangements?.includes(type.value) ? "bg-emerald-500" : "bg-emerald-200"} px-3 py-1 rounded-full`}
                   onPress={() => addWorkArrangement(type.value)}
                   activeOpacity={1}
                   key={type.value}
@@ -267,7 +267,7 @@ const JobFiltersView = ({
             <View className="flex flex-row flex-wrap gap-2 mt-2">
               {experienceLevels.map((type, index) => (
                 <TouchableOpacity
-                  className={`${tempFilters.experience?.includes(type.value) ? "bg-green-500" : "bg-green-200"} px-3 py-1 rounded-full`}
+                  className={`${tempFilters.experience?.includes(type.value) ? "bg-emerald-500" : "bg-emerald-200"} px-3 py-1 rounded-full`}
                   onPress={() => addExperienceLevel(type.value!)}
                   key={index}
                 >

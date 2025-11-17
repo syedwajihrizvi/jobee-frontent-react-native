@@ -38,7 +38,7 @@ const PulsatingButton = ({
       <TouchableOpacity
         onPress={handlePress}
         disabled={disabled}
-        className="bg-green-500 dark:bg-[#1e1e1e] rounded-full shadow-md p-2 size-16 justify-center items-center"
+        className="bg-emerald-500 dark:bg-[#1e1e1e] rounded-full shadow-md p-2 size-16 justify-center items-center"
       >
         {children}
       </TouchableOpacity>

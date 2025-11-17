@@ -34,7 +34,7 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
         <View className="flex-row gap-1">
           <TouchableOpacity
             onPress={openFilters}
-            className="bg-green-50 border border-green-200 px-3 py-1 rounded-full"
+            className="bg-emerald-50 border border-green-200 px-3 py-1 rounded-full"
             activeOpacity={0.7}
           >
             <Text className="font-quicksand-semibold text-xs text-green-600">Open Filters</Text>
@@ -105,7 +105,7 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
             {(filters as JobFilters).experience?.map((exp, index) => (
               <View
                 key={index}
-                className="bg-green-50 border border-green-200 px-3 py-1 rounded-full flex-row items-center gap-1"
+                className="bg-emerald-50 border border-green-200 px-3 py-1 rounded-full flex-row items-center gap-1"
               >
                 <Feather name="trending-up" size={10} color="#22c55e" />
                 <Text className="font-quicksand-medium text-xs text-green-800">

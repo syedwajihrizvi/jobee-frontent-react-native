@@ -65,7 +65,7 @@ const UploadNewDoc = () => {
                   <TouchableOpacity
                     key={doc.value}
                     className={`flex-row items-center gap-2 px-4 py-3 rounded-xl border ${
-                      selectedDocumentType === doc.value ? "border-green-200 bg-green-50" : "border-gray-200 bg-white"
+                      selectedDocumentType === doc.value ? "border-green-200 bg-emerald-50" : "border-gray-200 bg-white"
                     }`}
                     style={{
                       shadowColor: selectedDocumentType === doc.value ? "#6366f1" : "#000",

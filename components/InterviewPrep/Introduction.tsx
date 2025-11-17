@@ -9,7 +9,7 @@ const Introduction = ({ interviewDetails }: { interviewDetails: InterviewDetails
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4"
+          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
           style={{
             shadowColor: "#3b82f6",
             shadowOffset: { width: 0, height: 4 },
@@ -40,7 +40,7 @@ const Introduction = ({ interviewDetails }: { interviewDetails: InterviewDetails
         }}
       >
         <View className="flex-row items-center gap-3 mb-2">
-          <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center">
+          <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
             <Feather name="check-circle" size={16} color="#22c55e" />
           </View>
           <Text className="font-quicksand-bold text-md text-gray-800">Preparation Checklist</Text>
@@ -50,7 +50,7 @@ const Introduction = ({ interviewDetails }: { interviewDetails: InterviewDetails
           {interviewPrepChecklist.map((item, index) => (
             <View key={index} className="flex-row items-start gap-4 p-3 bg-gray-50 rounded-xl">
               <View
-                className="w-8 h-8 bg-green-500 rounded-full items-center justify-center"
+                className="w-8 h-8 bg-emerald-500 rounded-full items-center justify-center"
                 style={{
                   shadowColor: "#22c55e",
                   shadowOffset: { width: 0, height: 2 },

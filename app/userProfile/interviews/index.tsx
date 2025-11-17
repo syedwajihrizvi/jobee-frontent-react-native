@@ -33,7 +33,7 @@ const UpcomingInterviews = () => {
                 }}
               >
                 <View className="flex-row items-center gap-3 mb-4">
-                  <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
+                  <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                     <Feather name="calendar" size={24} color="#6366f1" />
                   </View>
                   <View className="flex-1">
@@ -49,7 +49,7 @@ const UpcomingInterviews = () => {
                     <Text className="font-quicksand-bold text-2xl text-blue-600">{interviews?.length}</Text>
                     <Text className="font-quicksand-medium text-sm text-blue-700">Total Interviews</Text>
                   </View>
-                  <View className="flex-1 bg-green-50 rounded-xl p-4 border border-green-100">
+                  <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-green-100">
                     <Text className="font-quicksand-bold text-2xl text-green-600">{completedInterviews?.length}</Text>
                     <Text className="font-quicksand-medium text-sm text-green-700">
                       Completed Interview{`${completedInterviews?.length > 1 ? "s" : ""}`}

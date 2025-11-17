@@ -161,7 +161,7 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
                       {item.fileType !== "folder" && (
                         <View className="items-center">
                           {isSelected ? (
-                            <View className="w-6 h-6 bg-green-500 rounded-full items-center justify-center">
+                            <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
                               <Feather name="check" size={14} color="white" />
                             </View>
                           ) : (
@@ -213,7 +213,7 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
               ListFooterComponent={() =>
                 hasMore ? (
                   <TouchableOpacity
-                    className="bg-green-500 rounded-xl p-4 flex-row items-center justify-center gap-3 mb-4"
+                    className="bg-emerald-500 rounded-xl p-4 flex-row items-center justify-center gap-3 mb-4"
                     style={{
                       shadowColor: "#3b82f6",
                       shadowOffset: { width: 0, height: 2 },
@@ -293,7 +293,7 @@ const DropBoxFileSelector = ({ onClose }: Props) => {
 
           <TouchableOpacity
             className={`flex-1 rounded-xl py-4 items-center justify-center ${
-              dropboxFile ? "bg-green-500" : "bg-gray-300"
+              dropboxFile ? "bg-emerald-500" : "bg-gray-300"
             }`}
             style={{
               shadowColor: dropboxFile ? "#3b82f6" : "#000",

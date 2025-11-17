@@ -27,7 +27,7 @@ const Conducted = ({ interviewDetails }: { interviewDetails: InterviewDetails | 
         return { bg: "bg-purple-100", text: "text-purple-600", icon: "#8b5cf6" };
       case "in-person":
       case "onsite":
-        return { bg: "bg-green-100", text: "text-green-600", icon: "#22c55e" };
+        return { bg: "bg-emerald-100", text: "text-green-600", icon: "#22c55e" };
       default:
         return { bg: "bg-gray-100", text: "text-gray-600", icon: "#6b7280" };
     }
@@ -136,7 +136,7 @@ const Conducted = ({ interviewDetails }: { interviewDetails: InterviewDetails | 
             </View>
           )}
           {interviewType?.toLowerCase() === "in_person" && (
-            <View className="bg-green-50 rounded-xl p-4 border border-green-200">
+            <View className="bg-emerald-50 rounded-xl p-4 border border-green-200">
               <View className="flex-row items-center gap-3 mb-3">
                 <Feather name="map-pin" size={18} color="#22c55e" />
                 <Text className="font-quicksand-bold text-green-800 text-base">In-Person Interview Location</Text>

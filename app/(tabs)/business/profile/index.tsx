@@ -164,7 +164,7 @@ const Profile = () => {
                   {user?.firstName} {user?.lastName}
                 </Text>
                 {user?.verified && (
-                  <View className="w-4 h-4 bg-green-500 rounded-full items-center justify-center">
+                  <View className="w-4 h-4 bg-emerald-500 rounded-full items-center justify-center">
                     <MaterialIcons name="check" size={10} color="white" />
                   </View>
                 )}

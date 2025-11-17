@@ -146,7 +146,7 @@ const RecommendedJobsPreview = ({
 
     return {
       disabled: false,
-      bgColor: "bg-green-500",
+      bgColor: "bg-emerald-500",
       borderColor: "border-green-600",
       text: "Quick Apply to All",
       icon: "zap",

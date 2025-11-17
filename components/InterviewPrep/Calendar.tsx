@@ -19,7 +19,7 @@ const Calendar = ({ interviewDetails }: { interviewDetails: InterviewDetails | u
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-3"
+          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 8 },
@@ -46,7 +46,7 @@ const Calendar = ({ interviewDetails }: { interviewDetails: InterviewDetails | u
       >
         <View className="items-center mb-3">
           <Text className="font-quicksand-bold text-lg text-gray-800 mb-2">Your interview is scheduled for</Text>
-          <View className="bg-green-50 rounded-xl p-4 mb-4 w-full border border-green-200">
+          <View className="bg-emerald-50 rounded-xl p-4 mb-4 w-full border border-green-200">
             <View className="flex-row items-center justify-center gap-2 mb-2">
               <Feather name="calendar" size={18} color="#22c55e" />
               <Text className="font-quicksand-bold text-green-800 text-md">
@@ -92,7 +92,7 @@ const Calendar = ({ interviewDetails }: { interviewDetails: InterviewDetails | u
 
       <View className="gap-4">
         <TouchableOpacity
-          className="bg-green-500 py-4 rounded-xl flex-row items-center justify-center"
+          className="bg-emerald-500 py-4 rounded-xl flex-row items-center justify-center"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 4 },

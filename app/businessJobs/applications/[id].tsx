@@ -30,7 +30,7 @@ const screenWidth = Dimensions.get("window").width;
 const panelWidth = screenWidth * 0.8;
 
 const Applications = () => {
-  const { id } = useLocalSearchParams();
+  const { id, applicationStatus } = useLocalSearchParams();
   const {
     fetchApplicationsForJob,
     getApplicationsForJob,
@@ -51,13 +51,19 @@ const Applications = () => {
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const [filters, setFilters] = useState<ApplicantFilters>({
+    applicationStatus: applicationStatus ? (applicationStatus as string) : undefined,
     locations: [],
     skills: [],
     educations: "Any",
     experiences: "Any",
+    hasVideoIntro: false,
+    hasCoverLetter: false,
+    applicationDateRange: undefined,
+    search: "",
   });
   const [isOpen, setIsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState<ApplicantFilters>({
+    applicationStatus: applicationStatus ? (applicationStatus as string) : undefined,
     locations: [],
     skills: [],
     educations: "Any",
@@ -147,7 +153,7 @@ const Applications = () => {
 
   const renderYesClass = (active: boolean) => {
     return active
-      ? "bg-green-100 border border-green-500 px-3 py-1 rounded-xl items-center justify-center"
+      ? "bg-emerald-100 border border-green-500 px-3 py-1 rounded-xl items-center justify-center"
       : "bg-gray-100 border border-gray-300 px-3 py-1 rounded-xl items-center justify-center";
   };
 

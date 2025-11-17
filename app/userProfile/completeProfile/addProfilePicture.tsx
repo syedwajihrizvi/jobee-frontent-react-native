@@ -93,7 +93,7 @@ const AddProfilePicture = ({ uploadedProfileImage, setUploadedProfileImage }: Pr
             />
 
             <TouchableOpacity
-              className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full items-center justify-center border-4 border-white"
+              className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full items-center justify-center border-4 border-white"
               style={{
                 shadowColor: "#22c55e",
                 shadowOffset: { width: 0, height: 4 },
@@ -109,7 +109,7 @@ const AddProfilePicture = ({ uploadedProfileImage, setUploadedProfileImage }: Pr
 
           {/* Status Indicator */}
           {uploadedProfileImage ? (
-            <View className="bg-green-50 border border-green-200 rounded-xl px-4 py-2">
+            <View className="bg-emerald-50 border border-green-200 rounded-xl px-4 py-2">
               <View className="flex-row items-center gap-2">
                 <Feather name="check-circle" size={16} color="#22c55e" />
                 <Text className="font-quicksand-semibold text-green-700 text-sm">Photo uploaded successfully!</Text>
@@ -130,7 +130,7 @@ const AddProfilePicture = ({ uploadedProfileImage, setUploadedProfileImage }: Pr
         {/* Action Buttons */}
         <View className="gap-4">
           <TouchableOpacity
-            className="bg-green-500 py-4 rounded-xl flex-row items-center justify-center"
+            className="bg-emerald-500 py-4 rounded-xl flex-row items-center justify-center"
             style={{
               shadowColor: "#22c55e",
               shadowOffset: { width: 0, height: 3 },

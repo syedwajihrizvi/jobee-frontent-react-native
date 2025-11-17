@@ -283,7 +283,7 @@ const General = () => {
                           <View
                             className={`p-3 rounded-lg border ${
                               profileForm.value.includes("@") && profileForm.value.includes(".")
-                                ? "bg-green-50 border-green-200"
+                                ? "bg-emerald-50 border-green-200"
                                 : "bg-red-50 border-red-200"
                             }`}
                           >

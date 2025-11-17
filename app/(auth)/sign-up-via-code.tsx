@@ -142,7 +142,7 @@ const SignUpViaCode = () => {
         </View>
         <CustomButton
           text="Sign Up"
-          customClass="bg-green-500 py-4 rounded-xl"
+          customClass="bg-emerald-500 py-4 rounded-xl"
           onClick={handleSignUpViaCode}
           isLoading={isLoading}
         />

@@ -16,7 +16,7 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
     const style =
       interviewStatusStyles[status as keyof typeof interviewStatusStyles] || interviewStatusStyles["SCHEDULED"];
     return (
-      <View className="flex-row items-center justify-between pt-3 border-t border-gray-100 w-full">
+      <View className="flex-row items-center justify-between w-full">
         <View className="flex-row items-center gap-2">
           <View className={`w-2 h-2 ${style.bgColor} rounded-full`}></View>
           <Text className="font-quicksand-medium text-sm text-gray-600">{style.text}</Text>
@@ -31,7 +31,7 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
             elevation: 2,
           }}
         >
-          <Feather name="chevron-right" size={16} color="#6366f1" />
+          <Feather name="chevron-right" size={16} color="#2196f3" />
         </View>
       </View>
     );
@@ -50,9 +50,9 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
       activeOpacity={0.7}
       onPress={() => router.push(`/userProfile/interviews/${item.id}`)}
     >
-      <View className="flex-row items-center justify-between mb-4">
+      <View className="flex-row items-start justify-between mb-4">
         <View className="flex-1">
-          <CompanyInformation companyName={item.companyName} companyLogoUrl={""} />
+          <CompanyInformation companyName={item.companyName} companyLogoUrl={""} jobTitle={item.jobTitle} />
         </View>
         <View
           className="bg-indigo-100 px-3 py-1 rounded-full"
@@ -67,14 +67,8 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
           <Text className="font-quicksand-bold text-xs text-indigo-700">{item.interviewDate}</Text>
         </View>
       </View>
-      <View className="mb-4">
-        <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">{item.jobTitle}</Text>
-        <View className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-          <Text className="font-quicksand-bold text-base text-gray-800 mb-1">{item.title}</Text>
-          <Text className="font-quicksand-medium text-sm text-gray-600 leading-5" numberOfLines={2}>
-            {item.description}
-          </Text>
-        </View>
+      <View className="mb-2">
+        <Text className="font-quicksand-bold text-lg text-gray-900">{item.title}</Text>
       </View>
       <View className="flex-row flex-wrap gap-2 mb-3">
         <View

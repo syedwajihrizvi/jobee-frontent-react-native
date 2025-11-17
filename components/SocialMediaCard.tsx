@@ -23,7 +23,7 @@ const SocialMediaCard = ({ icon, subtitle, label, handleEditPress }: Props) => {
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1 gap-4">
-          {icon && <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center">{icon}</View>}
+          {icon && <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">{icon}</View>}
           <View className="flex-1">
             <Text className="font-quicksand-bold text-base text-gray-800 mb-1">{label}</Text>
             <Text className="font-quicksand-medium text-sm text-gray-500 leading-4" numberOfLines={2}>
