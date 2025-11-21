@@ -1,12 +1,14 @@
 import { CustomInputProps } from "@/type";
-import React from "react";
-import { ReturnKeyTypeOptions, Text, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { ReturnKeyTypeOptions, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const CustomInput = ({
   placeholder,
   label,
   value,
   returnKeyType = "default",
+  secureField = false,
   keyboardType = "default",
   autoCapitalize = "none",
   fontSize = 14,
@@ -15,11 +17,14 @@ const CustomInput = ({
   fullWidth = false,
   customClass,
   onChangeText,
+  onSubmitEditing,
 }: CustomInputProps) => {
+  const [passwordVisible, setPasswordVisible] = useState(false);
   return (
-    <View className={`form-input${fullWidth ? " w-full" : ""}`}>
+    <View className={`relative form-input${fullWidth ? " w-full" : ""}`}>
       {label && <Text className="form-input__label">{label}</Text>}
       <TextInput
+        secureTextEntry={secureField && !passwordVisible}
         placeholder={placeholder}
         autoCapitalize={autoCapitalize as "none" | "sentences" | "words" | "characters"}
         value={value}
@@ -38,6 +43,21 @@ const CustomInput = ({
           elevation: 1,
         }}
       />
+      {secureField && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            right: 16,
+            top: 40,
+            zIndex: 1,
+          }}
+          onPressIn={() => {
+            setPasswordVisible(!passwordVisible);
+          }}
+        >
+          <Feather name="eye" size={20} color="gray" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

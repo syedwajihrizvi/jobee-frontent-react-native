@@ -4,6 +4,7 @@ import { Job } from "@/type";
 import { router } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import QuickApply from "./QuickApply";
 
 const JobActions = ({
   job,
@@ -43,15 +44,7 @@ const JobActions = ({
     }
 
     if (canQuickApply) {
-      return (
-        <TouchableOpacity
-          onPress={handleQuickApply}
-          className="bg-emerald-500 px-4 py-2 rounded-lg"
-          activeOpacity={0.8}
-        >
-          <Text className="font-quicksand-bold text-sm text-white">Quick Apply</Text>
-        </TouchableOpacity>
-      );
+      return <QuickApply job={job} size="small" />;
     }
 
     return null;

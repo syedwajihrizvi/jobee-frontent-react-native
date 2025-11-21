@@ -31,7 +31,6 @@ const UploadNewDoc = () => {
       <BackBar
         label="Upload Document"
         optionalCallback={() => {
-          console.log("Called");
           setUploadSuccess(false);
         }}
       />

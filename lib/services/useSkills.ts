@@ -1,8 +1,9 @@
+import { getAPIUrl } from "@/constants";
 import { UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const USER_SKILL_API = `http://192.168.2.29:8080/profiles/skills`;
+const USER_SKILL_API = getAPIUrl('profiles/skills');
 
 export const useSkills = () => {
     const fetchSkillsByUser = async () => {

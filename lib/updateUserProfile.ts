@@ -1,11 +1,10 @@
-import { AddExperienceForm, AddProjectForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate, Project } from "@/type";
+import { getAPIUrl } from "@/constants";
+import { AddExperienceForm, AddProjectForm, AddUserEducationForm, AddUserSkillForm, CompleteProfileForm, Education, Experience, ProfileImageUpdate, Project, User, UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ImagePickerResult } from "expo-image-picker";
 import { convertSocialMediaTypeToEnum } from "./utils";
 
-const PROFILES_API_URL = 'http://192.168.2.29:8080/profiles';
-const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles';
-const COMPANIES_API_URL = 'http://192.168.2.29:8080/api/companies';
+const PROFILES_API_URL = getAPIUrl('profiles');
 
 export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     const token = await AsyncStorage.getItem('x-auth-token');
@@ -31,31 +30,6 @@ export const updateUserProfileImage = async (image: ImagePickerResult)=> {
     if (response.status === 200) return data as ProfileImageUpdate;
     return null;
 };
-
-export const updateBusinessProfileImage = async (image: ImagePickerResult) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    const formData = new FormData();
-    const localUri = image.assets![0].uri;
-    const fileName = image.assets![0].fileName || localUri.split('/').pop() || 'profile.jpg';
-    const type = image.assets![0].type || 'image/jpeg';
-    formData.append('profileImage', {
-        uri: localUri,
-        name: fileName,
-        type
-    } as any);
-    const response = await fetch(
-        `${BUSINESS_PROFILES_API_URL}/update-profile-image/me`, {
-        method: 'PATCH',
-        headers: {
-            'x-auth-token': `Bearer ${token}`,
-        },
-        body: formData,
-    });
-    const data = await response.json();
-    if (response.status === 200) return data as ProfileImageUpdate;
-    return null;
-}
 
 export const updateUserVideoIntro = async (videoIntro: ImagePickerResult) => {
     const token = await AsyncStorage.getItem('x-auth-token');
@@ -129,8 +103,7 @@ export const addSkill = async (newSkill: AddUserSkillForm) => {
         })
     if (res.status === 201 || res.status === 200) {
         const data = await res.json();
-        console.log("Add skill response data:", data);
-        return data;
+        return data as UserSkill;
     }
     return null;
 }
@@ -341,7 +314,7 @@ export const completeProfile = async (
         });
         if (response.status === 200) {
             const data = await response.json();
-            return data;
+            return data as User;
         }
         return null;
     } catch (error) {
@@ -392,6 +365,8 @@ export const mapCompanyProfileToAPIField = (field: string) : string => {
             return 'hqState';
         case 'Description':
             return 'description';
+        case 'Company Website':
+            return 'website';
         default:
             return '';  
     }
@@ -448,6 +423,24 @@ export const updateProfileSummary = async (summary: string) => {
     return response.status === 200;
 }
 
+export const getAIProfileSummary = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const response = await fetch(`${PROFILES_API_URL}/generate-professional-summary`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    });
+    if (response.status === 200) {
+        const data = await response.json();
+        console.log("AI Profile Summary Response:", data);
+        return data.professionalSummary as string;
+    }
+    return null;
+}
+
 export const addViewToProfile = async (id: number) => {
     try {
         const result = await fetch(`${PROFILES_API_URL}/views?profileId=${id}`, {
@@ -471,83 +464,6 @@ export const toggleFavoriteCompany = async (companyId: number) => {
     });
     console.log("Toggle Favorite Company Status:", result);
     return result.status === 200;
-}
-
-export const updateGeneralInfoForBusinessUser = async ({field, value}: {field: string, value: string}) => {
-    console.log("Updating field:", field, "with value:", value);
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    if (!field) return null;
-    const body = {
-        [field]: value
-    }
-
-    const response = await fetch(`${BUSINESS_PROFILES_API_URL}/update-general-info/me`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-    });
-    return response.status === 200;
-}
-
-export const updateBusinessUserLocation = async ({city, country, state }: {city: string, country: string, state: string}) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    const body = {
-        city,
-        country,
-        state
-    }
-    const response = await fetch(`${BUSINESS_PROFILES_API_URL}/update-general-info/me`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-    });
-    console.log("Location update response:", response);
-    return response.status === 200;
-}
-
-export const updateCompanyProfile = async ({field, value, companyId}: {field: string, value: string, companyId: number}) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    if (!field) return null;
-    const body = {
-        [field]: value
-    }
-    const response = await fetch(`${COMPANIES_API_URL}/${companyId}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-    });
-    return response.status === 200;
-}
-
-export const updateCompanyLocation = async ({city, country, state, companyId }: {city: string, country: string, state: string, companyId: number}) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    const body = {
-        hqCity: city,
-        hqCountry: country,
-        hqState: state
-    }
-    const response = await fetch(`${COMPANIES_API_URL}/${companyId}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-    });
-    return response.status === 200;
 }
 
 export const updatePrimaryResume = async (documentId: number) => {
@@ -585,45 +501,6 @@ export const updateSocialMediaLink = async (type: string, url: string, id:number
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
     const res = await fetch(`${PROFILES_API_URL}/socialMedia/${id}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
-        },
-        body: JSON.stringify({ type: convertSocialMediaTypeToEnum(type), url })
-    });
-    if (res.status === 200) {
-        const data = await res.json();
-        console.log("Update social media link response data:", data);
-        return data;
-    }
-    return null;
-}
-
-
-export const createBusinessSocialMediaLink = async (type: string, url: string) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    const res = await fetch(`${BUSINESS_PROFILES_API_URL}/socialMedia`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': `Bearer ${token}`
-        },
-        body: JSON.stringify({ type: convertSocialMediaTypeToEnum(type), url })
-    });
-    if (res.status === 201 || res.status === 200) {
-        const data = await res.json();
-        console.log("Create social media link response data:", data);
-        return data;
-    }
-    return null;
-}
-
-export const updateBusinessSocialMediaLink = async (type: string, url: string, id:number) => {
-    const token = await AsyncStorage.getItem('x-auth-token');
-    if (!token) return null;
-    const res = await fetch(`${BUSINESS_PROFILES_API_URL}/socialMedia/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',

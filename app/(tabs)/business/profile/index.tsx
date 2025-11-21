@@ -1,9 +1,10 @@
 import BackBar from "@/components/BackBar";
 import ProfileLink from "@/components/ProfileLink";
+import RenderBusinessProfileImage from "@/components/RenderBusinessProfileImage";
 import { adminOnlyProfileLinks, businessProfileLinks, recruiterOnlyProfileLinks } from "@/constants/index";
 import { signOut } from "@/lib/auth";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
-import { updateBusinessProfileImage } from "@/lib/updateUserProfile";
+import { updateBusinessProfileImage } from "@/lib/updateProfiles/businessProfile";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser } from "@/type";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
@@ -16,7 +17,14 @@ import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, Vi
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Profile = () => {
-  const { isAuthenticated, isLoading, user: authUser, removeUser, setUserType } = useAuthStore();
+  const {
+    isAuthenticated,
+    isLoading,
+    user: authUser,
+    removeUser,
+    setUserType,
+    updateUserProfileImage,
+  } = useAuthStore();
   const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
@@ -87,6 +95,8 @@ const Profile = () => {
         Alert.alert("Success", "Profile image updated successfully.");
         console.log("Updated Profile Image URL:", response.profileImageUrl);
         setUploadedProfileImage(response.profileImageUrl);
+        console.log(response);
+        updateUserProfileImage(response.profileImageUrl);
       } else {
         Alert.alert("Error", "Failed to update profile image. Please try again.");
       }
@@ -114,7 +124,6 @@ const Profile = () => {
   };
 
   const renderProfileImage = () => {
-    console.log("Rendering profile image with user:", user);
     if (uploadedProfileImage) {
       return (
         <Image
@@ -124,11 +133,13 @@ const Profile = () => {
         />
       );
     } else if (!user || !user.profileImageUrl) {
-      console.log("No profile image found, rendering default icon.");
       return (
-        <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center">
-          <Feather name="user" size={30} color="#6b7280" />
-        </View>
+        <RenderBusinessProfileImage
+          profileImageSize={14}
+          fontSize={14}
+          firstName={user?.firstName}
+          lastName={user?.lastName}
+        />
       );
     }
     const uri = getS3BusinessProfileImage(user.profileImageUrl);
@@ -170,7 +181,8 @@ const Profile = () => {
                 )}
               </View>
               <Text className="font-quicksand-semibold text-sm">
-                {user?.title} @ {user?.companyName}
+                {user?.title && `${user?.title} @ `}
+                {user?.companyName}
               </Text>
             </View>
           </View>

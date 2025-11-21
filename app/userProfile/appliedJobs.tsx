@@ -6,6 +6,7 @@ import useUserStore from "@/store/user.store";
 import useUserJobsStore from "@/store/userJobsStore";
 import { ApplicationStatusFilter, Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -144,6 +145,57 @@ const AppliedJobs = () => {
           }}
           ListFooterComponent={() => {
             return isLoadingApplicationsForFilter ? <ActivityIndicator size="large" color="#8b5cf6" /> : null;
+          }}
+          ListEmptyComponent={() => {
+            return filter != null && totalCount > 0 ? null : (
+              <View className="flex-1 items-center justify-center px-6 py-20">
+                <View
+                  className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-6"
+                  style={{
+                    shadowColor: "#10b981",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <Feather name="briefcase" size={32} color="#10b981" />
+                </View>
+
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-3 text-center">
+                  No Job Applications Yet
+                </Text>
+
+                <Text className="font-quicksand-medium text-gray-600 text-center leading-6 mb-8">
+                  Start your job search journey! Browse available positions and apply to jobs that match your skills and
+                  interests.
+                </Text>
+
+                <TouchableOpacity
+                  className="bg-emerald-500 px-6 py-3 rounded-xl flex-row items-center gap-2"
+                  style={{
+                    shadowColor: "#10b981",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 6,
+                    elevation: 4,
+                  }}
+                  onPress={() => router.push("/(tabs)/users/jobs")}
+                  activeOpacity={0.8}
+                >
+                  <Feather name="search" size={16} color="white" />
+                  <Text className="font-quicksand-bold text-white">Browse Jobs</Text>
+                </TouchableOpacity>
+
+                <View className="mt-6 flex-row items-center gap-3">
+                  <View className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <Text className="font-quicksand-medium text-xs text-gray-500">
+                    Get started by exploring job opportunities
+                  </Text>
+                  <View className="w-1 h-1 bg-gray-300 rounded-full" />
+                </View>
+              </View>
+            );
           }}
           ItemSeparatorComponent={() => <View className="divider" />}
         />

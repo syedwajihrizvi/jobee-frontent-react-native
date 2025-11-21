@@ -5,8 +5,8 @@ import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
-import { useExperiences } from "@/lib/services/useExperiences";
 import { addExperience, deleteExperience } from "@/lib/updateUserProfile";
+import useUserStore from "@/store/user.store";
 import { AddExperienceForm, Experience } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -14,8 +14,14 @@ import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Experiences = () => {
-  const { data: userExperiences, isLoading } = useExperiences();
-  const [experiences, setExperiences] = useState<Experience[]>(userExperiences || []);
+  const {
+    getExperiences,
+    fetchUserExperiences,
+    hasValidExperiences,
+    isLoadingExperiences,
+    updateExperiences,
+    removeExperience,
+  } = useUserStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -35,10 +41,10 @@ const Experiences = () => {
   });
 
   useEffect(() => {
-    if (!isLoading && userExperiences) {
-      setExperiences(userExperiences);
+    if (!hasValidExperiences()) {
+      fetchUserExperiences();
     }
-  }, [userExperiences, isLoading]);
+  }, []);
 
   const resetStates = () => {
     setIsSubmitting(false);
@@ -88,8 +94,7 @@ const Experiences = () => {
     try {
       const res = await addExperience(experienceForm);
       if (res) {
-        console.log("Experience added successfully:", res);
-        setExperiences((prev) => [res, ...prev]);
+        updateExperiences(res);
         setAddSuccess(true);
       }
     } catch (error) {
@@ -100,19 +105,11 @@ const Experiences = () => {
   };
 
   const submitEditExperience = async () => {
-    console.log("Submitting edited experience:", experienceForm);
-    console.log("Editing experience:", experienceForm);
     setIsSubmitting(true);
     try {
       const res = await addExperience(experienceForm);
       if (res) {
-        console.log("Experience added successfully:", res);
-        const index = experiences.findIndex((exp) => exp.id === experienceForm.id);
-        if (typeof index === "number" && index !== -1) {
-          const updatedExperiences = [...experiences];
-          updatedExperiences[index] = res;
-          setExperiences(updatedExperiences);
-        }
+        updateExperiences(res);
         setEditSuccess(true);
       }
     } catch (error) {
@@ -132,10 +129,8 @@ const Experiences = () => {
         onPress: async () => {
           try {
             const res = await deleteExperience(experienceForm.id);
-            console.log("Delete experience response:", res);
             if (res) {
-              const updatedExperiences = experiences.filter((exp) => exp.id !== experienceForm.id);
-              setExperiences(updatedExperiences);
+              removeExperience(experienceForm.id);
               setDeleteSuccess(true);
             }
           } catch (error) {
@@ -148,6 +143,8 @@ const Experiences = () => {
     ]);
   };
 
+  const experiences = getExperiences();
+  const isLoading = isLoadingExperiences;
   return (
     <SafeAreaView>
       <BackBar label="Experiences" />
@@ -274,8 +271,8 @@ const Experiences = () => {
                 </View>
               ) : (
                 <View className="bg-white rounded-2xl p-8 items-center justify-center border border-gray-200">
-                  <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
-                    <Feather name="award" size={24} color="#9ca3af" />
+                  <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+                    <Feather name="briefcase" size={24} color="#10b981" />
                   </View>
                   <Text className="font-quicksand-bold text-gray-800 text-lg mb-2">No Experiences Added Yet</Text>
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">

@@ -17,7 +17,8 @@ const SearchBar = ({ placeholder, onSubmit }: { placeholder: string; onSubmit: (
         elevation: 3,
       }}
     >
-      <EvilIcons name="search" size={20} color="black" className="left-4 z-10" />
+      <View></View>
+      <EvilIcons name="search" size={20} color="#6b7280" className="left-4 z-10" />
       <TextInput
         className="search-bar"
         placeholder={placeholder}

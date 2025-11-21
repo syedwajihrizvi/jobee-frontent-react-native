@@ -173,13 +173,13 @@ const MessageChat = () => {
       >
         <FlatList
           ref={flatListRef}
-          data={[...messages].reverse()} // <-- clone to avoid mutation
+          data={[...messages].reverse()}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id.toString()}
           className="flex-1"
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
-          inverted // <-- this alone handles the bottom-up behavior
+          inverted
           onContentSizeChange={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
           ListEmptyComponent={
             <View className="items-center justify-center px-6 mt-20">

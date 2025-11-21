@@ -81,7 +81,7 @@ const RecruiterDashboard = () => {
                   <Text className="font-quicksand-bold text-xl text-gray-900">
                     {user?.firstName} {user?.lastName}
                   </Text>
-                  <RenderCompanyLogo logoUrl={user?.companyLogo || ""} />
+                  <RenderCompanyLogo logoUrl={user?.companyLogo} />
                 </View>
 
                 <View className="flex-row items-center gap-2">

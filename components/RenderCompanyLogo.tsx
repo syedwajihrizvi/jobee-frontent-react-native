@@ -1,15 +1,16 @@
-import { images } from "@/constants";
 import { getS3CompanyLogoUrl } from "@/lib/s3Urls";
+import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Image } from "react-native";
 
 type Props = {
-  logoUrl: string;
+  logoUrl?: string;
   size?: number;
 };
 
 const RenderCompanyLogo = ({ logoUrl, size = 4 }: Props) => {
-  const sizeInPixels = size * 8; // Assuming 1 unit = 8 pixels
+  const sizeInPixels = size * 8;
+
   if (logoUrl) {
     return (
       <Image
@@ -19,10 +20,9 @@ const RenderCompanyLogo = ({ logoUrl, size = 4 }: Props) => {
         resizeMode="contain"
       />
     );
+  } else {
+    return <Feather name="briefcase" size={sizeInPixels} color="#22c55e" />;
   }
-  return (
-    <Image source={images.companyLogo} resizeMode="contain" style={{ width: sizeInPixels, height: sizeInPixels }} />
-  );
 };
 
 export default RenderCompanyLogo;

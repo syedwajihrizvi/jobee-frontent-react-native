@@ -2,17 +2,14 @@ import CompleteProfileReminder from "@/components/CompleteProfileReminder";
 import FilterStatus from "@/components/FilterStatus";
 import JobFiltersView from "@/components/JobFiltersView";
 import JobListing from "@/components/JobListing";
-import QuickApplyModal from "@/components/QuickApplyModal";
 import RecommededJobApplySuccessModal from "@/components/RecommededJobApplySuccessModal";
 import RecommendedJobsPreview from "@/components/RecommendedJobsPreview";
 import SearchBar from "@/components/SearchBar";
 import { sounds } from "@/constants";
-import { quickApplyToJob } from "@/lib/jobEndpoints";
 import { onActionSuccess } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import useUserStore from "@/store/user.store";
 import useUserJobsStore from "@/store/userJobsStore";
-import { Application, Job, JobFilters, User } from "@/type";
+import { Application, JobFilters, User } from "@/type";
 import { useAudioPlayer } from "expo-audio";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -39,10 +36,7 @@ const Jobs = () => {
   const player = useAudioPlayer(sounds.popSound);
   const [filters, setFilters] = useState<JobFilters>({ ...defaultFilters });
 
-  const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
   const [showRecommendedJobsModalSuccess, setShowRecommendedJobsModalSuccess] = useState(false);
-  const [quickApplyJob, setQuickApplyJob] = useState<Job | null>(null);
-  const [quickApplyLabel, setQuickApplyLabel] = useState("");
   const [tempFilterCount, setTempFilterCount] = useState(0);
   const [filterCount, setFilterCount] = useState(0);
   const {
@@ -56,11 +50,9 @@ const Jobs = () => {
     isLoadingRecommendedJobs,
     hasValidCachedJobs,
     hasValidRecommendedJobsCache,
-    addAppliedJob,
   } = useUserJobsStore();
   const { user: authUser, isLoading: isAuthLoading, userType, isAuthenticated } = useAuthStore();
   const user = authUser as User | null;
-  const { setApplications, applications, setLastApplication } = useUserStore();
   const [isViewingRecommended, setIsViewRecommended] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileCompleteReminder, setShowProfileCompleteReminder] = useState(
@@ -93,6 +85,7 @@ const Jobs = () => {
 
   useEffect(() => {
     if (companyName) {
+      setTempFilterCount(1);
       setFilters((prev) => ({ ...prev, companies: [companyName as string] }));
       setFilterCount(1);
     }
@@ -141,46 +134,15 @@ const Jobs = () => {
     return <Redirect href="/(tabs)/business/jobs" />;
   }
 
-  const handleQuickApply = (job: Job) => {
-    setQuickApplyJob(job);
-    setQuickApplyLabel(`Quick Apply for ${job.title} at ${job.businessName}`);
-    setShowQuickApplyModal(true);
-  };
-
-  const handleUnAuthenticatedQuickApply = () => {
-    setQuickApplyJob(null);
-    setShowQuickApplyModal(false);
-    router.push("/(auth)/sign-in");
-  };
-
-  const handleQuickApplyClose = async (apply: boolean) => {
-    if (apply && quickApplyJob) {
-      const res = await quickApplyToJob(quickApplyJob.id);
-      if (res != null) {
-        const newApplication = {
-          id: res.id,
-          appliedAt: res.appliedAt,
-          jobId: quickApplyJob.id,
-          status: res.status,
-        } as Application;
-        setApplications([newApplication, ...applications]);
-        setLastApplication(res);
-        addAppliedJob(quickApplyJob);
-        player.seekTo(0);
-        player.play();
-        await onActionSuccess();
-      }
-    }
-    setQuickApplyJob(null);
-    setShowQuickApplyModal(false);
-  };
-
   const filteredJobs = getJobsByFilter(filters);
   const paginatedFilteredJobs = getPaginationForJobsByFilter(filters);
   const isLoadingFilteredJobs = isLoadingJobsForFilter(filters);
   const recommendedJobs = getRecommendedJobs();
   const isLoadingRecommended = isLoadingRecommendedJobs();
 
+  if (!isAuthenticated && !isLoadingFilteredJobs && filteredJobs.length === 0) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
   return (
     <SafeAreaView className={`relative flex-1 bg-white${isAuthenticated ? " pb-20" : ""}`}>
       <StatusBar hidden={true} />
@@ -218,7 +180,7 @@ const Jobs = () => {
         className="w-full px-4"
         data={filteredJobs}
         renderItem={({ item, index }) => {
-          return <JobListing key={index} job={item} handleQuickApply={() => handleQuickApply(item)} />;
+          return <JobListing key={index} job={item} />;
         }}
         onEndReached={() => {
           if (paginatedFilteredJobs?.hasMore && !isLoadingFilteredJobs) {
@@ -246,14 +208,6 @@ const Jobs = () => {
         showRecommendedJobsModalSuccess={showRecommendedJobsModalSuccess}
         setShowRecommendedJobsModalSuccess={setShowRecommendedJobsModalSuccess}
         recommendedJobs={recommendedJobs || []}
-      />
-
-      <QuickApplyModal
-        visible={showQuickApplyModal}
-        label={quickApplyLabel}
-        handleClose={handleQuickApplyClose}
-        canQuickApply={!!user?.primaryResume}
-        handleUnAuthenticatedQuickApply={handleUnAuthenticatedQuickApply}
       />
     </SafeAreaView>
   );

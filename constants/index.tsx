@@ -314,3 +314,8 @@ export const interviewFilterOptions = [
     activeTextColor: "#ffffff", // White
   },
 ];
+
+export const getAPIUrl = (path: string) => {
+  const baseUrl = "http://192.168.2.29:8080/api/";
+  return `${baseUrl}${path}`;
+};

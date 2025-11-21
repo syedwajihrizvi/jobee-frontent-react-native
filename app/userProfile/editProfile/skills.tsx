@@ -4,9 +4,9 @@ import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
-import { useSkills } from "@/lib/services/useSkills";
 import { addSkill, deleteSkill } from "@/lib/updateUserProfile";
-import { AddUserSkillForm, UserSkill } from "@/type";
+import useUserStore from "@/store/user.store";
+import { AddUserSkillForm } from "@/type";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
@@ -14,7 +14,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Skills = () => {
-  const { data: userSkills, isLoading } = useSkills();
+  const { getSkills, hasValidSkills, isLoadingSkills, fetchUserSkills, updateSkills, removeSkill } = useUserStore();
   const [showModal, setShowModal] = useState(false);
   const [skillForm, setSkillForm] = useState<AddUserSkillForm>({ id: 0, skill: "", experience: "", skillId: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +23,6 @@ const Skills = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [_, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [skills, setSkills] = useState<UserSkill[] | undefined>(userSkills);
   const getExperienceLevel = (years: number) => {
     if (years >= 5) return { label: "Expert", color: "green-600" };
     if (years >= 3) return { label: "Advanced", color: "green-500" };
@@ -32,10 +31,10 @@ const Skills = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && userSkills) {
-      setSkills(userSkills);
+    if (!hasValidSkills()) {
+      fetchUserSkills();
     }
-  }, [userSkills, isLoading]);
+  }, []);
 
   const resetStates = () => {
     setAddSuccess(false);
@@ -49,8 +48,6 @@ const Skills = () => {
   };
 
   const handleEditSkill = (skill: any) => {
-    // Navigate to edit skill modal or screen
-    console.log("Editing skill:", skill);
     resetStates();
     setSkillForm({
       id: skill.id,
@@ -63,7 +60,6 @@ const Skills = () => {
   };
 
   const handleAddSkill = () => {
-    // Navigate to add skill modal or screen
     resetStates();
     setSkillForm({ id: 0, skill: "", experience: "", skillId: 0 });
     setIsAdding(true);
@@ -71,31 +67,12 @@ const Skills = () => {
   };
 
   const submitNewSkill = async () => {
-    console.log("Submitting updated skill:", skillForm);
     setIsSubmitting(true);
-    console.log("Current skills before adding:", skills);
     try {
       const res = await addSkill(skillForm);
-      console.log("Add skill response:", res);
       if (res) {
-        const index = skills?.findIndex((s) => {
-          console.log(`Comparing: ${s.skill.id}, ${res.skill.id}`);
-          return s.skill.id === res.skill.id;
-        });
-        console.log("Skill index:", index);
-        const updatedSkills = [...(skills || [])];
-        if (typeof index === "number" && index >= 0) {
-          console.log("Updating existing skill at index:", index);
-          updatedSkills[index] = res;
-          setSkills(updatedSkills);
-          setAddSuccess(true);
-        } else {
-          console.log("Adding new skill");
-          console.log(res);
-          updatedSkills.push(res);
-          setSkills(updatedSkills);
-          setAddSuccess(true);
-        }
+        updateSkills(res);
+        setAddSuccess(true);
       }
     } catch (error) {
       console.error("Error adding skill:", error);
@@ -105,27 +82,12 @@ const Skills = () => {
   };
 
   const submitUpdatedSkill = async () => {
-    console.log("Submitting updated skill:", skillForm);
     setIsSubmitting(true);
-    console.log("Current skills before adding:", skills);
     try {
       const res = await addSkill(skillForm);
-      console.log("Add skill response:", res);
       if (res) {
-        console.log(res.skill.id);
-        console.log("Current skills:", skills);
-        const index = skills?.findIndex((s) => {
-          console.log(`Comparing: ${s.skill.id}, ${res.skill.id}`);
-          return s.skill.id === res.skill.id;
-        });
-        console.log("Skill index:", index);
-        const updatedSkills = [...(skills || [])];
-        if (typeof index === "number" && index >= 0) {
-          console.log("Updating existing skill at index:", index);
-          updatedSkills[index] = res;
-          setSkills(updatedSkills);
-          setEditSuccess(true);
-        }
+        updateSkills(res);
+        setEditSuccess(true);
       }
     } catch (error) {
       console.error("Error adding skill:", error);
@@ -144,15 +106,8 @@ const Skills = () => {
           setIsSubmitting(true);
           try {
             const res = await deleteSkill(skillForm.id);
-            console.log("Delete skill response:", res);
-            console.log(skillForm.skillId);
             if (res) {
-              console.log("Skill deleted successfully");
-              console.log("Current skills before deletion:", skills);
-              const index = skills?.findIndex((s) => s.id === skillForm.id);
-              console.log("Deleted skill index:", index);
-              const updatedSkills = skills?.filter((s) => s.id !== skillForm.id);
-              setSkills(updatedSkills);
+              removeSkill(skillForm.id);
               setDeleteSuccess(true);
             }
           } catch (error) {
@@ -165,6 +120,8 @@ const Skills = () => {
     ]);
   };
 
+  const skills = getSkills();
+  const isLoading = isLoadingSkills;
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Skills" />
@@ -222,47 +179,28 @@ const Skills = () => {
 
                   <View className="flex flex-row flex-wrap gap-3">
                     {skills.map((userSkill, index) => {
-                      const experienceLevel = getExperienceLevel(userSkill.experience);
                       return (
                         <TouchableOpacity
                           key={index}
-                          className="bg-white border-2 border-gray-100 rounded-2xl p-4 min-w-[45%] flex-1"
+                          className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-2xl p-5 min-w-[45%] flex-1"
                           style={{
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.08,
-                            shadowRadius: 4,
-                            elevation: 3,
+                            shadowColor: "#10b981",
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 6,
+                            elevation: 4,
                             maxWidth: "48%",
                           }}
                           onPress={() => handleEditSkill(userSkill)}
                         >
-                          <View className="flex-row items-center justify-between mb-3">
-                            <View className="bg-emerald-100 px-2 py-1 rounded-full">
-                              <Text className="font-quicksand-bold text-md text-green-700">{userSkill.skill.name}</Text>
-                            </View>
-                            <Feather name="edit-2" size={14} color="#6b7280" />
-                          </View>
-                          <View className="flex-row items-center gap-1 mb-3">
-                            <Feather name="clock" size={12} color="#6b7280" />
-                            <Text className="font-quicksand-medium text-gray-500 text-sm">
-                              {userSkill.experience} {userSkill.experience === 1 ? "year" : "years"}
-                            </Text>
-                          </View>
-                          <View>
-                            <View className="flex-row justify-between items-center mb-1">
-                              <Text className="font-quicksand-medium text-xs text-gray-500">Level</Text>
-                              <Text className={`font-quicksand-bold text-xs text-${experienceLevel.color}`}>
-                                {experienceLevel.label}
+                          <View className="flex-row items-center justify-between mb-2">
+                            <View className="flex-1 pr-2">
+                              <Text className="font-quicksand-bold text-base text-emerald-700 mb-1" numberOfLines={1}>
+                                {userSkill.skill.name}
                               </Text>
                             </View>
-                            <View className="w-full bg-gray-200 rounded-full h-2">
-                              <View
-                                className={`h-2 rounded-full bg-${experienceLevel.color}`}
-                                style={{
-                                  width: `${Math.min(userSkill.experience * 100, 100)}%`,
-                                }}
-                              />
+                            <View className="bg-emerald-100 p-2 rounded-full">
+                              <Feather name="edit-2" size={14} color="#10b981" />
                             </View>
                           </View>
                         </TouchableOpacity>
@@ -272,8 +210,8 @@ const Skills = () => {
                 </View>
               ) : (
                 <View className="bg-white rounded-2xl p-8 items-center justify-center border border-gray-200">
-                  <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
-                    <Feather name="award" size={24} color="#9ca3af" />
+                  <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+                    <Feather name="award" size={24} color="#10b981" />
                   </View>
                   <Text className="font-quicksand-bold text-gray-800 text-lg mb-2">No Skills Added Yet</Text>
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">
@@ -288,7 +226,7 @@ const Skills = () => {
           )}
         </View>
       </ScrollView>
-      <ModalWithBg visible={showModal} customHeight={0.8} customWidth={0.9}>
+      <ModalWithBg visible={showModal} customHeight={0.5} customWidth={0.7}>
         <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">
@@ -363,64 +301,11 @@ const Skills = () => {
                         }}
                       />
                     </View>
-                    <View className="px-6">
-                      <View className="flex-row items-center justify-between mb-2">
-                        <Text className="font-quicksand-medium text-sm text-gray-600">Years of Experience</Text>
-                        <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {skillForm.experience.length > 0 ? `${skillForm.experience} years` : "Required"}
-                        </Text>
-                      </View>
-                      <CustomInput
-                        placeholder="e.g. 3"
-                        label=""
-                        keyboardType="default"
-                        onChangeText={(text) => setSkillForm({ ...skillForm, experience: text })}
-                        value={skillForm.experience}
-                        customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                        style={{
-                          fontSize: 12,
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      />
-                      {skillForm.experience && !isNaN(Number(skillForm.experience)) && (
-                        <View className="mt-3 p-3 bg-emerald-50 border border-green-200 rounded-lg">
-                          <View className="flex-row items-center justify-between">
-                            <Text className="font-quicksand-medium text-sm text-green-700">Experience Level:</Text>
-                            <Text className="font-quicksand-bold text-sm text-green-800">
-                              {getExperienceLevel(Number(skillForm.experience)).label}
-                            </Text>
-                          </View>
-                          <View className="w-full bg-emerald-200 rounded-full h-2 mt-2">
-                            <View
-                              className={`h-2 rounded-full bg-emerald-600`}
-                              style={{
-                                width: `${Math.min((Number(skillForm.experience) / 5) * 100, 100)}%`,
-                              }}
-                            />
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                    <View className="px-6">
-                      <View className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <Text className="font-quicksand-bold text-base text-gray-700 mb-2">Experience Guide:</Text>
-                        <View className="gap-1">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">• 0-1 years: Beginner</Text>
-                          <Text className="font-quicksand-medium text-sm text-gray-600">• 1-3 years: Intermediate</Text>
-                          <Text className="font-quicksand-medium text-sm text-gray-600">• 3-5 years: Advanced</Text>
-                          <Text className="font-quicksand-medium text-sm text-gray-600">• 5+ years: Expert</Text>
-                        </View>
-                      </View>
-                    </View>
                     <View className="flex-1" />
                     <View className="px-6 pb-4">
                       {isAdding ? (
                         <ProfileButton
-                          color="green-500"
+                          color="emerald-500"
                           buttonText="Add Skill"
                           handlePress={submitNewSkill}
                           disabled={!skillForm.skill.trim() || !skillForm.experience.trim()}
@@ -428,7 +313,7 @@ const Skills = () => {
                       ) : (
                         <View className="gap-3">
                           <ProfileButton
-                            color="green-500"
+                            color="emerald-500"
                             buttonText="Update Skill"
                             handlePress={submitUpdatedSkill}
                             disabled={!skillForm.skill.trim() || !skillForm.experience.trim()}

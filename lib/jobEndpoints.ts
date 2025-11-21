@@ -1,9 +1,10 @@
-import { Application, CandidateForJob, CreateApplication, CreateJobForm, HiringTeamMemberForm } from "@/type";
+import { getAPIUrl } from "@/constants";
+import { Application, CandidateForJob, CreateApplication, CreateJobForm, HiringTeamMemberForm, Job } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const APPLICATION_API_URL = 'http://192.168.2.29:8080/applications'
-const JOBS_API_URL = 'http://192.168.2.29:8080/jobs'
-const USER_PROFILE_API_URL = 'http://192.168.2.29:8080/profiles'
+const JOBS_API_URL = getAPIUrl('jobs');
+const USER_PROFILE_API_URL = getAPIUrl('profiles');
 
 export const applyToJob = async (application: CreateApplication) => {
             const token = await AsyncStorage.getItem('x-auth-token');
@@ -96,7 +97,7 @@ export const createJob = async (
     })
     if (result.status !== 201) return null;
     const data = await result.json();
-    return data;
+    return data as Job;
 }
 
 export const getUserAppliedJobs = async () => {
@@ -181,7 +182,6 @@ export const getAIJobDescription = async (jobInfo: CreateJobForm) => {
     })
     if (result.status !== 200) return null;
     const data = await result.json();
-    console.log("AI Generated Job Description:", data.aiGeneratedJobDescription);
     return data.aiGeneratedJobDescription as string;
 
 }

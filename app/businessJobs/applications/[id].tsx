@@ -30,7 +30,7 @@ const screenWidth = Dimensions.get("window").width;
 const panelWidth = screenWidth * 0.8;
 
 const Applications = () => {
-  const { id, applicationStatus } = useLocalSearchParams();
+  const { id, applicationStatus, jobTitle } = useLocalSearchParams();
   const {
     fetchApplicationsForJob,
     getApplicationsForJob,
@@ -279,7 +279,7 @@ const Applications = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <BackBar label="Applications" />
+      <BackBar label={`${jobTitle} Applications`} />
       <View className="justify-center items-center mt-2">
         <SearchBar
           placeholder="Search applicants by name, city, or country"

@@ -1,6 +1,7 @@
 import BackBar from "@/components/BackBar";
 import ProfileLink from "@/components/ProfileLink";
-import { images, userProfileLinks } from "@/constants/index";
+import RenderUserProfileImage from "@/components/RenderUserProfileImage";
+import { userProfileLinks } from "@/constants/index";
 import { signOut } from "@/lib/auth";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { updateUserProfileImage } from "@/lib/updateUserProfile";
@@ -100,9 +101,10 @@ const Profile = () => {
   };
 
   const renderProfileImage = () => {
-    if (!user || !(user as User).profileImageUrl) {
-      return <Image source={{ uri: images.companyLogo }} className="size-14 rounded-full" resizeMode="contain" />;
-    } else if (uploadedProfileImage) {
+    if (isLoading) {
+      return <ActivityIndicator size="small" color="#0000ff" />;
+    }
+    if (uploadedProfileImage) {
       return (
         <Image
           source={{ uri: getS3ProfileImage(uploadedProfileImage) }}
@@ -111,8 +113,7 @@ const Profile = () => {
         />
       );
     }
-    const uri = getS3ProfileImage((user as User).profileImageUrl);
-    return <Image source={{ uri }} className="size-14 rounded-full" resizeMode="contain" />;
+    return <RenderUserProfileImage user={user as User} />;
   };
 
   return (
@@ -131,9 +132,23 @@ const Profile = () => {
                   {renderProfileImage()}
                   <Entypo
                     name="edit"
-                    size={16}
-                    color="black"
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1"
+                    size={12}
+                    color="white"
+                    style={{
+                      position: "absolute",
+                      top: -8,
+                      right: -8,
+                      backgroundColor: "#10b981",
+                      borderRadius: 12,
+                      padding: 4,
+                      borderWidth: 2,
+                      borderColor: "white",
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 4,
+                      elevation: 4,
+                    }}
                   />
                 </>
               )}

@@ -3,15 +3,16 @@ import ApplyBottomSheet from "@/components/ApplyBottomSheet";
 import BackBar from "@/components/BackBar";
 import CompanyInformation from "@/components/CompanyInformation";
 import ExpandableText from "@/components/ExpandableText";
+import FavoriteCompany from "@/components/FavoriteCompany";
 import FavoriteJob from "@/components/FavoriteJob";
 import JobInfo from "@/components/JobInfo";
 import ModalWithBg from "@/components/ModalWithBg";
+import QuickApply from "@/components/QuickApply";
 import ViewMore from "@/components/ViewMore";
 import { sounds, UserDocumentType } from "@/constants";
 import { addViewToJobs, applyToJob, checkJobMatchForUser } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob } from "@/lib/services/useJobs";
-import { toggleFavoriteCompany } from "@/lib/updateUserProfile";
 import {
   formatDate,
   getEmploymentType,
@@ -21,16 +22,15 @@ import {
   onActionSuccess,
 } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
 import useUserJobsStore from "@/store/userJobsStore";
-import { Application, Company, CreateApplication, User, UserDocument } from "@/type";
-import { Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
+import { Application, CreateApplication, User, UserDocument } from "@/type";
+import { Feather, FontAwesome5, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useAudioPlayer } from "expo-audio";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const JobDetails = () => {
@@ -38,12 +38,17 @@ const JobDetails = () => {
   const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
   const { applications, setApplications, isLoadingApplications, setLastApplication } = useUserStore();
   const user = authUser as User | null;
-  const { profileSummary } = useProfileSummaryStore();
   const { data: job, isLoading } = useJob(Number(jobId));
-
   const [jobApplication, setJobApplication] = useState<Application | null>(null);
-  const { addAppliedJob } = useUserJobsStore();
+  const {
+    addAppliedJob,
+    addViewForJob,
+    addApplicationForJob,
+    getTotalViewsForJobById,
+    getTotalApplicationsForJobById,
+  } = useUserJobsStore();
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
+  const [showMatchSignInModal, setShowMatchSignInModal] = useState(false);
   const [showJobInfoModal, setShowJobInfoModal] = useState(false);
   const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
   const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
@@ -71,6 +76,7 @@ const JobDetails = () => {
   }, [isLoadingApplications, applications, jobId]);
 
   useEffect(() => {
+    addViewForJob(Number(jobId));
     const addView = async () => {
       await addViewToJobs(Number(jobId));
       console.log("Added view to job", jobId);
@@ -91,34 +97,6 @@ const JobDetails = () => {
       }
     }
   }, [isLoadingUser, user]);
-
-  const checkIfCompanyIsFavorited = (companyId: number) => {
-    if (!profileSummary) return false;
-    return profileSummary?.favoriteCompanies.some((company) => company.id === companyId);
-  };
-  const handleFavoriteCompany = async (company: Company) => {
-    try {
-      const result = await toggleFavoriteCompany(Number(company.id));
-      if (result) {
-        const currFavorites = profileSummary?.favoriteCompanies || [];
-        const index = currFavorites.findIndex((c) => c.id === Number(company.id));
-        if (index > -1) {
-          const newFavorites = currFavorites.filter((c) => c.id !== Number(company.id));
-          useProfileSummaryStore.getState().setProfileSummary({
-            ...profileSummary!,
-            favoriteCompanies: newFavorites,
-          });
-        } else {
-          useProfileSummaryStore.getState().setProfileSummary({
-            ...profileSummary!,
-            favoriteCompanies: [company, ...currFavorites],
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error toggling favorite company:", error);
-    }
-  };
 
   const handleApplyBottomOpen = () => {
     companyBottomRef.current?.close();
@@ -158,6 +136,7 @@ const JobDetails = () => {
         setLastApplication(newApplication);
         setApplications([newApplication, ...applications]);
         addAppliedJob(res.job);
+        addApplicationForJob(Number(jobId));
         Alert.alert("Application submitted successfully!");
         applyBottomRef.current?.close();
         player.seekTo(0);
@@ -179,6 +158,10 @@ const JobDetails = () => {
   };
 
   const handleCheckMatch = async () => {
+    if (!isAuthenticated) {
+      setShowMatchSignInModal(true);
+      return;
+    }
     try {
       setIsCheckingMatch(true);
       const res = await checkJobMatchForUser(Number(jobId));
@@ -197,7 +180,7 @@ const JobDetails = () => {
     if (isCheckingMatch) {
       return (
         <TouchableOpacity
-          className="bg-gray-400 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2"
+          className="bg-gray-400 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2 w-1/2"
           style={{
             shadowColor: "#6b7280",
             shadowOffset: { width: 0, height: 3 },
@@ -215,7 +198,7 @@ const JobDetails = () => {
     if (matchPercentage === null) {
       return (
         <TouchableOpacity
-          className="bg-emerald-500 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2"
+          className="bg-emerald-500 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2 w-1/2"
           style={{
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 3 },
@@ -233,7 +216,7 @@ const JobDetails = () => {
     }
     const config = getMatchConfig(matchPercentage);
     return (
-      <View className="mb-2">
+      <View className="mb-2 w-1/2">
         <View
           className={`${config.bgColor} rounded-xl px-2 py-3 items-center justify-center flex-row gap-2`}
           style={{
@@ -264,6 +247,14 @@ const JobDetails = () => {
         </TouchableOpacity>
       </View>
     );
+  };
+
+  const getViews = () => {
+    return getTotalViewsForJobById(Number(jobId)) || job?.views || 0;
+  };
+
+  const getApplications = () => {
+    return getTotalApplicationsForJobById(Number(jobId)) || job?.applicationCount || 0;
   };
 
   return (
@@ -305,14 +296,16 @@ const JobDetails = () => {
             </View>
             <View className="flex-row items-start justify-between mb-1">
               <View className="flex-1 mr-4">
-                <Text className="font-quicksand-bold text-lg text-gray-900 leading-8 mb-2">{job?.title}</Text>
+                <Text className="font-quicksand-bold text-lg text-gray-900 leading-8 mb-2" numberOfLines={2}>
+                  {job?.title}
+                </Text>
                 <View className="flex-row flex-wrap items-center gap-x-4 gap-y-1 mb-1">
                   <View className="flex-row items-center gap-1">
                     <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center">
                       <Feather name="eye" size={12} color="#3b82f6" />
                     </View>
                     <Text className="font-quicksand-semibold text-sm text-blue-700">
-                      {job?.views || 0} {(job?.views || 0) === 1 ? "view" : "views"}
+                      {getViews()} {getViews() === 1 ? "view" : "views"}
                     </Text>
                   </View>
 
@@ -321,11 +314,11 @@ const JobDetails = () => {
                       <Feather name="users" size={12} color="#10b981" />
                     </View>
                     <Text className="font-quicksand-semibold text-sm text-emerald-700">
-                      {job?.applicationCount === 0
+                      {getApplications() === 0
                         ? "Be the first to apply"
-                        : job?.applicationCount === 1
+                        : getApplications() === 1
                           ? "1 applicant"
-                          : `${job?.applicationCount} applications`}
+                          : `${getApplications()} applications`}
                     </Text>
                   </View>
                   <View className="flex-row gap-1 items-center justify-center py-1">
@@ -334,7 +327,7 @@ const JobDetails = () => {
                     </View>
                     <Text className="font-quicksand-semibold text-sm text-amber-700">{getJobLevel(job?.level)}</Text>
                   </View>
-                  <View className="flex-row gap-1 items-center justify-center px-3 py-1">
+                  <View className="flex-row gap-1 items-center justify-center py-1">
                     <View className="w-6 h-6 bg-purple-100 rounded-full items-center justify-center">
                       <FontAwesome6 name="building" size={12} color="#8b5cf6" />
                     </View>
@@ -399,10 +392,13 @@ const JobDetails = () => {
                 ))}
               </ScrollView>
             )}
-            {isAuthenticated && renderJobMatchView()}
+            <View className="flex-row items-center justify-center gap-2">
+              {renderJobMatchView()}
+              <QuickApply job={job!} size="large" />
+            </View>
           </View>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100 gap-2"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -411,17 +407,21 @@ const JobDetails = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-center gap-2 mb-4">
+            <View className="flex-row items-center gap-2">
               <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
                 <Feather name="file-text" size={16} color="#3b82f6" />
               </View>
               <Text className="font-quicksand-semibold text-lg text-gray-900">Job Description</Text>
             </View>
-            <ExpandableText text={job?.description || ""} />
-            <ViewMore label="View More About Job" onClick={() => setShowJobInfoModal(true)} />
+            <ExpandableText text={job?.description || ""} length={300} />
+            <ViewMore
+              label="AI Insights and More"
+              onClick={() => setShowJobInfoModal(true)}
+              icon={<Ionicons name="sparkles" size={16} color="#fbbf24" />}
+            />
           </View>
           <View
-            className="bg-white mx-4 mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 mb-6 rounded-2xl p-6 border border-gray-100 gap-2"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -430,7 +430,7 @@ const JobDetails = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
                 <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center">
                   <FontAwesome5 name="building" size={16} color="#8b5cf6" />
@@ -438,20 +438,14 @@ const JobDetails = () => {
                 <Text className="font-quicksand-semibold text-lg text-gray-900">Company Overview</Text>
               </View>
 
-              <TouchableOpacity
-                className="w-10 h-10 bg-red-50 rounded-full items-center justify-center border border-red-100"
-                onPress={() => handleFavoriteCompany(company!)}
-                activeOpacity={0.7}
-              >
-                <FontAwesome5 name="heart" size={16} color="#ef4444" solid={checkIfCompanyIsFavorited(company?.id!)} />
-              </TouchableOpacity>
+              <FavoriteCompany company={company!} />
             </View>
             {isLoadingCompany ? (
               <View className="items-center py-4">
                 <ActivityIndicator size="small" color="#8b5cf6" />
               </View>
             ) : (
-              <ExpandableText text={company?.description || ""} />
+              <ExpandableText text={company?.description || ""} length={300} />
             )}
             <ViewMore label="View More About Company" onClick={() => router.push(`/companies/${company?.id}`)} />
           </View>
@@ -483,27 +477,11 @@ const JobDetails = () => {
           >
             <View className="flex-row items-center gap-2">
               <Feather name={jobApplication ? "eye" : "send"} size={18} color="white" />
-              <Text className="font-quicksand-bold text-base text-white">
+              <Text className="font-quicksand-bold text-md text-white">
                 {jobApplication ? "View Application" : "Apply Now"}
               </Text>
             </View>
           </TouchableOpacity>
-
-          {job && (
-            <TouchableOpacity
-              className="bg-gray-100 rounded-xl p-1 border border-gray-200"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-              activeOpacity={0.7}
-            >
-              <FavoriteJob job={job} />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
       {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (
@@ -592,6 +570,43 @@ const JobDetails = () => {
           <JobInfo job={job!} />
         </View>
       </ModalWithBg>
+      <Modal transparent animationType="fade" visible={showMatchSignInModal}>
+        <View className="flex-1 bg-black/45 justify-center items-center">
+          <View
+            style={{
+              width: 300,
+              height: 200,
+              backgroundColor: "white",
+              borderRadius: 16,
+              padding: 20,
+              justifyContent: "center",
+              alignItems: "center",
+              display: "flex",
+              gap: 10,
+            }}
+          >
+            <Text className="font-quicksand-bold text-xl">Sign in to use feature</Text>
+            <Text className="font-quicksand-medium text-center">You need to be signed in to use this feature.</Text>
+            <View className="flex flex-row items-center justify-center w-full gap-2">
+              <TouchableOpacity
+                className="apply-button w-1/2 items-center justify-center h-14"
+                onPress={() => {
+                  setShowMatchSignInModal(false);
+                  router.push("/(auth)/sign-in");
+                }}
+              >
+                <Text className="font-quicksand-semibold text-md text-white">Sign In</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="apply-button w-1/2 items-center justify-center h-14"
+                onPress={() => setShowMatchSignInModal(false)}
+              >
+                <Text className="font-quicksand-semibold text-md text-white">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

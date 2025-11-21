@@ -158,7 +158,7 @@ const JobFiltersView = ({
             position: "absolute",
             top: 0,
             right: 0,
-            width: screenWidth * 0.8,
+            width: screenWidth * 0.9,
             height: "120%",
             backgroundColor: "white",
             zIndex: 100,
@@ -288,7 +288,7 @@ const JobFiltersView = ({
                 onSubmitEditing={(event) => addTag(event.nativeEvent.text.trim())}
               />
               <View className="absolute right-3 top-5">
-                <FontAwesome5 name="wrench" size={16} color="#22c55e" />
+                <FontAwesome5 name="wrench" size={14} color="#22c55e" />
               </View>
             </View>
 
@@ -345,13 +345,13 @@ const JobFiltersView = ({
               className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
               onPress={() => handleFilterApply(tempFilters)}
             >
-              <Text className="font-quicksand-semibold text-md">Apply</Text>
+              <Text className="font-quicksand-semibold text-md text-white">Apply</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
               onPress={handleClearFilters}
             >
-              <Text className="font-quicksand-semibold text-md">Clear</Text>
+              <Text className="font-quicksand-semibold text-md text-white">Clear</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAwareScrollView>

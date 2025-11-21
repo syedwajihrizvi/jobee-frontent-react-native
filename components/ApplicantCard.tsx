@@ -78,7 +78,7 @@ const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
       </View>
       <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
         <Text className="font-quicksand-bold text-sm text-gray-900">Professional Summary</Text>
-        <Text className="font-quicksand-medium text-sm text-gray-700 leading-5" numberOfLines={3}>
+        <Text className="font-quicksand-medium text-sm text-gray-700 leading-5" numberOfLines={2}>
           {item.profileSummary || "No summary provided by the applicant."}
         </Text>
       </View>

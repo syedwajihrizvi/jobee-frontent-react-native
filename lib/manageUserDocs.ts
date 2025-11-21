@@ -1,4 +1,5 @@
 
+import { getAPIUrl } from '@/constants';
 import { DropBoxPathContent, GoogleDrivePathContent, OneDrivePathContent } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
@@ -7,12 +8,14 @@ import * as ImagePicker from "expo-image-picker";
 import { fetchDropboxFileAsPdfAndCreateTempFile } from './oauth/dropbox';
 import { fetchGoogleDocAsPdfAndCreateTempFile } from './oauth/googledrive';
 import { fetchOneDriveFileAsPdfAndCreateTempFile } from './oauth/onedrive';
-const USER_DOCS_API_URL = "http://192.168.2.29:8080/user-documents";
+
+const USER_DOCS_API_URL = getAPIUrl('user-documents');
 
 export const uploadUserDocument = async (
     document: DocumentPicker.DocumentPickerResult,
     documentType: string,
-    documentTitle: string
+    documentTitle: string,
+    generateSummary: boolean = false
     ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -29,6 +32,7 @@ export const uploadUserDocument = async (
     } as any)
     formData.append('documentType', documentType);
     formData.append('title', documentTitle);
+    console.log(USER_DOCS_API_URL)
     const response = await fetch(
         USER_DOCS_API_URL, {
         method: 'POST',
@@ -81,7 +85,7 @@ export const uploadUserDocumentViaImage = async (
 export const uploadGoogleDriveDocumentToServer = async (
     document: File,
     documentType: string,
-    documentTitle: string
+    documentTitle: string,
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -116,7 +120,7 @@ export const uploadDropboxDocumentToServer = async (
     document: File,
     documentType: string,
     documentTitle: string,
-    
+    generateSummary: boolean = false
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -150,7 +154,8 @@ export const uploadDropboxDocumentToServer = async (
 export const uploadOneDriveDocumentToServer = async (
     document: File,
     documentType: string,
-    documentTitle: string
+    documentTitle: string,
+    generateSummary: boolean = false
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -160,7 +165,6 @@ export const uploadOneDriveDocumentToServer = async (
     .replace(/\s+/g, "_") 
     .replace(/[^a-zA-Z0-9._-]/g, "");
     
-    console.log("Uploading OneDrive Document to Server:", { documentType, documentTitle, documentName: safeName });
     formData.append('document', {
         uri: document.uri,
         name: safeName || 'document.pdf',
@@ -185,9 +189,9 @@ export const sendDocumentLinkToServer = async (
     documentLink: string,
     documentType: string,
     documentTitle: string,
-    documentUrlType: 'GOOGLE_DRIVE' | 'DROPBOX' | 'ONE_DRIVE'
+    documentUrlType: 'GOOGLE_DRIVE' | 'DROPBOX' | 'ONE_DRIVE',
+    generateSummary: boolean = false
 ) => {
-    console.log('Sending document link to server:', { documentLink, documentType, documentTitle, documentUrlType });
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
     const response = await fetch(
@@ -198,10 +202,10 @@ export const sendDocumentLinkToServer = async (
             'x-auth-token': `Bearer ${token}`,
         },
         body: JSON.stringify({
-            documentLink: "https://www.dropbox.com/scl/fi/f8hpvxqu27rxle8yl01v6/Resume.pdf?rlkey=77bwp4zn0o577vptz2jzx074y&st=xwpefrcw&dl=0",
+            documentLink,
             documentType,
             documentTitle,
-            documentUrlType: 'DROPBOX'
+            documentUrlType: documentUrlType
         })
     })
     console.log(response)
@@ -223,7 +227,6 @@ export const processGoogleDriveUpload = async (googleDriveFile: GoogleDrivePathC
 
 export const processDropboxUpload = async (dropboxFile: DropBoxPathContent, selectedDocumentType: string, documentTitle: string) => {
     const { id, name, mimeType, pathDisplay} = dropboxFile;
-    console.log("Dropbox File Info:", { id, name, mimeType, pathDisplay });
     const tempFile = await fetchDropboxFileAsPdfAndCreateTempFile(id, name, mimeType || "application/pdf", pathDisplay);
     if (tempFile == null) {
         throw new Error("Failed to fetch the selected Dropbox file.");
@@ -235,12 +238,10 @@ export const processDropboxUpload = async (dropboxFile: DropBoxPathContent, sele
 
 export const processOneDriveUpload = async (oneDriveFile: OneDrivePathContent, selectedDocumentType: string, documentTitle: string) => {
     const tempFile = await fetchOneDriveFileAsPdfAndCreateTempFile(oneDriveFile.downloadUrl!, oneDriveFile.name);
-    console.log("OneDrive Temp File:", tempFile);
     if (tempFile == null) {
     throw new Error("Failed to fetch the selected OneDrive file.");
     }
     const title = documentTitle ||oneDriveFile.name;
     const res = await uploadOneDriveDocumentToServer(tempFile, selectedDocumentType, title);
-    console.log("OneDrive Upload Result:", res);
     return res;
 };

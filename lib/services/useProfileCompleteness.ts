@@ -1,7 +1,8 @@
+import { getAPIUrl } from "@/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const PROFILES_API_URL = 'http://192.168.2.29:8080/profiles';
+const PROFILES_API_URL = getAPIUrl('profiles');
 
 export const useProfileCompleteness = () => {
     const fetchProfileCompleteness = async () => {
@@ -22,6 +23,6 @@ export const useProfileCompleteness = () => {
     return useQuery({
         queryKey: ['profile-completeness'],
         queryFn: fetchProfileCompleteness,
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 60 * 120, // 2 hours
     })
 }

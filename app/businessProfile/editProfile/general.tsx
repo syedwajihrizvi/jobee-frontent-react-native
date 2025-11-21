@@ -4,17 +4,15 @@ import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import ProfileCard from "@/components/ProfileCard";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
-import {
-  mapGeneralInfoFieldToAPIField,
-  updateBusinessUserLocation,
-  updateGeneralInfoForBusinessUser,
-} from "@/lib/updateUserProfile";
+import { updateBusinessUserLocation, updateGeneralInfoForBusinessUser } from "@/lib/updateProfiles/businessProfile";
+import { mapGeneralInfoFieldToAPIField } from "@/lib/updateUserProfile";
 import { getCustomProfilePlaceholderForField } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const getFieldMaxLength = (field: string) => {
@@ -73,7 +71,6 @@ const General = () => {
   const handleEditPress = (field: string) => {
     setUpdateSuccess(false);
     setEditingField(field);
-    // Pre-fill the form with current value
     if (field !== "Location") {
       const currentValue = getCurrentFieldValue(field);
       setProfileForm({ value: currentValue || "" });
@@ -109,10 +106,8 @@ const General = () => {
     const fieldName = mapGeneralInfoFieldToAPIField(editingField);
     setIsSubmitting(true);
     try {
-      console.log("Submitting update for field:", editingField, "with value:", profileForm.value);
       if (editingField !== "Location") {
         const res = await updateGeneralInfoForBusinessUser({ field: fieldName, value: profileForm.value });
-        console.log("Update response:", res);
         if (res) setUser({ ...user, [fieldName]: profileForm.value } as BusinessUser);
       } else {
         const res = await updateBusinessUserLocation({
@@ -204,7 +199,7 @@ const General = () => {
       </ScrollView>
 
       <ModalWithBg visible={showModal} customHeight={editingField === "Location" ? 0.55 : 0.5} customWidth={0.75}>
-        <View className="flex-1">
+        <KeyboardAwareScrollView>
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">Update {editingField || ""}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
@@ -304,7 +299,7 @@ const General = () => {
                           </Text>
                         </View>
                         <CustomInput
-                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          placeholder="e.g., San Francisco"
                           label=""
                           onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
                           value={locationForm.city}
@@ -326,7 +321,7 @@ const General = () => {
                           </Text>
                         </View>
                         <CustomInput
-                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          placeholder="e.g., United States"
                           label=""
                           autoCapitalize="words"
                           onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
@@ -348,7 +343,7 @@ const General = () => {
                           </Text>
                         </View>
                         <CustomInput
-                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          placeholder="e.g., CA"
                           label=""
                           onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
                           autoCapitalize="characters"
@@ -370,7 +365,7 @@ const General = () => {
                   <View className="flex-1" />
                   <View className="px-6 pb-4">
                     <ProfileButton
-                      color="green-500"
+                      color="emerald-500"
                       buttonText="Update Information"
                       handlePress={submitProfileUpdate}
                       disabled={
@@ -390,7 +385,7 @@ const General = () => {
               <Text className="font-quicksand-semibold text-lg">Updating Profile Information...</Text>
             </View>
           )}
-        </View>
+        </KeyboardAwareScrollView>
       </ModalWithBg>
     </SafeAreaView>
   );

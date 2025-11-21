@@ -36,7 +36,6 @@ const JobListing = ({
     >
       <TouchableOpacity activeOpacity={0.8} onPress={() => router.push(`/jobs/${job.id}`)}>
         <CompanyHeader job={job} />
-
         <JobMetrics job={job} />
         <JobDetails job={job} />
       </TouchableOpacity>

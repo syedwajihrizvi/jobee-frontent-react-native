@@ -1,8 +1,6 @@
 import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
-import GoogleButton from "@/components/GoogleButton";
-import { registerForPushNotifications, signUpBusiness, signUpUser } from "@/lib/auth";
-import useAuthStore from "@/store/auth.store";
+import { signUpBusiness, signUpUser } from "@/lib/auth";
 import useUserStore from "@/store/user.store";
 import { BusinessSignUpParams, UserSignUpParams } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -17,17 +15,17 @@ const SignUp = () => {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
   const [businessForm, setBusinessForm] = useState<BusinessSignUpParams>({
     email: "",
     password: "",
     confirmPassword: "",
     companyName: "",
+    firstName: "",
+    lastName: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const { fetchAuthenticatedUser, setIsAuthenticated } = useAuthStore();
   const { type, setType } = useUserStore();
 
   const handleSignUpForUser = async () => {
@@ -42,12 +40,10 @@ const SignUp = () => {
           Alert.alert("Error", "Failed to create account");
           return;
         }
-        await fetchAuthenticatedUser();
-        setIsAuthenticated(true);
         setType("user");
+        Alert.alert("Success", "Account created successfully. You can now log in.");
         AsyncStorage.setItem("profileReminderShown", "false");
-        router.replace("/(tabs)/users/jobs");
-        await registerForPushNotifications();
+        router.push("/(auth)/sign-in");
       } catch (error) {
         console.log(error);
         Alert.alert("Error", "Failed to create account. Please try again.");
@@ -58,22 +54,20 @@ const SignUp = () => {
   };
 
   const handleSignUpForBusiness = async () => {
-    const { companyName, email, password, confirmPassword } = businessForm;
-    if (!confirmPassword || password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
-      return;
-    } else if (!companyName || !email || !password || !password) {
+    const { companyName, email, password } = businessForm;
+    if (!companyName || !email || !password || !password) {
       Alert.alert("Error", "Please fill in all fields");
     } else {
       setIsLoading(true);
       try {
         const result = await signUpBusiness(businessForm);
-        console.log(result.Error);
         if (result && result.Error) {
-          Alert.alert("Sign Up Error", result.Error);
+          Alert.alert("Sign Up Error", "An error occuerred during sign up. Please try again.");
           return;
         }
-        return;
+        setType("business");
+        Alert.alert("Success", "Account created successfully. You can now log in.");
+        router.push("/(auth)/sign-in");
       } catch (error) {
         Alert.alert("Error", "Failed to create business account. Please try again.");
       } finally {
@@ -147,35 +141,36 @@ const SignUp = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <View>
-        <View className="flex-row items-center mb-3">
-          <View className="flex-1 h-px bg-gray-200" />
-          <Text className="font-quicksand-medium text-xs text-gray-500 px-3">or</Text>
-          <View className="flex-1 h-px bg-gray-200" />
+      {type === "business" && (
+        <View>
+          <View className="flex-row items-center mb-3">
+            <View className="flex-1 h-px bg-gray-200" />
+            <Text className="font-quicksand-medium text-xs text-gray-500 px-3">or</Text>
+            <View className="flex-1 h-px bg-gray-200" />
+          </View>
+
+          <TouchableOpacity
+            className="bg-blue-50 border border-blue-200 rounded-xl py-3 px-4 flex-row items-center justify-center gap-2"
+            style={{
+              shadowColor: "#3b82f6",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            onPress={() => router.push("/(auth)/sign-up-via-code")}
+            activeOpacity={0.7}
+          >
+            <Feather name="key" size={16} color="#3b82f6" />
+            <Text className="font-quicksand-bold text-blue-600 text-sm">Join with Company Code</Text>
+          </TouchableOpacity>
+
+          <Text className="font-quicksand-medium text-xs text-gray-500 text-center mt-2">
+            Have an invitation code from your employer?
+          </Text>
         </View>
-
-        <TouchableOpacity
-          className="bg-blue-50 border border-blue-200 rounded-xl py-3 px-4 flex-row items-center justify-center gap-2"
-          style={{
-            shadowColor: "#3b82f6",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-          onPress={() => router.push("/(auth)/sign-up-via-code")}
-          activeOpacity={0.7}
-        >
-          <Feather name="key" size={16} color="#3b82f6" />
-          <Text className="font-quicksand-bold text-blue-600 text-sm">Join with Company Code</Text>
-        </TouchableOpacity>
-
-        <Text className="font-quicksand-medium text-xs text-gray-500 text-center mt-2">
-          Have an invitation code from your employer?
-        </Text>
-      </View>
-
-      <View className="gap-6 mb-8">
+      )}
+      <View className="gap-6 mb-4">
         {type === "user" ? (
           <>
             <View className="flex-row gap-3">
@@ -183,6 +178,7 @@ const SignUp = () => {
                 <CustomInput
                   placeholder="First name"
                   label="First Name"
+                  autoCapitalize="words"
                   value={form.firstName}
                   customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
                   onChangeText={(text) => setForm({ ...form, firstName: text })}
@@ -191,6 +187,7 @@ const SignUp = () => {
               <View className="flex-1">
                 <CustomInput
                   placeholder="Last name"
+                  autoCapitalize="words"
                   label="Last Name"
                   value={form.lastName}
                   customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
@@ -206,19 +203,11 @@ const SignUp = () => {
               customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
               onChangeText={(text) => setForm({ ...form, email: text })}
             />
-
             <CustomInput
               placeholder="Create a strong password"
               label="Password"
+              secureField={true}
               value={form.password}
-              customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
-              onChangeText={(text) => setForm({ ...form, password: text })}
-            />
-
-            <CustomInput
-              placeholder="Confirm Password"
-              label="Confirm Password"
-              value={form.confirmPassword}
               customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
               onChangeText={(text) => setForm({ ...form, password: text })}
             />
@@ -234,6 +223,22 @@ const SignUp = () => {
               onChangeText={(text) => setBusinessForm({ ...businessForm, companyName: text })}
             />
             <CustomInput
+              placeholder="Enter your first name"
+              label="First Name"
+              autoCapitalize="words"
+              value={businessForm.firstName}
+              customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
+              onChangeText={(text) => setBusinessForm({ ...businessForm, firstName: text })}
+            />
+            <CustomInput
+              placeholder="Enter your last name"
+              label="Last Name"
+              autoCapitalize="words"
+              value={businessForm.lastName}
+              customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
+              onChangeText={(text) => setBusinessForm({ ...businessForm, lastName: text })}
+            />
+            <CustomInput
               placeholder="Enter your email"
               label="Email Address"
               value={businessForm.email}
@@ -243,17 +248,10 @@ const SignUp = () => {
             <CustomInput
               placeholder="Enter your password"
               label="Password"
+              secureField={true}
               value={businessForm.password}
               customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
               onChangeText={(text) => setBusinessForm({ ...businessForm, password: text })}
-            />
-
-            <CustomInput
-              placeholder="Confirm Password"
-              label="Confirm Password"
-              value={businessForm.confirmPassword}
-              customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
-              onChangeText={(text) => setBusinessForm({ ...businessForm, confirmPassword: text })}
             />
           </>
         )}
@@ -277,9 +275,8 @@ const SignUp = () => {
         <Text className="font-quicksand-medium text-sm text-gray-500 px-4">or sign up with</Text>
         <View className="flex-1 h-px bg-gray-200" />
       </View>
-      <GoogleButton />
       <View className="items-center">
-        <Text className="font-quicksand-medium text-sm text-gray-600">
+        <Text className="font-quicksand-medium text-md text-gray-600">
           Already have an account?{" "}
           <Text className="text-green-600 font-quicksand-bold" onPress={() => router.navigate("/(auth)/sign-in")}>
             Sign In

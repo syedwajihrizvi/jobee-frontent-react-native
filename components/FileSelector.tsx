@@ -13,9 +13,9 @@ import { connectToOneDriveOAuth, isOneDriveAccessTokenValid } from "@/lib/oauth/
 import { compressImage, converOAuthProviderToText, isValidGoogleDriveLink } from "@/lib/utils";
 import useCompleteProfileStore from "@/store/completeProfile.store";
 import useOAuthDocStore from "@/store/oauth-doc.store";
+import useUserStore from "@/store/user.store";
 import { SelectedUploadMethod } from "@/type";
 import { AntDesign, Entypo, Feather } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -31,6 +31,7 @@ type Props = {
   selectedDocumentType: string;
   handleUploadSuccess: () => void;
   customHandleUploadMethod?: boolean;
+  customUploadMethod?: () => void;
 };
 
 const documentTypes = [
@@ -43,8 +44,14 @@ const documentTypes = [
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
-const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleUploadMethod = false }: Props) => {
-  const queryClient = useQueryClient();
+const FileSelector = ({
+  selectedDocumentType,
+  handleUploadSuccess,
+  customHandleUploadMethod = false,
+  customUploadMethod,
+}: Props) => {
+  const { refetchUserDocuments, refetchCandidateInformation } = useUserStore();
+  const [uploadView, setUploadView] = useState<"Direct" | "Cloud" | "Link">("Direct");
   const [uploadedDocument, setUploadedDocument] = useState<DocumentPicker.DocumentPickerResult | null>(null);
   const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerResult | null>(null);
   const [uploadingDocument, setUploadingDocument] = useState(false);
@@ -297,6 +304,9 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
       setDropboxFile(dropboxFile);
       setOneDriveFile(oneDriveFile);
       setShowConfirmationModal(false);
+      if (customUploadMethod) {
+        customUploadMethod();
+      }
       return;
     }
     setUploadingDocument(true);
@@ -362,12 +372,10 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
     setUploadedDocument(null);
     setDocumentLink("");
     resetState();
-    queryClient.invalidateQueries({ queryKey: ["documents", "user"] });
-    // Invalidate if resume since it may affect profile completeness
     if (selectedDocumentType === UserDocumentType.RESUME) {
-      queryClient.invalidateQueries({ queryKey: ["skills", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["education", "user"] });
-      queryClient.invalidateQueries({ queryKey: ["experience", "user"] });
+      refetchCandidateInformation();
+    } else {
+      refetchUserDocuments();
     }
     setShowConfirmationModal(false);
     handleUploadSuccess();
@@ -552,6 +560,7 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
         <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Document Title</Text>
         <TextInput
           className="border border-gray-200 rounded-xl p-4 font-quicksand-medium bg-white"
+          autoCapitalize="words"
           style={{
             fontSize: 14,
             shadowColor: "#000",
@@ -590,216 +599,262 @@ const FileSelector = ({ selectedDocumentType, handleUploadSuccess, customHandleU
         </View>
       )}
       <View className="mb-4">
-        <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">Choose Upload Method</Text>
-        <Text className="font-quicksand-medium text-sm text-gray-600 mb-6">
+        <Text className="font-quicksand-bold text-md text-gray-900 mb-2">Choose Upload Method</Text>
+        <Text className="font-quicksand-medium text-sm text-gray-600 mb-2">
           Select how you would like to add your document
         </Text>
+        <View className="flex-row gap-2 mb-4">
+          {["Direct", "Cloud", "Link"].map((method) => (
+            <TouchableOpacity
+              key={method}
+              onPress={() => setUploadView(method as "Direct" | "Cloud" | "Link")}
+              className={`px-4 py-2 rounded-md border-2 ${
+                uploadView === method ? "bg-emerald-500 border-emerald-500" : "bg-white border-emerald-200"
+              }`}
+              style={{
+                shadowColor: uploadView === method ? "#10b981" : "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: uploadView === method ? 0.2 : 0.05,
+                shadowRadius: 4,
+                elevation: uploadView === method ? 3 : 1,
+              }}
+              activeOpacity={0.8}
+            >
+              <Text
+                className={`font-quicksand-semibold text-center text-sm ${
+                  uploadView === method ? "text-white" : "text-emerald-600"
+                }`}
+              >
+                {method}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         {!uploadedDocument ? (
           <View className="space-y-4">
-            <View className="mb-6">
-              <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">📁 Direct Upload</Text>
-              <View className="gap-3">
-                <TouchableOpacity
-                  className="bg-emerald-500 rounded-xl p-4 flex-row items-center justify-center gap-3"
-                  style={{
-                    shadowColor: "#22c55e",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
-                  onPress={handleUpload}
-                  activeOpacity={0.8}
-                >
-                  <Feather name="upload" size={18} color="white" />
-                  <Text className="font-quicksand-bold text-white text-base">Upload from Device</Text>
-                </TouchableOpacity>
-                {selectedDocumentType !== UserDocumentType.RESUME &&
-                  (!selectedImage ? (
-                    <TouchableOpacity
-                      className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center justify-center gap-3"
-                      style={{
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.05,
-                        shadowRadius: 4,
-                        elevation: 2,
-                      }}
-                      onPress={() => handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")}
-                      activeOpacity={0.7}
-                    >
-                      <Feather name="camera" size={18} color="#6b7280" />
-                      <Text className="font-quicksand-bold text-gray-700 text-base">Take Photo</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    renderUploadedImageInfo()
-                  ))}
-              </View>
-            </View>
-            <View className="mb-6">
-              <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">☁️ Cloud Storage</Text>
-              <View className="gap-3">
-                <TouchableOpacity
-                  className={`rounded-xl p-4 flex-row items-center gap-4 ${
-                    isConnectedToGoogleDrive ? "bg-blue-50 border border-blue-200" : "bg-white border border-gray-200"
-                  }`}
-                  style={{
-                    shadowColor: isConnectedToGoogleDrive ? "#4285F4" : "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: isConnectedToGoogleDrive ? 0.15 : 0.05,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
-                  onPress={handleGoogleDrivePress}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center ${
-                      isConnectedToGoogleDrive ? "bg-blue-100" : "bg-gray-100"
-                    }`}
+            {uploadView === "Direct" && (
+              <View className="mb-6">
+                <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">📁 Direct Upload</Text>
+                <View className="gap-3">
+                  <TouchableOpacity
+                    className="bg-white border-2 border-emerald-500 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                    style={{
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 6,
+                      elevation: 4,
+                    }}
+                    onPress={handleUpload}
+                    activeOpacity={0.8}
                   >
-                    <AntDesign name="google" size={20} color={isConnectedToGoogleDrive ? "#4285F4" : "#6b7280"} />
-                  </View>
-                  <View className="flex-1">
-                    <Text
-                      className={`font-quicksand-bold text-base ${
-                        isConnectedToGoogleDrive ? "text-blue-700" : "text-gray-700"
+                    <Feather name="upload" size={18} color="#10b981" />
+                    <Text className="font-quicksand-bold text-emerald-600 text-base">Upload from Device</Text>
+                  </TouchableOpacity>
+                  {selectedDocumentType !== UserDocumentType.RESUME &&
+                    (!selectedImage ? (
+                      <TouchableOpacity
+                        className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                        style={{
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 4,
+                          elevation: 2,
+                        }}
+                        onPress={() =>
+                          handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")
+                        }
+                        activeOpacity={0.7}
+                      >
+                        <Feather name="camera" size={18} color="#6b7280" />
+                        <Text className="font-quicksand-bold text-gray-700 text-base">Take Photo</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      renderUploadedImageInfo()
+                    ))}
+                </View>
+              </View>
+            )}
+            {uploadView === "Cloud" && (
+              <View className="mb-6">
+                <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">☁️ Cloud Storage</Text>
+                <View className="gap-3">
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 flex-row items-center gap-4 border-2 ${
+                      isConnectedToGoogleDrive
+                        ? "bg-blue-50 border-emerald-200"
+                        : "bg-white border-dashed border-emerald-300"
+                    }`}
+                    style={{
+                      shadowColor: "#4285F4",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isConnectedToGoogleDrive ? 0.15 : 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                    onPress={handleGoogleDrivePress}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      className={`w-10 h-10 rounded-full items-center justify-center ${
+                        isConnectedToGoogleDrive ? "bg-emerald-100" : "bg-emerald-50 border border-emerald-200"
                       }`}
                     >
-                      Google Drive
-                    </Text>
-                    <Text
-                      className={`font-quicksand-medium text-sm ${
-                        isConnectedToGoogleDrive ? "text-blue-600" : "text-gray-500"
-                      }`}
-                    >
-                      {isConnectedToGoogleDrive
-                        ? googleDriveFile
-                          ? `Selected: ${googleDriveFile.name}`
-                          : "Select a Google Drive File"
-                        : "Connect with OAuth"}
-                    </Text>
-                  </View>
-                  {isConnectedToGoogleDrive && googleDriveFile && activeOAuthProvider === "GOOGLE_DRIVE" && (
-                    <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
-                      <Feather name="check" size={12} color="white" />
+                      <AntDesign name="google" size={20} color="#10B981" />
                     </View>
-                  )}
-                </TouchableOpacity>
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text className="font-quicksand-bold text-base text-emerald-600">Google Drive</Text>
+                        {!isConnectedToGoogleDrive && (
+                          <View className="bg-amber-100 px-2 py-0.5 rounded-full">
+                            <Text className="font-quicksand-bold text-xs text-amber-600">Secure</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="font-quicksand-medium text-sm text-emerald-500">
+                        {isConnectedToGoogleDrive
+                          ? googleDriveFile
+                            ? `Selected: ${googleDriveFile.name}`
+                            : "Select a Google Drive File"
+                          : "Connect to browse your Google Drive files"}
+                      </Text>
+                    </View>
+                    {isConnectedToGoogleDrive && googleDriveFile && activeOAuthProvider === "GOOGLE_DRIVE" ? (
+                      <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
+                        <Feather name="check" size={12} color="white" />
+                      </View>
+                    ) : !isConnectedToGoogleDrive ? (
+                      <View className="flex-row items-center gap-1 bg-emerald-100 px-3 py-1 rounded-full">
+                        <Feather name="plus" size={12} color="#10b981" />
+                        <Text className="font-quicksand-bold text-xs text-emerald-600">Connect</Text>
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 flex-row items-center gap-4 border-2 ${
+                      isConnectedToDropbox
+                        ? "bg-emerald-50 border-emerald-200"
+                        : "bg-white border-dashed border-emerald-300"
+                    }`}
+                    style={{
+                      shadowColor: "#0061FF",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isConnectedToDropbox ? 0.15 : 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                    onPress={handleDropboxPress}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      className={`w-10 h-10 rounded-full items-center justify-center ${
+                        isConnectedToDropbox ? "bg-emerald-100" : "bg-emerald-50 border border-emerald-200"
+                      }`}
+                    >
+                      <AntDesign name="dropbox" size={20} color="#10B981" />
+                    </View>
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text className="font-quicksand-bold text-base text-emerald-600">Dropbox</Text>
+                        {!isConnectedToDropbox && (
+                          <View className="bg-amber-100 px-2 py-0.5 rounded-full">
+                            <Text className="font-quicksand-bold text-xs text-amber-600">Secure</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="font-quicksand-medium text-sm text-emerald-500">
+                        {isConnectedToDropbox
+                          ? dropboxFile
+                            ? `Selected: ${dropboxFile.name}`
+                            : "Select a Dropbox File"
+                          : "Connect to browse your Dropbox files"}
+                      </Text>
+                    </View>
+                    {isConnectedToDropbox && dropboxFile && activeOAuthProvider === "DROPBOX" ? (
+                      <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
+                        <Feather name="check" size={12} color="white" />
+                      </View>
+                    ) : !isConnectedToDropbox ? (
+                      <View className="flex-row items-center gap-1 bg-emerald-100 px-3 py-1 rounded-full">
+                        <Feather name="plus" size={12} color="#10b981" />
+                        <Text className="font-quicksand-bold text-xs text-emerald-600">Connect</Text>
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  className={`rounded-xl p-4 flex-row items-center gap-4 ${
-                    isConnectedToDropbox ? "bg-blue-50 border border-blue-200" : "bg-white border border-gray-200"
-                  }`}
-                  style={{
-                    shadowColor: isConnectedToDropbox ? "#0061FF" : "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: isConnectedToDropbox ? 0.15 : 0.05,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
-                  onPress={handleDropboxPress}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center ${
-                      isConnectedToDropbox ? "bg-blue-100" : "bg-gray-100"
+                  <TouchableOpacity
+                    className={`rounded-xl p-4 flex-row items-center gap-4 border-2 ${
+                      isConnectedToOneDrive
+                        ? "bg-emerald-50 border-emerald-200"
+                        : "bg-white border-dashed border-emerald-300"
                     }`}
+                    style={{
+                      shadowColor: "#0078D4",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isConnectedToOneDrive ? 0.15 : 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                    onPress={handleOnedrivePress}
+                    activeOpacity={0.7}
                   >
-                    <AntDesign name="dropbox" size={20} color={isConnectedToDropbox ? "#0061FF" : "#6b7280"} />
-                  </View>
-                  <View className="flex-1">
-                    <Text
-                      className={`font-quicksand-bold text-base ${
-                        isConnectedToDropbox ? "text-blue-700" : "text-gray-700"
+                    <View
+                      className={`w-10 h-10 rounded-full items-center justify-center ${
+                        isConnectedToOneDrive ? "bg-emerald-100" : "bg-emerald-50 border border-emerald-200"
                       }`}
                     >
-                      Dropbox
-                    </Text>
-                    <Text
-                      className={`font-quicksand-medium text-sm ${
-                        isConnectedToDropbox ? "text-blue-600" : "text-gray-500"
-                      }`}
-                    >
-                      {isConnectedToDropbox
-                        ? dropboxFile
-                          ? `Selected: ${dropboxFile.name}`
-                          : "Select a Dropbox File"
-                        : "Connect with OAuth"}
-                    </Text>
-                  </View>
-                  {isConnectedToDropbox && dropboxFile && activeOAuthProvider === "DROPBOX" && (
-                    <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
-                      <Feather name="check" size={12} color="white" />
+                      <Entypo name="onedrive" size={20} color="#10B981" />
                     </View>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className={`rounded-xl p-4 flex-row items-center gap-4 ${
-                    isConnectedToOneDrive ? "bg-blue-50 border border-blue-200" : "bg-white border border-gray-200"
-                  }`}
-                  style={{
-                    shadowColor: isConnectedToOneDrive ? "#0078D4" : "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: isConnectedToOneDrive ? 0.15 : 0.05,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }}
-                  onPress={handleOnedrivePress}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    className={`w-10 h-10 rounded-full items-center justify-center ${
-                      isConnectedToOneDrive ? "bg-blue-100" : "bg-gray-100"
-                    }`}
-                  >
-                    <Entypo name="onedrive" size={20} color={isConnectedToOneDrive ? "#0078D4" : "#6b7280"} />
-                  </View>
-                  <View className="flex-1">
-                    <Text
-                      className={`font-quicksand-bold text-base ${
-                        isConnectedToOneDrive ? "text-blue-700" : "text-gray-700"
-                      }`}
-                    >
-                      OneDrive
-                    </Text>
-                    <Text
-                      className={`font-quicksand-medium text-sm ${
-                        isConnectedToOneDrive ? "text-blue-600" : "text-gray-500"
-                      }`}
-                    >
-                      {isConnectedToOneDrive
-                        ? oneDriveFile
-                          ? `Selected: ${oneDriveFile.name}`
-                          : "Select a OneDrive File"
-                        : "Connect with OAuth"}
-                    </Text>
-                  </View>
-                  {isConnectedToOneDrive && oneDriveFile && activeOAuthProvider === "ONEDRIVE" && (
-                    <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
-                      <Feather name="check" size={12} color="white" />
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text className="font-quicksand-bold text-base text-emerald-600">OneDrive</Text>
+                        {!isConnectedToOneDrive && (
+                          <View className="bg-amber-100 px-2 py-0.5 rounded-full">
+                            <Text className="font-quicksand-bold text-xs text-amber-600">Secure</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="font-quicksand-medium text-sm text-emerald-500">
+                        {isConnectedToOneDrive
+                          ? oneDriveFile
+                            ? `Selected: ${oneDriveFile.name}`
+                            : "Select a OneDrive File"
+                          : "Connect to browse your OneDrive files"}
+                      </Text>
                     </View>
-                  )}
-                </TouchableOpacity>
+                    {isConnectedToOneDrive && oneDriveFile && activeOAuthProvider === "ONEDRIVE" ? (
+                      <View className="w-6 h-6 bg-emerald-500 rounded-full items-center justify-center">
+                        <Feather name="check" size={12} color="white" />
+                      </View>
+                    ) : !isConnectedToOneDrive ? (
+                      <View className="flex-row items-center gap-1 bg-emerald-100 px-3 py-1 rounded-full">
+                        <Feather name="plus" size={12} color="#10b981" />
+                        <Text className="font-quicksand-bold text-xs text-emerald-600">Connect</Text>
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-            <View className="mb-6">
-              <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">🔗 Direct Link</Text>
-              <Text className="font-quicksand-medium text-xs text-gray-600 mb-3">
-                Paste a shareable link from supported services
-              </Text>
-              <View className="flex flex-row items-center gap-2 mb-3">
-                <AntDesign name="google" size={14} color="#4285F4" />
-                <AntDesign name="dropbox" size={14} color="#0061FF" />
-                <Text className="font-quicksand-medium text-xs text-gray-500 ml-2">Supported services</Text>
+            )}
+            {uploadView === "Link" && (
+              <View className="mb-6">
+                <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">🔗 Direct Link</Text>
+                <Text className="font-quicksand-medium text-xs text-gray-600 mb-3">
+                  Paste a shareable link from supported services
+                </Text>
+                <View className="flex flex-row items-center gap-2 mb-3">
+                  <AntDesign name="google" size={14} color="#4285F4" />
+                  <AntDesign name="dropbox" size={14} color="#0061FF" />
+                  <Text className="font-quicksand-medium text-xs text-gray-500 ml-2">Supported services</Text>
+                </View>
+                <LinkInput
+                  value={documentLink}
+                  handleChangeText={(text) => setDocumentLink(text)}
+                  onIconPress={handleDocumentUploadSubmit}
+                />
               </View>
-              <LinkInput
-                value={documentLink}
-                handleChangeText={(text) => setDocumentLink(text)}
-                onIconPress={handleDocumentUploadSubmit}
-              />
-            </View>
+            )}
           </View>
         ) : (
           renderUploadedResumeInfo()

@@ -24,6 +24,7 @@ export const useNotificationStomp = () => useContext(NotificationStompContext);
 
 export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, userType } = useAuthStore();
+  const { refetchCandidateInformation } = useUserStore();
   const { setNotifications, setLoading } = useNotificationStore();
   const [notificationClient, setNotificationClient] = useState<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -64,9 +65,11 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
         setApplicationStatus(applicationId, "INTERVIEW_SCHEDULED");
       }
       refetchInterviews();
+    } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
+      queryClient.invalidateQueries({ queryKey: ["profileCompleteness"] });
+      refetchCandidateInformation();
     }
   };
-
   useEffect(() => {
     if (!isLoading && userNotifications) {
       setLoading(false);

@@ -54,7 +54,7 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
         </View>
       </View>
 
-      <View className="flex-row gap-2 mb-3">
+      <View className="flex-row gap-2 mb-3 flex-wrap">
         <View className="bg-blue-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">
           <View className="flex-row items-center gap-1">
             <Feather name="eye" size={10} color="#3b82f6" />
@@ -78,6 +78,15 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
           </View>
           <Text className="font-quicksand-bold text-sm text-amber-800">{job.pendingApplicationsSize || "0"}</Text>
         </View>
+        {job.totalInterviews > 0 && (
+          <View className="bg-amber-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">
+            <View className="flex-row items-center gap-1">
+              <Feather name="calendar" size={10} color="#f59e0b" />
+              <Text className="font-quicksand-medium text-xs text-amber-700">Interviews</Text>
+            </View>
+            <Text className="font-quicksand-bold text-sm text-amber-800">{job.totalInterviews || "0"}</Text>
+          </View>
+        )}
       </View>
 
       <View className="flex-row items-center justify-between pt-2 border-t border-gray-100">

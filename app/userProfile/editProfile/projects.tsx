@@ -5,8 +5,8 @@ import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
-import { useProjects } from "@/lib/services/useProjects";
 import { addProject, deleteProject, editProject } from "@/lib/updateUserProfile";
+import useUserStore from "@/store/user.store";
 import { AddProjectForm, Project } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -14,7 +14,8 @@ import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Projects = () => {
-  const { data: userProjects, isLoading } = useProjects();
+  const { getProjects, updateProjects, removeProject, fetchUserProjects, hasValidProjects, isLoadingProjects } =
+    useUserStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
@@ -22,7 +23,6 @@ const Projects = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(userProjects || []);
   const [projectForm, setProjectForm] = useState<AddProjectForm>({
     id: 0,
     name: "",
@@ -32,10 +32,10 @@ const Projects = () => {
   });
 
   useEffect(() => {
-    if (!isLoading && userProjects) {
-      setProjects(userProjects);
+    if (!hasValidProjects()) {
+      fetchUserProjects();
     }
-  }, [userProjects, isLoading]);
+  }, []);
 
   const handleAddProject = () => {
     resetStates();
@@ -78,7 +78,7 @@ const Projects = () => {
     try {
       const res = await addProject(projectForm);
       if (res) {
-        setProjects([res, ...(projects || [])]);
+        updateProjects(res);
         setAddSuccess(true);
       }
     } catch (error) {
@@ -94,13 +94,8 @@ const Projects = () => {
     try {
       const res = await editProject(projectForm.id, projectForm);
       if (res) {
-        const index = projects.findIndex((proj) => proj.id === projectForm.id);
-        if (typeof index === "number" && index >= 0) {
-          const updatedProjects = [...projects];
-          updatedProjects[index] = res;
-          setProjects(updatedProjects);
-          setEditSuccess(true);
-        }
+        updateProjects(res);
+        setEditSuccess(true);
       }
     } catch (error) {
       console.log("Error editing project:", error);
@@ -120,8 +115,7 @@ const Projects = () => {
           try {
             const res = await deleteProject(projectForm.id);
             if (res) {
-              const updatedProjects = projects.filter((proj) => proj.id !== projectForm.id);
-              setProjects(updatedProjects);
+              removeProject(projectForm.id);
               setDeleteSuccess(true);
             }
           } catch (error) {
@@ -134,6 +128,8 @@ const Projects = () => {
     ]);
   };
 
+  const projects = getProjects();
+  const isLoading = isLoadingProjects;
   return (
     <SafeAreaView>
       <BackBar label="Project" />
@@ -229,8 +225,8 @@ const Projects = () => {
                 </View>
               ) : (
                 <View className="bg-white rounded-2xl p-8 items-center justify-center border border-gray-200">
-                  <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
-                    <Feather name="award" size={24} color="#9ca3af" />
+                  <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+                    <Feather name="folder" size={24} color="#10b981" />
                   </View>
                   <Text className="font-quicksand-bold text-gray-800 text-lg mb-2">No Projects Added Yet</Text>
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">

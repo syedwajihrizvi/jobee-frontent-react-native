@@ -36,6 +36,8 @@ interface UserJobsState {
     totalCountsByFilter: Record<string, number>;
     totalFavoriteJobsCount: number;
     totalAppliedJobsCountByFilter: Record<string, number>;
+    totalViewsForJobById: Record<number, number>;
+    totalApplicationsForJobById: Record<number, number>;
 
     paginationJobsbyFilter: Record<string, { currentPage: number, hasMore: boolean }>;
     paginationFavoriteJobs: { currentPage: number, hasMore: boolean };
@@ -54,6 +56,8 @@ interface UserJobsState {
     getTotalCountForJobsByFilter(filter: JobFilters): number;
     getTotalCountForFavoriteJobs(): number;
     getTotalCountForAppliedJobsByFilter(filter: ApplicationStatusFilter): number;
+    getTotalViewsForJobById(jobId: number): number | null;
+    getTotalApplicationsForJobById(jobId: number): number | null;
 
     getPaginationForJobsByFilter(filter: JobFilters): { currentPage: number, hasMore: boolean } | undefined;
     getPaginationForFavoriteJobs(): { currentPage: number, hasMore: boolean } | undefined;
@@ -82,6 +86,8 @@ interface UserJobsState {
     removeJobFromFavorites: (jobId: number) => void;
     addAppliedJob: (job: Job) => void;
     addAppliedJobs: (jobs: Job[]) => void;
+    addViewForJob: (jobId: number) => void;
+    addApplicationForJob: (jobId: number) => void;
 }
 
 const useUserJobsStore = create<UserJobsState>((set, get) => ({
@@ -99,6 +105,8 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
     totalCountsByFilter: {},
     totalFavoriteJobsCount: 0,
     totalAppliedJobsCountByFilter: {},
+    totalViewsForJobById: {},
+    totalApplicationsForJobById: {},
 
     paginationJobsbyFilter: {},
     paginationFavoriteJobs: {currentPage: 0, hasMore: false},
@@ -124,6 +132,18 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
             const { content: newJobs, totalElements, hasMore } = response;
             const existingJobs = state.userJobsByFilter[filterKey] || [];
             const updatedJobs = [...existingJobs, ...newJobs]
+            for (const job of newJobs) {
+                set((state) => ({
+                    totalViewsForJobById: {
+                        ...state.totalViewsForJobById,
+                        [job.id]: job.views || 0,
+                    },
+                    totalApplicationsForJobById: {
+                        ...state.totalApplicationsForJobById,
+                        [job.id]: job.applicationCount || 0,
+                    }
+                }))
+            }
             set((state) => ({
                 userJobsByFilter: {
                     ...state.userJobsByFilter,
@@ -188,7 +208,14 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
             const response = await getFavoriteJobsForUser(page, pageSize);
             const { content: newJobs, hasMore, totalElements } = response;
             const existingJobs = state.favoriteJobs || [];
-            const updatedJobs = [...existingJobs, ...newJobs]
+            let updatedJobs;
+            if (page === 0) {
+                updatedJobs = newJobs;
+            } else {
+                const existingJobIds = new Set(existingJobs.map(job => job.id));
+                const filteredNewJobs = newJobs.filter(job => !existingJobIds.has(job.id));
+                updatedJobs = [...existingJobs, ...filteredNewJobs];
+            }
             set(() => ({
                 favoriteJobs: updatedJobs,
                 totalFavoriteJobsCount: totalElements,
@@ -222,7 +249,26 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
             const response = await getAppliedJobsForUserAndFilter(page, pageSize, filter);
             const { content: newJobs, totalElements, hasMore } = response
             const existingJobs = state.appliedJobsByFilter[filterKey] || [];
-            const updatedJobs = [...existingJobs, ...newJobs]
+            let updatedJobs;
+            if (page === 0) {
+                updatedJobs = newJobs;
+            } else {
+                const existingJobIds = new Set(existingJobs.map(job => job.id));
+                const filteredNewJobs = newJobs.filter(job => !existingJobIds.has(job.id));
+                updatedJobs = [...existingJobs, ...filteredNewJobs];
+            }
+            for (const job of newJobs) {
+                set((state) => ({
+                    totalViewsForJobById: {
+                        ...state.totalViewsForJobById,
+                        [job.id]: job.views || 0,
+                    },
+                    totalApplicationsForJobById: {
+                        ...state.totalApplicationsForJobById,
+                        [job.id]: job.applicationCount || 0,
+                    }
+                }))
+            }
             set((state) => ({
                 appliedJobsByFilter: {
                     ...state.appliedJobsByFilter,
@@ -256,7 +302,6 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
         }
     },
 
-    // Getter methods in interface order
     getJobsByFilter: (filter) => {
         const filterKey = createJobsByFilterKey(filter);
         const state = get();
@@ -279,7 +324,14 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
         const state = get();
         return state.totalAppliedJobsCountByFilter[filterKey] || 0;
     },
-
+    getTotalViewsForJobById: (jobId) => {
+        const state = get();
+        return state.totalViewsForJobById[jobId] || null;
+    },
+    getTotalApplicationsForJobById: (jobId) => {
+        const state = get();
+        return state.totalApplicationsForJobById[jobId] || null;
+    },
     getPaginationForJobsByFilter: (filter) => {
         const filterKey = createJobsByFilterKey(filter);
         const state = get();
@@ -418,7 +470,6 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
     addJobToFavorites: (job) => {
         const state = get();
         const existingJobs = state.favoriteJobs || [];
-        console.log("Adding job to favorites in store:", job);
         const updatedJobs = [job, ...existingJobs];
         set(() => ({
             favoriteJobs: updatedJobs,
@@ -435,8 +486,6 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
         }))
     },
     addAppliedJob: (job) => {
-        // When a new job is added to the state, it will be Pending and all
-        // Update all filer keys accordinglt
         const state = get();
         Object.keys(state.appliedJobsByFilter).forEach((filterKey) => {
             if (filterKey === 'all' || filterKey === 'PENDING') {
@@ -458,8 +507,6 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
     addAppliedJobs: (jobs) => {
         const state = get();
         jobs.forEach((job) => {
-            // When a new job is added to the state, it will be Pending and all
-            // Update all filer keys accordingly
             Object.keys(state.appliedJobsByFilter).forEach((filterKey) => {
                 if (filterKey === 'all' || filterKey === 'PENDING') {
                 const existingJobs = state.appliedJobsByFilter[filterKey] || [];
@@ -477,7 +524,30 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
                 }
             });
         });
-    }
+    },
+    addViewForJob: (jobId) => {
+        const state = get();
+        const currentViews = state.totalViewsForJobById[jobId] || 0;
+        console.log("Current views for job:", jobId, currentViews);
+        set(() => ({
+            totalViewsForJobById: {
+                ...state.totalViewsForJobById,
+                [jobId]: currentViews + 1,
+            }
+        }))
+        console.log("Added view for job:", jobId);
+        console.log("New total views:", get().totalViewsForJobById);
+    },
+    addApplicationForJob: (jobId) => {
+        const state = get();
+        const currentApplications = state.totalApplicationsForJobById[jobId] || 0;
+        set(() => ({
+            totalApplicationsForJobById: {
+                ...state.totalApplicationsForJobById,
+                [jobId]: currentApplications + 1,
+            }
+        }))
+    },
 }))
 
 export default useUserJobsStore;

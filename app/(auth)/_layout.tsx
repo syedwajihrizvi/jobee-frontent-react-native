@@ -9,7 +9,7 @@ const AuthLayout = () => {
   const { type } = useUserStore();
   return (
     <View className="bg-white h-full">
-      <View className="w-full relative" style={{ height: Dimensions.get("window").height / 2.25 }}>
+      <View className="w-full relative" style={{ height: Dimensions.get("window").height / 3.235 }}>
         <ImageBackground
           source={{ uri: images.placeholder }}
           className="w-full h-full rounded-b-lg"
@@ -29,8 +29,11 @@ const AuthLayout = () => {
         contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
         enableOnAndroid
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
         enableResetScrollToCoords={false}
+        resetScrollToCoords={{ x: 0, y: 0 }}
+        extraScrollHeight={0}
+        extraHeight={0}
       >
         <Slot />
         <View className="flex-1" />

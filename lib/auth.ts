@@ -1,13 +1,13 @@
+import { getAPIUrl } from "@/constants";
 import { BusinessSignUpParams, SignInParams, SignUpViaCodeParams, UserSignUpParams } from "@/type";
 import Asyncstorage from "@react-native-async-storage/async-storage";
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
-const USER_ACCOUNTS_API_URL = "http://192.168.2.29:8080/accounts";
-const PROFILES_API_URL = "http://192.168.2.29:8080/profiles";
-const BUSINESS_ACCOUNTS_API_URL = "http://192.168.2.29:8080/business-accounts";
-const BUSINESS_PROFILES_API_URL = "http://192.168.2.29:8080/business-profiles";
-
+const USER_ACCOUNTS_API_URL = getAPIUrl('accounts');
+const PROFILES_API_URL = getAPIUrl('profiles');
+const BUSINESS_ACCOUNTS_API_URL = getAPIUrl('business-accounts');
+const BUSINESS_PROFILES_API_URL = getAPIUrl('business-profiles');
 export const signInUser = async (request: SignInParams) => {
     const response = await fetch(`${USER_ACCOUNTS_API_URL}/login`, {
         method: 'POST',
@@ -55,13 +55,13 @@ export const signUpUser = async (request: UserSignUpParams) => {
 }
 
 export const signUpBusiness = async (request: BusinessSignUpParams) => {
-    const { companyName, email, password } = request
+    const { companyName, email, password, firstName, lastName } = request
     const result = await fetch(`${BUSINESS_ACCOUNTS_API_URL}/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({email,password, companyName})
+        body: JSON.stringify({email,password, companyName, firstName, lastName})
     })
     const data = await result.json()
     return data;
@@ -152,7 +152,6 @@ export const registerForPushNotifications = async () => {
             return;
         }
         const token = (await Notifications.getExpoPushTokenAsync()).data;
-        console.log(token);
         return token;
     } else {
         console.log("Physical device is not being used")

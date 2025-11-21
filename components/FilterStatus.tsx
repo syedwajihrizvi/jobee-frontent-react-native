@@ -24,7 +24,10 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
         elevation: 4,
       }}
     >
-      <View className="flex-row items-center justify-between">
+      <View
+        className="flex-row items-center justify-between"
+        style={{ marginBottom: filterCount > 0 || (filters.search ? 8 : 0) ? 8 : 0 }}
+      >
         <View className="flex-row items-center gap-2">
           <View className="w-6 h-6 bg-indigo-100 rounded-full items-center justify-center">
             <Feather name="filter" size={12} color="#6366f1" />
@@ -39,7 +42,7 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
           >
             <Text className="font-quicksand-semibold text-xs text-green-600">Open Filters</Text>
           </TouchableOpacity>
-          {filterCount > 0 && (
+          {(filterCount > 0 || filters.search) && (
             <TouchableOpacity
               onPress={handleClearFilters}
               className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
@@ -50,7 +53,6 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
           )}
         </View>
       </View>
-      {filterCount > 0 && <View className="h-2" />}
       <View className="flex-row flex-wrap gap-2">
         {filterType === "job" ? (
           <>

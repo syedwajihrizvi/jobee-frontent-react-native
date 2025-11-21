@@ -1,8 +1,9 @@
+import { getAPIUrl } from "@/constants";
 import { User } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const USER_PROFILE_API_URL = `http://192.168.2.29:8080/profiles`;
+const USER_PROFILE_API_URL = getAPIUrl('profiles');
 
 export const useUserProfileForBusiness = (userId: number) => {
     const fetchUserProfile = async () => {

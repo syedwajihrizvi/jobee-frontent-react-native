@@ -9,6 +9,7 @@ import { convert10DigitNumberToPhoneFormat, getCustomProfilePlaceholderForField 
 import useAuthStore from "@/store/auth.store";
 import { User } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -59,6 +60,7 @@ const getFieldInfo = (field: string) => {
   }
 };
 const General = () => {
+  const queryClient = useQueryClient();
   const { user: authUser, setUser, isLoading } = useAuthStore();
   const user = authUser as User | null;
   const [showModal, setShowModal] = useState(false);
@@ -117,7 +119,6 @@ const General = () => {
   const submitProfileUpdate = async () => {
     if (!editingField) return;
     const fieldName = mapGeneralInfoFieldToAPIField(editingField);
-    console.log("Submitting profile update for", editingField, "with value:", profileForm.value);
     setIsSubmitting(true);
     try {
       if (editingField !== "Location") {
@@ -139,6 +140,7 @@ const General = () => {
           } as User);
       }
       setUpdateSuccess(true);
+      queryClient.invalidateQueries({ queryKey: ["profile-completeness"] });
     } catch (error) {
       console.log("Error updating profile:", error);
     } finally {
@@ -325,7 +327,7 @@ const General = () => {
                           </Text>
                         </View>
                         <CustomInput
-                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          placeholder="e.g. Seattle"
                           label=""
                           onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
                           value={locationForm.city}
@@ -347,7 +349,7 @@ const General = () => {
                           </Text>
                         </View>
                         <CustomInput
-                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          placeholder="e.g. United States"
                           label=""
                           autoCapitalize="words"
                           onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
@@ -369,7 +371,7 @@ const General = () => {
                           </Text>
                         </View>
                         <CustomInput
-                          placeholder={getCustomProfilePlaceholderForField(editingField || "")}
+                          placeholder="e.g. WA"
                           label=""
                           onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
                           autoCapitalize="characters"
@@ -391,7 +393,7 @@ const General = () => {
                   <View className="flex-1" />
                   <View className="px-6 pb-4">
                     <ProfileButton
-                      color="green-500"
+                      color="emerald-500"
                       buttonText="Update Information"
                       handlePress={submitProfileUpdate}
                       disabled={

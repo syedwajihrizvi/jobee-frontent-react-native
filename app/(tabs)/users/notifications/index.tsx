@@ -45,6 +45,8 @@ const Notifications = () => {
         return { name: "book-open", color: "#14b8a6", bgColor: "#ccfbf1" };
       case "INTERVIEW_REMINDER":
         return { name: "clock", color: "#f59e0b", bgColor: "#fef3c7" };
+      case "AI_RESUME_REVIEW_COMPLETE":
+        return { name: "cpu", color: "#8b5cf6", bgColor: "#ede9fe" };
       default:
         return { name: "info", color: "#6b7280", bgColor: "#f3f4f6" };
     }
@@ -79,6 +81,8 @@ const Notifications = () => {
         return "#99f6e4";
       case "INTERVIEW_REMINDER":
         return "#fbbf24";
+      case "AI_RESUME_REVIEW_COMPLETE":
+        return "#c4b5fd";
       default:
         return "#d1d5db";
     }
@@ -100,7 +104,6 @@ const Notifications = () => {
   };
 
   const handleNotificationPress = async (notification: Notification) => {
-    console.log("Notification pressed: ", notification);
     markNotificationAsRead(notification.id!);
     updateNotificationStatusToRead(notification.id!);
     const { notificationType, context } = notification;
@@ -113,8 +116,9 @@ const Notifications = () => {
       if (interviewId) {
         router.push(`/userProfile/interviews/${interviewId}`);
       }
+    } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
+      router.push("/userProfile/editProfile");
     }
-    // TODO: Navigate to relevant screen based on notification type
   };
 
   const handleClearAllReadNotifications = async () => {
@@ -134,7 +138,7 @@ const Notifications = () => {
     const iconData = getNotificationIcon(item.notificationType);
     const borderColor = getBorderColor(item.notificationType, item.read || false);
     const context = item.context || {};
-    const { companyLogoUrl } = context;
+    const { companyLogoUrl, companyId } = context;
     return (
       <TouchableOpacity
         className="bg-white"
@@ -155,8 +159,8 @@ const Notifications = () => {
       >
         <View className="p-4">
           <View className="flex-row items-start gap-3">
-            {companyLogoUrl ? (
-              <RenderCompanyLogo logoUrl={companyLogoUrl || ""} size={12} />
+            {companyId ? (
+              <RenderCompanyLogo logoUrl={companyLogoUrl} size={12} />
             ) : (
               <View
                 className="w-12 h-12 items-center justify-center"
@@ -342,7 +346,7 @@ const Notifications = () => {
   const renderDeleteAllReadNotifications = () => {
     if (notifications.length > 0) {
       return (
-        <View className="pb-4">
+        <View className="pb-4 mx-4">
           <TouchableOpacity
             className="bg-red-50 border border-red-200 rounded-xl py-3 px-4 flex-row items-center justify-center gap-2"
             style={{

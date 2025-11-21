@@ -23,7 +23,7 @@ const CompanyHeader = ({ job }: { job: Job }) => {
           </Text>
         </View>
       ) : (
-        <FavoriteJob job={job} />
+        <FavoriteJob job={job} showText={false} />
       )}
     </View>
   );

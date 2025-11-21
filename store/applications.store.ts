@@ -20,6 +20,7 @@ const createApplicationsFilterKey = (jobId: number, filters: ApplicantFilters) =
 }
 
 interface ApplicationsState {
+    applicationsPerJob: Record<number, number>;
     applicationsByJobAndFilter: Record<string, Application[]>;
     shortListedApplicationsByJob: Record<number, number[]>;
 
@@ -43,6 +44,7 @@ interface ApplicationsState {
     fetchCandidatesForJob: (jobId: number) => Promise<void>;
 
     getApplicationsForJob: (jobId: number, filters: ApplicantFilters) => Application[] | undefined;
+    getTotalApplicationsForJob: (jobId: number) => number | undefined;
     getShortListedApplicationsForJob: (jobId: number) => number[] | undefined;
     getCandidatesForJob: (jobId: number) => CandidateForJob[] | undefined;
     getPaginationForJobAndFilter: (jobId: number, filters: ApplicantFilters) => { currentPage: number; hasMore: boolean } | undefined;
@@ -69,6 +71,7 @@ interface ApplicationsState {
 
 const useApplicationStore = create<ApplicationsState>((set, get) => ({
     // State variables in interface order
+    applicationsPerJob: {},
     applicationsByJobAndFilter: {},
     shortListedApplicationsByJob: {},
 
@@ -120,6 +123,10 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
             const existingApplications = state.applicationsByJobAndFilter[filterKey] || [];
             const updatedApplications = [...existingApplications, ...newApplications];
             set((state) => ({
+                applicationsPerJob: {
+                    ...state.applicationsPerJob,
+                    [jobId]: totalElements
+                },
                 applicationsByJobAndFilter: {
                     ...state.applicationsByJobAndFilter,
                     [filterKey]: updatedApplications
@@ -179,6 +186,10 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const state = get();
         const filterKey = createApplicationsFilterKey(jobId, filters);
         return state.applicationsByJobAndFilter[filterKey];
+    },
+    getTotalApplicationsForJob: (jobId) => {
+        const state = get();
+        return state.applicationsPerJob[jobId] || 0;
     },
     getShortListedApplicationsForJob: (jobId) => {
         const state = get();

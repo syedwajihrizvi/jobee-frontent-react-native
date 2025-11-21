@@ -30,9 +30,7 @@ export const useBusinessSocials = () => {
                 'x-auth-token': `Bearer ${token}` || ''
             }
         });
-        console.log(response)
         const data = await response.json();
-        console.log("Fetched business socials:", data);
         return data;
     }
     return useQuery<SocialMedia[], Error>({

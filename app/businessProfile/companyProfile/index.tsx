@@ -5,14 +5,23 @@ import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import ProfileCard from "@/components/ProfileCard";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
-import { useCompany } from "@/lib/services/useCompany";
-import { mapCompanyProfileToAPIField, updateCompanyLocation, updateCompanyProfile } from "@/lib/updateUserProfile";
-import { getCustomCompanyFormPlaceholderField } from "@/lib/utils";
+import { getS3CompanyLogoUrl } from "@/lib/s3Urls";
+import {
+  getCustomCompanyFormPlaceholderField,
+  updateCompanyLocation,
+  updateCompanyLogo,
+  updateCompanyProfile,
+} from "@/lib/updateProfiles/businessProfile";
+import { mapCompanyProfileToAPIField } from "@/lib/updateUserProfile";
+import { handleProfileImagePicker } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
-import { BusinessUser, Company } from "@/type";
+import useCompanyStore from "@/store/company.store";
+import { BusinessUser } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const getFieldMaxLength = (field: string) => {
@@ -33,6 +42,8 @@ const getFieldMaxLength = (field: string) => {
       return 28;
     case "Description":
       return 500;
+    case "Website":
+      return 100;
     default:
       return 30;
   }
@@ -47,20 +58,31 @@ const getFieldInfo = (field: string) => {
     case "Industry":
       return "Enter the industry the company is a part of.";
     case "Location":
-      return "Company's current city and state/country (e.g., San Francisco, CA or London, UK).";
+      return "Company's headquarters current city and state/country (e.g., San Francisco, CA or London, UK).";
     case "Number of Employees":
       return "Enter the total number of employees in your company.";
     case "Description":
       return "Provide a brief description of your company.";
+    case "Website":
+      return "Enter the official website URL of your company.";
     default:
       return "Update this field with your current information.";
   }
 };
+
 const CompanyProfile = () => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
-  const { isLoading, data } = useCompany(user?.companyId);
-  const [company, setCompany] = useState(data);
+  const {
+    hasValidCompanyInformation,
+    refreshCompanyInformation,
+    isLoadingCompanyInformation,
+    getCompanyInformation,
+    updateCompanyLogoUrl,
+    updateCompany,
+  } = useCompanyStore();
+  const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
+  const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -74,11 +96,15 @@ const CompanyProfile = () => {
     state: "",
   });
 
+  const company = getCompanyInformation(user?.companyId as number);
+  const isLoading = isLoadingCompanyInformation();
+
   useEffect(() => {
-    if (data && !isLoading) {
-      setCompany(data);
+    const cacheValid = hasValidCompanyInformation(user?.companyId as number);
+    if (user?.companyId && !cacheValid) {
+      refreshCompanyInformation(user.companyId);
     }
-  }, [data, isLoading]);
+  }, [user?.companyId]);
 
   const getCurrentFieldValue = (field: string) => {
     switch (field) {
@@ -94,6 +120,8 @@ const CompanyProfile = () => {
         return company?.location || "";
       case "Description":
         return company?.description || "";
+      case "Company Website":
+        return company?.website || "";
       default:
         return "";
     }
@@ -102,6 +130,7 @@ const CompanyProfile = () => {
   const handleEditPress = (field: string) => {
     setUpdateSuccess(false);
     setEditingField(field);
+    console.log("Editing field:", field);
     if (field !== "Location") {
       const currentValue = getCurrentFieldValue(field);
       setCompanyForm({ value: currentValue || "" });
@@ -129,7 +158,7 @@ const CompanyProfile = () => {
         if (res) {
           setCompanyForm({ value: "" });
           setEditingField(null);
-          setCompany({ ...company, [fieldName]: companyForm.value.trim() } as Company);
+          updateCompany(user?.companyId as number, { [fieldName]: companyForm.value.trim() });
           setUpdateSuccess(true);
         }
       } else {
@@ -141,13 +170,14 @@ const CompanyProfile = () => {
           companyId: user?.companyId as number,
         });
         if (res) {
-          setCompany({
-            ...company,
+          updateCompany(user?.companyId as number, {
             location: `${city.trim()}, ${state.trim()}, ${country.trim()}`,
             hqCity: city.trim(),
             hqCountry: country.trim(),
             hqState: state.trim(),
-          } as Company);
+          });
+          setLocationForm({ city: "", country: "", state: "" });
+          setEditingField(null);
           setUpdateSuccess(true);
         }
       }
@@ -155,6 +185,53 @@ const CompanyProfile = () => {
       console.error("Error updating profile:", error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const renderCompanyLogo = () => {
+    if (uploadingUserProfileImage) return <ActivityIndicator size="small" color="#0000ff" />;
+    if (uploadedProfileImage) {
+      return (
+        <Image
+          source={{ uri: uploadedProfileImage }}
+          className="rounded-md"
+          style={{ width: 30, height: 30 }}
+          resizeMode="contain"
+        />
+      );
+    }
+    if (company && company.logoUrl) {
+      return (
+        <Image
+          source={{ uri: getS3CompanyLogoUrl(company.logoUrl) }}
+          className="rounded-md"
+          style={{ width: 30, height: 30 }}
+          resizeMode="contain"
+        />
+      );
+    }
+    return <Feather name="image" size={20} color="#10b981" />;
+  };
+
+  const uploadCompanyLogo = async (image: ImagePicker.ImagePickerResult) => {
+    if (!image || !image.assets || image.assets.length === 0) {
+      Alert.alert("No Image Selected", "Please select an image to upload.");
+      return;
+    }
+    setUploadingUserProfileImage(true);
+    try {
+      const response = await updateCompanyLogo(image, user?.companyId as number);
+      if (response) {
+        Alert.alert("Success", "Profile image updated successfully.");
+        setUploadedProfileImage(response.profileImageUrl);
+        updateCompanyLogoUrl(user?.companyId as number, response.profileImageUrl);
+      } else {
+        Alert.alert("Error", "Failed to update profile image. Please try again.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while uploading the profile image. Please try again.");
+    } finally {
+      setUploadingUserProfileImage(false);
     }
   };
 
@@ -191,14 +268,27 @@ const CompanyProfile = () => {
           ) : (
             <View className="flex flex-col gap-3">
               <ProfileCard
+                label="Company Logo"
+                withBackground={company?.logoUrl ? false : true}
+                subtitle={"Upload or change your company logo"}
+                icon={renderCompanyLogo()}
+                handleEditPress={() => handleProfileImagePicker({ onSuccess: uploadCompanyLogo })}
+              />
+              <ProfileCard
                 label="Company Name"
                 subtitle={company?.name || "Not Provided"}
                 icon={<FontAwesome5 name="building" size={18} color="#22c55e" />}
                 handleEditPress={handleEditPress}
               />
               <ProfileCard
+                label="Company Website"
+                subtitle={company?.website || "Not Provided"}
+                icon={<FontAwesome5 name="link" size={18} color="#22c55e" />}
+                handleEditPress={handleEditPress}
+              />
+              <ProfileCard
                 label="Description"
-                subtitle={company?.description.slice(0, 100) || "Not Provided"}
+                subtitle={(company?.description && company?.description.slice(0, 100)) || "Not Provided"}
                 icon={<FontAwesome5 name="building" size={18} color="#22c55e" />}
                 handleEditPress={handleEditPress}
               />
@@ -235,7 +325,12 @@ const CompanyProfile = () => {
         customHeight={editingField === "Location" || editingField === "Description" ? 0.55 : 0.5}
         customWidth={0.75}
       >
-        <View className="flex-1">
+        <KeyboardAwareScrollView
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid
+          keyboardShouldPersistTaps="handled"
+          enableResetScrollToCoords={false}
+        >
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">Update {editingField || ""}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)} className="p-2">
@@ -279,73 +374,75 @@ const CompanyProfile = () => {
                   )}
                   {editingField === "Location" && (
                     <View className="px-6">
-                      <View className="flex-row items-center justify-between mb-2">
-                        <Text className="font-quicksand-medium text-sm text-gray-600">City</Text>
-                        <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {locationForm.city.length}/{getFieldMaxLength("City")} characters
-                        </Text>
+                      <View className="gap-2">
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">City</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {locationForm.city.length}/{getFieldMaxLength("City")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g., San Francisco"
+                          label=""
+                          onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
+                          value={locationForm.city}
+                          autoCapitalize="words"
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {locationForm.country.length}/{getFieldMaxLength("Country")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g., USA"
+                          label=""
+                          autoCapitalize="words"
+                          onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
+                          value={locationForm.country}
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
+                        <View className="flex-row items-center justify-between mb-2">
+                          <Text className="font-quicksand-medium text-sm text-gray-600">State/Province</Text>
+                          <Text className="font-quicksand-medium text-xs text-gray-500">
+                            {locationForm.state.length}/{getFieldMaxLength("State")} characters
+                          </Text>
+                        </View>
+                        <CustomInput
+                          placeholder="e.g., CA"
+                          label=""
+                          onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
+                          autoCapitalize="characters"
+                          autocorrect={false}
+                          value={locationForm.state}
+                          customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
+                          style={{
+                            fontSize: 12,
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                          }}
+                        />
                       </View>
-                      <CustomInput
-                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                        label=""
-                        onChangeText={(text) => setLocationForm({ ...locationForm, city: text })}
-                        value={locationForm.city}
-                        autoCapitalize="words"
-                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                        style={{
-                          fontSize: 12,
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      />
-                      <View className="flex-row items-center justify-between mb-2">
-                        <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
-                        <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {locationForm.country.length}/{getFieldMaxLength("Country")} characters
-                        </Text>
-                      </View>
-                      <CustomInput
-                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                        label=""
-                        autoCapitalize="words"
-                        onChangeText={(text) => setLocationForm({ ...locationForm, country: text })}
-                        value={locationForm.country}
-                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                        style={{
-                          fontSize: 12,
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      />
-                      <View className="flex-row items-center justify-between mb-2">
-                        <Text className="font-quicksand-medium text-sm text-gray-600">State/Province</Text>
-                        <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {locationForm.state.length}/{getFieldMaxLength("State")} characters
-                        </Text>
-                      </View>
-                      <CustomInput
-                        placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
-                        label=""
-                        onChangeText={(text) => setLocationForm({ ...locationForm, state: text })}
-                        autoCapitalize="characters"
-                        autocorrect={false}
-                        value={locationForm.state}
-                        customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
-                        style={{
-                          fontSize: 12,
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      />
                     </View>
                   )}
                   {editingField !== "Location" && editingField !== "Description" && (
@@ -359,7 +456,7 @@ const CompanyProfile = () => {
                       <CustomInput
                         placeholder={getCustomCompanyFormPlaceholderField(editingField || "")}
                         label=""
-                        autoCapitalize="words"
+                        autoCapitalize={editingField === "Company Website" ? "none" : "words"}
                         onChangeText={(text) => setCompanyForm({ value: text })}
                         value={companyForm.value}
                         customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"
@@ -374,10 +471,9 @@ const CompanyProfile = () => {
                       />
                     </View>
                   )}
-                  <View className="flex-1" />
                   <View className="px-6 pb-4">
                     <ProfileButton
-                      color="green-500"
+                      color="emerald-500"
                       buttonText="Update Information"
                       handlePress={submitProfileUpdate}
                       disabled={
@@ -397,7 +493,7 @@ const CompanyProfile = () => {
               <Text className="font-quicksand-semibold text-lg">Updating Profile Information...</Text>
             </View>
           )}
-        </View>
+        </KeyboardAwareScrollView>
       </ModalWithBg>
     </SafeAreaView>
   );

@@ -4,8 +4,8 @@ import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
-import { useEducations } from "@/lib/services/useEducations";
 import { addEducation, deleteEducation, editEducation } from "@/lib/updateUserProfile";
+import useUserStore from "@/store/user.store";
 import { AddUserEducationForm, Education } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -14,13 +14,18 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Educations = () => {
-  const { data: userEducations, isLoading } = useEducations();
+  const {
+    getEducations,
+    fetchUserEducations,
+    isLoadingEducations,
+    hasValidEducations,
+    updateEducations,
+    removeEducation,
+  } = useUserStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [openDegreeDropdown, setOpenDegreeDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [educations, setEducations] = useState<Education[]>(userEducations || []);
   const [addSuccess, setAddSuccess] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
@@ -34,10 +39,10 @@ const Educations = () => {
   });
 
   useEffect(() => {
-    if (!isLoading && userEducations) {
-      setEducations(userEducations);
+    if (!hasValidEducations()) {
+      fetchUserEducations();
     }
-  }, [userEducations, isLoading]);
+  }, []);
 
   const resetStates = () => {
     setIsSubmitting(false);
@@ -82,8 +87,7 @@ const Educations = () => {
     try {
       const res = await addEducation(educationForm);
       if (res) {
-        const updatedEducations = [res, ...(educations || [])];
-        setEducations(updatedEducations);
+        updateEducations(res);
         setAddSuccess(true);
       }
     } catch (error) {
@@ -101,9 +105,7 @@ const Educations = () => {
       if (res) {
         const index = educations.findIndex((edu) => edu.id === educationForm.id);
         if (typeof index === "number" && index >= 0) {
-          const updatedEducations = [...educations];
-          updatedEducations[index] = res;
-          setEducations(updatedEducations);
+          updateEducations(res);
           setEditSuccess(true);
         }
       }
@@ -126,8 +128,7 @@ const Educations = () => {
           try {
             const res = await deleteEducation(educationForm.id);
             if (res) {
-              const updatedEducations = educations.filter((edu) => edu.id !== educationForm.id);
-              setEducations(updatedEducations);
+              removeEducation(educationForm.id);
               setDeleteSuccess(true);
             }
           } catch (error) {
@@ -140,6 +141,8 @@ const Educations = () => {
     ]);
   };
 
+  const educations = getEducations();
+  const isLoading = isLoadingEducations;
   return (
     <SafeAreaView>
       <BackBar label="Education" />
@@ -233,8 +236,8 @@ const Educations = () => {
                 </View>
               ) : (
                 <View className="bg-white rounded-2xl p-8 items-center justify-center border border-gray-200">
-                  <View className="w-16 h-16 bg-gray-200 rounded-full items-center justify-center mb-4">
-                    <Feather name="award" size={24} color="#9ca3af" />
+                  <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+                    <Feather name="book-open" size={24} color="#10b981" />
                   </View>
                   <Text className="font-quicksand-bold text-gray-800 text-lg mb-2">No Educations Added Yet</Text>
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">

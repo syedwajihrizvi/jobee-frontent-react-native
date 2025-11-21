@@ -2,15 +2,16 @@ import UploadVideoIntro from "@/components/UploadVideoIntro";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   uploadedVideoIntro: ImagePicker.ImagePickerResult | null;
   setUploadedVideoIntro: React.Dispatch<React.SetStateAction<ImagePicker.ImagePickerResult | null>>;
+  handleSubmit: () => void;
 };
 
-const AddVideoIntro = ({ uploadedVideoIntro, setUploadedVideoIntro }: Props) => {
+const AddVideoIntro = ({ uploadedVideoIntro, setUploadedVideoIntro, handleSubmit }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   return (
     <SafeAreaView className="flex-1">
@@ -39,6 +40,37 @@ const AddVideoIntro = ({ uploadedVideoIntro, setUploadedVideoIntro }: Props) => 
               </Text>
             </View>
           </View>
+        </View>
+        <View className="flex-row gap-2 items-center justify-center mt-6">
+          <TouchableOpacity
+            className=" bg-emerald-500 py-4 rounded-xl items-center w-1/2"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            activeOpacity={0.8}
+            onPress={handleSubmit}
+          >
+            <Text className="font-quicksand-bold text-white text-md">Done</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="bg-white border-2 border-emerald-500 py-4 rounded-xl items-center w-1/2"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            activeOpacity={0.8}
+            onPress={handleSubmit}
+          >
+            <Text className="font-quicksand-bold text-emerald-600 text-md">Skip for now</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

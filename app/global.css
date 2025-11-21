@@ -68,7 +68,7 @@
   }
 
   .btn--green {
-    background-color: #22c55e;
+    background-color: #10b981;
     color: white;
   }
 
@@ -80,9 +80,8 @@
   }
 
   .apply-button {
-    background-color: #22c55e;
+    background-color: #10b981;
     font-weight: 600;
-    color: white;
     border-radius: 8px;
   }
 
@@ -113,7 +112,8 @@
     gap: 12px;
     background-color: #f3f4f6;
     border-radius: 9999px;
-    padding: 8px 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
     position: relative;
   }
 
@@ -139,7 +139,7 @@
     bottom: 0;
     width: 75%;
     background-color: white;
-    padding: 40px;
+    padding: 30px;
     border-top-left-radius: 24px;
     flex-direction: column;
     gap: 32px;

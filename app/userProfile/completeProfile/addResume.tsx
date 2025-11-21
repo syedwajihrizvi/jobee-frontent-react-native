@@ -1,5 +1,4 @@
 import FileSelector from "@/components/FileSelector";
-import ImportFromLinkedInButton from "@/components/ImportFromLinkedinButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -7,15 +6,10 @@ import { Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const AddResume = () => {
+const AddResume = ({ handleSubmit }: { handleSubmit: () => void }) => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
-
-  const handleImportFromLinkedIn = () => {
-    console.log("Import from LinkedIn clicked");
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50 mb-20">
       <KeyboardAwareScrollView
         className="flex-1 px-6 py-8"
         showsVerticalScrollIndicator={false}
@@ -32,10 +26,6 @@ const AddResume = () => {
             handleReedit={() => setUploadSuccess(false)}
           />
         )}
-        <ImportFromLinkedInButton />
-        <View className="items-center justify-center">
-          <Text className="font-quicksand-bold text-md">OR</Text>
-        </View>
         <View className="items-center">
           <Text className="font-quicksand-bold text-lg text-gray-800 text-center mb-2">Add Your Resume</Text>
           <Text className="font-quicksand-medium text-gray-600 text-center leading-5">
@@ -63,6 +53,7 @@ const AddResume = () => {
           selectedDocumentType="RESUME"
           handleUploadSuccess={() => console.log("Upload successful")}
           customHandleUploadMethod={true}
+          customUploadMethod={handleSubmit}
         />
       </KeyboardAwareScrollView>
     </SafeAreaView>

@@ -1,20 +1,23 @@
 import React, { useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import RenderMarkdown from "./RenderMarkdown";
 
-const ExpandableText = ({ text }: { text: string }) => {
+const ExpandableText = ({ text, length = 100 }: { text: string; length?: number }) => {
   const [expanded, setExpanded] = useState(false);
 
-  if (text.length <= 100) {
-    return <Text className="font-quicksand-regular text-sm text-gray-700">{text}</Text>;
+  if (text.length <= length) {
+    return <RenderMarkdown text={text} />;
   }
+
+  const truncatedText = text.substring(0, length);
 
   return (
     <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-      <Text className="font-quicksand-regular text-sm text-gray-700">
-        {expanded ? text : text.substring(0, 100)}
-        {!expanded && "... "}
-        <Text className="font-quicksand-semibold text-blue-600">{expanded ? " Show less" : "Read more"}</Text>
-      </Text>
+      <View>
+        <RenderMarkdown text={expanded ? text : truncatedText} />
+        {!expanded && <Text className="font-quicksand-semibold text-blue-600">... Read more</Text>}
+        {expanded && <Text className="font-quicksand-semibold text-blue-600">Show less</Text>}
+      </View>
     </TouchableOpacity>
   );
 };

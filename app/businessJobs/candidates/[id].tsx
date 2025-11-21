@@ -3,16 +3,16 @@ import BackBar from "@/components/BackBar";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import ContactCandidate from "@/components/ContactCandidate";
 import DocumentModal from "@/components/DocumentModal";
+import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import UserVideoIntro from "@/components/UserVideoIntro";
-import { images } from "@/constants";
-import { getS3ProfileImage, getS3VideoIntroUrl } from "@/lib/s3Urls";
+import { getS3VideoIntroUrl } from "@/lib/s3Urls";
 import { useUserProfileForBusiness } from "@/lib/services/useUserProfileForBusiness";
 import { User } from "@/type";
 import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useLocalSearchParams } from "expo-router";
 import React, { useRef, useState } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Candidate = () => {
@@ -27,8 +27,7 @@ const Candidate = () => {
   const [viewingDocument, setViewingDocument] = useState<string | undefined>();
 
   const handleResumePress = () => {
-    console.log("Viewing document URL:", userProfile?.primaryResume?.documentUrl);
-    setViewingDocument(userProfile?.primaryResume?.documentUrl);
+    if (userProfile?.primaryResume) setViewingDocument(userProfile?.primaryResume?.documentUrl);
   };
 
   return (
@@ -68,26 +67,7 @@ const Candidate = () => {
             >
               <View className="flex-row items-start justify-between mb-2">
                 <View className="flex-row items-start gap-4 flex-1">
-                  <View
-                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200"
-                    style={{
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                  >
-                    <Image
-                      source={{
-                        uri: userProfile?.profileImageUrl
-                          ? getS3ProfileImage(userProfile?.profileImageUrl)
-                          : images.companyLogo,
-                      }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
-                  </View>
+                  <RenderUserProfileImage user={userProfile} profileImageUrl={userProfile?.profileImageUrl} />
                   <View className="flex-1">
                     <Text className="font-quicksand-bold text-xl text-gray-900">
                       {userProfile?.firstName} {userProfile?.lastName}
@@ -116,11 +96,17 @@ const Candidate = () => {
                 onPress={handleResumePress}
                 activeOpacity={0.8}
               >
-                <Feather name="file-text" size={18} color="white" />
-                <Text className="font-quicksand-bold text-white text-md">View Resume</Text>
+                {userProfile?.primaryResume ? (
+                  <>
+                    <Feather name="file-text" size={18} color="white" />
+                    <Text className="font-quicksand-bold text-white text-md">View Resume</Text>
+                  </>
+                ) : (
+                  <Text className="font-quicksand-bold text-white text-md">No Resume Uploaded</Text>
+                )}
               </TouchableOpacity>
             </View>
-            <View className="mx-4 mt-4">
+            <View className="mx-4 mt-4 gap-2">
               <CollapsibleSection
                 title="Skills"
                 icon={<Ionicons name="bulb" size={16} color="#f59e0b" />}

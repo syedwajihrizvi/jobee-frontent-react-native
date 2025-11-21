@@ -8,13 +8,15 @@ import { employmentTypes, experienceLevels, sounds, workArrangements } from "@/c
 import { createJob, getAIJobDescription } from "@/lib/jobEndpoints";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
-import { BusinessUser, CreateJobForm, HiringTeamMemberForm } from "@/type";
+import useBusinessJobsStore from "@/store/businessJobs.store";
+import { BusinessUser, CreateJobForm, HiringTeamMemberForm, JobFilters } from "@/type";
 import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAudioPlayer } from "expo-audio";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+
+import RenderMarkdown from "@/components/RenderMarkdown";
 import {
   ActivityIndicator,
   Alert,
@@ -29,7 +31,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CreateJob = () => {
-  const queryClient = useQueryClient();
   const defaultJobForm: CreateJobForm = {
     title: "",
     location: "",
@@ -61,6 +62,7 @@ const CreateJob = () => {
     email: "",
   });
   const { profileSummary, setProfileSummary } = useBusinessProfileSummaryStore();
+  const { refreshJobsForBusinessAndFilter } = useBusinessJobsStore();
   const [createJobForm, setCreateJobForm] = useState<CreateJobForm>(defaultJobForm);
   const [addingJob, setAddingJob] = useState(false);
   const [generatingAIDescription, setGeneratingAIDescription] = useState(false);
@@ -190,11 +192,9 @@ const CreateJob = () => {
         return;
       }
       Alert.alert("Success", "Job created successfully");
+      refreshJobsForBusinessAndFilter({} as JobFilters);
       setCreateJobForm({ ...defaultJobForm });
-      queryClient.invalidateQueries({
-        queryKey: ["jobs", "company", user?.companyId],
-      });
-      router.push(`/businessJobs/${result.id}?companyId=${user?.companyId}`);
+      router.replace(`/businessJobs/${result.id}`);
       setProfileSummary({
         ...profileSummary,
         totalJobsPosted: (profileSummary?.totalJobsPosted || 0) + 1,
@@ -220,7 +220,6 @@ const CreateJob = () => {
   };
 
   const handleAddTeamMember = () => {
-    console.log("Adding team member:", hiringTeamMemberForm);
     const { firstName, lastName, email } = hiringTeamMemberForm;
     if (!firstName || !lastName || !email) {
       Alert.alert("Error", "Please fill in all fields for the team member");
@@ -317,7 +316,7 @@ const CreateJob = () => {
                 label="Description"
                 numberOfLines={2}
                 value={createJobForm.description}
-                placeholder="eg. We are looking for a skilled software engineer to join our team..."
+                placeholder="Give a description of the role. We'll use AI to expand and clean it up for you."
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, description: text })}
               />
             </View>
@@ -598,9 +597,37 @@ const CreateJob = () => {
                 </View>
               </View>
               <View>
-                <Text className="font-quicksand-semibold text-base text-gray-900 mb-2">Job Description</Text>
-                <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <Text className="font-quicksand-medium text-gray-700 leading-6">{createJobForm.description}</Text>
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="font-quicksand-semibold text-base text-gray-900">Job Description</Text>
+                  <TouchableOpacity
+                    className="bg-emerald-500 px-4 py-2 rounded-full flex-row items-center gap-2 border-2 border-amber-300"
+                    style={{
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.4,
+                      shadowRadius: 8,
+                      elevation: 6,
+                    }}
+                    onPress={handleGenerateAIDescription}
+                    activeOpacity={0.8}
+                    disabled={generatingAIDescription}
+                  >
+                    {generatingAIDescription ? (
+                      <>
+                        <ActivityIndicator size="small" color="#ffffff" />
+                        <Text className="font-quicksand-bold text-white text-sm">Writing...</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Ionicons name="sparkles" size={16} color="#fbbf24" />
+                        <Text className="font-quicksand-bold text-white text-sm">AI Write</Text>
+                        <Text className="font-quicksand-medium text-emerald-100 text-xs">NEW</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                <View className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
+                  <RenderMarkdown text={createJobForm.description} />
                 </View>
               </View>
               <View>
@@ -703,28 +730,6 @@ const CreateJob = () => {
                   <Text className="font-quicksand-semibold text-md">You did not specify a hiring team</Text>
                 </View>
               )}
-              <TouchableOpacity
-                className="flex-1 bg-emerald-500 py-3 px-4 rounded-xl items-center justify-center flex-row gap-2"
-                style={{
-                  shadowColor: "#16a34a",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={handleGenerateAIDescription}
-                activeOpacity={0.8}
-                disabled={generatingAIDescription}
-              >
-                {generatingAIDescription ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <>
-                    <Ionicons name="sparkles" size={18} color="#fbbf24" />
-                    <Text className="font-quicksand-bold text-white text-center text-base">Update With AI</Text>
-                  </>
-                )}
-              </TouchableOpacity>
             </View>
           </ScrollView>
 

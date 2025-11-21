@@ -1,12 +1,12 @@
 import BackBar from "@/components/BackBar";
 import DocumentItem from "@/components/DocumentItem";
 import { UserDocumentType } from "@/constants";
-import { useDocuments } from "@/lib/services/useDocuments";
 import useAuthStore from "@/store/auth.store";
-import { AllUserDocuments, User, UserDocument } from "@/type";
+import useUserStore from "@/store/user.store";
+import { User, UserDocument } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -28,35 +28,25 @@ const documentTypes = [
 ];
 
 const ManageDocuments = () => {
-  const { isLoading, user: authUser } = useAuthStore();
-  const { data: userDocs, isLoading: isLoadingDocs } = useDocuments();
-  const [userDocuments, setUserDocuments] = useState<AllUserDocuments | null>(null);
+  const { user: authUser } = useAuthStore();
+  const {
+    getDocuments,
+    getResumeDocuments,
+    getCoverLetterDocuments,
+    getCertificateDocuments,
+    getTranscriptDocuments,
+    getRecommendationDocuments,
+    fetchUserDocuments,
+    hasValidDocuments,
+    isLoadingDocuments,
+  } = useUserStore();
   const user = authUser as User | null;
-  useEffect(() => {
-    if (userDocs && !isLoadingDocs) {
-      const resumeDocuments: UserDocument[] = userDocs.filter((doc) => doc.documentType === UserDocumentType.RESUME);
-      const coverLetterDocuments: UserDocument[] = userDocs.filter(
-        (doc) => doc.documentType === UserDocumentType.COVER_LETTER
-      );
-      const certificateDocuments: UserDocument[] = userDocs.filter(
-        (doc) => doc.documentType === UserDocumentType.CERTIFICATE
-      );
-      const transcriptDocuments: UserDocument[] = userDocs.filter(
-        (doc) => doc.documentType === UserDocumentType.TRANSCRIPT
-      );
-      const recommendationDocuments: UserDocument[] = userDocs.filter(
-        (doc) => doc.documentType === UserDocumentType.RECOMMENDATION
-      );
-      setUserDocuments({
-        resumeDocuments,
-        coverLetterDocuments,
-        certificateDocuments,
-        transcriptDocuments,
-        recommendationDocuments,
-      });
-    }
-  }, [userDocs, isLoadingDocs]);
 
+  useEffect(() => {
+    if (!hasValidDocuments()) {
+      fetchUserDocuments();
+    }
+  }, []);
   const getDocumentTypeInfo = (type: string) => {
     return documentTypes.find((doc) => doc.value === type) || documentTypes[0];
   };
@@ -131,16 +121,12 @@ const ManageDocuments = () => {
     );
   };
 
-  const getTotalDocumentsCount = () => {
-    if (!userDocuments) return 0;
-    return (
-      (userDocuments?.resumeDocuments?.length || 0) +
-      (userDocuments?.coverLetterDocuments?.length || 0) +
-      (userDocuments?.certificateDocuments?.length || 0) +
-      (userDocuments?.transcriptDocuments?.length || 0) +
-      (userDocuments?.recommendationDocuments?.length || 0)
-    );
-  };
+  const resumes = getResumeDocuments();
+  const coverLetters = getCoverLetterDocuments();
+  const certificates = getCertificateDocuments();
+  const transcripts = getTranscriptDocuments();
+  const recommendations = getRecommendationDocuments();
+  const totalDocumentCount = getDocuments().length;
 
   return (
     <SafeAreaView className="bg-gray-50 flex-1">
@@ -164,7 +150,7 @@ const ManageDocuments = () => {
         }
       />
 
-      {isLoading ? (
+      {isLoadingDocuments ? (
         <View className="flex-1 justify-center items-center">
           <View
             className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
@@ -205,17 +191,17 @@ const ManageDocuments = () => {
                 <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
                   <Feather name="folder" size={24} color="#6366f1" />
                 </View>
-                <View>
+                <View className="flex-1">
                   <Text className="font-quicksand-bold text-xl text-gray-900">Document Library</Text>
                   <Text className="font-quicksand-medium text-sm text-gray-600">
-                    Manage all your professional documents
+                    Manage all your professional documents. Companies will see these when you apply for jobs.
                   </Text>
                 </View>
               </View>
 
               <View className="flex-row gap-4">
                 <View className="flex-1 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                  <Text className="font-quicksand-bold text-2xl text-blue-600">{getTotalDocumentsCount()}</Text>
+                  <Text className="font-quicksand-bold text-2xl text-blue-600">{totalDocumentCount}</Text>
                   <Text className="font-quicksand-medium text-sm text-blue-700">Total Documents</Text>
                 </View>
               </View>
@@ -223,31 +209,31 @@ const ManageDocuments = () => {
 
             {renderDocumentFlatList({
               title: "Resumes",
-              documents: userDocuments?.resumeDocuments || [],
+              documents: resumes,
               type: UserDocumentType.RESUME,
             })}
 
             {renderDocumentFlatList({
               title: "Cover Letters",
-              documents: userDocuments?.coverLetterDocuments || [],
+              documents: coverLetters,
               type: UserDocumentType.COVER_LETTER,
             })}
 
             {renderDocumentFlatList({
               title: "Certificates",
-              documents: userDocuments?.certificateDocuments || [],
+              documents: certificates,
               type: UserDocumentType.CERTIFICATE,
             })}
 
             {renderDocumentFlatList({
               title: "Transcripts",
-              documents: userDocuments?.transcriptDocuments || [],
+              documents: transcripts,
               type: UserDocumentType.TRANSCRIPT,
             })}
 
             {renderDocumentFlatList({
               title: "Recommendations",
-              documents: userDocuments?.recommendationDocuments || [],
+              documents: recommendations,
               type: UserDocumentType.RECOMMENDATION,
             })}
           </ScrollView>

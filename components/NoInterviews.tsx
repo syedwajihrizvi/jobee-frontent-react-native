@@ -30,7 +30,7 @@ const NoInterviews = ({ filter }: Props) => {
           </Text>
         </View>
       );
-    case "Interview Scheduled":
+    case "SCHEDULED":
       return (
         <View className="flex-1 justify-center items-center p-6">
           <View
@@ -47,11 +47,11 @@ const NoInterviews = ({ filter }: Props) => {
           </View>
           <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Scheduled Interviews</Text>
           <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
-            When you schedule interviews for this job, they will appear here.
+            When interviews are scheduled, they will appear here.
           </Text>
         </View>
       );
-    case "Interview Completed":
+    case "COMPLETED":
       return (
         <View className="flex-1 justify-center items-center p-6">
           <View
@@ -72,7 +72,7 @@ const NoInterviews = ({ filter }: Props) => {
           </Text>
         </View>
       );
-    case "Rejected":
+    case "REJECTED":
       return (
         <View className="flex-1 justify-center items-center p-6">
           <View
@@ -93,7 +93,7 @@ const NoInterviews = ({ filter }: Props) => {
           </Text>
         </View>
       );
-    case "Pending":
+    case "PENDING":
       return (
         <View className="flex-1 justify-center items-center p-6">
           <View

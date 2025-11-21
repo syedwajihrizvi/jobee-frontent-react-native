@@ -8,7 +8,6 @@ interface SignInParams {
 interface UserSignUpParams {
     email: string;
     password: string;
-    confirmPassword: string;
     firstName: string,
     lastName: string,
 }
@@ -18,6 +17,8 @@ interface BusinessSignUpParams {
     email: string;
     password: string;
     confirmPassword: string;
+    firstName: string;
+    lastName: string;
 }
 
 export type SignUpViaCodeParams = {
@@ -27,11 +28,11 @@ export type SignUpViaCodeParams = {
     email: string;
     phoneNumber: string;
     password: string;
-    confirmPassword: string;
 }
 
 export type CustomInputProps = {
     placeholder: string;
+    secureField?: boolean;
     label: string?;
     fontSize?: number;
     value?: string;
@@ -130,7 +131,10 @@ export type AuthState = {
     resetCanBatchQuickApply: () => void;
     setAuthReady: () => void;
     fetchAuthenticatedUser: () => Promise<void>;
-    removeUser: () => void
+    removeUser: () => void;
+    updateUserProfileImage: (profileImageUrl: string) => void;
+    updateBusinessLogoUrl: (logoUrl: string) => void;
+    setProfileToComplete: (profileComplete: boolean) => void;
 }
 
 export type ProfileSummaryState = {
@@ -178,6 +182,7 @@ export type Job = {
     maxSalary: number,
     tags: Tag[],
     applicants: number,
+    totalInterviews: number,
     pendingApplicationsSize: number,
     interviews: number
     createdAt: string,
@@ -293,6 +298,7 @@ export type User = {
     documents: UserDocument[],
     primaryResume: UserDocument | null
     videoIntroUrl: string | null;
+    socialMedias: SocialMedia[];
 }
 
 export type BusinessUser = {
@@ -311,7 +317,9 @@ export type BusinessUser = {
     state: string;
     country: string;
     phoneNumber: string;
-    role: 'ADMIN' | 'RECRUITER' | 'EMPLOYEE'
+    role: 'ADMIN' | 'RECRUITER' | 'EMPLOYEE',
+    socialMedias: SocialMedia[];
+
 }
 
 export type InterviewerProfileSummary = { 
@@ -356,7 +364,6 @@ export type Project = {
 
 export type UserSkill = {
     id: number;
-    experience: number;
     skill: Skill
 }
 
@@ -610,6 +617,8 @@ export type CompleteProfileForm = {
     country: string;
     summary: string;
     phoneNumber: string;
+    company: string;
+    
 }
 
 export interface PagedResponse<T> {
@@ -713,7 +722,7 @@ export type NotificationContext = {
     companyName?: string;
     jobTitle?: string;
 }
-export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED"
+export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED" | "AI_RESUME_REVIEW_COMPLETE";
 
 type ApplicationStatusFilter =
   | "PENDING"

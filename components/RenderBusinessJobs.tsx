@@ -1,9 +1,11 @@
 import useAuthStore from "@/store/auth.store";
 import useBusinessJobsStore from "@/store/businessJobs.store";
+import useCompanyStore from "@/store/company.store";
 import { BusinessUser, JobFilters } from "@/type";
-import { Feather } from "@expo/vector-icons";
+import { Entypo, Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Dimensions, FlatList, StatusBar, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, FlatList, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import BusinessJobListings from "./BusinessJobListings";
 import FilterStatus from "./FilterStatus";
@@ -30,8 +32,8 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
     experience: [],
     postedByAccountId: postedByAccountId ? postedByAccountId : undefined,
   };
-
   const { user: businessUser } = useAuthStore();
+  const { getCompanyInformation, hasValidCompanyInformation, refreshCompanyInformation } = useCompanyStore();
   const user = businessUser as BusinessUser | null;
   const slideX = useSharedValue(screenWidth);
   const [filters, setFilters] = useState<JobFilters>({ ...defaultFilters });
@@ -46,6 +48,12 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
     getPaginationForJobAndFilter,
     isLoadingJobsForBusinessAndFilter,
   } = useBusinessJobsStore();
+
+  useEffect(() => {
+    if (user?.companyId && !hasValidCompanyInformation(user.companyId)) {
+      refreshCompanyInformation(user.companyId);
+    }
+  }, [user?.companyId]);
 
   useEffect(() => {
     const cacheValid = hasValidCachedJobs(filters);
@@ -95,6 +103,8 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
   const isLoading = isLoadingJobsForBusinessAndFilter(filters);
   const jobs = getInterviewsForJobAndFilter(filters);
   const pagination = getPaginationForJobAndFilter(filters);
+  const company = getCompanyInformation(user?.companyId as number);
+
   return (
     <>
       <StatusBar hidden={true} />
@@ -114,7 +124,7 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
         >
           <View className="flex-row items-center gap-3">
             <View className="items-center justify-center">
-              <RenderCompanyLogo logoUrl={user?.companyLogo || ""} />
+              <RenderCompanyLogo logoUrl={company?.logoUrl} />
             </View>
             <View>
               <Text className="font-quicksand-bold text-xl text-gray-900">Jobs</Text>
@@ -149,16 +159,16 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
         ListEmptyComponent={() => (
           <View className="flex-1 items-center justify-center px-6 py-20">
             <View
-              className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
+              className="w-20 h-20 bg-emerald-500 rounded-full items-center justify-center mb-6"
               style={{
-                shadowColor: "#3b82f6",
+                shadowColor: "#10b981",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.2,
                 shadowRadius: 8,
                 elevation: 4,
               }}
             >
-              <Feather name="briefcase" size={32} color="#3b82f6" />
+              <Feather name="briefcase" size={32} color="white" />
             </View>
 
             <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Jobs Found</Text>
@@ -168,6 +178,23 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
                 ? "No jobs match your current search criteria. Try adjusting your filters or search terms."
                 : "You haven't posted any jobs yet. Create your first job posting to get started."}
             </Text>
+            {filters.search === "" && filterCount === 0 && (
+              <TouchableOpacity
+                className="flex-1 bg-emerald-500 rounded-lg px-6 py-3 flex-row items-center justify-center gap-2 w-2/3"
+                style={{
+                  shadowColor: "#22c55e",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={() => router.push("/businessJobs/createJob")}
+                activeOpacity={0.8}
+              >
+                <Entypo name="circle-with-plus" size={22} color="white" />
+                <Text className="font-quicksand-semibold text-white text-lg">Create Job</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
         ListFooterComponent={() => {

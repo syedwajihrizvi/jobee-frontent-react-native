@@ -30,16 +30,32 @@ const RenderUserProfileImage = ({
     fn = nameParts[0];
     ln = nameParts.length > 1 ? nameParts[1] : "";
   }
+  let textSize = "sm";
+  if (fontSize > 12) {
+    textSize = "md";
+  }
+  if (fontSize >= 16) {
+    textSize = "lg";
+  } else if (fontSize >= 20) {
+    textSize = "xl";
+  } else if (fontSize >= 24) {
+    textSize = "2xl";
+  } else if (fontSize >= 30) {
+    textSize = "3xl";
+  }
   if (imgUrl != null)
     return (
       <Image
         source={{ uri: getS3ProfileImage(imgUrl) }}
         className={`w-${profileImageSize} h-${profileImageSize} rounded-full`}
+        style={{
+          resizeMode: "cover",
+        }}
       />
     );
   return (
-    <View className={`w-${fontSize} h-${fontSize} bg-blue-100 rounded-full items-center justify-center`}>
-      <Text className="font-quicksand-bold text-blue-600 text-sm">
+    <View className={`w-${fontSize} h-${fontSize} bg-emerald-100 rounded-full items-center justify-center`}>
+      <Text className={`font-quicksand-bold text-emerald-600 text-${textSize}`}>
         {fn.charAt(0)}
         {ln.charAt(0)}
       </Text>

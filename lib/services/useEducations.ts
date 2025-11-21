@@ -1,8 +1,9 @@
+import { getAPIUrl } from "@/constants";
 import { Education } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const USER_EDUCATION_API = `http://192.168.2.29:8080/profiles/education`;
+const USER_EDUCATION_API = getAPIUrl('profiles/education');
 
 export const useEducations = () => {
     const fetchEducationsForUser = async () => {

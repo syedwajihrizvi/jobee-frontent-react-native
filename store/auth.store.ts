@@ -37,6 +37,21 @@ const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   removeUser: () => set({ user: null, isAuthenticated: false }),
+  updateUserProfileImage: (profileImageUrl: string) => {
+    const state = get();
+    const updatedUser = { ...(state.user as User), profileImageUrl } as User;
+    set({ user: updatedUser });
+  },
+  updateBusinessLogoUrl: (logoUrl: string) => {
+    const state = get();
+    const updatedUser = { ...(state.user as User), companyLogo: logoUrl } as User;
+    set({ user: updatedUser });
+  },
+  setProfileToComplete: (profileComplete: boolean) => {
+    const state = get();
+    const updatedUser = { ...(state.user as User), profileComplete } as User;
+    set({ user: updatedUser });
+  } 
 }))
 
 export default useAuthStore;

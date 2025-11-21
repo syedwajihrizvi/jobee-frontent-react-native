@@ -15,17 +15,12 @@ const SignUpViaCode = () => {
     lastName: "",
     phoneNumber: "",
     password: "",
-    confirmPassword: "",
   });
 
   const handleSignUpViaCode = async () => {
-    const { companyCode, email, phoneNumber, password, confirmPassword } = signUpForm;
-    if (!companyCode || !email || !phoneNumber || !password || !confirmPassword) {
+    const { companyCode, email, phoneNumber, password } = signUpForm;
+    if (!companyCode || !email || !phoneNumber || !password) {
       Alert.alert("Please fill in all fields");
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert("Passwords do not match");
       return;
     }
     setIsLoading(true);
@@ -129,15 +124,6 @@ const SignUpViaCode = () => {
             value={signUpForm.password}
             customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
             onChangeText={(text) => setSignUpForm({ ...signUpForm, password: text })}
-          />
-        </View>
-        <View className="flex-1">
-          <CustomInput
-            label="Confirm Password"
-            placeholder="Confirm your password"
-            value={signUpForm.confirmPassword}
-            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
-            onChangeText={(text) => setSignUpForm({ ...signUpForm, confirmPassword: text })}
           />
         </View>
         <CustomButton

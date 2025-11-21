@@ -3,9 +3,9 @@ import CustomInput from "@/components/CustomInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SocialMediaCard from "@/components/SocialMediaCard";
-import { useBusinessSocials } from "@/lib/services/useSocials";
-import { createBusinessSocialMediaLink, updateBusinessSocialMediaLink } from "@/lib/updateUserProfile";
+import { createBusinessSocialMediaLink, updateBusinessSocialMediaLink } from "@/lib/updateProfiles/businessProfile";
 import { convertEnumToSocialMediaType } from "@/lib/utils";
+import useAuthStore from "@/store/auth.store";
 import { Entypo, Feather, FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import React, { ReactNode, useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -21,6 +21,8 @@ type BusinessSocials = {
 };
 
 const SocialMedia = () => {
+  const { user, isLoading, setUser } = useAuthStore();
+
   const [showModal, setShowModal] = useState(false);
   const [editingField, setEditingField] = useState<{ name: string; icon: ReactNode } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -32,22 +34,20 @@ const SocialMedia = () => {
     personalWebsite: { id: 0, url: "" },
   });
   const [updateForm, setUpdateForm] = useState({ type: "", url: "" });
-  const { data: socialMedias, isLoading } = useBusinessSocials();
-  console.log(userSocials);
+
   useEffect(() => {
-    if (socialMedias && !isLoading) {
-      console.log("Fetched social medias:", socialMedias);
-      socialMedias.forEach((social) => {
+    if (user && !isLoading) {
+      user.socialMedias.forEach((social) => {
         const convertType = convertEnumToSocialMediaType(social.type);
         if (convertType in userSocials) {
           setUserSocials((prev) => ({ ...prev, [convertType]: { id: social.id, url: social.url } }));
         }
       });
     }
-  }, [socialMedias, isLoading]);
+  }, [user, isLoading]);
 
   const handleFormUpdateSubmit = async () => {
-    // Depending on whether or not the user already has a link for this social media, either create or update
+    console.log("Submitting update for:", updateForm);
     setIsUpdating(true);
     try {
       const hasValue = userSocials[updateForm.type as keyof BusinessSocials].url !== "";
@@ -61,14 +61,25 @@ const SocialMedia = () => {
         console.log("Create response:", res);
       }
       if (res != null) {
-        console.log("Response from server:", res);
         const { id, type, url } = res;
         const convertType = convertEnumToSocialMediaType(type);
-        console.log("Converted Type:", convertType);
+        console.log("Converted type:", convertType);
         if (convertType in userSocials) {
-          setUserSocials((prev) => ({ ...prev, [convertType]: { id, url } }));
+          const updatedSocialIndex = user?.socialMedias.findIndex((social) => social.type === type) ?? -1;
+          if (updatedSocialIndex !== -1) {
+            const newSocials = [...(user?.socialMedias ?? [])];
+            newSocials[updatedSocialIndex] = { id, type, url };
+            console.log("Updated socials:", newSocials);
+            setUser({ ...(user as any), socialMedias: newSocials });
+          } else {
+            const newSocials = [...(user?.socialMedias ?? []), { id, type, url }];
+            console.log("Added new social to socials:", newSocials);
+            setUser({ ...(user as any), socialMedias: newSocials });
+          }
         }
         setShowModal(false);
+        setEditingField(null);
+        setUpdateForm({ type: "", url: "" });
       }
     } catch (error) {
       console.error("Error updating social media link:", error);
@@ -107,6 +118,7 @@ const SocialMedia = () => {
 
     setShowModal(true);
   };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Social Media Links" />
@@ -173,11 +185,8 @@ const SocialMedia = () => {
               <Feather name="x" size={20} color="#6b7280" />
             </TouchableOpacity>
           </View>
-
-          <View className="items-center gap-2 py-5 px-4">
+          <View className="items-center gap-4 py-5 px-4">
             {editingField?.icon}
-            <Text className="font-quicksand-bold text-gray-600 text-lg">Udpdate your {editingField?.name}</Text>
-
             <CustomInput
               placeholder={`Enter your ${editingField?.name} link`}
               label=""
@@ -197,7 +206,7 @@ const SocialMedia = () => {
             />
             <View className="w-full gap-3">
               <ProfileButton
-                color="green-500"
+                color="emerald-500"
                 buttonText={`Update ${editingField?.name}`}
                 handlePress={handleFormUpdateSubmit}
                 disabled={false}

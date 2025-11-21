@@ -11,11 +11,11 @@ type Props = {
 const CompanyInformation = ({ companyName, companyLogoUrl, jobTitle }: Props) => {
   if (jobTitle) {
     return (
-      <View className="flex-row items-center gap-2">
+      <View className="flex-row items-center gap-2 w-2/3">
         <RenderCompanyLogo logoUrl={companyLogoUrl} />
         <View>
           <Text className="font-quicksand-bold text-sm">{companyName}</Text>
-          <Text className="font-quicksand-bold text-lg" numberOfLines={2}>
+          <Text className="font-quicksand-bold text-lg" numberOfLines={2} style={{ lineHeight: 20 }}>
             {jobTitle}
           </Text>
         </View>
@@ -23,9 +23,11 @@ const CompanyInformation = ({ companyName, companyLogoUrl, jobTitle }: Props) =>
     );
   }
   return (
-    <View className="flex-row items-center gap-2">
+    <View className="flex-row items-center gap-2 w-2/3">
       <RenderCompanyLogo logoUrl={companyLogoUrl} />
-      <Text className="font-quicksand-bold text-xl">{companyName}</Text>
+      <Text className="font-quicksand-bold text-xl" numberOfLines={2}>
+        {companyName}
+      </Text>
     </View>
   );
 };

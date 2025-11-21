@@ -12,7 +12,7 @@ const discovery = {
 };
 
 export default function ImportFromLinkedInButton() {
-  const [request, response, promptAsync] = useAuthRequest(
+  const [request, response] = useAuthRequest(
     {
       clientId: LINKEDIN_CLIENT_ID,
       redirectUri: REDIRECT_URI,
@@ -22,11 +22,9 @@ export default function ImportFromLinkedInButton() {
     discovery
   );
 
-  // Handle successful redirect
   useEffect(() => {
     if (response?.type === "success") {
       const { code } = response.params;
-      console.log("LinkedIn Auth Code:", code);
       fetch("https://dauntless-aron-unprobationary.ngrok-free.dev/auth/linkedin/exchange", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,12 +36,9 @@ export default function ImportFromLinkedInButton() {
     }
   }, [response]);
 
-  // Function to trigger login when user presses button
   const handleImportFromLinkedIn = async () => {
     Alert.alert("Import from LinkedIn", "This feature is currently under development.");
     if (!request) return;
-    // console.log(request);
-    // await promptAsync();
   };
 
   return (
@@ -60,7 +55,6 @@ export default function ImportFromLinkedInButton() {
       activeOpacity={0.9}
       onPress={handleImportFromLinkedIn}
     >
-      {/* LinkedIn Logo */}
       <View className="w-8 h-8 bg-white rounded-sm items-center justify-center">
         <Text className="font-bold text-[#0A66C2] text-base" style={{ fontFamily: "System" }}>
           in

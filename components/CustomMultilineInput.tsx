@@ -8,6 +8,7 @@ type Props = {
   numberOfLines?: number;
   customClass?: string;
   style?: object;
+  minHeight?: number;
   onChangeText: (text: string) => void;
 };
 
@@ -18,6 +19,7 @@ const CustomMultilineInput = ({
   numberOfLines = 8,
   customClass,
   style,
+  minHeight = 200,
   onChangeText,
 }: Props) => {
   const handleKeyPress = (e: any) => {
@@ -48,6 +50,7 @@ const CustomMultilineInput = ({
       {label && <Text className="form-input__label">{label}</Text>}
       <TextInput
         multiline
+        blurOnSubmit={true}
         numberOfLines={numberOfLines}
         placeholder={placeholder}
         value={value}
@@ -66,7 +69,7 @@ const CustomMultilineInput = ({
         style={
           !style
             ? {
-                minHeight: 200,
+                minHeight,
                 fontSize: 12,
                 lineHeight: 24,
                 shadowColor: "#000",

@@ -6,10 +6,11 @@ type Props = {
   label: string;
   subtitle?: string;
   icon?: React.ReactNode;
+  withBackground?: boolean;
   handleEditPress: (field: string) => void;
 };
 
-const ProfileCard = ({ label, subtitle, icon, handleEditPress }: Props) => {
+const ProfileCard = ({ label, subtitle, icon, withBackground = true, handleEditPress }: Props) => {
   return (
     <View
       className="bg-white rounded-xl p-4 border border-gray-100"
@@ -23,7 +24,10 @@ const ProfileCard = ({ label, subtitle, icon, handleEditPress }: Props) => {
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1 gap-4">
-          {icon && <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">{icon}</View>}
+          {withBackground && icon && (
+            <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">{icon}</View>
+          )}
+          {!withBackground && icon}
           <View className="flex-1">
             <Text className="font-quicksand-bold text-base text-gray-800 mb-1">{label}</Text>
             <Text className="font-quicksand-medium text-sm text-gray-500 leading-4" numberOfLines={2}>

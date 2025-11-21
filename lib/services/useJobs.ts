@@ -1,12 +1,13 @@
+import { getAPIUrl } from '@/constants';
 import { ApplicantFilters, Application, ApplicationSummary, InterviewDetails, Job, JobApplicationStatus, JobFilters, PagedResponse } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getEducationLevel, getExperienceLevel } from '../utils';
 
-const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
+const JOBS_API_URL = getAPIUrl('jobs');
 const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
 const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
-const USER_PROFILE_API_URL =`http://192.168.2.29:8080/profiles`;
+const USER_PROFILE_API_URL = getAPIUrl('profiles');
 
 export const useJobs = (jobFilters: JobFilters) => {
     const { search, locations, companies, tags, minSalary, maxSalary, experience, employmentTypes, workArrangements } = jobFilters
@@ -167,7 +168,7 @@ export const useJobForBusinessAccount = (filters?: JobFilters, companyId?: numbe
   })
 }
 
-export const useJobsForBusiness = (companyId: number, jobId: number) => {
+export const useJobsForBusiness = (jobId: number) => {
   const fetchJobForBusiness = async () => {
     const response = await fetch(`${JOBS_API_URL}/companies/jobs/${jobId}`, {
       method: 'GET',
@@ -182,7 +183,7 @@ export const useJobsForBusiness = (companyId: number, jobId: number) => {
     queryKey: ['job', 'business', jobId],
     queryFn: fetchJobForBusiness,
     staleTime: 1000 * 60 * 5,
-    enabled: !!companyId && !!jobId,
+    enabled: !!jobId,
   })
 }
 

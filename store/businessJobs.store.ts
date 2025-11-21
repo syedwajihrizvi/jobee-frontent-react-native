@@ -21,6 +21,7 @@ const createFilterKey = (filters: JobFilters) => {
 interface BusinessJobState {
     businessJobsByIdAndFilter: Record<string, Job[]>;
     pendingApplicationsByJobId: Record<string, number>;
+    interviewsByJobId: Record<string, number>;
     loadingJobStates: Record<string, boolean>;
     totalCounts: Record<string, number>;
     pagination: Record<string, { currentPage: number, hasMore: boolean}>;
@@ -31,11 +32,13 @@ interface BusinessJobState {
     getInterviewsForJobAndFilter(filter: JobFilters): Job[];
     getTotalCountForJobAndFilter(filter: JobFilters): number;
     getPendingApplicationsForJob(jobId: number): number;
+    getInterviewsForJob(jobId: number): number;
     getPaginationForJobAndFilter(filter: JobFilters): { currentPage: number, hasMore: boolean } | undefined;
     isLoadingJobsForBusinessAndFilter(filter: JobFilters): boolean;
 
     hasValidCachedJobs: (filter: JobFilters) => boolean;
     refreshJobsForBusinessAndFilter: (filter: JobFilters) => Promise<void>;
+    refreshEverything: () => Promise<void>;
 }
 
 const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
@@ -45,6 +48,7 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
     lastFetchedJobs: {},
     pagination: {},
     pendingApplicationsByJobId: {},
+    interviewsByJobId: {},
 
     fetchJobsForBusinessAndFilter: async (filter, page = 0) => {
         const filterKey = createFilterKey(filter);
@@ -67,6 +71,10 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
                     pendingApplicationsByJobId: {
                         ...state.pendingApplicationsByJobId,
                         [job.id]: job.pendingApplicationsSize || 0,
+                    },
+                    interviewsByJobId: {
+                        ...state.interviewsByJobId,
+                        [job.id]: job.totalInterviews || 0,
                     }
                 }))
             })
@@ -125,6 +133,10 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
         const state = get();
         return state.pagination[filterKey];
     },
+    getInterviewsForJob: (jobId) => {
+        const state = get();
+        return state.interviewsByJobId[jobId] || 0;
+    },
     isLoadingJobsForBusinessAndFilter: (filter) => {
         const filterKey = createFilterKey(filter);
         const state = get();
@@ -153,8 +165,17 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
             lastFetchedJobs: newState.lastFetchedJobs,
         }));
         await newState.fetchJobsForBusinessAndFilter(filter, 0);
+    },
+    refreshEverything: async () => {
+        const newState = get();
+        set(() => ({
+            businessJobsByIdAndFilter: {},
+            totalCounts: {},
+            pagination: {},
+            lastFetchedJobs: {},
+        }));
+        await newState.fetchJobsForBusinessAndFilter({} as JobFilters, 0);
     }
-
 }))
 
 export default useBusinessJobsStore;

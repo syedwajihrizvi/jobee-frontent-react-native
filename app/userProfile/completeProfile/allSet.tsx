@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,8 +31,8 @@ const AllSet = ({ isSubmitting, handleDone }: Props) => {
           <Text className="font-quicksand-bold text-lg text-gray-800 text-center mb-4">You&apos;re All Set! 🎉</Text>
           <View className="items-center gap-4">
             <Text className="text-center font-quicksand-medium text-gray-600 text-md leading-6">
-              With your updated profile, you&apos;re ready to explore job opportunities tailored just for you. You can
-              quick apply, get discovered by top companies, and take the next step in your career journey.
+              With your updated profile, you can start applying, get discovered by top companies, and take the next step
+              in your career journey.
             </Text>
             <Text className="text-center font-quicksand-medium text-gray-500 text-base leading-5">
               You can always update your profile information later from your profile settings.
@@ -57,6 +57,14 @@ const AllSet = ({ isSubmitting, handleDone }: Props) => {
               </View>
               <Text className="font-quicksand-medium text-gray-700 text-sm flex-1">
                 AI processes your resume and extracts key information
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
+                <Ionicons name="sparkles" size={16} color="#f59e0b" />
+              </View>
+              <Text className="font-quicksand-medium text-gray-700 text-sm flex-1">
+                Jobee automatically Populate your profile with skills, education, experience, projects, and more
               </Text>
             </View>
             <View className="flex-row items-center gap-3">

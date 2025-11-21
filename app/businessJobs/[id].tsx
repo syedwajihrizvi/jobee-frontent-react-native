@@ -1,4 +1,5 @@
 import BackBar from "@/components/BackBar";
+import ExpandableText from "@/components/ExpandableText";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { useJobsForBusiness } from "@/lib/services/useJobs";
 import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
@@ -11,24 +12,15 @@ import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const BusinessJobDetails = () => {
-  const { id: jobId, companyId } = useLocalSearchParams();
-  const { data: job, isLoading } = useJobsForBusiness(Number(companyId), Number(jobId));
-  const {
-    isLoadingShortListedStatesForJob,
-    getShortListedApplicationsForJob,
-    hasValidShortListedCache,
-    refreshShortListedApplicationsForJob,
-  } = useApplicationStore();
-  const { getPendingApplicationsForJob } = useBusinessJobsStore();
+  const { id: jobId } = useLocalSearchParams();
+  const { data: job, isLoading } = useJobsForBusiness(Number(jobId));
+  const { hasValidShortListedCache, refreshShortListedApplicationsForJob } = useApplicationStore();
+  const { getPendingApplicationsForJob, getInterviewsForJob } = useBusinessJobsStore();
   useEffect(() => {
     if (jobId && !hasValidShortListedCache(Number(jobId))) {
       refreshShortListedApplicationsForJob(Number(jobId));
     }
   }, [jobId]);
-
-  const isLoadingShortlist = isLoadingShortListedStatesForJob(Number(jobId));
-  const shortListedCandidates = getShortListedApplicationsForJob(Number(jobId));
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <BackBar label="Job Management" />
@@ -108,46 +100,44 @@ const BusinessJobDetails = () => {
             </View>
           </View>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
+            className="bg-white mx-4 mt-4 rounded-2xl p-3 border border-gray-100"
             style={{
               shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 12,
-              elevation: 6,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-purple-100 rounded-full items-center justify-center">
-                <Feather name="trending-up" size={20} color="#8b5cf6" />
+            <View className="flex-row items-center gap-2 mb-3">
+              <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center">
+                <Feather name="trending-up" size={16} color="#8b5cf6" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Performance Metrics</Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900">Performance Metrics</Text>
             </View>
 
-            <View className="flex-row gap-4">
-              <View className="flex-1 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Feather name="eye" size={16} color="#3b82f6" />
-                  <Text className="font-quicksand-semibold text-sm text-blue-700">Views</Text>
-                </View>
-                <Text className="font-quicksand-bold text-2xl text-blue-800">{job.views || 0}</Text>
+            <View className="flex-row gap-2">
+              <View className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3 items-center">
+                <Text className="font-quicksand-semibold text-xs text-blue-700">Views</Text>
+                <Text className="font-quicksand-bold text-lg text-blue-800">{job.views || 0}</Text>
               </View>
 
-              <View className="flex-1 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Feather name="send" size={16} color="#10b981" />
-                  <Text className="font-quicksand-semibold text-sm text-emerald-700">Applied</Text>
-                </View>
-                <Text className="font-quicksand-bold text-2xl text-emerald-800">{job.applicants}</Text>
+              <View className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-3 items-center">
+                <Text className="font-quicksand-semibold text-xs text-emerald-700">Applied</Text>
+                <Text className="font-quicksand-bold text-lg text-emerald-800">{job.applicants}</Text>
               </View>
 
-              <View className="flex-1 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Feather name="clock" size={16} color="#f59e0b" />
-                  <Text className="font-quicksand-semibold text-sm text-amber-700">Pending</Text>
-                </View>
-                <Text className="font-quicksand-bold text-2xl text-amber-800">
+              <View className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 items-center">
+                <Text className="font-quicksand-semibold text-xs text-amber-700">Pending</Text>
+                <Text className="font-quicksand-bold text-lg text-amber-800">
                   {getPendingApplicationsForJob(Number(job.id))}
+                </Text>
+              </View>
+
+              <View className="flex-1 bg-purple-50 border border-purple-200 rounded-lg p-3 items-center">
+                <Text className="font-quicksand-semibold text-xs text-purple-700">Interviews</Text>
+                <Text className="font-quicksand-bold text-lg text-purple-800">
+                  {getInterviewsForJob(Number(job.id))}
                 </Text>
               </View>
             </View>
@@ -169,7 +159,7 @@ const BusinessJobDetails = () => {
               <Text className="font-quicksand-bold text-xl text-gray-900">Job Description</Text>
             </View>
 
-            <Text className="font-quicksand-medium text-base text-gray-700 leading-6">{job.description}</Text>
+            <ExpandableText text={job.description} length={400} />
           </View>
           <View
             className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
@@ -269,7 +259,7 @@ const BusinessJobDetails = () => {
 
       {job && (
         <View
-          className="bg-white border-t border-gray-200 px-4 py-6 absolute bottom-0 left-0 right-0"
+          className="bg-white border-t border-gray-200 px-4 py-6 absolute bottom-0 left-0 right-0 flex-row gap-2"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: -2 },
@@ -278,7 +268,7 @@ const BusinessJobDetails = () => {
             elevation: 10,
           }}
         >
-          <View className="flex-row gap-3">
+          <View className="flex-row gap-3 w-1/2">
             <TouchableOpacity
               className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
               style={{
@@ -288,34 +278,35 @@ const BusinessJobDetails = () => {
                 shadowRadius: 6,
                 elevation: 4,
               }}
-              onPress={() => router.push(`/businessJobs/applications/${jobId}`)}
+              onPress={() =>
+                router.push(`/businessJobs/applications/${jobId}?jobTitle=${encodeURIComponent(job.title)}`)
+              }
               activeOpacity={0.8}
             >
               <View className="flex-row items-center gap-2">
                 <Feather name="users" size={18} color="white" />
-                <Text className="font-quicksand-bold text-white text-base">View All Applicants</Text>
+                <Text className="font-quicksand-bold text-white text-base">View Applicants</Text>
               </View>
             </TouchableOpacity>
-
-            {shortListedCandidates && shortListedCandidates.length > 0 && (
-              <TouchableOpacity
-                className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
-                style={{
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={() => router.push(`/businessJobs/applications/${jobId}?shortListed=true`)}
-                activeOpacity={0.8}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="star" size={18} color="white" />
-                  <Text className="font-quicksand-bold text-white text-base">View Shortlist</Text>
-                </View>
-              </TouchableOpacity>
-            )}
+          </View>
+          <View className="flex-row gap-3 w-1/2">
+            <TouchableOpacity
+              className="flex-1 bg-purple-500 rounded-xl py-4 items-center justify-center"
+              style={{
+                shadowColor: "#6366f1",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={() => router.push(`/businessJobs/interviews/${jobId}?jobTitle=${encodeURIComponent(job.title)}`)}
+              activeOpacity={0.8}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="calendar" size={18} color="white" />
+                <Text className="font-quicksand-bold text-white text-base">View Interviews</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       )}

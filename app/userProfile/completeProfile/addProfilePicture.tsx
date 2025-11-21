@@ -1,4 +1,5 @@
-import { images } from "@/constants";
+import RenderUserProfileImage from "@/components/RenderUserProfileImage";
+import { User } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import React from "react";
@@ -8,14 +9,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 type Props = {
   uploadedProfileImage: ImagePicker.ImagePickerResult | null;
   setUploadedProfileImage: React.Dispatch<React.SetStateAction<ImagePicker.ImagePickerResult | null>>;
+  user: User;
 };
 
-const AddProfilePicture = ({ uploadedProfileImage, setUploadedProfileImage }: Props) => {
+const AddProfilePicture = ({ uploadedProfileImage, setUploadedProfileImage, user }: Props) => {
   const renderProfileImageUri = () => {
     if (uploadedProfileImage && uploadedProfileImage.assets && uploadedProfileImage.assets.length > 0) {
-      return uploadedProfileImage.assets[0].uri;
+      return (
+        <Image
+          source={{ uri: uploadedProfileImage.assets[0].uri }}
+          className="w-24 h-24 rounded-full border-4 border-white"
+          resizeMode="cover"
+        />
+      );
     }
-    return images.companyLogo;
+    return <RenderUserProfileImage user={user} fontSize={20} />;
   };
 
   const handleProfileImageCamera = async () => {
@@ -86,11 +94,7 @@ const AddProfilePicture = ({ uploadedProfileImage, setUploadedProfileImage }: Pr
               elevation: 8,
             }}
           >
-            <Image
-              source={{ uri: renderProfileImageUri() }}
-              className="w-24 h-24 rounded-full border-4 border-white"
-              resizeMode="cover"
-            />
+            {renderProfileImageUri()}
 
             <TouchableOpacity
               className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full items-center justify-center border-4 border-white"

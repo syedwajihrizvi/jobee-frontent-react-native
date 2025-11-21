@@ -1,11 +1,17 @@
-import { ApplicantFilters, Application, ApplicationStatusFilter, InterviewDetails, InterviewFilters, Job, JobFilters, PagedResponse } from "@/type";
+import { getAPIUrl } from "@/constants";
+import { ApplicantFilters, Application, ApplicationStatusFilter, Education, Experience, InterviewDetails, InterviewFilters, Job, JobFilters, PagedResponse, Project, UserDocument, UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getEducationLevel, getExperienceLevel } from "./utils";
 
-const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
+const APPLICATIONS_API_URL = getAPIUrl('applications');
 const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
-const JOBS_API_URL = `http://192.168.2.29:8080/jobs`;
-const USER_PROFILE_API_URL = `http://192.168.2.29:8080/profiles`;
+const JOBS_API_URL = getAPIUrl('jobs');
+const USER_PROFILE_API_URL = getAPIUrl('profiles');
+const USER_SKILL_API = getAPIUrl('profiles/skills');
+const USER_EXPERIENCES_API = getAPIUrl('profiles/experiences');
+const USER_EDUCATION_API = getAPIUrl('profiles/education');
+const USER_PROJECTS_API = getAPIUrl('profiles/projects');
+const USER_DOCUMENTS_API = getAPIUrl('user-documents')
 
 export const getUserInterviews = async () => {
     const token = await AsyncStorage.getItem('x-auth-token')
@@ -42,8 +48,11 @@ export const getLastUserApplication = async () => {
             'x-auth-token': `Bearer ${token}`
         }
     })
+    if (response.status === 404) {
+        return null
+    }
     const data = await response.json()
-    return data as Application | null;
+    return data as Application
 }
 
 export const getBusinessUserInterviews = async () => {
@@ -245,3 +254,60 @@ export const getAppliedJobsForUserAndFilter = async (page: number, pageSize: num
     const data = await response.json() as PagedResponse<Job>;
     return data;
 }
+
+export const getUserSkills = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    const response = await fetch(`${USER_SKILL_API}/my-skills`, {
+        headers: {
+            'x-auth-token': `Bearer ${token}` || ''
+        }
+    });
+    const data = await response.json();
+    return data as UserSkill[];
+}
+
+export const getUserExperiences = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    const response = await fetch(`${USER_EXPERIENCES_API}/my-experiences`, {
+        headers: {
+            'x-auth-token': `Bearer ${token}` || ''
+        }
+    });
+    const data = await response.json();
+    return data as Experience[];
+}
+
+export const getUserEducations = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    const response = await fetch(`${USER_EDUCATION_API}/my-education`, {
+        headers: {
+            'x-auth-token': `Bearer ${token}` || ''
+        }
+    });
+    const data = await response.json();
+    return data as Education[];
+}
+
+export const getUserProjects = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    const response = await fetch(`${USER_PROJECTS_API}/my-projects`, {
+        headers: {
+            'x-auth-token': `Bearer ${token}` || ''
+        }
+    });
+    const data = await response.json();
+    return data as Project[];
+}   
+
+export const getUserDocuments = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    console.log(USER_DOCUMENTS_API)
+    const response = await fetch(`${USER_DOCUMENTS_API}/user/me`, {
+        headers: {
+            'x-auth-token': `Bearer ${token}` || ''
+        }
+    });
+    const data = await response.json();
+    return data as UserDocument[];
+
+}   

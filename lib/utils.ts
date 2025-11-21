@@ -1,6 +1,8 @@
 import { Application, OneDriveFile, User, UserDocument } from "@/type";
 import * as Haptics from 'expo-haptics';
 import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import { Alert } from "react-native";
 
 export const formatDate = (date: string) => {
   if (!date) return "";
@@ -365,27 +367,6 @@ export const getCustomProfilePlaceholderForField = (field: string) => {
     default:
       return "e.g. Value";
   }
-}
-
-export const getCustomCompanyFormPlaceholderField = (field: string) => {
-  switch(field) {
-    case 'Company Name':
-      return "e.g. Amazon";
-    case 'Industry':
-      return "e.g. Information Technology";
-    case 'Description':
-      return "e.g. Amazon is a multinational technology company...";
-    case 'Location':
-      return "e.g. Seattle, WA";
-    case 'Company Size':
-      return "e.g. 10,000+ employees";
-    case 'Website':
-      return "e.g. www.amazon.com";
-    case 'LinkedIn':
-      return "e.g. linkedin.com/company/amazon";
-    default:
-      return "e.g. Value";
-}
 }
 
 export const interviewStatusStyles = {
@@ -839,3 +820,44 @@ export const getInterviewFilterText = (filter: string, count: number) => {
     
   }
 }
+
+export const handleProfileImagePicker = async ({onSuccess}: {onSuccess: (result: ImagePicker.ImagePickerResult) => Promise<void>}) => {
+    const result = await ImagePicker.requestCameraPermissionsAsync();
+    if (!result.granted) {
+      Alert.alert("Permission Denied", "You need to allow camera access to change profile picture.");
+      return;
+    }
+    Alert.alert("Change Profile Picture", "Choose an option", [
+      {
+        text: "Camera",
+        onPress: async () => {
+          const cameraResult = await ImagePicker.launchCameraAsync({
+            mediaTypes: "images",
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+          });
+          if (!cameraResult.canceled && cameraResult.assets && cameraResult.assets.length > 0) {
+            await onSuccess(cameraResult);
+          }
+          return;
+        },
+      },
+      {
+        text: "Gallery",
+        onPress: async () => {
+          const galleryResult = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: "images",
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+          });
+          if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
+            await onSuccess(galleryResult);
+          }
+          return;
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };

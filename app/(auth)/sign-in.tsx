@@ -1,6 +1,5 @@
 import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
-import GoogleButton from "@/components/GoogleButton";
 import { registerForPushNotifications, signInBusiness, signInUser } from "@/lib/auth";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
@@ -139,7 +138,7 @@ const SignIn = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <View className="gap-6 mb-8">
+      <View className="gap-6 mb-4">
         <CustomInput
           placeholder="Enter your email"
           label="Email Address"
@@ -156,6 +155,7 @@ const SignIn = () => {
           }}
         />
         <CustomInput
+          secureField={true}
           placeholder="Enter your password"
           label="Password"
           value={form.password}
@@ -181,14 +181,8 @@ const SignIn = () => {
         onClick={type === "user" ? handleSignInForUser : handleSignInForBusiness}
         isLoading={isLoading}
       />
-      <View className="flex-row items-center my-4">
-        <View className="flex-1 h-px bg-gray-200" />
-        <Text className="font-quicksand-medium text-sm text-gray-500 px-4">or continue with</Text>
-        <View className="flex-1 h-px bg-gray-200" />
-      </View>
-      <GoogleButton />
-      <View className="items-center">
-        <Text className="font-quicksand-medium text-sm text-gray-600">
+      <View className="items-center mt-2">
+        <Text className="font-quicksand-medium text-md text-gray-600">
           {type === "user" ? "Don't have an account?" : "Business not registered?"}{" "}
           <Text className="text-green-600 font-quicksand-bold" onPress={() => router.navigate("/(auth)/sign-up")}>
             {type === "user" ? "Sign Up" : "Register Now"}

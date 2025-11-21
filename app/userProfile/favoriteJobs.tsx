@@ -1,5 +1,6 @@
 import BackBar from "@/components/BackBar";
 import JobListing from "@/components/JobListing";
+import { formatSWord } from "@/lib/utils";
 import useUserJobsStore from "@/store/userJobsStore";
 import { Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -34,7 +35,7 @@ const FavoriteJobs = () => {
     <SafeAreaView className="relative flex-1 bg-white">
       <BackBar label="My Favorite Jobs" />
       <FlatList
-        className="w-full px-4"
+        className="w-full px-4 mt-8"
         showsVerticalScrollIndicator={false}
         data={jobs || []}
         renderItem={({ item, index }: { item: Job; index: number }) => (
@@ -66,7 +67,9 @@ const FavoriteJobs = () => {
                   <Feather name="folder" size={24} color="#6366f1" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-quicksand-bold text-xl text-gray-900">{totalCount} Favorite Jobs</Text>
+                  <Text className="font-quicksand-bold text-xl text-gray-900">
+                    {totalCount} Favorite {formatSWord("Job", totalCount)}
+                  </Text>
                   <Text className="font-quicksand-medium text-sm text-gray-600">
                     View jobs you have favorited for easy access later.
                   </Text>
@@ -80,12 +83,60 @@ const FavoriteJobs = () => {
         }}
         ListEmptyComponent={() => {
           return (
-            <View className="p-4 flex-1 justify-center items-center">
-              <Feather name="briefcase" size={64} color="black" />
-              <Text className="font-quicksand-bold text-xl text-gray-600 mt-4">No Favorite Jobs Yet</Text>
-              <Text className="font-quicksand-regular text-gray-500 text-center mt-2 text-lg">
-                Browse some jobs and tap the star icon to add them to your favorites.
+            <View className="flex-1 items-center justify-center px-6 py-20">
+              <View
+                className="w-20 h-20 bg-amber-100 rounded-full items-center justify-center mb-6"
+                style={{
+                  shadowColor: "#f59e0b",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Feather name="star" size={32} color="#f59e0b" />
+              </View>
+
+              <Text className="font-quicksand-bold text-xl text-gray-900 mb-3 text-center">No Favorite Jobs Yet</Text>
+
+              <Text className="font-quicksand-medium text-gray-600 text-center leading-6 mb-8">
+                Start building your collection! Browse jobs and tap the star icon to save positions you are interested
+                in.
               </Text>
+
+              <TouchableOpacity
+                className="bg-emerald-500 px-6 py-3 rounded-xl flex-row items-center gap-2 mb-4"
+                style={{
+                  shadowColor: "#10b981",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={() => router.push("/(tabs)/users/jobs")}
+                activeOpacity={0.8}
+              >
+                <Feather name="search" size={16} color="white" />
+                <Text className="font-quicksand-bold text-white">Browse Jobs</Text>
+              </TouchableOpacity>
+
+              <View className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex-row items-start gap-3">
+                <View className="w-6 h-6 bg-amber-100 rounded-full items-center justify-center mt-0.5">
+                  <Feather name="info" size={12} color="#f59e0b" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-quicksand-semibold text-amber-800 text-sm mb-1">Pro Tip</Text>
+                  <Text className="font-quicksand-medium text-amber-700 text-xs leading-4">
+                    Save jobs to easily track opportunities you are considering and apply when you are ready!
+                  </Text>
+                </View>
+              </View>
+
+              <View className="mt-6 flex-row items-center gap-3">
+                <View className="w-1 h-1 bg-gray-300 rounded-full" />
+                <Text className="font-quicksand-medium text-xs text-gray-500">Your saved jobs will appear here</Text>
+                <View className="w-1 h-1 bg-gray-300 rounded-full" />
+              </View>
             </View>
           );
         }}
