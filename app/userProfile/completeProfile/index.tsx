@@ -1,14 +1,7 @@
 import BackBar from "@/components/BackBar";
 import { sounds } from "@/constants";
-import {
-  processDropboxUpload,
-  processGoogleDriveUpload,
-  processOneDriveUpload,
-  sendDocumentLinkToServer,
-  uploadUserDocument,
-} from "@/lib/manageUserDocs";
+import { handleDropboxUpload, handleGoogleDriveUpload, handleOneDriveUpload, uploadResume } from "@/lib/manageUserDocs";
 import { completeProfile } from "@/lib/updateUserProfile";
-import { isValidGoogleDriveLink } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useCompleteProfileStore from "@/store/completeProfile.store";
 import { CompleteProfileForm, User } from "@/type";
@@ -78,64 +71,25 @@ const CompleteProfile = () => {
     });
   }, [translateX, width]);
 
-  const handleGoogleDriveUpload = useCallback(async () => {
-    if (!googleDriveFile) return;
-    try {
-      await processGoogleDriveUpload(googleDriveFile, "RESUME", documentTitle);
-    } catch (error) {
-      console.log("Error uploading Google Drive document:", error);
-      Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
-    }
-  }, [googleDriveFile, documentTitle]);
-
-  const handleDropboxUpload = useCallback(async () => {
-    if (!dropboxFile) return;
-    try {
-      await processDropboxUpload(dropboxFile, "RESUME", documentTitle);
-    } catch (error) {
-      console.log("Error uploading Dropbox document:", error);
-      Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
-    }
-  }, [dropboxFile, documentTitle]);
-
-  const handleOneDriveUpload = useCallback(async () => {
-    if (!oneDriveFile) return;
-    try {
-      await processOneDriveUpload(oneDriveFile, "RESUME", documentTitle);
-    } catch (error) {
-      console.log("Error uploading OneDrive file:", error);
-      Alert.alert("Error", "An error occurred while uploading the OneDrive file.");
-    }
-  }, [oneDriveFile, documentTitle]);
-
   const handleDone = useCallback(async () => {
+    if (!uploadMethod) {
+      Alert.alert("Error", "Please select a document upload method.");
+      return;
+    }
     setIsSubmitting(true);
     const selectedDocumentType = "RESUME";
 
     try {
-      if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
-        console.log("SYED-DEBUG Starting direct document upload");
-        uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle)
-          .then(() => console.log("Direct document upload completed"))
-          .catch((error) => console.error("Error uploading document:", error));
-      } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
-        const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
-        sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType)
-          .then(() => console.log("Document link sent successfully"))
-          .catch((error) => console.error("Error sending document link:", error));
-      } else if (uploadMethod === "GOOGLE_DRIVE") {
-        handleGoogleDriveUpload()
-          .then(() => console.log("Google Drive upload completed"))
-          .catch((error) => console.error("Error with Google Drive upload:", error));
-      } else if (uploadMethod === "DROPBOX") {
-        handleDropboxUpload()
-          .then(() => console.log("Dropbox upload completed"))
-          .catch((error) => console.error("Error with Dropbox upload:", error));
-      } else if (uploadMethod === "ONEDRIVE") {
-        handleOneDriveUpload()
-          .then(() => console.log("OneDrive upload completed"))
-          .catch((error) => console.error("Error with OneDrive upload:", error));
-      }
+      uploadResume(
+        uploadMethod,
+        uploadedDocument,
+        documentLink,
+        googleDriveFile,
+        dropboxFile,
+        oneDriveFile,
+        selectedDocumentType,
+        documentTitle
+      );
 
       const res = await completeProfile(uploadedProfileImage!, uploadedVideoIntro!, detailsForm);
       if (res === null) {

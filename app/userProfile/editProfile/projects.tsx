@@ -1,6 +1,7 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
+import ExpandableText from "@/components/ExpandableText";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
@@ -8,7 +9,7 @@ import UpdatingProfileView from "@/components/UpdatingProfileView";
 import { addProject, deleteProject, editProject } from "@/lib/updateUserProfile";
 import useUserStore from "@/store/user.store";
 import { AddProjectForm, Project } from "@/type";
-import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -136,20 +137,36 @@ const Projects = () => {
       <ScrollView>
         <View className="px-6 py-6">
           <View
-            className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5"
+            className="relative mb-2 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">View and edit your projects.</Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center mr-3">
+                <Feather name="folder" size={20} color="white" />
+              </View>
+              <View className="bg-emerald-100 px-3 py-1.5 rounded-full">
+                <Text className="font-quicksand-bold text-xs text-emerald-700">PROJECTS</Text>
+              </View>
+            </View>
+            <Text className="font-quicksand-bold text-xl text-gray-800 mb-3">View and edit your work projects.</Text>
+            <Text className="font-quicksand-medium text-gray-600 text-sm leading-6">
               These are automatically extracted from your resume, but you can update, add, or delete projects to better
-              reflect your background.
+              reflect your professional background.
             </Text>
+            <View className="pt-3">
+              <View className="flex-row items-center gap-2">
+                <Feather name="check-circle" size={14} color="#10b981" />
+                <Text className="font-quicksand-semibold text-emerald-700 text-xs">
+                  Keep your profile up to date for better job matches
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
         <View className="px-6 pb-6">
@@ -188,36 +205,29 @@ const Projects = () => {
                         elevation: 3,
                       }}
                     >
-                      <View className="flex-row items-start justify-between mb-3">
-                        <View className="flex-1">
-                          <View className="flex-row items-center gap-2 mb-1">
-                            <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
-                              <FontAwesome5 name="university" size={14} color="#3b82f6" />
-                            </View>
-                            <View className="bg-blue-100 px-2 py-1 rounded-full">
-                              <Text className="font-quicksand-bold text-xs text-blue-700">PROJECT</Text>
-                            </View>
-                          </View>
-                        </View>
-                        <TouchableOpacity className="p-1" onPress={() => handleEditProject(proj)}>
-                          <Feather name="edit-2" size={16} color="#6b7280" />
+                      <View className="flex-row items-start justify-between">
+                        <Text className="font-quicksand-bold text-gray-800 text-lg mb-2" numberOfLines={2}>
+                          {proj.name}
+                        </Text>
+                        <TouchableOpacity
+                          className="bg-emerald-100 p-2 rounded-full -top-2"
+                          onPress={() => handleEditProject(proj)}
+                        >
+                          <Feather name="edit-2" size={16} color="#10b981" />
                         </TouchableOpacity>
                       </View>
-
-                      <Text className="font-quicksand-bold text-gray-800 text-lg mb-2" numberOfLines={2}>
-                        {proj.name}
-                      </Text>
-
-                      <Text className="font-quicksand-semibold text-gray-600 text-base mb-2">{proj.link}</Text>
+                      {proj.link && (
+                        <Text className="font-quicksand-semibold text-gray-600 text-base mb-2">{proj.link}</Text>
+                      )}
 
                       <View className="flex-row items-center mb-2">
-                        <Text className="font-quicksand-semibold text-gray-600 text-base">{proj.description}</Text>
+                        <ExpandableText text={proj.description} length={300} />
                       </View>
 
                       <View className="flex-row items-center gap-2 mb-3">
                         <Feather name="calendar" size={14} color="#6b7280" />
                         <Text className="font-quicksand-medium text-gray-500 text-sm">
-                          {proj.yearCompleted || "Present"}
+                          {proj.yearCompleted || "Year not specified"}
                         </Text>
                       </View>
                     </View>
@@ -302,6 +312,7 @@ const Projects = () => {
                             </Text>
                           </View>
                           <CustomInput
+                            fontSize={12}
                             placeholder="e.g. Stock Trading App"
                             autoCapitalize="words"
                             label=""
@@ -324,7 +335,7 @@ const Projects = () => {
                           <View className="flex-row items-center justify-between mb-2">
                             <Text className="font-quicksand-medium text-sm text-gray-600">Description</Text>
                             <Text className="font-quicksand-medium text-xs text-gray-500">
-                              {projectForm.description.length}/150 characters
+                              {projectForm.description.length}/500 characters
                             </Text>
                           </View>
                           <CustomMultilineInput
@@ -343,6 +354,7 @@ const Projects = () => {
                             </Text>
                           </View>
                           <CustomInput
+                            fontSize={12}
                             placeholder="e.g. https://github.com/yourusername/yourproject"
                             label=""
                             onChangeText={(text) => setProjectForm({ ...projectForm, link: text })}
@@ -364,11 +376,12 @@ const Projects = () => {
                           <View className="flex-row items-center justify-between mb-2">
                             <Text className="font-quicksand-medium text-sm text-gray-600">Year Completed</Text>
                             <Text className="font-quicksand-medium text-xs text-gray-500">
-                              {projectForm.name.length}/4 characters
+                              {projectForm.yearCompleted.length}/7 characters
                             </Text>
                           </View>
                           <CustomInput
-                            placeholder="e.g. 2023"
+                            fontSize={12}
+                            placeholder="e.g. 2023 or Present"
                             label=""
                             onChangeText={(text) => setProjectForm({ ...projectForm, yearCompleted: text })}
                             value={projectForm.yearCompleted}
@@ -388,7 +401,7 @@ const Projects = () => {
                         {isAdding ? (
                           <View className="gap-2">
                             <ProfileButton
-                              color="green-500"
+                              color="emerald-500"
                               buttonText="Add Project"
                               handlePress={submitNewProject}
                               disabled={isSubmitting}
@@ -403,7 +416,7 @@ const Projects = () => {
                         ) : (
                           <View className="gap-3">
                             <ProfileButton
-                              color="green-500"
+                              color="emerald-500"
                               buttonText="Update Project"
                               handlePress={submitEditProject}
                               disabled={isSubmitting}

@@ -1,9 +1,10 @@
 import { UserDocumentType } from "@/constants";
 import {
-  processDropboxUpload,
-  processGoogleDriveUpload,
-  processOneDriveUpload,
+  handleDropboxUpload,
+  handleGoogleDriveUpload,
+  handleOneDriveUpload,
   sendDocumentLinkToServer,
+  uploadResume,
   uploadUserDocument,
   uploadUserDocumentViaImage,
 } from "@/lib/manageUserDocs";
@@ -253,45 +254,6 @@ const FileSelector = ({
     return null;
   };
 
-  const handleGoogleDriveUpload = async () => {
-    if (!googleDriveFile) return;
-    try {
-      const res = await processGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle);
-      console.log(res);
-      return res;
-    } catch (error) {
-      console.log("Error uploading Google Drive document:", error);
-      Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
-    }
-    return null;
-  };
-
-  const handleDropboxUpload = async () => {
-    if (!dropboxFile) return;
-    try {
-      const res = await processDropboxUpload(dropboxFile, selectedDocumentType, documentTitle);
-      return res;
-    } catch (error) {
-      console.log("Error uploading Dropbox document:", error);
-      Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
-    }
-    return null;
-  };
-
-  const handleOneDriveUpload = async () => {
-    if (!oneDriveFile) return;
-    try {
-      console.log("Using document title: ", documentTitle);
-      const res = await processOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle);
-      console.log("OneDrive upload result:", res);
-      return res;
-    } catch (error) {
-      console.log("Error uploading OneDrive file:", error);
-      Alert.alert("Error", "An error occurred while uploading the OneDrive file.");
-    }
-    return null;
-  };
-
   const handleDocumentUploadSubmit = async () => {
     const uploadMethod = inferUploadMethod();
     if (customHandleUploadMethod) {
@@ -310,68 +272,96 @@ const FileSelector = ({
       return;
     }
     setUploadingDocument(true);
-    try {
-      if (
-        uploadMethod === "IMAGE_UPLOAD" &&
-        selectedImage &&
-        !selectedImage.canceled &&
-        selectedImage.assets.length > 0
-      ) {
-        const compressedUri = await compressImage(selectedImage.assets[0].uri);
-        const res = await uploadUserDocumentViaImage(selectedImage, compressedUri, selectedDocumentType, documentTitle);
-        if (!res) {
-          Alert.alert("Error", "Failed to upload image document. Please try again.");
-          return;
+    if (selectedDocumentType === "RESUME") {
+      uploadResume(
+        uploadMethod!,
+        uploadedDocument,
+        documentLink,
+        googleDriveFile,
+        dropboxFile,
+        oneDriveFile,
+        selectedDocumentType,
+        documentTitle
+      );
+      handleUploadSuccess();
+    } else {
+      try {
+        if (
+          uploadMethod === "IMAGE_UPLOAD" &&
+          selectedImage &&
+          !selectedImage.canceled &&
+          selectedImage.assets.length > 0
+        ) {
+          const compressedUri = await compressImage(selectedImage.assets[0].uri);
+          const res = await uploadUserDocumentViaImage(
+            selectedImage,
+            compressedUri,
+            selectedDocumentType,
+            documentTitle
+          );
+          if (!res) {
+            Alert.alert("Error", "Failed to upload image document. Please try again.");
+            return;
+          }
+        } else if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
+          const res = await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
+          if (!res) {
+            Alert.alert("Error", "Failed to upload document. Please try again.");
+            return;
+          }
+        } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
+          if (!isValidGoogleDriveLink(documentLink) && !documentLink.includes("dropbox.com")) {
+            Alert.alert("Invalid Link", "Please provide a valid Google Drive or Dropbox link.");
+            return;
+          }
+          const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
+          const res = await sendDocumentLinkToServer(
+            documentLink,
+            selectedDocumentType,
+            documentTitle,
+            documentLinkType
+          );
+          if (!res) {
+            Alert.alert("Error", "Failed to upload document link. Please try again.");
+            return;
+          }
+        } else if (uploadMethod === "GOOGLE_DRIVE") {
+          const res = await handleGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle);
+          if (!res) {
+            Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
+            return;
+          }
+        } else if (uploadMethod === "DROPBOX") {
+          const res = await handleDropboxUpload(dropboxFile, selectedDocumentType, documentTitle);
+          if (!res) {
+            Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
+            return;
+          }
+        } else if (uploadMethod === "ONEDRIVE") {
+          const res = await handleOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle);
+          if (!res) {
+            Alert.alert("Error", "An error occurred while uploading the OneDrive document.");
+            return;
+          }
         }
-      } else if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
-        const res = await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle);
-        if (!res) {
-          Alert.alert("Error", "Failed to upload document. Please try again.");
-          return;
-        }
-      } else if (uploadMethod === "LINK_INPUT" && documentLink.trim() !== "") {
-        if (!isValidGoogleDriveLink(documentLink) && !documentLink.includes("dropbox.com")) {
-          Alert.alert("Invalid Link", "Please provide a valid Google Drive or Dropbox link.");
-          return;
-        }
-        const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
-        const res = await sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType);
-        if (!res) {
-          Alert.alert("Error", "Failed to upload document link. Please try again.");
-          return;
-        }
-      } else if (uploadMethod === "GOOGLE_DRIVE") {
-        const res = await handleGoogleDriveUpload();
-        if (!res) {
-          Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
-          return;
-        }
-      } else if (uploadMethod === "DROPBOX") {
-        const res = await handleDropboxUpload();
-        if (!res) {
-          Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
-          return;
-        }
-      } else if (uploadMethod === "ONEDRIVE") {
-        const res = await handleOneDriveUpload();
-        if (!res) {
-          Alert.alert("Error", "An error occurred while uploading the OneDrive document.");
-          return;
-        }
+        resetForm();
+        handleSuccessFullUpload();
+      } catch (error) {
+        console.error("Error uploading document:", error);
+      } finally {
+        setUploadingDocument(false);
       }
-      handleSuccessFullUpload();
-    } catch (error) {
-      console.error("Error uploading document:", error);
-    } finally {
-      setUploadingDocument(false);
     }
   };
 
-  const handleSuccessFullUpload = () => {
+  const resetForm = () => {
     setDocumentTitle("");
     setUploadedDocument(null);
     setDocumentLink("");
     resetState();
+  };
+
+  const handleSuccessFullUpload = () => {
     if (selectedDocumentType === UserDocumentType.RESUME) {
       refetchCandidateInformation();
     } else {

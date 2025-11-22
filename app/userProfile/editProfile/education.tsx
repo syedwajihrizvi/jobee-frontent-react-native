@@ -35,7 +35,7 @@ const Educations = () => {
     degree: "",
     fromYear: "",
     toYear: "",
-    degreeType: "",
+    level: "",
   });
 
   useEffect(() => {
@@ -55,7 +55,7 @@ const Educations = () => {
       degree: "",
       fromYear: "",
       toYear: "",
-      degreeType: "",
+      level: "",
     });
     setAddSuccess(false);
     setEditSuccess(false);
@@ -76,7 +76,7 @@ const Educations = () => {
       degree: education.degree,
       fromYear: education.fromYear,
       toYear: education.toYear || "Present",
-      degreeType: education.degreeType,
+      level: education.level,
     });
     setShowModal(true);
   };
@@ -99,7 +99,6 @@ const Educations = () => {
 
   const submitEditEducation = async () => {
     setIsSubmitting(true);
-    console.log("Editing education:", educationForm);
     try {
       const res = await editEducation(educationForm.id, educationForm);
       if (res) {
@@ -124,7 +123,6 @@ const Educations = () => {
         style: "destructive",
         onPress: async () => {
           setIsSubmitting(true);
-          console.log("Deleting education:", educationForm);
           try {
             const res = await deleteEducation(educationForm.id);
             if (res) {
@@ -142,6 +140,7 @@ const Educations = () => {
   };
 
   const educations = getEducations();
+  console.log("Educations:", educations);
   const isLoading = isLoadingEducations;
   return (
     <SafeAreaView>
@@ -149,17 +148,25 @@ const Educations = () => {
       <ScrollView>
         <View className="px-6 py-6">
           <View
-            className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5"
+            className="relative mb-2 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">View and edit your educations.</Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
+                <FontAwesome5 name="graduation-cap" size={18} color="white" />
+              </View>
+              <View className="bg-emerald-100 px-3 py-1.5 rounded-full">
+                <Text className="font-quicksand-bold text-xs text-emerald-700">ACADEMIC BACKGROUND</Text>
+              </View>
+            </View>
+            <Text className="font-quicksand-bold text-xl text-gray-800 mb-3">View and edit your educations.</Text>
+            <Text className="font-quicksand-medium text-gray-600 leading-6 text-base">
               These are automatically extracted from your resume, but you can update, add, or delete educations to
               better reflect your academic background.
             </Text>
@@ -201,34 +208,25 @@ const Educations = () => {
                         elevation: 3,
                       }}
                     >
-                      <View className="flex-row items-start justify-between mb-3">
-                        <View className="flex-1">
-                          <View className="flex-row items-center gap-2 mb-1">
-                            <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
-                              <FontAwesome5 name="university" size={14} color="#3b82f6" />
-                            </View>
-                            <View className="bg-blue-100 px-2 py-1 rounded-full">
-                              <Text className="font-quicksand-bold text-xs text-blue-700">EDUCATION</Text>
-                            </View>
-                          </View>
-                        </View>
-                        <TouchableOpacity className="p-1" onPress={() => handleEditEducation(edu)}>
-                          <Feather name="edit-2" size={16} color="#6b7280" />
+                      <View className="flex-row items-start justify-between">
+                        <Text className="font-quicksand-bold text-gray-800 text-lg mb-1 w-3/4" numberOfLines={4}>
+                          {edu.degree}
+                        </Text>
+                        <TouchableOpacity
+                          className="bg-emerald-100 p-2 rounded-full -top-2"
+                          onPress={() => handleEditEducation(edu)}
+                        >
+                          <Feather name="edit-2" size={16} color="#10b981" />
                         </TouchableOpacity>
                       </View>
-
-                      <Text className="font-quicksand-bold text-gray-800 text-lg mb-2" numberOfLines={2}>
-                        {edu.degree}
-                      </Text>
-
-                      <View className="flex-row items-center mb-2">
+                      <View className="flex-row items-center mb-1">
                         <Text className="font-quicksand-semibold text-gray-600 text-base">{edu.institution}</Text>
                       </View>
 
                       <View className="flex-row items-center gap-2 mb-3">
                         <Feather name="calendar" size={14} color="#6b7280" />
                         <Text className="font-quicksand-medium text-gray-500 text-sm">
-                          {edu.fromYear} - {edu.toYear || "Present"}
+                          {edu.fromYear || "Unknown"} - {edu.toYear || "Present"}
                         </Text>
                       </View>
                     </View>
@@ -252,7 +250,7 @@ const Educations = () => {
           )}
         </View>
       </ScrollView>
-      <ModalWithBg visible={showModal} customHeight={0.55} customWidth={0.9}>
+      <ModalWithBg visible={showModal} customHeight={0.8} customWidth={0.9}>
         <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
           <Text className="font-quicksand-bold text-lg text-gray-800">
             {isAdding ? "Add New Eductation" : "Edit Education"}
@@ -313,6 +311,7 @@ const Educations = () => {
                           </Text>
                         </View>
                         <CustomInput
+                          fontSize={12}
                           placeholder="e.g. Harvard University"
                           autoCapitalize="words"
                           label=""
@@ -345,30 +344,30 @@ const Educations = () => {
                           <TouchableOpacity
                             key={item.value}
                             className={`px-4 py-2 rounded-full border ${
-                              educationForm.degreeType === item.value
-                                ? "bg-blue-500 border-blue-500"
+                              educationForm.level === item.value
+                                ? "bg-emerald-500 border-emerald-500"
                                 : "bg-gray-50 border-gray-300"
                             }`}
                             style={{
-                              shadowColor: educationForm.degreeType === item.value ? "#3b82f6" : "transparent",
+                              shadowColor: educationForm.level === item.value ? "#3b82f6" : "transparent",
                               shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: educationForm.degreeType === item.value ? 0.2 : 0,
+                              shadowOpacity: educationForm.level === item.value ? 0.2 : 0,
                               shadowRadius: 4,
-                              elevation: educationForm.degreeType === item.value ? 2 : 0,
+                              elevation: educationForm.level === item.value ? 2 : 0,
                             }}
-                            onPress={() => setEducationForm({ ...educationForm, degreeType: item.value })}
+                            onPress={() => setEducationForm({ ...educationForm, level: item.value })}
                             activeOpacity={0.7}
                           >
                             <View className="flex-row items-center gap-2">
                               <Text
-                                className={`font-quicksand-semibold text-sm ${
-                                  educationForm.degreeType === item.value ? "text-white" : "text-gray-700"
+                                className={`font-quicksand-semibold text-xs ${
+                                  educationForm.level === item.value ? "text-white" : "text-gray-700"
                                 }`}
                               >
                                 {item.label}
                               </Text>
-                              {educationForm.degreeType === item.value && (
-                                <View className="w-4 h-4 bg-blue-400 rounded-full items-center justify-center">
+                              {educationForm.level === item.value && (
+                                <View className="w-4 h-4 bg-emerald-400 rounded-full items-center justify-center">
                                   <Feather name="check" size={10} color="white" />
                                 </View>
                               )}
@@ -387,6 +386,7 @@ const Educations = () => {
                         </View>
                         <CustomInput
                           placeholder="e.g. Bachelor of Science in Computer Science"
+                          fontSize={12}
                           autoCapitalize="words"
                           label=""
                           onChangeText={(text) => setEducationForm({ ...educationForm, degree: text })}
@@ -403,53 +403,53 @@ const Educations = () => {
                         />
                       </View>
                     </View>
-                    <View className="px-6 flex-row justify-between gap-1">
-                      <View className="w-1/3">
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">From (Year)</Text>
-                        </View>
-                        <CustomInput
-                          placeholder="e.g. 2018"
-                          label=""
-                          onChangeText={(text) => setEducationForm({ ...educationForm, fromYear: text })}
-                          value={educationForm.fromYear}
-                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">From (Year)</Text>
                       </View>
-                      <View className="w-1/3">
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">To (Year)</Text>
-                        </View>
-                        <CustomInput
-                          placeholder="e.g. 2023"
-                          label=""
-                          onChangeText={(text) => setEducationForm({ ...educationForm, toYear: text })}
-                          value={educationForm.toYear}
-                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
+                      <CustomInput
+                        placeholder="e.g. 2018"
+                        fontSize={12}
+                        label=""
+                        onChangeText={(text) => setEducationForm({ ...educationForm, fromYear: text })}
+                        value={educationForm.fromYear}
+                        customClass="border border-gray-300 rounded-xl p-2 w-1/2 font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                    </View>
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">To (Year)</Text>
                       </View>
+                      <CustomInput
+                        placeholder="e.g. 2023 or Present"
+                        fontSize={12}
+                        label=""
+                        onChangeText={(text) => setEducationForm({ ...educationForm, toYear: text })}
+                        value={educationForm.toYear}
+                        customClass="border border-gray-300 rounded-xl p-2 w-1/2 font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
                     </View>
                     <View className="flex-1" />
                     <View className="px-6 gap-2 mt-2 mb-10">
                       {isAdding ? (
                         <ProfileButton
-                          color="green-500"
+                          color="emerald-500"
                           buttonText="Add Experience"
                           handlePress={submitNewEducation}
                           disabled={isSubmitting}
@@ -457,7 +457,7 @@ const Educations = () => {
                       ) : (
                         <View className="gap-3">
                           <ProfileButton
-                            color="green-500"
+                            color="emerald-500"
                             buttonText="Update Experience"
                             handlePress={submitEditEducation}
                             disabled={isSubmitting}

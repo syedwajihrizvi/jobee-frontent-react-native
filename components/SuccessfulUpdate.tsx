@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   editingField: string | null;
-  type?: "add" | "edit" | "delete" | "uploadDocument" | "updatePrimary";
+  type?: "add" | "edit" | "delete" | "uploadDocument" | "updatePrimary" | "uploadResume";
   handleConfirm: () => void;
   handleReedit: () => void;
 };
@@ -20,6 +20,8 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
         return `Your ${editingField?.toLowerCase()} has been successfully deleted from your profile.`;
       case "uploadDocument":
         return `Your document has been successfully uploaded and saved to your profile.`;
+      case "uploadResume":
+        return `Your resume has been uploaded, we are currently parsing it using AI. We'll notify you when its ready and update your profile. Should take just a few minutes!`;
       case "updatePrimary":
         return `Your primary resume has been successfully updated.`;
       default:
@@ -37,6 +39,8 @@ const SuccessfulUpdate = ({ editingField, handleConfirm, type = "add", handleRee
         return `Restore`;
       case "uploadDocument":
         return `Upload Again`;
+      case "uploadResume":
+        return `Thanks`;
       case "updatePrimary":
         return `Change Again`;
       default:

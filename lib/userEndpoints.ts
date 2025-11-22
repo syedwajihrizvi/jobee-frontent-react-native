@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@/constants";
-import { ApplicantFilters, Application, ApplicationStatusFilter, Education, Experience, InterviewDetails, InterviewFilters, Job, JobFilters, PagedResponse, Project, UserDocument, UserSkill } from "@/type";
+import { ApplicantFilters, Application, ApplicationStatusFilter, Education, Experience, InterviewDetails, InterviewFilters, Job, JobFilters, PagedResponse, Project, SocialMedia, UserDocument, UserSkill } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getEducationLevel, getExperienceLevel } from "./utils";
 
@@ -301,7 +301,6 @@ export const getUserProjects = async () => {
 
 export const getUserDocuments = async () => {
     const token = await AsyncStorage.getItem('x-auth-token');
-    console.log(USER_DOCUMENTS_API)
     const response = await fetch(`${USER_DOCUMENTS_API}/user/me`, {
         headers: {
             'x-auth-token': `Bearer ${token}` || ''
@@ -311,3 +310,16 @@ export const getUserDocuments = async () => {
     return data as UserDocument[];
 
 }   
+
+export const getUserSocialMedias = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    console.log(USER_PROFILE_API_URL);
+    const response = await fetch(`${USER_PROFILE_API_URL}/social-media/my-social-media`, {
+        headers: {
+            'x-auth-token': `Bearer ${token}` || ''
+        }
+    });
+    console.log("SYED-DEBUG: Fetched user social medias response:", response);
+    const data = await response.json();
+    return data as SocialMedia[];
+}

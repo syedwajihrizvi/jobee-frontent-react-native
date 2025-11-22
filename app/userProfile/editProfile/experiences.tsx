@@ -1,11 +1,13 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
+import ExpandableText from "@/components/ExpandableText";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
-import { addExperience, deleteExperience } from "@/lib/updateUserProfile";
+import { addExperience, deleteExperience, editExperience } from "@/lib/updateUserProfile";
+import { getDurationString, renderLocationString } from "@/lib/utils";
 import useUserStore from "@/store/user.store";
 import { AddExperienceForm, Experience } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -35,6 +37,7 @@ const Experiences = () => {
     company: "",
     city: "",
     country: "",
+    state: "",
     from: "",
     to: "",
     description: "",
@@ -42,6 +45,7 @@ const Experiences = () => {
 
   useEffect(() => {
     if (!hasValidExperiences()) {
+      console.log("SYED-DEBUG: Fetching user experiences...");
       fetchUserExperiences();
     }
   }, []);
@@ -58,6 +62,7 @@ const Experiences = () => {
       title: "",
       company: "",
       city: "",
+      state: "",
       country: "",
       from: "",
       to: "",
@@ -80,6 +85,7 @@ const Experiences = () => {
       company: experience.company,
       city: experience.city || "",
       country: experience.country || "",
+      state: experience.state || "",
       from: experience.from,
       to: experience.to || "",
       description: experience.description || "",
@@ -89,7 +95,6 @@ const Experiences = () => {
   };
 
   const submitNewExperience = async () => {
-    console.log("Submitting new experience:", experienceForm);
     setIsSubmitting(true);
     try {
       const res = await addExperience(experienceForm);
@@ -105,10 +110,13 @@ const Experiences = () => {
   };
 
   const submitEditExperience = async () => {
+    console.log("Editing experience with ID:", experienceForm.id);
     setIsSubmitting(true);
     try {
-      const res = await addExperience(experienceForm);
+      const res = await editExperience(experienceForm.id, experienceForm);
+      console.log("SYED-DEBUG: Response from addExperience:", res);
       if (res) {
+        console.log("SYED-DEBUG: Updated experiences:", res);
         updateExperiences(res);
         setEditSuccess(true);
       }
@@ -151,20 +159,36 @@ const Experiences = () => {
       <ScrollView>
         <View className="px-6 py-6">
           <View
-            className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5"
+            className="relative mb-2 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">View and edit your work experiences</Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center mr-3">
+                <Feather name="briefcase" size={20} color="white" />
+              </View>
+              <View className="bg-emerald-100 px-3 py-1.5 rounded-full">
+                <Text className="font-quicksand-bold text-xs text-emerald-700">WORK EXPERIENCES</Text>
+              </View>
+            </View>
+            <Text className="font-quicksand-bold text-xl text-gray-800 mb-3">View and edit your work experiences.</Text>
+            <Text className="font-quicksand-medium text-gray-600 text-sm leading-6">
               These are automatically extracted from your resume, but you can update, add, or delete experiences to
               better reflect your professional background.
             </Text>
+            <View className="pt-3">
+              <View className="flex-row items-center gap-2">
+                <Feather name="check-circle" size={14} color="#10b981" />
+                <Text className="font-quicksand-semibold text-emerald-700 text-xs">
+                  Keep your profile up to date for better job matches
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -204,30 +228,20 @@ const Experiences = () => {
                         elevation: 3,
                       }}
                     >
-                      <View className="flex-row items-start justify-between mb-1">
-                        <View className="flex-1">
-                          <View className="flex-row items-center gap-2 mb-1">
-                            <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center">
-                              <Feather name="briefcase" size={14} color="#3b82f6" />
-                            </View>
-                            <View className="bg-blue-100 px-2 py-1 rounded-full">
-                              <Text className="font-quicksand-bold text-xs text-blue-700">EXPERIENCE</Text>
-                            </View>
-                          </View>
-                        </View>
-                        <TouchableOpacity className="p-1" onPress={() => handleEditExperience(exp)}>
-                          <Feather name="edit-2" size={16} color="#6b7280" />
+                      <View className="flex-row items-start justify-between">
+                        <Text className="font-quicksand-bold text-gray-800 text-lg" numberOfLines={2}>
+                          {exp.title}
+                        </Text>
+                        <TouchableOpacity
+                          className="bg-emerald-100 p-2 rounded-full -top-2"
+                          onPress={() => handleEditExperience(exp)}
+                        >
+                          <Feather name="edit-2" size={12} color="#10b981" />
                         </TouchableOpacity>
                       </View>
-
-                      <Text className="font-quicksand-bold text-gray-800 text-lg mb-1" numberOfLines={2}>
-                        {exp.title}
-                      </Text>
-
                       <View className="flex-row items-center mb-1">
                         <Text className="font-quicksand-semibold text-gray-600 text-base">{exp.company}</Text>
                       </View>
-
                       <View className="flex-row items-center gap-2 mb-1">
                         <Feather name="calendar" size={14} color="#6b7280" />
                         <Text className="font-quicksand-medium text-gray-500 text-sm">
@@ -235,20 +249,18 @@ const Experiences = () => {
                         </Text>
                       </View>
 
-                      {exp.city && (
+                      {(exp.city || exp.state || exp.country) && (
                         <View className="flex-row items-center gap-2 mb-3">
                           <Feather name="map-pin" size={14} color="#6b7280" />
                           <Text className="font-quicksand-medium text-gray-500 text-sm">
-                            {exp.city}, {exp.country}
+                            {renderLocationString(exp.city, exp.state, exp.country)}
                           </Text>
                         </View>
                       )}
 
                       {exp.description && (
-                        <View className="mt-2 p-3 bg-gray-50 rounded-xl">
-                          <Text className="font-quicksand-medium text-gray-700 text-sm leading-5" numberOfLines={3}>
-                            {exp.description}
-                          </Text>
+                        <View className="mt-1 p-2 bg-gray-50 rounded-xl">
+                          <ExpandableText text={exp.description} length={250} />
                         </View>
                       )}
                       <View className="mt-3 pt-3 border-t border-gray-100">
@@ -256,14 +268,16 @@ const Experiences = () => {
                           <View className="flex-row items-center gap-2">
                             <Feather name="clock" size={12} color="#22c55e" />
                             <Text className="font-quicksand-medium text-green-600 text-xs">
-                              {/* Calculate duration here */}
-                              Duration: 2 years 3 months
+                              {getDurationString(exp.from, exp.to)}
                             </Text>
                           </View>
-                          <View className="flex-row items-center gap-1">
+                          <TouchableOpacity
+                            className="flex-row items-center gap-1"
+                            onPress={() => handleEditExperience(exp)}
+                          >
                             <Feather name="arrow-right" size={12} color="#9ca3af" />
                             <Text className="font-quicksand-medium text-gray-400 text-xs">Tap to edit</Text>
-                          </View>
+                          </TouchableOpacity>
                         </View>
                       </View>
                     </View>
@@ -287,8 +301,8 @@ const Experiences = () => {
           )}
         </View>
       </ScrollView>
-      <ModalWithBg visible={showModal} customHeight={0.8} customWidth={0.9}>
-        <ScrollView className="flex-1">
+      <ModalWithBg visible={showModal} customHeight={0.9} customWidth={0.9}>
+        <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">
               {isAdding ? "Add New Experience" : "Edit Experience"}
@@ -297,7 +311,7 @@ const Experiences = () => {
               <Feather name="x" size={20} color="#6b7280" />
             </TouchableOpacity>
           </View>
-          <View className="flex-1 gap-4 pt-4">
+          <View className="gap-4 pt-4">
             <View className="px-6">
               <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <View className="flex-row items-start gap-2">
@@ -311,7 +325,7 @@ const Experiences = () => {
               </View>
             </View>
           </View>
-          <View className="flex-1 gap-2">
+          <ScrollView className="flex-1 gap-2">
             {!isSubmitting ? (
               <View className="flex-1 gap-4 pb-6">
                 {addSuccess && (
@@ -351,6 +365,7 @@ const Experiences = () => {
                         <CustomInput
                           placeholder="e.g. Full Stack Developer"
                           autoCapitalize="words"
+                          fontSize={12}
                           label=""
                           onChangeText={(text) => setExperienceForm({ ...experienceForm, title: text })}
                           value={experienceForm.title}
@@ -371,12 +386,13 @@ const Experiences = () => {
                         <View className="flex-row items-center justify-between mb-2">
                           <Text className="font-quicksand-medium text-sm text-gray-600">Company</Text>
                           <Text className="font-quicksand-medium text-xs text-gray-500">
-                            {experienceForm.title.length}/75 characters
+                            {experienceForm.company.length}/75 characters
                           </Text>
                         </View>
                         <CustomInput
                           placeholder="e.g. Amazon, Google, Microsoft"
                           autoCapitalize="words"
+                          fontSize={12}
                           label=""
                           onChangeText={(text) => setExperienceForm({ ...experienceForm, company: text })}
                           value={experienceForm.company}
@@ -392,58 +408,59 @@ const Experiences = () => {
                         />
                       </View>
                     </View>
-                    <View className="px-6 flex-row justify-between gap-1">
-                      <View className="w-1/3">
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">From (Year)</Text>
-                        </View>
-                        <CustomInput
-                          placeholder="e.g. 2018"
-                          label=""
-                          onChangeText={(text) => setExperienceForm({ ...experienceForm, from: text })}
-                          value={experienceForm.from}
-                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">From (Year)</Text>
                       </View>
-                      <View className="w-1/3">
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className="font-quicksand-medium text-sm text-gray-600">To (Year)</Text>
-                        </View>
-                        <CustomInput
-                          placeholder="e.g. 2023"
-                          label=""
-                          onChangeText={(text) => setExperienceForm({ ...experienceForm, to: text })}
-                          value={experienceForm.to}
-                          customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
-                          style={{
-                            fontSize: 12,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        />
+                      <CustomInput
+                        placeholder="e.g. 2018"
+                        label=""
+                        fontSize={12}
+                        onChangeText={(text) => setExperienceForm({ ...experienceForm, from: text })}
+                        value={experienceForm.from}
+                        customClass="border border-gray-300 rounded-xl p-2 w-1/2 font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                    </View>
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">To (Year)</Text>
                       </View>
+                      <CustomInput
+                        placeholder="e.g. 2023 or Present"
+                        label=""
+                        fontSize={12}
+                        onChangeText={(text) => setExperienceForm({ ...experienceForm, to: text })}
+                        value={experienceForm.to}
+                        customClass="border border-gray-300 rounded-xl p-2 w-1/2 font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
                     </View>
                     <View className="px-6">
                       <View className="flex-row items-center justify-between mb-2">
                         <Text className="font-quicksand-medium text-sm text-gray-600">City</Text>
                         <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {experienceForm.title.length}/30 characters
+                          {experienceForm.city.length}/30 characters
                         </Text>
                       </View>
                       <CustomInput
-                        placeholder="e.g. New York, San Francisco"
+                        placeholder="e.g. New York City"
                         label=""
+                        fontSize={12}
                         autoCapitalize="words"
                         onChangeText={(text) => setExperienceForm({ ...experienceForm, city: text })}
                         value={experienceForm.city}
@@ -460,15 +477,41 @@ const Experiences = () => {
                     </View>
                     <View className="px-6">
                       <View className="flex-row items-center justify-between mb-2">
-                        <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
+                        <Text className="font-quicksand-medium text-sm text-gray-600">State/Province</Text>
                         <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {experienceForm.title.length}/30 characters
+                          {experienceForm.state.length}/2 characters
                         </Text>
                       </View>
                       <CustomInput
-                        placeholder="e.g. United States, Canada"
+                        placeholder="e.g. NY"
+                        autoCapitalize="characters"
+                        label=""
+                        fontSize={12}
+                        onChangeText={(text) => setExperienceForm({ ...experienceForm, state: text })}
+                        value={experienceForm.state}
+                        customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
+                        style={{
+                          fontSize: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      />
+                    </View>
+                    <View className="px-6">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="font-quicksand-medium text-sm text-gray-600">Country</Text>
+                        <Text className="font-quicksand-medium text-xs text-gray-500">
+                          {experienceForm.country.length}/30 characters
+                        </Text>
+                      </View>
+                      <CustomInput
+                        placeholder="e.g. United States"
                         autoCapitalize="words"
                         label=""
+                        fontSize={12}
                         onChangeText={(text) => setExperienceForm({ ...experienceForm, country: text })}
                         value={experienceForm.country}
                         customClass="border border-gray-300 rounded-xl p-2 w-full font-quicksand-medium"
@@ -486,7 +529,7 @@ const Experiences = () => {
                       <View className="flex-row items-center justify-between mb-2">
                         <Text className="font-quicksand-medium text-sm text-gray-600">Description</Text>
                         <Text className="font-quicksand-medium text-xs text-gray-500">
-                          {experienceForm.title.length}/30 characters
+                          {experienceForm.description.length}/500 characters
                         </Text>
                       </View>
                       <CustomMultilineInput
@@ -498,7 +541,7 @@ const Experiences = () => {
                     <View className="px-6 gap-2 mt-2">
                       {isAdding ? (
                         <ProfileButton
-                          color="green-500"
+                          color="emerald-500"
                           buttonText="Add Experience"
                           handlePress={submitNewExperience}
                           disabled={isSubmitting}
@@ -506,7 +549,7 @@ const Experiences = () => {
                       ) : (
                         <View className="gap-3">
                           <ProfileButton
-                            color="green-500"
+                            color="emerald-500"
                             buttonText="Update Experience"
                             handlePress={submitEditExperience}
                             disabled={isSubmitting}
@@ -526,8 +569,8 @@ const Experiences = () => {
             ) : (
               <UpdatingProfileView />
             )}
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       </ModalWithBg>
     </SafeAreaView>
   );

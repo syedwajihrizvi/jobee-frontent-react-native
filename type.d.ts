@@ -298,7 +298,6 @@ export type User = {
     documents: UserDocument[],
     primaryResume: UserDocument | null
     videoIntroUrl: string | null;
-    socialMedias: SocialMedia[];
 }
 
 export type BusinessUser = {
@@ -349,6 +348,7 @@ export type Experience = {
     company: string;
     city: string;
     country: string;
+    state: string;
     from: string;
     to: string;
     currentlyWorking: boolean;
@@ -379,7 +379,7 @@ export type Education = {
     degree: string;
     fromYear: string;
     toYear: string | null;
-    degreeType: string;
+    level: string;
 }
 
 export type SocialMedia = {
@@ -414,7 +414,7 @@ export type AddUserEducationForm = {
     degree: string;
     fromYear: string;
     toYear: string;
-    degreeType: string;
+    level: string;
 }
 
 export type AddExperienceForm = {
@@ -423,6 +423,7 @@ export type AddExperienceForm = {
     company: string;
     description: string;
     city: string;
+    state: string;
     country: string;
     from: string;
     to: string;
@@ -754,3 +755,11 @@ export type InterviewFilter =
   | "SCHEDULED"
   | "COMPLETED"
   | null;
+
+  export type UserSocials = {
+    linkedin: { id: number; url: string };
+    github: { id: number; url: string };
+    stackOverflow: { id: number; url: string };
+    twitter: { id: number; url: string };
+    personalWebsite: { id: number; url: string };
+  };

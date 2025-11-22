@@ -1,4 +1,4 @@
-import { Application, OneDriveFile, User, UserDocument } from "@/type";
+import { Application, Experience, OneDriveFile, Project, User, UserDocument } from "@/type";
 import * as Haptics from 'expo-haptics';
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -861,3 +861,95 @@ export const handleProfileImagePicker = async ({onSuccess}: {onSuccess: (result:
       { text: "Cancel", style: "cancel" },
     ]);
   };
+
+  export const getDurationString = (from: string, to: string) => {
+    const currentDate = new Date();
+    const fromDate = new Date(from);
+    const toDate = to.toLowerCase() === 'present' ? currentDate : new Date(to);
+
+    let years = toDate.getFullYear() - fromDate.getFullYear();
+    let months = toDate.getMonth() - fromDate.getMonth();
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    let duration = '';
+    if (years > 0) {
+      duration += `${years} ${formatSWord('year', years)}`;
+    }
+    if (months > 0) {
+      if (duration) duration += ' ';
+      duration += `${months} ${formatSWord('month', months)}`;
+    }
+  
+    return duration || 'less than 1 year';
+  }
+
+export const sortProjectsByDate = (projects: Project[]) => {
+  return projects.sort((p1, p2) => {
+    const year1 = p1.yearCompleted;
+    const year2 = p2.yearCompleted;
+    if (year1?.toLowerCase() === "present") return -1;
+    if (year2?.toLowerCase() === "present") return 1;
+
+    const year1Empty = !year1 || year1.trim() === "";
+    const year2Empty = !year2 || year2.trim() === "";
+
+    if (year1Empty && year2Empty) return 0;
+    if (year1Empty) return 1;
+    if (year2Empty) return -1;
+
+    try {
+      const y1 = parseInt(year1.trim());
+      const y2 = parseInt(year2.trim());
+      
+      if (isNaN(y1) || isNaN(y2)) {
+        // If parsing fails, compare as strings
+        return year1.localeCompare(year2);
+      }
+      
+      return y2 - y1; // descending order (newer first)
+    } catch (e) {
+      return year1.localeCompare(year2);
+    }
+  });
+};
+
+export const sortExperiencesByDate = (experiences: Experience[]) => {
+  return experiences.sort((e1, e2) => {
+    // Experiences with empty 'to' field come first
+    const e1ToEmpty = !e1.to || e1.to === "" || e1.to.toLowerCase() === "present";
+    const e2ToEmpty = !e2.to || e2.to === "" || e2.to.toLowerCase() === "present";
+
+    if (e1ToEmpty && !e2ToEmpty) return -1;
+    if (!e1ToEmpty && e2ToEmpty) return 1;
+
+    // Both have same 'to' status, sort by fromYear descending, then toYear descending
+    const from1 = parseInt(e1.from);
+    const from2 = parseInt(e2.from);
+    const to1 = parseInt(e1.to);
+    const to2 = parseInt(e2.to);
+
+    const fromCompare = from2 - from1; // Descending order (newer first)
+    if (fromCompare !== 0) return fromCompare;
+
+    return to2 - to1; // Descending order (newer first)
+  });
+};
+
+export const renderLocationString = (city: string, state: string, country: string) => {
+  let location = '';
+  if (city) location += city;
+  if (state) {
+    if (location) location += ', ';
+    location += state;
+  }
+  if (country) {
+    if (location) location += ', ';
+    location += country;
+  }
+  console.log('Rendered location:', location);
+  return location;
+}

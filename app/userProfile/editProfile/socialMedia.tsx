@@ -3,50 +3,31 @@ import CustomInput from "@/components/CustomInput";
 import ModalWithBg from "@/components/ModalWithBg";
 import ProfileButton from "@/components/ProfileButton";
 import SocialMediaCard from "@/components/SocialMediaCard";
-import { useSocials } from "@/lib/services/useSocials";
 import { createSocialMediaLink, updateSocialMediaLink } from "@/lib/updateUserProfile";
-import { convertEnumToSocialMediaType } from "@/lib/utils";
+import useUserStore from "@/store/user.store";
+import { UserSocials } from "@/type";
 import { Entypo, Feather, FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import React, { ReactNode, useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type UserSocials = {
-  linkedin: { id: number; url: string };
-  github: { id: number; url: string };
-  stackOverflow: { id: number; url: string };
-  twitter: { id: number; url: string };
-  personalWebsite: { id: number; url: string };
-};
-
 const SocialMedia = () => {
+  const { getSocialMedias, fetchUserSocialMedias, hasValidSocialMedias, isLoadingSocialMedias, updateSocialMedias } =
+    useUserStore();
   const [showModal, setShowModal] = useState(false);
   const [editingField, setEditingField] = useState<{ name: string; icon: ReactNode } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [userSocials, setUserSocials] = useState<UserSocials>({
-    linkedin: { id: 0, url: "" },
-    github: { id: 0, url: "" },
-    stackOverflow: { id: 0, url: "" },
-    twitter: { id: 0, url: "" },
-    personalWebsite: { id: 0, url: "" },
-  });
   const [updateForm, setUpdateForm] = useState({ type: "", url: "" });
-  const { data: socialMedias, isLoading } = useSocials();
 
   useEffect(() => {
-    if (socialMedias && !isLoading) {
-      socialMedias.forEach((social) => {
-        const convertType = convertEnumToSocialMediaType(social.type);
-        if (convertType in userSocials) {
-          setUserSocials((prev) => ({ ...prev, [convertType]: { id: social.id, url: social.url } }));
-        }
-      });
+    if (!hasValidSocialMedias()) {
+      fetchUserSocialMedias();
     }
-  }, [socialMedias, isLoading]);
+  }, []);
 
+  const userSocials = getSocialMedias();
   const handleFormUpdateSubmit = async () => {
-    // Depending on whether or not the user already has a link for this social media, either create or update
     setIsUpdating(true);
     try {
       const hasValue = userSocials[updateForm.type as keyof UserSocials].url !== "";
@@ -54,19 +35,11 @@ const SocialMedia = () => {
       if (hasValue) {
         const id = userSocials[updateForm.type as keyof UserSocials].id;
         res = await updateSocialMediaLink(updateForm.type, updateForm.url, id);
-        console.log("Update response:", res);
       } else {
         res = await createSocialMediaLink(updateForm.type, updateForm.url);
-        console.log("Create response:", res);
       }
       if (res != null) {
-        console.log("Response from server:", res);
-        const { id, type, url } = res;
-        const convertType = convertEnumToSocialMediaType(type);
-        console.log("Converted Type:", convertType);
-        if (convertType in userSocials) {
-          setUserSocials((prev) => ({ ...prev, [convertType]: { id, url } }));
-        }
+        updateSocialMedias(res);
         setShowModal(false);
       }
     } catch (error) {
@@ -131,38 +104,42 @@ const SocialMedia = () => {
           </View>
         </View>
         <View className="py-3 px-6">
-          <View className="flex flex-col gap-3">
-            <SocialMediaCard
-              label="Linkedin"
-              subtitle={userSocials.linkedin.url || "Add your Linkedin profile link"}
-              icon={<Entypo name="linkedin" size={22} color="#0A66C2" />}
-              handleEditPress={() => handleEditPress("Linkedin")}
-            />
-            <SocialMediaCard
-              label="GitHub"
-              subtitle={userSocials.github.url || "Add your GitHub profile link"}
-              icon={<Feather name="github" size={22} color="#171515" />}
-              handleEditPress={() => handleEditPress("GitHub")}
-            />
-            <SocialMediaCard
-              label="Stack Overflow"
-              subtitle={userSocials.stackOverflow.url || "Add your Stack Overflow profile link"}
-              icon={<FontAwesome name="stack-overflow" size={22} color="#F48024" />}
-              handleEditPress={() => handleEditPress("Stack Overflow")}
-            />
-            <SocialMediaCard
-              label="Twitter"
-              subtitle={userSocials.twitter.url || "Add your Twitter (X) profile link"}
-              icon={<FontAwesome6 name="x-twitter" size={22} color="black" />}
-              handleEditPress={() => handleEditPress("Twitter")}
-            />
-            <SocialMediaCard
-              label="Personal Website"
-              subtitle={userSocials.personalWebsite.url || "Add your personal or portfolio website"}
-              icon={<Feather name="globe" size={22} color="#374151" />}
-              handleEditPress={() => handleEditPress("Personal Website")}
-            />
-          </View>
+          {isLoadingSocialMedias ? (
+            <ActivityIndicator size="large" />
+          ) : (
+            <View className="flex flex-col gap-3">
+              <SocialMediaCard
+                label="Linkedin"
+                subtitle={userSocials.linkedin.url || "Add your Linkedin profile link"}
+                icon={<Entypo name="linkedin" size={22} color="#0A66C2" />}
+                handleEditPress={() => handleEditPress("Linkedin")}
+              />
+              <SocialMediaCard
+                label="GitHub"
+                subtitle={userSocials.github.url || "Add your GitHub profile link"}
+                icon={<Feather name="github" size={22} color="#171515" />}
+                handleEditPress={() => handleEditPress("GitHub")}
+              />
+              <SocialMediaCard
+                label="Stack Overflow"
+                subtitle={userSocials.stackOverflow.url || "Add your Stack Overflow profile link"}
+                icon={<FontAwesome name="stack-overflow" size={22} color="#F48024" />}
+                handleEditPress={() => handleEditPress("Stack Overflow")}
+              />
+              <SocialMediaCard
+                label="Twitter"
+                subtitle={userSocials.twitter.url || "Add your Twitter (X) profile link"}
+                icon={<FontAwesome6 name="x-twitter" size={22} color="black" />}
+                handleEditPress={() => handleEditPress("Twitter")}
+              />
+              <SocialMediaCard
+                label="Personal Website"
+                subtitle={userSocials.personalWebsite.url || "Add your personal or portfolio website"}
+                icon={<Feather name="globe" size={22} color="#374151" />}
+                handleEditPress={() => handleEditPress("Personal Website")}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
       <ModalWithBg visible={showModal} customHeight={0.4} customWidth={0.7}>

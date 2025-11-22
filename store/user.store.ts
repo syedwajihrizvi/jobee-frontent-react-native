@@ -1,6 +1,7 @@
 import { UserDocumentType } from '@/constants';
-import { getLastUserApplication, getUserApplications, getUserDocuments, getUserEducations, getUserExperiences, getUserInterviews, getUserProjects, getUserSkills } from '@/lib/userEndpoints';
-import { Application, Education, Experience, InterviewDetails, Project, UserDocument, UserSkill } from '@/type';
+import { getLastUserApplication, getUserApplications, getUserDocuments, getUserEducations, getUserExperiences, getUserInterviews, getUserProjects, getUserSkills, getUserSocialMedias } from '@/lib/userEndpoints';
+import { convertEnumToSocialMediaType, sortExperiencesByDate, sortProjectsByDate } from '@/lib/utils';
+import { Application, Education, Experience, InterviewDetails, Project, SocialMedia, UserDocument, UserSkill, UserSocials } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from "zustand";
 
@@ -13,6 +14,7 @@ type UserType = {
     isLoadingExperiences: boolean,
     isLoadingEducations: boolean,
     isLoadingProjects: boolean,
+    isLoadingSocialMedias: boolean,
     isLoadingDocuments: boolean,
     interviews: InterviewDetails[],
     applications: Application[],
@@ -20,6 +22,7 @@ type UserType = {
     experiences: Experience[],
     educations: Education[],
     projects: Project[],
+    socialMedias: UserSocials,
     resumeDocuments: UserDocument[],
     coverLetterDocuments: UserDocument[],
     certificateDocuments: UserDocument[],
@@ -33,6 +36,7 @@ type UserType = {
     lastFetchedEducations: number | null,
     lastFetchedProjects: number | null,
     lastFetchedDocuments: number | null,
+    lastFetchedSocialMedias: number | null,
     setType: (type: 'user' | 'business') => Promise<void>,
     fetchUserData: () => Promise<void>,
     fetchLastApplication: () => Promise<void>,
@@ -40,6 +44,7 @@ type UserType = {
     fetchUserExperiences: () => Promise<void>,
     fetchUserEducations: () => Promise<void>,
     fetchUserProjects: () => Promise<void>,
+    fetchUserSocialMedias: () => Promise<void>,
     fetchUserDocuments: () => Promise<void>,
     refetchInterviews: () => Promise<void>,
     refetchCandidateInformation: () => Promise<void>,
@@ -56,6 +61,7 @@ type UserType = {
     getExperiences: () => Experience[],
     getEducations: () => Education[],
     getProjects: () => Project[],
+    getSocialMedias: () => UserSocials,
     getDocuments: () => UserDocument[],
     getResumeDocuments: () => UserDocument[],
     getCoverLetterDocuments: () => UserDocument[],
@@ -68,6 +74,7 @@ type UserType = {
     hasValidExperiences: () => boolean,
     hasValidEducations: () => boolean,
     hasValidProjects: () => boolean,
+    hasValidSocialMedias: () => boolean,
     hasValidDocuments: () => boolean,
     updateSkills: (skill: UserSkill) => void,
     removeSkill: (skillId: number) => void,
@@ -77,6 +84,7 @@ type UserType = {
     removeEducation: (educationId: number) => void,
     updateProjects: (project: Project) => void,
     removeProject: (projectId: number) => void,
+    updateSocialMedias: (socialMedia: SocialMedia) => void,
 
 }
 
@@ -89,6 +97,7 @@ const useUserStore = create<UserType>((set, get) => ({
     isLoadingExperiences: false,
     isLoadingEducations: false,
     isLoadingProjects: false,
+    isLoadingSocialMedias: false,
     isLoadingDocuments: false,
     interviews: [],
     applications: [],
@@ -96,6 +105,13 @@ const useUserStore = create<UserType>((set, get) => ({
     experiences: [],
     educations: [],
     projects: [],
+    socialMedias: {
+      linkedin: { id: 0, url: "" },
+      github: { id: 0, url: "" },
+      stackOverflow: { id: 0, url: "" },
+      twitter: { id: 0, url: "" },
+      personalWebsite: { id: 0, url: "" },
+    },
     resumeDocuments: [],
     coverLetterDocuments: [],
     certificateDocuments: [],
@@ -108,6 +124,7 @@ const useUserStore = create<UserType>((set, get) => ({
     lastFetchedExperiences: null,
     lastFetchedEducations: null,
     lastFetchedProjects: null,
+    lastFetchedSocialMedias: null,
     lastFetchedDocuments: null,
     setType: async (type: 'user' | 'business') => {
         await AsyncStorage.setItem('userType', type);
@@ -174,8 +191,8 @@ const useUserStore = create<UserType>((set, get) => ({
         }
     },
     fetchUserEducations: async () => {
-        if (get().isLoadingExperiences) return;
-        set({ isLoadingExperiences: true });
+        if (get().isLoadingEducations) return;
+        set({ isLoadingEducations: true });
         try {
             const educations = await getUserEducations();
             set({ educations, lastFetchedEducations: Date.now() });
@@ -186,15 +203,38 @@ const useUserStore = create<UserType>((set, get) => ({
         }
     },
     fetchUserProjects: async () => {
-        if (get().isLoadingExperiences) return;
-        set({ isLoadingExperiences: true });
+        if (get().isLoadingProjects) return;
+        set({ isLoadingProjects: true });
         try {
             const projects = await getUserProjects();
             set({ projects, lastFetchedProjects: Date.now() });
         } catch (error) {
             console.error("Error fetching user projects:", error);
         } finally {
-            set({ isLoadingEducations: false });
+            set({ isLoadingProjects: false });
+        }
+    },
+    fetchUserSocialMedias: async () => {
+        if (get().isLoadingSocialMedias) return;
+        set({ isLoadingSocialMedias: true });
+        try {
+            const socialMedias = await getUserSocialMedias();
+            socialMedias.forEach((social) => {
+                const convertType = convertEnumToSocialMediaType(social.type);
+                if (convertType in get().socialMedias) {
+                    set((state) => ({
+                        socialMedias: {
+                            ...state.socialMedias,
+                            [convertType]: { id: social.id, url: social.url },
+                        },
+                    }));
+                }
+            });
+            set({ lastFetchedSocialMedias: Date.now() });
+        } catch (error) {
+            console.error("Error fetching user social medias:", error);
+        } finally {
+            set({ isLoadingSocialMedias: false });
         }
     },
     fetchUserDocuments: async () => {
@@ -234,6 +274,7 @@ const useUserStore = create<UserType>((set, get) => ({
             get().fetchUserExperiences(),
             get().fetchUserEducations(),
             get().fetchUserProjects(),
+            get().fetchUserSocialMedias(),
             get().fetchUserDocuments(),
         ]);
     },
@@ -266,6 +307,9 @@ const useUserStore = create<UserType>((set, get) => ({
     },
     getProjects: () => {
         return get().projects;
+    },
+    getSocialMedias: () => {
+        return get().socialMedias;
     },
     getDocuments: () => {
         return get().documents;
@@ -329,6 +373,12 @@ const useUserStore = create<UserType>((set, get) => ({
         const ONE_HOUR = 60 * 60 * 1000;
         return (Date.now() - lastFetchedProjects) < ONE_HOUR;
     },
+    hasValidSocialMedias: () => {
+        const { lastFetchedSocialMedias } = get();
+        if (!lastFetchedSocialMedias) return false;
+        const ONE_HOUR = 60 * 60 * 1000;
+        return (Date.now() - lastFetchedSocialMedias) < ONE_HOUR;
+    },
     hasValidDocuments: () => {
         const { documents, lastFetchedDocuments } = get();
         if (documents.length === 0 || !lastFetchedDocuments) return false;
@@ -361,7 +411,7 @@ const useUserStore = create<UserType>((set, get) => ({
             } else {
                 updatedExperiences = [...state.experiences, experience];
             }
-            return { experiences: updatedExperiences };
+            return { experiences: sortExperiencesByDate(updatedExperiences) };
         });
     },
     removeExperience: (experienceId: number) => set((state) => ({
@@ -393,12 +443,23 @@ const useUserStore = create<UserType>((set, get) => ({
             } else {
                 updatedProjects = [...state.projects, project];
             }
-            return { projects: updatedProjects };
+            return { projects: sortProjectsByDate(updatedProjects) };
         });
     },
     removeProject: (projectId: number) => set((state) => ({
         projects: state.projects.filter(project => project.id !== projectId)
-    })),    
+    })),
+    updateSocialMedias: (social: SocialMedia) => {
+        const convertType = convertEnumToSocialMediaType(social.type);
+        if (convertType in get().socialMedias) {
+            set((state) => ({
+                socialMedias: {
+                    ...state.socialMedias,
+                    [convertType]: { id: social.id, url: social.url },
+                },
+            }));
+        }
+    } 
 }))
 
 export default useUserStore;

@@ -5,9 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import * as ImagePicker from "expo-image-picker";
+import { Alert } from 'react-native';
 import { fetchDropboxFileAsPdfAndCreateTempFile } from './oauth/dropbox';
 import { fetchGoogleDocAsPdfAndCreateTempFile } from './oauth/googledrive';
 import { fetchOneDriveFileAsPdfAndCreateTempFile } from './oauth/onedrive';
+import { isValidGoogleDriveLink } from './utils';
 
 const USER_DOCS_API_URL = getAPIUrl('user-documents');
 
@@ -245,3 +247,62 @@ export const processOneDriveUpload = async (oneDriveFile: OneDrivePathContent, s
     const res = await uploadOneDriveDocumentToServer(tempFile, selectedDocumentType, title);
     return res;
 };
+
+export const handleGoogleDriveUpload = async (googleDriveFile: GoogleDrivePathContent | null, documentType: string, documentTitle: string) => {
+    if (!googleDriveFile) return;
+    try {
+      const res = await processGoogleDriveUpload(googleDriveFile, documentType, documentTitle);
+      return res;
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
+    }
+    return null;
+}
+
+export const handleDropboxUpload = async (dropboxFile: DropBoxPathContent | null, documentType: string, documentTitle: string) => {
+    if (!dropboxFile) return;
+    try {
+      const res = await processDropboxUpload(dropboxFile, documentType, documentTitle);
+      return res;
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while uploading the Dropbox document.");
+    }
+    return null;
+}
+
+export const handleOneDriveUpload = async (oneDriveFile: OneDrivePathContent | null, documentType: string, documentTitle: string) => {
+    if (!oneDriveFile) return;
+    try {
+      const res = await processOneDriveUpload(oneDriveFile, documentType, documentTitle);
+      return res;
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while uploading the OneDrive document.");
+    }
+    return null;
+}
+
+export const uploadResume = async (uploadMethod: string, uploadedDocument: DocumentPicker.DocumentPickerResult | null, documentLink: string | null, googleDriveFile: GoogleDrivePathContent | null, dropboxFile: DropBoxPathContent | null, oneDriveFile: OneDrivePathContent | null, selectedDocumentType: string, documentTitle: string) => {
+      if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
+        uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle)
+          .then(() => console.log("Direct document upload completed"))
+          .catch((error) => console.error("Error uploading document:", error));
+      } else if (uploadMethod === "LINK_INPUT") {
+        if (!documentLink || documentLink.trim() !== "") return;
+        const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
+        sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType)
+          .then(() => console.log("Document link sent successfully"))
+          .catch((error) => console.error("Error sending document link:", error));
+      } else if (uploadMethod === "GOOGLE_DRIVE") {
+        handleGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle)
+          .then(() => console.log("Google Drive upload completed"))
+          .catch((error) => console.error("Error with Google Drive upload:", error));
+      } else if (uploadMethod === "DROPBOX") {
+        handleDropboxUpload(dropboxFile, selectedDocumentType, documentTitle)
+          .then(() => console.log("Dropbox upload completed"))
+          .catch((error) => console.error("Error with Dropbox upload:", error));
+      } else if (uploadMethod === "ONEDRIVE") {
+        handleOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle)
+          .then(() => console.log("OneDrive upload completed"))
+          .catch((error) => console.error("Error with OneDrive upload:", error));
+      }
+}

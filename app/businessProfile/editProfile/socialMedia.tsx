@@ -6,6 +6,7 @@ import SocialMediaCard from "@/components/SocialMediaCard";
 import { createBusinessSocialMediaLink, updateBusinessSocialMediaLink } from "@/lib/updateProfiles/businessProfile";
 import { convertEnumToSocialMediaType } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import { BusinessUser } from "@/type";
 import { Entypo, Feather, FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import React, { ReactNode, useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -21,8 +22,8 @@ type BusinessSocials = {
 };
 
 const SocialMedia = () => {
-  const { user, isLoading, setUser } = useAuthStore();
-
+  const { user: authUser, isLoading, setUser } = useAuthStore();
+  const user = authUser as BusinessUser;
   const [showModal, setShowModal] = useState(false);
   const [editingField, setEditingField] = useState<{ name: string; icon: ReactNode } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);

@@ -21,7 +21,7 @@ const markdownStyles = {
   },
   heading3: {
     fontFamily: "Quicksand-SemiBold",
-    fontSize: 14,
+    fontSize: 12,
   },
   paragraph: {
     fontFamily: "Quicksand-Medium",

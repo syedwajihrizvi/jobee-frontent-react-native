@@ -167,7 +167,7 @@ export const addExperience = async (newExperience: AddExperienceForm) => {
             }
             return null
 }
-
+  
 export const addProject = async (newProject: AddProjectForm) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -185,10 +185,8 @@ export const addProject = async (newProject: AddProjectForm) => {
 }
 
 export const editExperience = async (experienceId: number, updatedExperience: AddExperienceForm) => {
-    return await new Promise<Experience | null>((resolve, reject) => {
-        setTimeout(async () => {
             const token = await AsyncStorage.getItem('x-auth-token')
-            if (!token) return resolve(null)
+            if (!token) return null
             const result = await fetch(`${PROFILES_API_URL}/experiences/${experienceId}`, {
                 method: 'PUT',
                 headers: {
@@ -197,11 +195,10 @@ export const editExperience = async (experienceId: number, updatedExperience: Ad
                 },
                 body: JSON.stringify(updatedExperience)
             })
+            console.log("Response Status from editExperience:", result.status)
             const response = await result.json()
-            if (result.status === 200) return resolve(response as Experience)
-            return resolve(null)
-        }, 3000)
-    })   
+            if (result.status === 200) return response as Experience
+            return null
 }
 
 export const editProject = async (projectId: number, updatedProject: AddProjectForm) => {

@@ -23,12 +23,6 @@ const Skills = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [_, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const getExperienceLevel = (years: number) => {
-    if (years >= 5) return { label: "Expert", color: "green-600" };
-    if (years >= 3) return { label: "Advanced", color: "green-500" };
-    if (years >= 1) return { label: "Intermediate", color: "yellow-500" };
-    return { label: "Beginner", color: "gray-400" };
-  };
 
   useEffect(() => {
     if (!hasValidSkills()) {
@@ -226,7 +220,7 @@ const Skills = () => {
           )}
         </View>
       </ScrollView>
-      <ModalWithBg visible={showModal} customHeight={0.5} customWidth={0.7}>
+      <ModalWithBg visible={showModal} customHeight={0.7} customWidth={0.8}>
         <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="font-quicksand-bold text-lg text-gray-800">
@@ -308,7 +302,7 @@ const Skills = () => {
                           color="emerald-500"
                           buttonText="Add Skill"
                           handlePress={submitNewSkill}
-                          disabled={!skillForm.skill.trim() || !skillForm.experience.trim()}
+                          disabled={!skillForm.skill.trim()}
                         />
                       ) : (
                         <View className="gap-3">
