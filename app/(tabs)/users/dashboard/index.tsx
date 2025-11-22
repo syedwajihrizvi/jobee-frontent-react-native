@@ -3,13 +3,12 @@ import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import UserInterviewCard from "@/components/UserInterviewCard";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
-import { useTopCompanies } from "@/lib/services/useTopCompanies";
 import { formatDate, getApplicationStatus } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
 import { InterviewSummary, User } from "@/type";
-import { Entypo, Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -20,7 +19,6 @@ const Dashboard = () => {
   const { user: userProfile } = useAuthStore();
   const user = userProfile as User;
   const { isLoading: isLoadingProfileCompleteness, data: completeness } = useProfileCompleteness();
-  const { data: topCompanies, isLoading: isLoadingTopCompanies } = useTopCompanies();
   const {
     interviews,
     isLoadingInterviews: isLoadingInterviews,
@@ -90,14 +88,14 @@ const Dashboard = () => {
         )}
         {!isLoading && profileSummary && (
           <>
-            <View className="px-6 py-4">
+            <View className="px-3 py-4">
               <Text className="font-quicksand-bold text-2xl text-gray-900">Dashboard</Text>
               <Text className="font-quicksand-medium text-base text-gray-600">
                 Welcome back {profileSummary.fullName}! Here is your job search overview.
               </Text>
             </View>
             <View
-              className="bg-white mx-6 mb-4 rounded-2xl p-6 border border-gray-100"
+              className="bg-white mx-3 mb-4 rounded-2xl p-4 border border-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -106,69 +104,63 @@ const Dashboard = () => {
                 elevation: 6,
               }}
             >
-              <View className="items-center mb-2">
-                <View className="relative mb-4">
+              <View className="flex-row items-center gap-4 mb-3">
+                <View className="relative">
                   <View
-                    className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center border-4 border-white"
+                    className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center border-3 border-white"
                     style={{
                       shadowColor: "#10b981",
-                      shadowOffset: { width: 0, height: 4 },
+                      shadowOffset: { width: 0, height: 3 },
                       shadowOpacity: 0.2,
-                      shadowRadius: 8,
-                      elevation: 6,
+                      shadowRadius: 6,
+                      elevation: 4,
                     }}
                   >
                     <RenderUserProfileImage user={user} />
                   </View>
-                  <View className="absolute bottom-1 right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white items-center justify-center">
-                    <Feather name="check" size={12} color="white" />
+                  <View className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white items-center justify-center">
+                    <Feather name="check" size={10} color="white" />
                   </View>
                 </View>
 
-                <View className="items-center">
-                  <Text className="font-quicksand-bold text-2xl text-gray-900 mb-1">{profileSummary.fullName}</Text>
+                <View className="flex-1">
+                  <Text className="font-quicksand-bold text-lg text-gray-900">{profileSummary.fullName}</Text>
                   {user.title && (
-                    <Text className="font-quicksand-semibold text-base text-gray-600 mb-2">
+                    <Text className="font-quicksand-semibold text-sm text-gray-600">
                       {user.title}
                       {user.company ? ` @ ${user.company}` : ""}
                     </Text>
                   )}
-                </View>
-              </View>
-              <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 mb-4">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
-                      <Feather name="eye" size={12} color="#10b981" />
+                  <View className="flex-row items-center gap-2 mt-1">
+                    <View className="w-4 h-4 bg-emerald-100 rounded-full items-center justify-center">
+                      <Feather name="eye" size={8} color="#10b981" />
                     </View>
-                    <View>
-                      <Text className="font-quicksand-bold text-md text-emerald-900">
-                        {profileSummary.profileViews || 0} Profile Views
-                      </Text>
-                    </View>
+                    <Text className="font-quicksand-medium text-xs text-emerald-600">
+                      {profileSummary.profileViews || 0} views
+                    </Text>
                   </View>
                 </View>
               </View>
-              <Text className="font-quicksand-semibold text-md mb-1">Profile Completeness</Text>
+
               <View className="mb-3">
                 {isLoadingProfileCompleteness ? (
-                  <ActivityIndicator size="small" color="#3b82f6" className="my-2" />
+                  <ActivityIndicator size="small" color="#3b82f6" className="my-1" />
                 ) : (
                   <>
-                    <View className="flex-row justify-between mb-2">
+                    <View className="flex-row justify-between items-center mb-2">
                       {completeness?.completeness === 100 ? (
                         <View className="flex-row items-center gap-2">
-                          <Feather name="check-circle" size={16} color="#10b981" />
-                          <Text className="font-quicksand-medium text-sm text-emerald-600">Profile Complete!</Text>
+                          <Feather name="check-circle" size={14} color="#10b981" />
+                          <Text className="font-quicksand-medium text-sm text-emerald-600">Complete!</Text>
                         </View>
                       ) : (
-                        <Text className="font-quicksand-medium text-sm text-gray-600">Complete your profile</Text>
+                        <Text className="font-quicksand-medium text-sm text-gray-600">Profile Progress</Text>
                       )}
                       <Text className="font-quicksand-bold text-sm text-emerald-600">
                         {completeness?.completeness}%
                       </Text>
                     </View>
-                    <View className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <View className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                       <View
                         className="h-full bg-emerald-500 rounded-full"
                         style={{ width: `${completeness?.completeness!}%` }}
@@ -177,18 +169,158 @@ const Dashboard = () => {
                   </>
                 )}
               </View>
+
               <TouchableOpacity
-                className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex-row items-center justify-center gap-2"
+                className="bg-emerald-50 border border-emerald-200 rounded-xl py-2 px-4 flex-row items-center justify-center gap-2"
                 onPress={() => router.push("/userProfile/editProfile")}
                 activeOpacity={0.7}
               >
-                <Text className="font-quicksand-semibold text-emerald-700">
+                <Text className="font-quicksand-semibold text-emerald-700 text-sm">
                   {completeness?.completeness === 100 ? "View Profile" : "Complete Profile"}
                 </Text>
-                <Feather name="edit-3" size={14} color="#10b981" />
+                <Feather name="edit-3" size={12} color="#10b981" />
               </TouchableOpacity>
             </View>
-            {!user?.summary && (
+            <View className="px-3 mb-4">
+              <View
+                className="bg-white rounded-2xl p-5 border border-gray-100"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 12,
+                  elevation: 6,
+                }}
+              >
+                <View className="flex-row items-center gap-3 mb-4">
+                  <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+                    <Feather name="zap" size={16} color="#10b981" />
+                  </View>
+                  <Text className="font-quicksand-bold text-base text-gray-900">Quick Actions</Text>
+                </View>
+
+                <View className="gap-3">
+                  <View className="flex-row gap-2">
+                    <TouchableOpacity
+                      className="flex-1 bg-teal-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#14b8a6",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/appliedJobs")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="send" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1">Applications</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 bg-green-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#22c55e",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/interviews")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="calendar" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1">Interviews</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 bg-cyan-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#06b6d4",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/manageDocs")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="file" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1 text-center" numberOfLines={2}>
+                        Upload Documents
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View className="flex-row gap-2">
+                    <TouchableOpacity
+                      className="flex-1 bg-purple-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#8b5cf6",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/editProfile/projects")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="folder" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1 text-center">Projects</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 bg-indigo-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#6366f1",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/editProfile/education")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="book" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1 text-center">Education</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 bg-blue-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#3b82f6",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/editProfile/skills")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="zap" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1 text-center">Skills</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 bg-orange-500 rounded-lg px-3 py-3 items-center justify-center"
+                      style={{
+                        shadowColor: "#f97316",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => router.push("/userProfile/editProfile/experiences")}
+                      activeOpacity={0.8}
+                    >
+                      <Feather name="briefcase" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-xs mt-1 text-center">Work</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+            {user?.summary && (
               <View className="px-3 mb-4">
                 <View
                   className="bg-white rounded-2xl p-6 border border-gray-100"
@@ -201,12 +333,12 @@ const Dashboard = () => {
                   }}
                 >
                   <View className="flex-row items-center gap-3 mb-4">
-                    <View className="w-12 h-12 bg-emerald-100 rounded-xl items-center justify-center">
-                      <Feather name="file-text" size={24} color="#10b981" />
+                    <View className="w-8 h-8 bg-emerald-100 rounded-xl items-center justify-center">
+                      <Feather name="file-text" size={16} color="#10b981" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-quicksand-bold text-xl text-gray-900">Professional Summary</Text>
-                      <View className="flex-row items-center gap-2 mt-1">
+                      <Text className="font-quicksand-bold text-md text-gray-900">Professional Summary</Text>
+                      <View className="flex-row items-center gap-2">
                         <Ionicons name="sparkles" size={14} color="#fbbf24" />
                         <Text className="font-quicksand-medium text-sm text-emerald-600">
                           AI-powered writing available
@@ -215,118 +347,90 @@ const Dashboard = () => {
                     </View>
                   </View>
 
-                  <Text className="font-quicksand-medium text-gray-700 mb-6 leading-6">
-                    Highlight your skills and experience with a compelling summary. Write your own or let our AI create
-                    one for you.
+                  <Text className="font-quicksand-medium text-gray-700 mb-4 leading-6">
+                    Highlight yourself with a compelling summary.
                   </Text>
 
                   <TouchableOpacity
-                    className="bg-emerald-500 rounded-xl px-4 py-4 items-center gap-2 flex-1"
+                    className="bg-emerald-500 rounded-xl px-4 py-3 flex-row items-center justify-center gap-2"
                     style={{
-                      shadowColor: "#8b5cf6",
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    activeOpacity={0.8}
+                    onPress={() => router.push("/userProfile/editProfile/summary")}
+                  >
+                    <Ionicons name="sparkles" size={16} color="#fbbf24" />
+                    <Text className="font-quicksand-bold text-white text-base">Add Summary</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            {!user?.videoIntroUrl && (
+              <View className="px-3 mb-4">
+                <View
+                  className="bg-white rounded-2xl p-6 border border-gray-100"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
+                >
+                  <View className="flex-row items-center gap-3 mb-4">
+                    <View className="w-8 h-8 bg-emerald-100 rounded-xl items-center justify-center">
+                      <Feather name="video" size={16} color="#10b981" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-md text-gray-900">Video Introduction</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Feather name="star" size={14} color="#f59e0b" />
+                        <Text className="font-quicksand-medium text-sm text-emerald-600">Stand out with video</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <Text className="font-quicksand-medium text-gray-700 mb-3 leading-6">
+                    Make a 60-second video introduction.
+                  </Text>
+
+                  <View className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200">
+                    <View className="flex-row items-center gap-2">
+                      <View className="w-5 h-5 bg-blue-100 rounded-full items-center justify-center">
+                        <Feather name="trending-up" size={12} color="#3b82f6" />
+                      </View>
+                      <Text className="font-quicksand-bold text-blue-800 text-sm">
+                        3x More Likely to Get Interviews
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    className="bg-emerald-500 rounded-xl px-4 py-3 flex-row items-center justify-center gap-2"
+                    style={{
+                      shadowColor: "#3b82f6",
                       shadowOffset: { width: 0, height: 3 },
                       shadowOpacity: 0.3,
                       shadowRadius: 6,
                       elevation: 4,
                     }}
                     activeOpacity={0.9}
-                    onPress={() => router.push("/userProfile/editProfile/summary")}
+                    onPress={() => router.push("/userProfile/editProfile/video-intro")}
                   >
                     <View className="flex-row items-center gap-3">
-                      <Ionicons name="sparkles" size={18} color="#fbbf24" />
-                      <Text className="font-quicksand-bold text-white text-lg">Add Summary</Text>
+                      <Feather name="video" size={18} color="white" />
+                      <Text className="font-quicksand-bold text-white text-base">Add Video Intro</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
               </View>
             )}
-            <View className="px-3 mb-4">
-              <View
-                className="bg-white rounded-2xl p-6 border border-gray-100"
-                style={{
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 12,
-                  elevation: 6,
-                }}
-              >
-                <View className="flex-row items-center gap-3 mb-4">
-                  <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                    <Feather name="zap" size={20} color="#3b82f6" />
-                  </View>
-                  <Text className="font-quicksand-bold text-lg text-gray-900">Quick Actions</Text>
-                </View>
-                <View className="gap-2">
-                  <View className="flex-row gap-3 flex-wrap">
-                    <TouchableOpacity
-                      className="flex-1 bg-amber-500 rounded-xl p-4 items-center"
-                      style={{
-                        shadowColor: "#22c55e",
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 6,
-                        elevation: 4,
-                      }}
-                      onPress={() => router.push("/userProfile/appliedJobs")}
-                      activeOpacity={0.8}
-                    >
-                      <Feather name="send" size={24} color="white" />
-                      <Text className="font-quicksand-bold text-white text-sm mt-2 text-center">Applications</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="flex-1 bg-emerald-500 rounded-xl p-4 items-center"
-                      style={{
-                        shadowColor: "#22c55e",
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 6,
-                        elevation: 4,
-                      }}
-                      onPress={() => router.push("/(tabs)/users/jobs")}
-                      activeOpacity={0.8}
-                    >
-                      <Entypo name="briefcase" size={24} color="white" />
-                      <Text className="font-quicksand-bold text-white text-sm mt-2">Find Job</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View className="flex-row gap-3 flex-wrap">
-                    <TouchableOpacity
-                      className="flex-1 bg-blue-500 rounded-xl p-4 items-center"
-                      style={{
-                        shadowColor: "#3b82f6",
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 6,
-                        elevation: 4,
-                      }}
-                      onPress={() => router.push("/userProfile/interviews")}
-                      activeOpacity={0.8}
-                    >
-                      <Feather name="calendar" size={24} color="white" />
-                      <Text className="font-quicksand-bold text-white text-sm mt-2">Interviews</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="flex-1 bg-purple-500 rounded-xl p-4 items-center"
-                      style={{
-                        shadowColor: "#8b5cf6",
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 6,
-                        elevation: 4,
-                      }}
-                      onPress={() => router.push("/userProfile/manageDocs")}
-                      activeOpacity={0.8}
-                    >
-                      <Feather name="file" size={24} color="white" />
-                      <Text className="font-quicksand-bold text-white text-sm mt-2">Upload Document</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </View>
             <View
-              className="bg-white mx-6 mb-4 rounded-2xl p-6 border border-gray-100"
+              className="bg-white mx-3 mb-4 rounded-2xl p-6 border border-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -336,10 +440,10 @@ const Dashboard = () => {
               }}
             >
               <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
-                  <MaterialIcons name="pie-chart" size={20} color="#10b981" />
+                <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+                  <MaterialIcons name="pie-chart" size={16} color="#10b981" />
                 </View>
-                <Text className="font-quicksand-bold text-lg text-gray-900">Applications Overview</Text>
+                <Text className="font-quicksand-bold text-md text-gray-900">Applications Overview</Text>
               </View>
               <View className="gap-2">
                 <View className="flex-row items-center gap-2">
@@ -383,7 +487,7 @@ const Dashboard = () => {
               </TouchableOpacity>
             </View>
             {upcomingInterviews && upcomingInterviews.length > 0 && (
-              <View className="mx-6 mb-4">
+              <View className="mx-3 mb-4">
                 <View
                   className="bg-white rounded-2xl p-6 border border-gray-100"
                   style={{
@@ -396,10 +500,10 @@ const Dashboard = () => {
                 >
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center gap-3">
-                      <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
-                        <Feather name="calendar" size={20} color="#f59e0b" />
+                      <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
+                        <Feather name="calendar" size={16} color="#f59e0b" />
                       </View>
-                      <Text className="font-quicksand-bold text-lg text-gray-900">Upcoming Interviews</Text>
+                      <Text className="font-quicksand-bold text-md text-gray-900">Upcoming Interviews</Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => router.push(`/userProfile/interviews?userId=${user?.id}`)}
@@ -418,7 +522,7 @@ const Dashboard = () => {
             )}
             {lastApplication && (
               <View
-                className="bg-white mx-6 mb-4 rounded-2xl p-6 border border-gray-100"
+                className="bg-white mx-3 mb-4 rounded-2xl p-6 border border-gray-100"
                 style={{
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 4 },
@@ -462,99 +566,50 @@ const Dashboard = () => {
                 )}
               </View>
             )}
-            <View
-              className="bg-white mx-6 mb-4 rounded-2xl p-6 border border-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center">
-                    <Feather name="heart" size={20} color="#ef4444" />
+            {profileSummary.favoriteCompanies.length > 0 && (
+              <View
+                className="bg-white mx-3 mb-4 rounded-2xl p-6 border border-gray-100"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 12,
+                  elevation: 6,
+                }}
+              >
+                <View className="flex-row items-center justify-between mb-4">
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center">
+                      <Feather name="heart" size={16} color="#ef4444" />
+                    </View>
+                    <Text className="font-quicksand-bold text-MD text-gray-900">Favorite Companies</Text>
                   </View>
-                  <Text className="font-quicksand-bold text-lg text-gray-900">Favorite Companies</Text>
+                  <TouchableOpacity onPress={() => router.push("/userProfile/favoriteCompanies")} activeOpacity={0.7}>
+                    <Feather name="chevron-right" size={16} color="#6b7280" />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={() => router.push("/userProfile/favoriteCompanies")} activeOpacity={0.7}>
-                  <Feather name="chevron-right" size={16} color="#6b7280" />
-                </TouchableOpacity>
-              </View>
-              <View className="gap-3">
-                {profileSummary.favoriteCompanies.length === 0 && (
-                  <Text className="font-quicksand-medium text-sm text-gray-600">No favorite companies yet.</Text>
-                )}
-                {profileSummary.favoriteCompanies.length > 0 &&
-                  profileSummary.favoriteCompanies.map((company, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
-                      activeOpacity={0.7}
-                      onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
-                    >
-                      <View className="flex-row items-center gap-3">
-                        <RenderCompanyLogo logoUrl={company.logoUrl} />
-                        <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
-                      </View>
-                      <FavoriteCompany company={company} />
-                    </TouchableOpacity>
-                  ))}
-              </View>
-            </View>
-            <View
-              className="bg-white mx-6 mb-6 rounded-2xl p-6 border border-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center">
-                    <Feather name="trending-up" size={20} color="#f59e0b" />
-                  </View>
-                  <Text className="font-quicksand-bold text-lg text-gray-900">Top Hiring Companies</Text>
-                </View>
-              </View>
-              <View className="gap-3">
-                {isLoadingTopCompanies ? (
-                  <ActivityIndicator size="small" color="#f59e0b" className="my-2" />
-                ) : (
-                  <>
-                    {topCompanies?.map((company, index) => (
+                <View className="gap-3">
+                  {profileSummary.favoriteCompanies.length === 0 && (
+                    <Text className="font-quicksand-medium text-sm text-gray-600">No favorite companies yet.</Text>
+                  )}
+                  {profileSummary.favoriteCompanies.length > 0 &&
+                    profileSummary.favoriteCompanies.map((company, index) => (
                       <TouchableOpacity
                         key={index}
-                        onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
-                        className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex-row items-center justify-between"
+                        className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
                         activeOpacity={0.7}
+                        onPress={() => router.push(`/users/jobs?companyName=${company.name}`)}
                       >
                         <View className="flex-row items-center gap-3">
-                          <View className="w-8 h-8 bg-amber-200 rounded items-center justify-center">
-                            <Text className="font-quicksand-bold text-xs text-amber-800">{index + 1}</Text>
-                          </View>
-                          <View>
-                            <View className="flex-row gap-1 items-center">
-                              <RenderCompanyLogo logoUrl={company.logoUrl} />
-                              <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
-                            </View>
-                            <Text className="font-quicksand-medium text-sm text-amber-700">
-                              {company.jobCount} open position{company.jobCount !== 1 ? "s" : ""}
-                            </Text>
-                          </View>
+                          <RenderCompanyLogo logoUrl={company.logoUrl} />
+                          <Text className="font-quicksand-semibold text-base text-gray-900">{company.name}</Text>
                         </View>
-                        <Feather name="chevron-right" size={14} color="#f59e0b" />
+                        <FavoriteCompany company={company} />
                       </TouchableOpacity>
                     ))}
-                  </>
-                )}
+                </View>
               </View>
-            </View>
+            )}
           </>
         )}
         {!isLoading && !profileSummary && <></>}
