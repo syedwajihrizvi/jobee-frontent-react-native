@@ -1,3 +1,4 @@
+import { UserDocumentType } from "@/constants";
 import { Application, Experience, OneDriveFile, Project, User, UserDocument } from "@/type";
 import * as Haptics from 'expo-haptics';
 import * as ImageManipulator from "expo-image-manipulator";
@@ -952,4 +953,29 @@ export const renderLocationString = (city: string, state: string, country: strin
   }
   console.log('Rendered location:', location);
   return location;
+}
+
+export const documentTypes = [
+  { label: "Resume", value: UserDocumentType.RESUME, icon: "file-text", color: "#3b82f6" },
+  { label: "Cover Letter", value: UserDocumentType.COVER_LETTER, icon: "mail", color: "#8b5cf6" },
+  { label: "Certificate", value: UserDocumentType.CERTIFICATE, icon: "award", color: "#f59e0b" },
+  { label: "Transcript", value: UserDocumentType.TRANSCRIPT, icon: "book", color: "#10b981" },
+  { label: "Recommendation", value: UserDocumentType.RECOMMENDATION, icon: "star", color: "#ef4444" },
+];
+
+export const convertDocumentTypeToLabel = (type: string | undefined) => {
+  switch(type) {
+    case 'RESUME':
+      return "Resume";
+    case 'COVER_LETTER':
+      return "Cover Letter";
+    case 'CERTIFICATE':
+      return "Certificate";
+    case 'TRANSCRIPT':
+      return "Transcript";
+    case 'RECOMMENDATION':
+      return "Recommendation";
+    default:
+      return "Document";
+  }
 }

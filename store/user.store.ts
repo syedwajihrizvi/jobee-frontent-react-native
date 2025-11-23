@@ -63,7 +63,8 @@ type UserType = {
     getProjects: () => Project[],
     getSocialMedias: () => UserSocials,
     getDocuments: () => UserDocument[],
-    getResumeDocuments: () => UserDocument[],
+    // We have a number for the primary so that we place it first in the list
+    getResumeDocuments: (primaryResumeId: number | null) => UserDocument[],
     getCoverLetterDocuments: () => UserDocument[],
     getCertificateDocuments: () => UserDocument[],
     getTranscriptDocuments: () => UserDocument[],
@@ -84,7 +85,7 @@ type UserType = {
     removeEducation: (educationId: number) => void,
     updateProjects: (project: Project) => void,
     removeProject: (projectId: number) => void,
-    updateSocialMedias: (socialMedia: SocialMedia) => void,
+    updateSocialMedias: (socialMedia: SocialMedia) => void
 
 }
 
@@ -314,8 +315,14 @@ const useUserStore = create<UserType>((set, get) => ({
     getDocuments: () => {
         return get().documents;
     },
-    getResumeDocuments: () => {
-        return get().resumeDocuments;
+    getResumeDocuments: (primaryResumeId: number | null) => {
+        const resumes = get().resumeDocuments;
+        if (primaryResumeId === null) return resumes;
+        const primaryResumeIndex = resumes.findIndex(doc => doc.id === primaryResumeId);
+        if (primaryResumeIndex === -1) return resumes;
+        const primaryResume = resumes[primaryResumeIndex];
+        const otherResumes = resumes.filter(doc => doc.id !== primaryResumeId);
+        return [primaryResume, ...otherResumes];
     },
     getCoverLetterDocuments: () => {
         return get().coverLetterDocuments;
@@ -459,7 +466,7 @@ const useUserStore = create<UserType>((set, get) => ({
                 },
             }));
         }
-    } 
+    }
 }))
 
 export default useUserStore;

@@ -869,7 +869,7 @@ const FileSelector = ({
           ) : (
             <View className="flex-row items-center gap-2">
               <Text className="font-quicksand-bold text-white text-base">
-                {customHandleUploadMethod ? "Save Document" : "Upload Document"}
+                {customHandleUploadMethod ? `Save` : `Upload`}
               </Text>
             </View>
           )}

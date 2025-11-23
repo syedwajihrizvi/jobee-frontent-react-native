@@ -1,6 +1,6 @@
 
 import { getAPIUrl } from '@/constants';
-import { DropBoxPathContent, GoogleDrivePathContent, OneDrivePathContent } from '@/type';
+import { DropBoxPathContent, GoogleDrivePathContent, OneDrivePathContent, UserDocument } from '@/type';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
@@ -305,4 +305,41 @@ export const uploadResume = async (uploadMethod: string, uploadedDocument: Docum
           .then(() => console.log("OneDrive upload completed"))
           .catch((error) => console.error("Error with OneDrive upload:", error));
       }
+}
+
+export const updateUserDocument = async (documentId: number, title: string, documentType: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return null;
+    const response = await fetch(
+        `${USER_DOCS_API_URL}/${documentId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            title,
+            documentType
+        })
+    })
+    if (response.status !== 200)
+        return null
+    const data = await response.json();
+    return data as UserDocument;
+}
+
+export const deleteUserDocument = async (documentId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return false;
+    const response = await fetch(
+        `${USER_DOCS_API_URL}/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+            'x-auth-token': `Bearer ${token}`,
+        },
+    })
+    console.log(response)
+    if (response.status !== 204)
+        return false
+    return true;
 }

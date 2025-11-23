@@ -1,24 +1,33 @@
 import BackBar from "@/components/BackBar";
 import FileSelector from "@/components/FileSelector";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
-import { UserDocumentType } from "@/constants";
+import { convertDocumentTypeToLabel, documentTypes } from "@/lib/utils";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const documentTypes = [
-  { label: "Resume", value: UserDocumentType.RESUME, icon: "file-text", color: "#3b82f6" },
-  { label: "Cover Letter", value: UserDocumentType.COVER_LETTER, icon: "mail", color: "#8b5cf6" },
-  { label: "Certificate", value: UserDocumentType.CERTIFICATE, icon: "award", color: "#f59e0b" },
-  { label: "Transcript", value: UserDocumentType.TRANSCRIPT, icon: "book", color: "#10b981" },
-  { label: "Recommendation", value: UserDocumentType.RECOMMENDATION, icon: "star", color: "#ef4444" },
-];
-
+const renderSubtitle = (type: string) => {
+  switch (type) {
+    case "RESUME":
+      return "Upload a resume to apply to jobs.";
+    case "COVER_LETTER":
+      return "Add cover letters for job applications.";
+    case "CERTIFICATE":
+      return "Show your certifications";
+    case "TRANSCRIPT":
+      return "Highlight your educational background.";
+    case "RECOMMENDATION":
+      return "Upload recommendation letters to strengthen your profile.";
+    default:
+      return "Upload a document to enhance your professional library.";
+  }
+};
 const UploadNewDoc = () => {
-  const [selectedDocumentType, setSelectedDocumentType] = useState("RESUME");
+  const { initialType } = useLocalSearchParams();
+  const [selectedDocumentType, setSelectedDocumentType] = useState((initialType as string) || "RESUME");
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const getDocumentTypeInfo = (type: string) => {
@@ -52,9 +61,11 @@ const UploadNewDoc = () => {
               >
                 <Feather name={selectedDocInfo.icon as any} size={28} color={selectedDocInfo.color} />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Add New Document</Text>
+              <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">
+                Add New {convertDocumentTypeToLabel(selectedDocumentType)}
+              </Text>
               <Text className="font-quicksand-medium text-sm text-gray-600 text-center">
-                Upload a new document to your professional library
+                {renderSubtitle(selectedDocumentType)}
               </Text>
             </View>
             <View className="mb-4">

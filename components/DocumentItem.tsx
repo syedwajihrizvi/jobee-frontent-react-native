@@ -1,13 +1,18 @@
 import { images } from "@/constants";
+import { deleteUserDocument, updateUserDocument } from "@/lib/manageUserDocs";
 import { getS3DocumentUrl } from "@/lib/s3Urls";
 import { updatePrimaryResume } from "@/lib/updateUserProfile";
+import { convertDocumentTypeToLabel, documentTypes } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import useUserStore from "@/store/user.store";
 import { User, UserDocument } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, Dimensions, Image, Modal, Text, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
+import CustomInput from "./CustomInput";
+import ModalWithBg from "./ModalWithBg";
 import RenderSlicedText from "./RenderSlicedText";
 
 const { height, width } = Dimensions.get("window");
@@ -24,15 +29,17 @@ const DocumentItem = ({
   standOut?: boolean;
 }) => {
   const { user: authUser, setUser } = useAuthStore();
+  const { refetchUserDocuments } = useUserStore();
   const user = authUser as User | null;
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [updatingPrimary, setUpdatingPrimary] = useState(false);
+  const [selectedDocumentInfo, setSelectedDocumentInfo] = useState(document);
   const handleOpen = () => setModalVisible(true);
   const handleClose = () => setModalVisible(false);
 
   const handleSetPrimary = async (documentId: number) => {
-    console.log("Set document as primary:", documentId);
-    // Logic to set the document as primary
     setUpdatingPrimary(true);
     try {
       const success = await updatePrimaryResume(documentId);
@@ -49,10 +56,67 @@ const DocumentItem = ({
     }
   };
 
-  const handleRemovePrimary = (documentId: number) => {
-    // Logic to remove the document as primary
-    console.log("Remove document as primary:", documentId);
+  const handleEdit = () => {
+    setModalVisible(false);
+    setEditModalVisible(true);
   };
+
+  const handleDeleteDocument = async () => {
+    const documentId = document.id;
+    setUpdatingPrimary(true);
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this document? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => setUpdatingPrimary(false),
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const success = await deleteUserDocument(documentId);
+              if (success) {
+                Alert.alert("Success", "Document deleted successfully.");
+                refetchUserDocuments();
+                setEditModalVisible(false);
+              } else {
+                Alert.alert("Error", "Failed to delete document. Please try again.");
+              }
+            } catch (error) {
+              console.error("Error deleting document:", error);
+            } finally {
+              setUpdatingPrimary(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditSubmit = async () => {
+    setLoading(true);
+    try {
+      const title = selectedDocumentInfo.title || "";
+      const documentType = selectedDocumentInfo.documentType || "RESUME";
+      const res = await updateUserDocument(selectedDocumentInfo.id, title, documentType);
+      if (res) {
+        setEditModalVisible(false);
+        Alert.alert("Success", "Document updated successfully.");
+        refetchUserDocuments();
+      } else {
+        Alert.alert("Error", "Failed to update document. Please try again.");
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       {customAction ? (
@@ -135,7 +199,9 @@ const DocumentItem = ({
           >
             <View className="p-3 flex-row justify-between items-center bg-gray-200">
               <View className="flex-row items-center gap-2">
-                <Text className="text-lg font-semibold">{document.title || document.documentType}</Text>
+                <Text className="text-lg font-semibold">
+                  {document.title || convertDocumentTypeToLabel(document.documentType)}
+                </Text>
                 {standOut && document.documentType === "RESUME" && (
                   <View
                     className="bg-blue-500 border border-blue-600 rounded-xl px-3 py-2 flex-row items-center gap-1"
@@ -179,7 +245,7 @@ const DocumentItem = ({
                 )}
               </View>
               <View className="flex-row gap-2">
-                <TouchableOpacity onPress={handleClose}>
+                <TouchableOpacity onPress={handleEdit}>
                   <Feather name="edit" size={24} color="black" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleClose}>
@@ -200,6 +266,116 @@ const DocumentItem = ({
           </View>
         </View>
       </Modal>
+      <ModalWithBg visible={editModalVisible} customHeight={0.8} customWidth={0.9}>
+        <View className="bg-white rounded-2xl p-6 mx-4" style={{ maxWidth: width * 0.9 }}>
+          <View className="mb-6">
+            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">Edit Document</Text>
+            <View className="h-1 w-16 bg-emerald-500 rounded-full" />
+          </View>
+
+          <CustomInput
+            label="Document Title"
+            autoCapitalize="words"
+            customClass="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-md text-gray-900"
+            placeholder="Enter document title"
+            value={selectedDocumentInfo.title || ""}
+            onChangeText={(text) => {
+              setSelectedDocumentInfo({ ...selectedDocumentInfo, title: text });
+            }}
+          />
+          <View className="mb-4 mt-4">
+            <Text className="form__input-label mb-2">Document Type</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {documentTypes.map((doc) => (
+                <TouchableOpacity
+                  key={doc.value}
+                  className={`flex-row items-center gap-2 px-4 py-3 rounded-xl border ${
+                    selectedDocumentInfo.documentType === doc.value
+                      ? "border-green-200 bg-emerald-50"
+                      : "border-gray-200 bg-white"
+                  }`}
+                  style={{
+                    shadowColor: selectedDocumentInfo.documentType === doc.value ? "#6366f1" : "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: selectedDocumentInfo.documentType === doc.value ? 0.1 : 0.05,
+                    shadowRadius: 4,
+                    elevation: 2,
+                  }}
+                  onPress={() => setSelectedDocumentInfo({ ...selectedDocumentInfo, documentType: doc.value })}
+                  activeOpacity={0.7}
+                >
+                  <Feather
+                    name={doc.icon as any}
+                    size={16}
+                    color={selectedDocumentInfo.documentType === doc.value ? "#6366f1" : doc.color}
+                  />
+                  <Text
+                    className={`font-quicksand-semibold text-sm ${
+                      selectedDocumentInfo.documentType === doc.value ? "text-green-700" : "text-gray-700"
+                    }`}
+                  >
+                    {doc.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <View className="gap-3 mt-6">
+            <TouchableOpacity
+              className="bg-emerald-500 rounded-xl px-4 py-4 items-center justify-center"
+              style={{
+                shadowColor: "#10b981",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={() => {
+                handleEditSubmit();
+              }}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <View className="flex-row items-center gap-2">
+                  <Feather name="check" size={18} color="white" />
+                  <Text className="font-quicksand-bold text-white text-base">Save Changes</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="border-2 border-red-500 rounded-xl px-4 py-4 items-center justify-center"
+              onPress={handleDeleteDocument}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#ef4444" />
+              ) : (
+                <View className="flex-row items-center gap-2">
+                  <Feather name="trash-2" size={18} color="#ef4444" />
+                  <Text className="font-quicksand-bold text-red-500 text-base">Delete Document</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="border border-gray-300 bg-gray-50 rounded-xl px-4 py-4 items-center justify-center"
+              onPress={() => {
+                setSelectedDocumentInfo(document);
+                setEditModalVisible(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <View className="flex-row items-center gap-2">
+                <Feather name="x" size={18} color="#6b7280" />
+                <Text className="font-quicksand-bold text-gray-600 text-base">Cancel</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ModalWithBg>
     </>
   );
 };
