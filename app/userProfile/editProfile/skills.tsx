@@ -122,20 +122,36 @@ const Skills = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
           <View
-            className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5"
+            className="relative mb-2 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">View and edit your skills</Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
-              These are automatically extracted from your resume, but you can add or remove skills to better reflect
-              your expertise.
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center mr-3">
+                <Feather name="zap" size={20} color="white" />
+              </View>
+              <View className="bg-emerald-100 px-3 py-1.5 rounded-full">
+                <Text className="font-quicksand-bold text-xs text-emerald-700">SKILLS</Text>
+              </View>
+            </View>
+            <Text className="font-quicksand-bold text-xl text-gray-800 mb-3">View and edit your skills.</Text>
+            <Text className="font-quicksand-medium text-gray-600 text-sm leading-6">
+              These are automatically extracted from your resume, but you can update, add, or delete skills to better
+              reflect your professional background.
             </Text>
+            <View className="pt-3">
+              <View className="flex-row items-center gap-2">
+                <Feather name="check-circle" size={14} color="#10b981" />
+                <Text className="font-quicksand-semibold text-emerald-700 text-xs">
+                  Keep your profile up to date for better job matches
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 

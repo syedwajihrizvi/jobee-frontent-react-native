@@ -320,7 +320,7 @@ const Dashboard = () => {
                 </View>
               </View>
             </View>
-            {user?.summary && (
+            {!user?.summary && (
               <View className="px-3 mb-4">
                 <View
                   className="bg-white rounded-2xl p-6 border border-gray-100"

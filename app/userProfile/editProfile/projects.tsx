@@ -192,7 +192,7 @@ const Projects = () => {
                 <Text className="text-white font-quicksand-bold text-base ml-2">Add New Project</Text>
               </TouchableOpacity>
               {projects && projects.length > 0 ? (
-                <View className="gap-4">
+                <View className="gap-2">
                   {projects.map((proj, index) => (
                     <View
                       key={index}
@@ -206,7 +206,7 @@ const Projects = () => {
                       }}
                     >
                       <View className="flex-row items-start justify-between">
-                        <Text className="font-quicksand-bold text-gray-800 text-lg mb-2" numberOfLines={2}>
+                        <Text className="font-quicksand-bold text-gray-800 text-lg" numberOfLines={2}>
                           {proj.name}
                         </Text>
                         <TouchableOpacity
@@ -217,14 +217,14 @@ const Projects = () => {
                         </TouchableOpacity>
                       </View>
                       {proj.link && (
-                        <Text className="font-quicksand-semibold text-gray-600 text-base mb-2">{proj.link}</Text>
+                        <Text className="font-quicksand-semibold text-gray-600 text-base">{proj.link}</Text>
                       )}
 
-                      <View className="flex-row items-center mb-2">
+                      <View className="flex-row items-center">
                         <ExpandableText text={proj.description} length={300} />
                       </View>
 
-                      <View className="flex-row items-center gap-2 mb-3">
+                      <View className="flex-row items-center gap-2">
                         <Feather name="calendar" size={14} color="#6b7280" />
                         <Text className="font-quicksand-medium text-gray-500 text-sm">
                           {proj.yearCompleted || "Year not specified"}

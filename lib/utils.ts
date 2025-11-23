@@ -300,7 +300,7 @@ export const editProfileSections: { label: string; subtitle: string; route: stri
     label: "Skills",
     subtitle: "Add or remove skills that highlight your expertise and qualifications.",
     route: "skills",
-    icon: "award",
+    icon: "zap",
   },
   {
     label: "Video Introduction",
