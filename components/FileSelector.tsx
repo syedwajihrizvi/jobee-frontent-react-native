@@ -11,7 +11,12 @@ import {
 import { connectToDropboxOAuth, isDropboxAccessTokenValid } from "@/lib/oauth/dropbox";
 import { connectToGoogleDriveOAuth, isGoogleDriveAccessTokenValid } from "@/lib/oauth/googledrive";
 import { connectToOneDriveOAuth, isOneDriveAccessTokenValid } from "@/lib/oauth/onedrive";
-import { compressImage, converOAuthProviderToText, isValidGoogleDriveLink } from "@/lib/utils";
+import {
+  compressImage,
+  converOAuthProviderToText,
+  convertDocumentTypeToLabel,
+  isValidGoogleDriveLink,
+} from "@/lib/utils";
 import useCompleteProfileStore from "@/store/completeProfile.store";
 import useOAuthDocStore from "@/store/oauth-doc.store";
 import useUserStore from "@/store/user.store";
@@ -125,8 +130,6 @@ const FileSelector = ({
         onPress: async () => {
           const cameraResult = await ImagePicker.launchCameraAsync({
             mediaTypes: "images",
-            allowsEditing: true,
-            aspect: [4, 3],
             quality: 1,
           });
           if (!cameraResult.canceled && cameraResult.assets && cameraResult.assets.length > 0) {
@@ -141,8 +144,6 @@ const FileSelector = ({
         onPress: async () => {
           const galleryResult = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: "images",
-            allowsEditing: true,
-            aspect: [4, 3],
             quality: 1,
           });
           if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
@@ -273,17 +274,26 @@ const FileSelector = ({
     }
     setUploadingDocument(true);
     if (selectedDocumentType === "RESUME") {
-      uploadResume(
-        uploadMethod!,
-        uploadedDocument,
-        documentLink,
-        googleDriveFile,
-        dropboxFile,
-        oneDriveFile,
-        selectedDocumentType,
-        documentTitle
-      );
-      handleUploadSuccess();
+      try {
+        const res = await uploadResume(
+          uploadMethod!,
+          uploadedDocument,
+          documentLink,
+          googleDriveFile,
+          dropboxFile,
+          oneDriveFile,
+          selectedDocumentType,
+          documentTitle
+        );
+        console.log("Resume upload result:", res);
+        handleSuccessFullUpload();
+        handleUploadSuccess();
+      } catch (error) {
+        console.error("Error uploading resume:", error);
+        Alert.alert("Error", "Failed to upload resume. Please try again.");
+      } finally {
+        setUploadingDocument(false);
+      }
     } else {
       try {
         if (
@@ -506,7 +516,9 @@ const FileSelector = ({
             <View className="bg-emerald-50 border border-green-200 rounded-xl px-3 py-2 mt-2 mb-2">
               <View className="flex-row items-center gap-2">
                 <Feather name="check-circle" size={14} color="#22c55e" />
-                <Text className="font-quicksand-semibold text-green-700 text-xs">Resume uploaded successfully!</Text>
+                <Text className="font-quicksand-semibold text-green-700 text-xs">
+                  {convertDocumentTypeToLabel(selectedDocumentType)} uploaded successfully!
+                </Text>
               </View>
             </View>
           </View>
@@ -589,6 +601,19 @@ const FileSelector = ({
         </View>
       )}
       <View className="mb-4">
+        <View className="mb-3">
+          <View className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+            <View className="flex-row items-center gap-2">
+              <Feather name="info" size={14} color="#10b981" />
+              <Text className="font-quicksand-semibold text-emerald-800 text-xs flex-1">
+                If uploading files, PDF format is recommended for best compatibility
+              </Text>
+              <View className="bg-emerald-200 px-2 py-0.5 rounded-full">
+                <Text className="font-quicksand-bold text-xs text-emerald-700">PDF</Text>
+              </View>
+            </View>
+          </View>
+        </View>
         <Text className="font-quicksand-bold text-md text-gray-900 mb-2">Choose Upload Method</Text>
         <Text className="font-quicksand-medium text-sm text-gray-600 mb-2">
           Select how you would like to add your document
@@ -627,7 +652,7 @@ const FileSelector = ({
                 <Text className="font-quicksand-semibold text-base text-gray-800 mb-3">📁 Direct Upload</Text>
                 <View className="gap-3">
                   <TouchableOpacity
-                    className="bg-white border-2 border-emerald-500 rounded-xl p-4 flex-row items-center justify-center gap-3"
+                    className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center justify-center gap-3"
                     style={{
                       shadowColor: "#10b981",
                       shadowOffset: { width: 0, height: 3 },
@@ -646,19 +671,19 @@ const FileSelector = ({
                       <TouchableOpacity
                         className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center justify-center gap-3"
                         style={{
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 2 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 4,
-                          elevation: 2,
+                          shadowColor: "#10b981",
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 6,
+                          elevation: 4,
                         }}
                         onPress={() =>
                           handleDocImagePicker("Camera access needed!", "Take Photo", "Choose from Gallery")
                         }
                         activeOpacity={0.7}
                       >
-                        <Feather name="camera" size={18} color="#6b7280" />
-                        <Text className="font-quicksand-bold text-gray-700 text-base">Take Photo</Text>
+                        <Feather name="camera" size={18} color="#10b981" />
+                        <Text className="font-quicksand-bold text-emerald-600 text-base">Take Photo</Text>
                       </TouchableOpacity>
                     ) : (
                       renderUploadedImageInfo()

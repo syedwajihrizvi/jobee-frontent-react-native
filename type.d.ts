@@ -240,9 +240,11 @@ export type UserDocument = {
     id: number,
     documentUrl: string,
     documentType?: string,
+    formatType?: string,
     createdAt?: string,
     filename?: string,
-    title?: string
+    title?: string,
+    previewUrl?: string
 }
 
 export type AllUserDocuments = {
@@ -348,6 +350,7 @@ export type Experience = {
     company: string;
     city: string;
     country: string;
+    location: string;
     state: string;
     from: string;
     to: string;

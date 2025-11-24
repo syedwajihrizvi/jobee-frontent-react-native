@@ -1,3 +1,5 @@
+import { UserDocument } from "@/type";
+
 const bucketName = 'jobee-backend'; // Replace with your S3 bucket name
 const region = 'us-west-2'; // Replace with your S3 bucket region
 
@@ -31,4 +33,11 @@ export const getS3InterviewQuestionAudioUrlUsingFileName = (fileName: string) =>
 
 export const getS3CompanyLogoUrl = (companyLogoUrl: string) => {
     return `https://${bucketName}.s3.${region}.amazonaws.com/company-logos/${companyLogoUrl}`;
+}
+
+export const getS3DocumentPreviewUrl = (document: UserDocument) => {
+    if (document.formatType === 'IMG') {
+        return `https://${bucketName}.s3.${region}.amazonaws.com/user-documents/${document.documentUrl}`;
+    }
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${document.previewUrl}`;
 }

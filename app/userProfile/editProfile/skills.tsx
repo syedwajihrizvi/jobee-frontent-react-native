@@ -192,25 +192,25 @@ const Skills = () => {
                       return (
                         <TouchableOpacity
                           key={index}
-                          className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-2xl p-5 min-w-[45%] flex-1"
+                          className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-xl p-3 min-w-[30%] flex-1"
                           style={{
                             shadowColor: "#10b981",
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.15,
-                            shadowRadius: 6,
-                            elevation: 4,
-                            maxWidth: "48%",
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                            elevation: 3,
+                            maxWidth: "31%",
                           }}
                           onPress={() => handleEditSkill(userSkill)}
                         >
-                          <View className="flex-row items-center justify-between mb-2">
-                            <View className="flex-1 pr-2">
-                              <Text className="font-quicksand-bold text-base text-emerald-700 mb-1" numberOfLines={1}>
+                          <View className="flex-row items-center justify-between">
+                            <View className="flex-1 pr-1">
+                              <Text className="font-quicksand-bold text-xs text-emerald-700" numberOfLines={1}>
                                 {userSkill.skill.name}
                               </Text>
                             </View>
-                            <View className="bg-emerald-100 p-2 rounded-full">
-                              <Feather name="edit-2" size={14} color="#10b981" />
+                            <View className="bg-emerald-100 p-1.5 rounded-full">
+                              <Feather name="edit-2" size={10} color="#10b981" />
                             </View>
                           </View>
                         </TouchableOpacity>
@@ -295,8 +295,9 @@ const Skills = () => {
                         </Text>
                       </View>
                       <CustomInput
-                        placeholder="e.g. JavaScript, Project Management, Leadership"
+                        placeholder="e.g. JavaScript, AutoCAD, Photoshop"
                         label=""
+                        fontSize={12}
                         autoCapitalize="words"
                         onChangeText={(text) => setSkillForm({ ...skillForm, skill: text })}
                         value={skillForm.skill}

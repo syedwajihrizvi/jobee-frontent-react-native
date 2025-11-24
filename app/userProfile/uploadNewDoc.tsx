@@ -46,7 +46,7 @@ const UploadNewDoc = () => {
       <KeyboardAwareScrollView className="flex-1 p-6 bg-gray-50" showsVerticalScrollIndicator={false}>
         {uploadSuccess && (
           <SuccessfulUpdate
-            type="uploadResume"
+            type={selectedDocumentType === "RESUME" ? "uploadResume" : "uploadDocument"}
             editingField="Document"
             handleConfirm={() => router.back()}
             handleReedit={() => setUploadSuccess(false)}

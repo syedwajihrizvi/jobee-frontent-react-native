@@ -7,7 +7,7 @@ import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
 import { addExperience, deleteExperience, editExperience } from "@/lib/updateUserProfile";
-import { getDurationString, renderLocationString } from "@/lib/utils";
+import { getDurationString } from "@/lib/utils";
 import useUserStore from "@/store/user.store";
 import { AddExperienceForm, Experience } from "@/type";
 import { Feather } from "@expo/vector-icons";
@@ -229,7 +229,7 @@ const Experiences = () => {
                       }}
                     >
                       <View className="flex-row items-start justify-between">
-                        <Text className="font-quicksand-bold text-gray-800 text-lg" numberOfLines={2}>
+                        <Text className="font-quicksand-bold text-gray-800 text-lg w-4/5" numberOfLines={2}>
                           {exp.title}
                         </Text>
                         <TouchableOpacity
@@ -245,16 +245,14 @@ const Experiences = () => {
                       <View className="flex-row items-center gap-2 mb-1">
                         <Feather name="calendar" size={14} color="#6b7280" />
                         <Text className="font-quicksand-medium text-gray-500 text-sm">
-                          {exp.from} - {exp.to || "Present"}
+                          {exp.from} - {exp.currentlyWorking ? "Present" : exp.to}
                         </Text>
                       </View>
 
-                      {(exp.city || exp.state || exp.country) && (
+                      {exp.location && (
                         <View className="flex-row items-center gap-2 mb-3">
                           <Feather name="map-pin" size={14} color="#6b7280" />
-                          <Text className="font-quicksand-medium text-gray-500 text-sm">
-                            {renderLocationString(exp.city, exp.state, exp.country)}
-                          </Text>
+                          <Text className="font-quicksand-medium text-gray-500 text-sm">{exp.location}</Text>
                         </View>
                       )}
 
@@ -292,7 +290,7 @@ const Experiences = () => {
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">
                     Showcase your professional experiences to attract potential employers and highlight your expertise.
                   </Text>
-                  <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={() => {}}>
+                  <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={handleAddNewExperience}>
                     <Text className="font-quicksand-semibold text-white text-sm">Add Your First Experience</Text>
                   </TouchableOpacity>
                 </View>

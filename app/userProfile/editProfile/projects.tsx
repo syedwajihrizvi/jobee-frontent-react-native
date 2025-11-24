@@ -11,7 +11,7 @@ import useUserStore from "@/store/user.store";
 import { AddProjectForm, Project } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Projects = () => {
@@ -217,7 +217,12 @@ const Projects = () => {
                         </TouchableOpacity>
                       </View>
                       {proj.link && (
-                        <Text className="font-quicksand-semibold text-gray-600 text-base">{proj.link}</Text>
+                        <Text
+                          className="font-quicksand-semibold text-blue-600 text-sm"
+                          onPress={() => Linking.openURL(proj.link)}
+                        >
+                          {proj.link}
+                        </Text>
                       )}
 
                       <View className="flex-row items-center">
@@ -404,12 +409,6 @@ const Projects = () => {
                               color="emerald-500"
                               buttonText="Add Project"
                               handlePress={submitNewProject}
-                              disabled={isSubmitting}
-                            />
-                            <ProfileButton
-                              color="red-400"
-                              buttonText="Cancel"
-                              handlePress={() => setShowModal(false)}
                               disabled={isSubmitting}
                             />
                           </View>

@@ -91,6 +91,27 @@ export const getEducationLevel = (level: string) => {
   };
 }
 
+export const getEducationLevelLabel = (level: string) => {
+  switch(level) {
+    case 'HIGH_SCHOOL':
+      return "High School";
+    case 'DIPLOMA':
+      return "Diploma";
+    case 'ASSOCIATES':
+      return "Associate Degree";
+    case 'BACHELORS':
+      return "Bachelors Degree";
+    case 'MASTERS':
+      return "Masters Degree";
+    case 'PHD':
+      return "PHD";
+    case 'POSTDOCTORATE':
+      return "Post Doctorate";
+    default:
+      return "Not Specified";
+  }
+
+}
 export const getExperienceLevel = (level: string) => {
   switch(level) {
     case 'Intern':
@@ -941,6 +962,7 @@ export const sortExperiencesByDate = (experiences: Experience[]) => {
 };
 
 export const renderLocationString = (city: string, state: string, country: string) => {
+  console.log('Rendering location with:', { city, state, country });
   let location = '';
   if (city) location += city;
   if (state) {

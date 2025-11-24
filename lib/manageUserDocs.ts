@@ -34,7 +34,6 @@ export const uploadUserDocument = async (
     } as any)
     formData.append('documentType', documentType);
     formData.append('title', documentTitle);
-    console.log(USER_DOCS_API_URL)
     const response = await fetch(
         USER_DOCS_API_URL, {
         method: 'POST',
@@ -45,8 +44,9 @@ export const uploadUserDocument = async (
         body: formData
     })
     if (response.status !== 201)
-        return false
-    return true
+        return null;
+    const data = await response.json();
+    return data as UserDocument;
 }
 
 export const uploadUserDocumentViaImage = async (
@@ -114,8 +114,9 @@ export const uploadGoogleDriveDocumentToServer = async (
         body: formData
     })
     if (response.status !== 201)
-        return false
-    return true
+        return null;
+    const data = await response.json();
+    return data as UserDocument;
 }
 
 export const uploadDropboxDocumentToServer = async (
@@ -149,8 +150,9 @@ export const uploadDropboxDocumentToServer = async (
         body: formData
     })
     if (response.status !== 201)
-        return false
-    return true
+        return null
+    const data = await response.json();
+    return data as UserDocument;
 }
 
 export const uploadOneDriveDocumentToServer = async (
@@ -184,15 +186,16 @@ export const uploadOneDriveDocumentToServer = async (
         body: formData
     })
     if (response.status !== 201)
-        return false
-    return true
+        return null
+    const data = await response.json();
+    return data as UserDocument;
 }
+
 export const sendDocumentLinkToServer = async (
     documentLink: string,
     documentType: string,
     documentTitle: string,
     documentUrlType: 'GOOGLE_DRIVE' | 'DROPBOX' | 'ONE_DRIVE',
-    generateSummary: boolean = false
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -282,29 +285,21 @@ export const handleOneDriveUpload = async (oneDriveFile: OneDrivePathContent | n
 }
 
 export const uploadResume = async (uploadMethod: string, uploadedDocument: DocumentPicker.DocumentPickerResult | null, documentLink: string | null, googleDriveFile: GoogleDrivePathContent | null, dropboxFile: DropBoxPathContent | null, oneDriveFile: OneDrivePathContent | null, selectedDocumentType: string, documentTitle: string) => {
-      if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
-        uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle)
-          .then(() => console.log("Direct document upload completed"))
-          .catch((error) => console.error("Error uploading document:", error));
+    let res;  
+    if (uploadMethod === "DIRECT_UPLOAD" && uploadedDocument) {
+        res = await uploadUserDocument(uploadedDocument, selectedDocumentType, documentTitle)
       } else if (uploadMethod === "LINK_INPUT") {
         if (!documentLink || documentLink.trim() !== "") return;
         const documentLinkType = isValidGoogleDriveLink(documentLink) ? "GOOGLE_DRIVE" : "DROPBOX";
-        sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType)
-          .then(() => console.log("Document link sent successfully"))
-          .catch((error) => console.error("Error sending document link:", error));
+        res = sendDocumentLinkToServer(documentLink, selectedDocumentType, documentTitle, documentLinkType)
       } else if (uploadMethod === "GOOGLE_DRIVE") {
-        handleGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle)
-          .then(() => console.log("Google Drive upload completed"))
-          .catch((error) => console.error("Error with Google Drive upload:", error));
+        res = await handleGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle)
       } else if (uploadMethod === "DROPBOX") {
-        handleDropboxUpload(dropboxFile, selectedDocumentType, documentTitle)
-          .then(() => console.log("Dropbox upload completed"))
-          .catch((error) => console.error("Error with Dropbox upload:", error));
+        res = await handleDropboxUpload(dropboxFile, selectedDocumentType, documentTitle)
       } else if (uploadMethod === "ONEDRIVE") {
-        handleOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle)
-          .then(() => console.log("OneDrive upload completed"))
-          .catch((error) => console.error("Error with OneDrive upload:", error));
+        res = await handleOneDriveUpload(oneDriveFile, selectedDocumentType, documentTitle)
       }
+    return res;
 }
 
 export const updateUserDocument = async (documentId: number, title: string, documentType: string) => {

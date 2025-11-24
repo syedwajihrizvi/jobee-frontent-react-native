@@ -5,6 +5,7 @@ import ProfileButton from "@/components/ProfileButton";
 import SuccessfulUpdate from "@/components/SuccessfulUpdate";
 import UpdatingProfileView from "@/components/UpdatingProfileView";
 import { addEducation, deleteEducation, editEducation } from "@/lib/updateUserProfile";
+import { getEducationLevelLabel } from "@/lib/utils";
 import useUserStore from "@/store/user.store";
 import { AddUserEducationForm, Education } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
@@ -140,7 +141,7 @@ const Educations = () => {
   };
 
   const educations = getEducations();
-  console.log("Educations:", educations);
+  console.log("SYED-DEBUG: Rendering Educations component with educations:", educations);
   const isLoading = isLoadingEducations;
   return (
     <SafeAreaView>
@@ -229,6 +230,11 @@ const Educations = () => {
                           {edu.fromYear || "Unknown"} - {edu.toYear || "Present"}
                         </Text>
                       </View>
+                      <View className="px-3 py-1 bg-emerald-50 rounded-full self-start">
+                        <Text className="font-quicksand-semibold text-emerald-700 text-xs">
+                          {getEducationLevelLabel(edu.level)}
+                        </Text>
+                      </View>
                     </View>
                   ))}
                 </View>
@@ -241,7 +247,7 @@ const Educations = () => {
                   <Text className="font-quicksand-medium text-gray-500 text-center text-sm leading-5 mb-4">
                     Showcase your academic experience to attract potential employers and highlight your qualifications.
                   </Text>
-                  <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={() => {}}>
+                  <TouchableOpacity className="bg-emerald-500 px-6 py-3 rounded-xl" onPress={handleAddNewEducation}>
                     <Text className="font-quicksand-semibold text-white text-sm">Add Your First Education</Text>
                   </TouchableOpacity>
                 </View>
@@ -334,12 +340,13 @@ const Educations = () => {
                       <View className="flex-row flex-wrap gap-2">
                         {[
                           { label: "High School", value: "HIGH_SCHOOL" },
+                          { label: "Diploma", value: "DIPLOMA" },
                           { label: "Associate's", value: "ASSOCIATES" },
                           { label: "Bachelor's", value: "BACHELORS" },
                           { label: "Master's", value: "MASTERS" },
                           { label: "Doctorate", value: "PHD" },
                           { label: "Postdoctoral", value: "POSTDOCTORATE" },
-                          { label: "Other", value: "Other" },
+                          { label: "Other", value: "OTHER" },
                         ].map((item) => (
                           <TouchableOpacity
                             key={item.value}

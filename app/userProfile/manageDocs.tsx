@@ -64,7 +64,7 @@ const ManageDocuments = () => {
           shadowOpacity: 0.08,
           shadowRadius: 12,
           elevation: 6,
-          height: 320,
+          height: 400,
         }}
       >
         <View className="flex-row items-center gap-3 mb-4">

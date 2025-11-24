@@ -106,7 +106,7 @@ const Summary = () => {
               </View>
             </View>
 
-            <Text className="font-quicksand-medium text-gray-700 leading-6 mb-4">
+            <Text className="font-quicksand-medium text-gray-700 leading-6 mb-4 text-sm">
               Your professional summary is the first thing employers see. Make it compelling and highlight your unique
               value proposition to stand out from the competition.
             </Text>
@@ -136,7 +136,6 @@ const Summary = () => {
           </View>
         </View>
 
-        {/* Content Section */}
         {user?.summary ? (
           <View className="px-6 pb-6">
             <View
@@ -171,12 +170,12 @@ const Summary = () => {
                   onPress={handleEditSummary}
                   activeOpacity={0.7}
                 >
-                  <Feather name="edit-2" size={18} color="#10b981" />
+                  <Feather name="edit-2" size={13} color="#10b981" />
                 </TouchableOpacity>
               </View>
 
               <View className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <Text className="font-quicksand-medium text-gray-800 leading-6">
+                <Text className="font-quicksand-medium text-gray-800 leading-6 text-sm">
                   {user?.summary || "No summary provided."}
                 </Text>
               </View>

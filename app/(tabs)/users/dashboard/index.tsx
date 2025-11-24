@@ -86,7 +86,7 @@ const Dashboard = () => {
             </View>
           </View>
         )}
-        {!isLoading && profileSummary && (
+        {!isLoading && profileSummary && user && (
           <>
             <View className="px-3 py-4">
               <Text className="font-quicksand-bold text-2xl text-gray-900">Dashboard</Text>

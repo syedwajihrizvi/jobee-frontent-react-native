@@ -1,6 +1,5 @@
-import { images } from "@/constants";
 import { deleteUserDocument, updateUserDocument } from "@/lib/manageUserDocs";
-import { getS3DocumentUrl } from "@/lib/s3Urls";
+import { getS3DocumentPreviewUrl, getS3DocumentUrl } from "@/lib/s3Urls";
 import { updatePrimaryResume } from "@/lib/updateUserProfile";
 import { convertDocumentTypeToLabel, documentTypes } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
@@ -122,9 +121,11 @@ const DocumentItem = ({
       {customAction ? (
         <View className="items-center justify-center">
           <TouchableOpacity
-            className={`w-20 h-20 relative ${standOut ? "border-2 border-emerald-400" : ""}`}
+            className={`relative ${standOut ? "border-2 border-emerald-200" : "border-2 border-emerald-200"}`}
             onPress={handleOpen}
             style={{
+              width: 100,
+              height: 120,
               zIndex: 1,
               borderRadius: 8,
               ...(standOut && {
@@ -138,7 +139,7 @@ const DocumentItem = ({
           >
             {standOut && (
               <View
-                className="absolute bg-emerald-500 rounded-lg items-center justify-center"
+                className="absolute bg-emerald-100 rounded-lg items-center justify-center"
                 style={{
                   top: 0,
                   left: 0,
@@ -152,7 +153,7 @@ const DocumentItem = ({
                   <View className="w-8 h-8 bg-white rounded-full items-center justify-center mb-1">
                     <Feather name="star" size={16} color="#10b981" />
                   </View>
-                  <Text className="font-quicksand-bold text-xs text-white text-center">PRIMARY</Text>
+                  <Text className="font-quicksand-bold text-xs text-emerald-600 text-center">PRIMARY</Text>
                 </View>
               </View>
             )}
@@ -172,12 +173,16 @@ const DocumentItem = ({
               <Feather name={actionIcon as any} size={14} color="#22c55e" />
             </View>
 
-            <Image source={images.resumeImage} className="w-full h-full rounded-lg" resizeMode="cover" />
+            <Image
+              source={{ uri: getS3DocumentPreviewUrl(document) }}
+              className="w-full h-full rounded-lg"
+              resizeMode="cover"
+            />
           </TouchableOpacity>
 
           <View className="mt-1">
-            <Text className="font-quicksand-bold text-xs text-emerald-600 text-center">
-              {<RenderSlicedText text={document.title || document.documentType || ""} maxLength={10} />}
+            <Text className="font-quicksand-bold text-xs text-emerald-600 text-center" numberOfLines={2}>
+              {<RenderSlicedText text={document.title || document.documentType || ""} maxLength={20} />}
             </Text>
           </View>
         </View>
@@ -286,7 +291,10 @@ const DocumentItem = ({
           <View className="mb-4 mt-4">
             <Text className="form__input-label mb-2">Document Type</Text>
             <View className="flex-row flex-wrap gap-2">
-              {documentTypes.map((doc) => (
+              {(document.formatType === "IMG"
+                ? documentTypes.filter((doc) => doc.value !== "RESUME")
+                : documentTypes
+              ).map((doc) => (
                 <TouchableOpacity
                   key={doc.value}
                   className={`flex-row items-center gap-2 px-4 py-3 rounded-xl border ${
