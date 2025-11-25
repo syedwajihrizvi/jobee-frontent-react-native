@@ -1,8 +1,9 @@
+import { getAPIUrl } from "@/constants";
 import { ApplicationDetailsForBusiness, InterviewDetails, InterviewSummary } from "@/type";
 import { useQuery } from "@tanstack/react-query";
 
-const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
-const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
+const APPLICATIONS_API_URL = getAPIUrl('applications');
+const INTERVIEWS_API_URL = getAPIUrl('interviews');
 
 export const useApplicant = (applicantId?: number, jobId?: number, candidateId?: number) => {
     const fetchApplicant = async () => {
@@ -14,7 +15,7 @@ export const useApplicant = (applicantId?: number, jobId?: number, candidateId?:
                 },
             })
             const data = await response.json()
-            console.log("ONE-Fetched applicant data:", data);
+            console.log("RES: Docs:" ,data.userDocuments)
             return data
         } else {
             const response = await fetch(`${APPLICATIONS_API_URL}?jobId=${jobId}&userId=${candidateId}`, {

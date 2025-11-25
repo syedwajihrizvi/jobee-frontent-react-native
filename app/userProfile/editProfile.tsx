@@ -14,25 +14,7 @@ const EditProfile = () => {
   return (
     <SafeAreaView className="bg-gray-50 h-full">
       <BackBar label="Edit Profile" />
-      <ScrollView>
-        <View className="px-6 py-6">
-          <View
-            className="relative mb-3 border border-gray-200 bg-white rounded-xl p-5"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">Edit Your Profile</Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
-              Keep your profile up to date to get the best job recommendations and opportunities.
-            </Text>
-          </View>
-        </View>
-
+      <ScrollView className="mt-4">
         <View className="flex-1 px-6">
           <View className="flex flex-col gap-3">
             {editProfileSections.map((section, index) => (

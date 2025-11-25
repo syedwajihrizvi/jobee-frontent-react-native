@@ -21,11 +21,25 @@ const DocumentItem = ({
   actionIcon = "edit",
   customAction,
   standOut,
+  highlightPrimary = true,
+  width: customWidth = 100,
+  height: customHeight = 120,
+  customTitle,
+  canEdit = true,
+  canDelete = false,
+  handleDelete,
 }: {
   document: UserDocument;
   actionIcon?: string;
   customAction?: () => void;
   standOut?: boolean;
+  width?: number;
+  height?: number;
+  customTitle?: string;
+  highlightPrimary?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  handleDelete?: () => void;
 }) => {
   const { user: authUser, setUser } = useAuthStore();
   const { refetchUserDocuments } = useUserStore();
@@ -35,7 +49,12 @@ const DocumentItem = ({
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [updatingPrimary, setUpdatingPrimary] = useState(false);
   const [selectedDocumentInfo, setSelectedDocumentInfo] = useState(document);
-  const handleOpen = () => setModalVisible(true);
+  const handleOpen = () => {
+    if (customAction) {
+      customAction();
+    }
+    setModalVisible(true);
+  };
   const handleClose = () => setModalVisible(false);
 
   const handleSetPrimary = async (documentId: number) => {
@@ -121,23 +140,21 @@ const DocumentItem = ({
       {customAction ? (
         <View className="items-center justify-center">
           <TouchableOpacity
-            className={`relative ${standOut ? "border-2 border-emerald-200" : "border-2 border-emerald-200"}`}
+            className={`relative ${standOut ? "border-2 border-emerald-200" : ""}`}
             onPress={handleOpen}
             style={{
-              width: 100,
-              height: 120,
+              width: customWidth,
+              height: customHeight,
               zIndex: 1,
               borderRadius: 8,
-              ...(standOut && {
-                shadowColor: "#10b981",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 6,
-              }),
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 6,
             }}
           >
-            {standOut && (
+            {standOut && document.id === user?.primaryResume?.id && highlightPrimary && (
               <View
                 className="absolute bg-emerald-100 rounded-lg items-center justify-center"
                 style={{
@@ -157,21 +174,41 @@ const DocumentItem = ({
                 </View>
               </View>
             )}
-            <View
-              className="absolute bg-white rounded-full p-1"
-              style={{
-                top: -4,
-                right: -4,
-                zIndex: 11,
-                elevation: 4,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
-              }}
-            >
-              <Feather name={actionIcon as any} size={14} color="#22c55e" />
-            </View>
+            {canDelete && (
+              <TouchableOpacity
+                className="absolute bg-emerald-500 rounded-full p-1"
+                style={{
+                  top: -10,
+                  right: -10,
+                  zIndex: 11,
+                  elevation: 4,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                }}
+                onPress={handleDelete}
+              >
+                <Feather name="x" size={20} color="white" />
+              </TouchableOpacity>
+            )}
+            {canEdit && (
+              <View
+                className="absolute bg-white rounded-full p-1"
+                style={{
+                  top: -4,
+                  right: -4,
+                  zIndex: 11,
+                  elevation: 4,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                }}
+              >
+                <Feather name={actionIcon as any} size={14} color="#22c55e" />
+              </View>
+            )}
 
             <Image
               source={{ uri: getS3DocumentPreviewUrl(document) }}
@@ -182,7 +219,11 @@ const DocumentItem = ({
 
           <View className="mt-1">
             <Text className="font-quicksand-bold text-xs text-emerald-600 text-center" numberOfLines={2}>
-              {<RenderSlicedText text={document.title || document.documentType || ""} maxLength={20} />}
+              {customTitle ? (
+                customTitle
+              ) : (
+                <RenderSlicedText text={document.title || document.documentType || ""} maxLength={20} />
+              )}
             </Text>
           </View>
         </View>
@@ -195,19 +236,19 @@ const DocumentItem = ({
         <View className="flex-1 bg-black/45 justify-center items-center">
           <View
             style={{
-              height: height * 0.6,
-              width: width * 0.9,
+              height: height * 0.65,
+              width: width * 0.95,
               borderRadius: 16,
               overflow: "hidden",
               backgroundColor: "white",
             }}
           >
-            <View className="p-3 flex-row justify-between items-center bg-gray-200">
+            <View className="p-3 flex-row justify-between items-center white">
               <View className="flex-row items-center gap-2">
-                <Text className="text-lg font-semibold">
-                  {document.title || convertDocumentTypeToLabel(document.documentType)}
+                <Text className="text-md font-semibold">
+                  {customTitle ? customTitle : document.title || convertDocumentTypeToLabel(document.documentType)}
                 </Text>
-                {standOut && document.documentType === "RESUME" && (
+                {document.documentType === "RESUME" && document.id === user?.primaryResume?.id && canEdit && (
                   <View
                     className="bg-blue-500 border border-blue-600 rounded-xl px-3 py-2 flex-row items-center gap-1"
                     style={{
@@ -223,38 +264,43 @@ const DocumentItem = ({
                   </View>
                 )}
 
-                {!standOut && document.documentType === "RESUME" && (
-                  <TouchableOpacity
-                    className="bg-emerald-500 border border-emerald-600 rounded-xl px-3 py-2 flex-row items-center gap-1"
-                    style={{
-                      shadowColor: "#10b981",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                    onPress={() => {
-                      handleSetPrimary(document.id);
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    {updatingPrimary ? (
-                      <ActivityIndicator color="white" />
-                    ) : (
-                      <>
-                        <Feather name="star" size={14} color="white" />
-                        <Text className="font-quicksand-bold text-xs text-white">Set as Primary</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                )}
+                {!standOut &&
+                  document.documentType === "RESUME" &&
+                  document.id !== user?.primaryResume?.id &&
+                  canEdit && (
+                    <TouchableOpacity
+                      className="bg-emerald-500 border border-emerald-600 rounded-xl px-3 py-2 flex-row items-center gap-1"
+                      style={{
+                        shadowColor: "#10b981",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 3,
+                      }}
+                      onPress={() => {
+                        handleSetPrimary(document.id);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      {updatingPrimary ? (
+                        <ActivityIndicator color="white" />
+                      ) : (
+                        <>
+                          <Feather name="star" size={14} color="white" />
+                          <Text className="font-quicksand-bold text-xs text-white">Set as Primary</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
               </View>
               <View className="flex-row gap-2">
-                <TouchableOpacity onPress={handleEdit}>
-                  <Feather name="edit" size={24} color="black" />
-                </TouchableOpacity>
+                {canEdit && (
+                  <TouchableOpacity onPress={handleEdit}>
+                    <Feather name="edit" size={20} color="black" />
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity onPress={handleClose}>
-                  <AntDesign name="close" size={24} color="black" />
+                  <AntDesign name="close" size={20} color="black" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -272,7 +318,7 @@ const DocumentItem = ({
         </View>
       </Modal>
       <ModalWithBg visible={editModalVisible} customHeight={0.8} customWidth={0.9}>
-        <View className="bg-white rounded-2xl p-6 mx-4" style={{ maxWidth: width * 0.9 }}>
+        <View className="bg-white rounded-2xl p-6 mx-4" style={{ maxWidth: customWidth * 0.9 }}>
           <View className="mb-6">
             <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">Edit Document</Text>
             <View className="h-1 w-16 bg-emerald-500 rounded-full" />

@@ -2,10 +2,10 @@ import BackBar from "@/components/BackBar";
 import ExpandableText from "@/components/ExpandableText";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { useJobsForBusiness } from "@/lib/services/useJobs";
-import { formatDate, getEmploymentType, getWorkArrangement } from "@/lib/utils";
+import { getEmploymentType, getWorkArrangement } from "@/lib/utils";
 import useApplicationStore from "@/store/applications.store";
 import useBusinessJobsStore from "@/store/businessJobs.store";
-import { Feather, Fontisto, MaterialIcons } from "@expo/vector-icons";
+import { Feather, Fontisto } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -15,12 +15,32 @@ const BusinessJobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
   const { data: job, isLoading } = useJobsForBusiness(Number(jobId));
   const { hasValidShortListedCache, refreshShortListedApplicationsForJob } = useApplicationStore();
-  const { getPendingApplicationsForJob, getInterviewsForJob } = useBusinessJobsStore();
+  const {
+    getPendingApplicationsForJob,
+    getInterviewsForJob,
+    getApplicationsForJob,
+    getViewsForJob,
+    setApplicationsForJob,
+    setInterviewsForJob,
+    setPendingApplicationsForJob,
+    setViewsForJob,
+  } = useBusinessJobsStore();
+
   useEffect(() => {
     if (jobId && !hasValidShortListedCache(Number(jobId))) {
       refreshShortListedApplicationsForJob(Number(jobId));
     }
   }, [jobId]);
+
+  useEffect(() => {
+    if (!isLoading && job) {
+      setViewsForJob(Number(job.id), job.views || 0);
+      setApplicationsForJob(Number(job.id), job.applicants || 0);
+      setPendingApplicationsForJob(Number(job.id), job.pendingApplicationsSize || 0);
+      setInterviewsForJob(Number(job.id), job.totalInterviews || 0);
+    }
+  }, [job, isLoading]);
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <BackBar label="Job Management" />
@@ -43,102 +63,68 @@ const BusinessJobDetails = () => {
       ) : job ? (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
+            className="bg-gradient-to-br from-emerald-50 to-white mx-4 mt-4 rounded-xl p-3 border border-emerald-100"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 12,
-              elevation: 6,
-            }}
-          >
-            <View className="flex-row items-start justify-between mb-4">
-              <View className="flex-1 mr-4">
-                <Text className="font-quicksand-bold text-2xl text-gray-900 leading-8 mb-1">{job.title}</Text>
-                <View className="flex-row items-center gap-2 mb-1 flex-wrap">
-                  <View className="flex-row items-center gap-1">
-                    <Feather name="map-pin" size={14} color="#6b7280" />
-                    <Text className="font-quicksand-medium text-sm text-gray-600">
-                      {job.location || `${job.city}, ${job.country}`}
-                    </Text>
-                  </View>
-                  <View className="w-1 h-1 bg-gray-400 rounded-full" />
-                  <View className="flex-row items-center gap-1">
-                    <Feather name="clock" size={14} color="#6b7280" />
-                    <Text className="font-quicksand-medium text-sm text-gray-600">
-                      {getEmploymentType(job.employmentType)}
-                    </Text>
-                  </View>
-                  <View className="w-1 h-1 bg-gray-400 rounded-full" />
-                  <View className="flex-row items-center gap-1">
-                    <Feather name="home" size={14} color="#6b7280" />
-                    <Text className="font-quicksand-medium text-sm text-gray-600">
-                      {getWorkArrangement(job.setting)}
-                    </Text>
-                  </View>
-                </View>
-                <View className="flex-row items-center gap-2 mb-1">
-                  <Text className="font-quicksand-bold text-base text-emerald-600">
-                    ${job.minSalary?.toLocaleString()} - ${job.maxSalary?.toLocaleString()}
-                  </Text>
-                </View>
-                <View className="gap-1">
-                  <View className="flex-row items-center gap-2">
-                    <Feather name="calendar" size={14} color="#6b7280" />
-                    <Text className="font-quicksand-medium text-sm text-gray-600">
-                      Posted: {formatDate(job.createdAt)}
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center gap-2">
-                    <MaterialIcons name="schedule" size={14} color="#ef4444" />
-                    <Text className="font-quicksand-medium text-sm text-red-600">
-                      Deadline: {formatDate(job.appDeadline)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            className="bg-white mx-4 mt-4 rounded-2xl p-3 border border-gray-100"
-            style={{
-              shadowColor: "#000",
+              shadowColor: "#10b981",
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
+              shadowOpacity: 0.1,
               shadowRadius: 8,
               elevation: 4,
             }}
           >
-            <View className="flex-row items-center gap-2 mb-3">
-              <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center">
-                <Feather name="trending-up" size={16} color="#8b5cf6" />
+            <View className="mb-2">
+              <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">{job.title}</Text>
+              <View className="flex-row flex-wrap gap-x-2 gap-y-1 mb-1">
+                <View className="flex-row items-center gap-1">
+                  <Feather name="map-pin" size={11} color="#6b7280" />
+                  <Text className="font-quicksand-medium text-xs text-gray-600">
+                    {job.location || `${job.city}, ${job.country}`}
+                  </Text>
+                </View>
+                <Text className="text-xs">·</Text>
+                <View className="flex-row items-center gap-1">
+                  <Feather name="clock" size={11} color="#6b7280" />
+                  <Text className="font-quicksand-medium text-xs text-gray-600">
+                    {getEmploymentType(job.employmentType)}
+                  </Text>
+                </View>
+                <Text className="text-xs">·</Text>
+                <View className="flex-row items-center gap-1">
+                  <Feather name="home" size={11} color="#6b7280" />
+                  <Text className="font-quicksand-medium text-xs text-gray-600">{getWorkArrangement(job.setting)}</Text>
+                </View>
               </View>
-              <Text className="font-quicksand-bold text-lg text-gray-900">Performance Metrics</Text>
+              <Text className="font-quicksand-bold text-sm text-emerald-600">
+                ${job.minSalary?.toLocaleString()} - ${job.maxSalary?.toLocaleString()}
+              </Text>
             </View>
 
-            <View className="flex-row gap-2">
-              <View className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3 items-center">
-                <Text className="font-quicksand-semibold text-xs text-blue-700">Views</Text>
-                <Text className="font-quicksand-bold text-lg text-blue-800">{job.views || 0}</Text>
-              </View>
-
-              <View className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-3 items-center">
-                <Text className="font-quicksand-semibold text-xs text-emerald-700">Applied</Text>
-                <Text className="font-quicksand-bold text-lg text-emerald-800">{job.applicants}</Text>
-              </View>
-
-              <View className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-3 items-center">
-                <Text className="font-quicksand-semibold text-xs text-amber-700">Pending</Text>
-                <Text className="font-quicksand-bold text-lg text-amber-800">
-                  {getPendingApplicationsForJob(Number(job.id))}
-                </Text>
-              </View>
-
-              <View className="flex-1 bg-purple-50 border border-purple-200 rounded-lg p-3 items-center">
-                <Text className="font-quicksand-semibold text-xs text-purple-700">Interviews</Text>
-                <Text className="font-quicksand-bold text-lg text-purple-800">
-                  {getInterviewsForJob(Number(job.id))}
-                </Text>
+            <View className="border-t border-emerald-100 pt-2">
+              <View className="flex-row gap-1.5">
+                <View className="flex-1 bg-white border border-emerald-200 rounded-lg p-1.5 items-center">
+                  <Text className="font-quicksand-bold text-lg text-emerald-700">
+                    {getViewsForJob(Number(job.id)) || 0}
+                  </Text>
+                  <Text className="font-quicksand-medium text-[10px] text-gray-600">Views</Text>
+                </View>
+                <View className="flex-1 bg-white border border-emerald-200 rounded-lg p-1.5 items-center">
+                  <Text className="font-quicksand-bold text-lg text-emerald-700">
+                    {getApplicationsForJob(Number(job.id))}
+                  </Text>
+                  <Text className="font-quicksand-medium text-[10px] text-gray-600">Applied</Text>
+                </View>
+                <View className="flex-1 bg-white border border-emerald-200 rounded-lg p-1.5 items-center">
+                  <Text className="font-quicksand-bold text-lg text-amber-600">
+                    {getPendingApplicationsForJob(Number(job.id))}
+                  </Text>
+                  <Text className="font-quicksand-medium text-[10px] text-gray-600">Pending</Text>
+                </View>
+                <View className="flex-1 bg-white border border-emerald-200 rounded-lg p-1.5 items-center">
+                  <Text className="font-quicksand-bold text-lg text-purple-600">
+                    {getInterviewsForJob(Number(job.id))}
+                  </Text>
+                  <Text className="font-quicksand-medium text-[10px] text-gray-600">Interviews</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -152,11 +138,11 @@ const BusinessJobDetails = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
-                <Feather name="file-text" size={20} color="#6366f1" />
+            <View className="flex-row items-center gap-3">
+              <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+                <Feather name="file-text" size={16} color="#6366f1" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Job Description</Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900">Job Description</Text>
             </View>
 
             <ExpandableText text={job.description} length={400} />
@@ -172,10 +158,10 @@ const BusinessJobDetails = () => {
             }}
           >
             <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-orange-100 rounded-full items-center justify-center">
-                <Feather name="tag" size={20} color="#f97316" />
+              <View className="w-8 h-8 bg-orange-100 rounded-full items-center justify-center">
+                <Feather name="tag" size={16} color="#f97316" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Skills & Tags</Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900">Skills & Tags</Text>
             </View>
 
             <View className="flex-row flex-wrap gap-2">
@@ -191,7 +177,7 @@ const BusinessJobDetails = () => {
                     elevation: 1,
                   }}
                 >
-                  <Text className="text-orange-800 font-quicksand-semibold text-sm">{tag.name}</Text>
+                  <Text className="text-orange-800 font-quicksand-semibold text-xs">{tag.name}</Text>
                 </View>
               ))}
             </View>
@@ -207,10 +193,10 @@ const BusinessJobDetails = () => {
             }}
           >
             <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-orange-100 rounded-full items-center justify-center">
-                <Fontisto name="persons" size={20} color="#f97316" />
+              <View className="w-8 h-8 bg-orange-100 rounded-full items-center justify-center">
+                <Fontisto name="persons" size={16} color="#f97316" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Hiring Team</Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900">Hiring Team</Text>
             </View>
 
             <View>
@@ -259,7 +245,7 @@ const BusinessJobDetails = () => {
 
       {job && (
         <View
-          className="bg-white border-t border-gray-200 px-4 py-6 absolute bottom-0 left-0 right-0 flex-row gap-2"
+          className="bg-white border-t border-gray-200 px-4 pb-10 pt-6 absolute bottom-0 left-0 right-0 flex-row gap-2"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: -2 },

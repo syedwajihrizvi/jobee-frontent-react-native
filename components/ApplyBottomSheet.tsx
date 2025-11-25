@@ -1,202 +1,105 @@
-import { formatDate, getUserDocumentById } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import useUserStore from "@/store/user.store";
 import { User, UserDocument } from "@/type";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
-import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
+import React, { useEffect, useState } from "react";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import CustomButton from "./CustomButton";
 import DocumentItem from "./DocumentItem";
 
 type ApplyBottomSheetProps = {
-  userHasResume: boolean;
-  selectedResume: string | null;
-  setSelectedResume: React.Dispatch<React.SetStateAction<string | null>>;
-  openResumeDropdown: boolean;
-  setOpenResumeDropdown: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedCoverLetter: string | null;
-  setSelectedCoverLetter: React.Dispatch<React.SetStateAction<string | null>>;
-  openCoverLetterDropdown: boolean;
-  setOpenCoverLetterDropdown: React.Dispatch<React.SetStateAction<boolean>>;
-  userDocuments: { RESUMES: UserDocument[]; COVER_LETTERS: UserDocument[] } | null;
   isSubmittingApplication: boolean;
-  handleSubmitApplication: () => void;
+  handleSubmitApplication: (selectedResume: UserDocument | null, selectedCoverLetter: UserDocument | null) => void;
   closeSheet: () => void;
 };
 
-const ApplyBottomSheet = ({
-  userHasResume,
-  selectedResume,
-  setSelectedResume,
-  openResumeDropdown,
-  setOpenResumeDropdown,
-  selectedCoverLetter,
-  setSelectedCoverLetter,
-  openCoverLetterDropdown,
-  setOpenCoverLetterDropdown,
-  userDocuments,
-  isSubmittingApplication,
-  handleSubmitApplication,
-  closeSheet,
-}: ApplyBottomSheetProps) => {
+const ApplyBottomSheet = ({ isSubmittingApplication, handleSubmitApplication, closeSheet }: ApplyBottomSheetProps) => {
   const { user: authUser } = useAuthStore();
+  const { getCoverLetterDocuments, getResumeDocuments, fetchUserDocuments, hasValidDocuments } = useUserStore();
   const user = authUser as User | null;
+  const [selectedResume, setSelectedResume] = useState<UserDocument | null>(null);
+  const [selectedCoverLetter, setSelectedCoverLetter] = useState<UserDocument | null>(null);
+
+  useEffect(() => {
+    if (!hasValidDocuments()) {
+      fetchUserDocuments();
+    }
+  }, []);
+
+  const resumeDocuments = getResumeDocuments(user?.primaryResume?.id || null);
+  const coverLetterDocuments = getCoverLetterDocuments();
 
   return (
-    <View className="flex-1 bg-white rounded-t-2xl shadow-lg p-6">
-      {userHasResume ? (
+    <View className="flex-1 rounded-t-2xl shadow-lg p-6">
+      {user?.primaryResume ? (
         <>
-          {/* Header */}
           <View className="w-full flex-row items-center justify-between mb-4">
-            <Text className="font-quicksand-bold text-2xl">Confirm Application</Text>
+            <Text className="font-quicksand-bold text-lg">Confirm Application</Text>
             <TouchableOpacity
-              onPress={() => console.log("Show AI information")}
-              className="p-2 rounded-full bg-gray-100"
+              onPress={() => router.push("/userProfile/uploadNewDoc")}
+              className="px-3 py-2 rounded-lg bg-emerald-500"
             >
-              <AntDesign name="info" size={18} color="black" />
+              <Text className="font-quicksand-semibold text-white text-sm">Add Document</Text>
             </TouchableOpacity>
           </View>
           <View className="mb-6">
-            <Text className="font-quicksand-bold text-lg mb-2">Resume</Text>
-            <View className="flex-row gap-3">
-              {selectedResume && <DocumentItem document={getUserDocumentById(Number(selectedResume), user!)!} />}
-              <View className="flex-1">
-                {user && user.documents && user.documents.length > 0 ? (
-                  <View className="flex-col gap-2">
-                    <DropDownPicker
-                      open={openResumeDropdown}
-                      value={selectedResume}
-                      items={
-                        userDocuments?.RESUMES.map((doc) => ({
-                          label: doc.filename,
-                          value: String(doc.id),
-                        })) ?? []
-                      }
-                      setOpen={setOpenResumeDropdown}
-                      setValue={setSelectedResume}
-                      onChangeValue={(value) => setSelectedResume(value)}
-                      placeholder="Select a resume"
-                      style={{
-                        backgroundColor: "#f9fafb", // light gray background
-                        borderColor: "#e5e7eb", // Tailwind gray-200
-                        borderRadius: 10,
-                        minHeight: 35, // less tall than default
-                      }}
-                      textStyle={{
-                        fontSize: 14,
-                        fontFamily: "Quicksand-Medium",
-                        color: "#111827", // Tailwind gray-900
-                      }}
-                      dropDownContainerStyle={{
-                        backgroundColor: "white",
-                        borderColor: "#e5e7eb",
-                        borderRadius: 12,
-                      }}
-                      labelStyle={{
-                        fontSize: 14,
-                        fontFamily: "Quicksand-Regular",
-                        color: "#111827",
-                      }}
-                      listItemContainerStyle={{
-                        paddingVertical: 8,
-                      }}
-                      containerStyle={{
-                        width: "100%",
-                      }}
-                    />
-                    <Text className="font-quicksand-medium text-sm text-gray-500">
-                      Last Updated • {formatDate(user.documents[0].createdAt!)}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text className="text-gray-500">Upload a resume to continue</Text>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* Divider */}
-          <View className="h-px bg-gray-200 my-4" />
-
-          {/* Cover Letter Section */}
-          <View className="mb-6">
-            <Text className="font-quicksand-bold text-lg mb-2">Cover Letter (Optional)</Text>
-            <View className="flex-row gap-3">
-              {selectedCoverLetter && (
+            <Text className="font-quicksand-bold text-md mb-4">Resume</Text>
+            <FlatList
+              data={resumeDocuments}
+              horizontal
+              ItemSeparatorComponent={() => <View className="w-4" />}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{
+                paddingHorizontal: 2,
+                flexGrow: 1,
+                minWidth: "100%",
+                flexDirection: "row",
+                marginBottom: 8,
+              }}
+              renderItem={({ item }) => (
                 <DocumentItem
-                  document={getUserDocumentById(Number(selectedCoverLetter), user!)!}
-                  customAction={() => {
-                    setSelectedCoverLetter(null);
-                    setOpenCoverLetterDropdown(false);
-                  }}
-                  actionIcon="delete"
+                  canEdit={false}
+                  document={item}
+                  customAction={() => setSelectedResume(item)}
+                  highlightPrimary={false}
+                  standOut={item.id === selectedResume?.id}
                 />
               )}
-              <View className="flex-1">
-                {user && user.documents && user.documents.length > 0 ? (
-                  <View className="flex-col gap-2">
-                    <DropDownPicker
-                      open={openCoverLetterDropdown}
-                      value={selectedCoverLetter}
-                      items={
-                        userDocuments?.COVER_LETTERS.map((doc) => ({
-                          label: doc.filename,
-                          value: String(doc.id),
-                        })) ?? []
-                      }
-                      setOpen={setOpenCoverLetterDropdown}
-                      setValue={setSelectedCoverLetter}
-                      onChangeValue={(value) => setSelectedCoverLetter(value)}
-                      placeholder="Select a cover letter"
-                      style={{
-                        backgroundColor: "#f9fafb",
-                        borderColor: "#e5e7eb",
-                        borderRadius: 10,
-                        minHeight: 35,
-                      }}
-                      textStyle={{
-                        fontSize: 14,
-                        fontFamily: "Quicksand-Medium",
-                        color: "#111827",
-                      }}
-                      dropDownContainerStyle={{
-                        backgroundColor: "white",
-                        borderColor: "#e5e7eb",
-                        borderRadius: 12,
-                      }}
-                      labelStyle={{
-                        fontSize: 14,
-                        fontFamily: "Quicksand-Regular",
-                        color: "#111827",
-                      }}
-                      listItemContainerStyle={{
-                        paddingVertical: 8,
-                      }}
-                      containerStyle={{
-                        width: "100%",
-                      }}
-                    />
-                    <Text className="font-quicksand-medium text-sm text-gray-500">
-                      Last Updated • {formatDate(user.documents[0].createdAt!)}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text className="text-gray-500">Upload a cover letter to continue</Text>
+            />
+          </View>
+          <View className="h-px bg-gray-200" />
+          <View className="mb-6 mt-2">
+            <Text className="font-quicksand-bold text-md mb-2">Cover Letter (Optional)</Text>
+            <View className="flex-row gap-3">
+              <FlatList
+                data={coverLetterDocuments}
+                horizontal
+                ItemSeparatorComponent={() => <View className="w-4" />}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{
+                  paddingHorizontal: 2,
+                  flexGrow: 1,
+                  minWidth: "100%",
+                  flexDirection: "row",
+                  marginBottom: 8,
+                }}
+                renderItem={({ item }) => (
+                  <DocumentItem
+                    canEdit={false}
+                    document={item}
+                    highlightPrimary={false}
+                    customAction={() => setSelectedCoverLetter(item)}
+                    standOut={item.id === selectedCoverLetter?.id}
+                  />
                 )}
-              </View>
+              />
             </View>
           </View>
-          <View className="h-px bg-gray-200 my-4" />
-          <View className="mb-6">
-            <Text className="font-quicksand-medium text-base text-gray-700">
-              Company-specific questions will appear here.
-            </Text>
-          </View>
+          <View className="h-px bg-gray-200" />
           <View className="flex-row gap-3">
             <CustomButton
               customClass="apply-button flex-1 items-center justify-center h-14"
-              onClick={handleSubmitApplication}
+              onClick={() => handleSubmitApplication(selectedResume, selectedCoverLetter)}
               text="Submit Application"
               isLoading={isSubmittingApplication}
             />

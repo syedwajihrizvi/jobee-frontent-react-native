@@ -45,7 +45,7 @@ const Jobs = () => {
     getJobsByFilter,
     fetchJobsForUserAndFilter,
     getPaginationForJobsByFilter,
-    getRecommendedJobs,
+    getRecommendations,
     isLoadingJobsForFilter,
     isLoadingRecommendedJobs,
     hasValidCachedJobs,
@@ -137,9 +137,13 @@ const Jobs = () => {
   const filteredJobs = getJobsByFilter(filters);
   const paginatedFilteredJobs = getPaginationForJobsByFilter(filters);
   const isLoadingFilteredJobs = isLoadingJobsForFilter(filters);
-  const recommendedJobs = getRecommendedJobs();
+  const recommendedJobs = getRecommendations();
   const isLoadingRecommended = isLoadingRecommendedJobs();
 
+  console.log(
+    "Recommended Jobs NOW:",
+    recommendedJobs.map((rec) => rec.job.id)
+  );
   if (!isAuthenticated && !isLoadingFilteredJobs && filteredJobs.length === 0) {
     return <Redirect href="/(auth)/sign-in" />;
   }
@@ -149,7 +153,7 @@ const Jobs = () => {
       <View className="w-full items-center justify-center mb-4">
         <SearchBar placeholder="Search for Jobs..." onSubmit={handleSearchSubmit} />
       </View>
-      {isAuthenticated && user?.canQuickApplyBatch && (
+      {isAuthenticated && user?.canQuickApplyBatch && recommendedJobs.length > 0 && (
         <View className="m-4 my-2">
           <RecommendedJobsPreview
             recommendedJobs={recommendedJobs}

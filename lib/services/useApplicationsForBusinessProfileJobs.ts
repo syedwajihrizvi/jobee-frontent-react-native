@@ -20,6 +20,9 @@ export const useApplicationsForBusinessProfileJobs = ({userId}: {userId: number 
     return useQuery<ApplicationSummary[], Error>({
         queryKey: ['application-for-business-profile', userId],
         queryFn: fetchApplicationsForBusinessProfileJobs,
+        staleTime: 30 * 1000, // 2 minutes
+        refetchInterval: 2 * 60 * 1000, // 2 minutes
+        refetchOnWindowFocus: true,
         enabled: !!userId
     })
 }

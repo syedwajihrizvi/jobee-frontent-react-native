@@ -186,7 +186,6 @@ const Skills = () => {
                       {skills.length} skill{skills.length !== 1 ? "s" : ""}
                     </Text>
                   </View>
-
                   <View className="flex flex-row flex-wrap gap-3">
                     {skills.map((userSkill, index) => {
                       return (

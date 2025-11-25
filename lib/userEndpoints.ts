@@ -313,13 +313,23 @@ export const getUserDocuments = async () => {
 
 export const getUserSocialMedias = async () => {
     const token = await AsyncStorage.getItem('x-auth-token');
-    console.log(USER_PROFILE_API_URL);
     const response = await fetch(`${USER_PROFILE_API_URL}/social-media/my-social-media`, {
         headers: {
             'x-auth-token': `Bearer ${token}` || ''
         }
     });
-    console.log("SYED-DEBUG: Fetched user social medias response:", response);
     const data = await response.json();
     return data as SocialMedia[];
+}
+
+export const getMostPopularJobs = async () => {
+    const token = await AsyncStorage.getItem('x-auth-token')
+    const response = await fetch(`${JOBS_API_URL}/popular-jobs`, {
+        method: 'GET',
+        headers: {
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    const data = await response.json() as {mostAppliedJobs: Job[], mostViewedJobs: Job[]};
+    return data;
 }

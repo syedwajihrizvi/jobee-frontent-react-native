@@ -10,7 +10,7 @@ export const CollapsibleSection = ({
   children,
   titleSize = "text-lg",
   boldness = "semibold",
-  padding = 5,
+  padding = 3,
 }: {
   title: string;
   icon: any;
@@ -35,7 +35,7 @@ export const CollapsibleSection = ({
     <TouchableOpacity onPress={onToggle} activeOpacity={0.7}>
       <View className="flex-row justify-between items-center">
         <View className="flex-row items-center gap-2">
-          <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center">{icon}</View>
+          <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">{icon}</View>
           <Text className={`font-quicksand-${boldness} ${titleSize} text-gray-900`}>{title}</Text>
         </View>
         <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center">

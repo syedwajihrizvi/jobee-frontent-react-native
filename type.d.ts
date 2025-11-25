@@ -489,13 +489,16 @@ export type ApplicationDetailsForBusiness = {
     status: string;
     resumeUrl: string;
     coverLetterUrl?: string;
+    resumeDocument: UserDocument;
+    coverLetterDocument?: UserDocument;
     interviewIds: number[];
     fullName: string;
     jobId: number;
     jobTitle: string;
     companyName: string;
     shortListed: boolean;
-    userProfile: User
+    userProfile: User,
+    userDocuments: UserDocument[]
 }
 
 export type CreateJobForm = {

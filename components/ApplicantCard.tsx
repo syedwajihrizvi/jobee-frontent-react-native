@@ -43,20 +43,20 @@ const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
       onPress={() => router.push(`/businessJobs/applications/applicant/${item.id}?jobId=${jobId}`)}
     >
       <View className="flex-row items-start justify-between mb-2">
-        <View className="flex-row items-start gap-4 flex-1">
+        <View className="flex-row items-start gap-2 flex-1">
           <RenderUserProfileImage
             profileImageUrl={item.profileImageUrl}
-            profileImageSize={12}
+            profileImageSize={10}
             fontSize={12}
             firstName={item.firstName}
             lastName={item.lastName}
           />
           <View className="flex-1 mr-3">
-            <Text className="font-quicksand-bold text-lg text-gray-900">{item.fullName}</Text>
-            <Text className="font-quicksand-semibold text-base text-gray-700">{item.title}</Text>
+            <Text className="font-quicksand-bold text-md text-gray-900">{item.fullName}</Text>
+            <Text className="font-quicksand-semibold text-sm text-gray-700">{item.title}</Text>
             <View className="flex-row items-center gap-1">
-              <Feather name="map-pin" size={14} color="#6b7280" />
-              <Text className="font-quicksand-medium text-sm text-gray-600">{item.location}</Text>
+              <Feather name="map-pin" size={10} color="#6b7280" />
+              <Text className="font-quicksand-medium text-xs text-gray-600">{item.location}</Text>
             </View>
           </View>
         </View>
@@ -69,7 +69,7 @@ const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
               </View>
             </View>
           )}
-          <View className={`${statusColors.bg} ${statusColors.border} border px-3 py-1 rounded-full`}>
+          <View className={`${statusColors.bg} ${statusColors.border} border px-2 py-1 rounded-full`}>
             <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
               {getApplicationStatus(item.status)}
             </Text>
@@ -78,14 +78,14 @@ const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
       </View>
       <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
         <Text className="font-quicksand-bold text-sm text-gray-900">Professional Summary</Text>
-        <Text className="font-quicksand-medium text-sm text-gray-700 leading-5" numberOfLines={2}>
+        <Text className="font-quicksand-medium text-xs text-gray-700 leading-5" numberOfLines={2}>
           {item.profileSummary || "No summary provided by the applicant."}
         </Text>
       </View>
       <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
         <View className="flex-row items-center gap-2">
-          <Feather name="calendar" size={14} color="#6b7280" />
-          <Text className="font-quicksand-medium text-sm text-gray-600">Applied on {formatDate(item.appliedAt)}</Text>
+          <Feather name="calendar" size={14} color="#10b981" />
+          <Text className="font-quicksand-medium text-xs text-gray-600">Applied on {formatDate(item.appliedAt)}</Text>
         </View>
         <View
           className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center"

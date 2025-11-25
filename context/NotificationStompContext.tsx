@@ -92,7 +92,6 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
         const currentNotifications = useNotificationStore.getState().notifications;
         handleNewNotification(notif);
         setNotifications([notif, ...currentNotifications]);
-        // Update store related to queries: Interview Schedules, Applicatons, etc
       },
     });
     setNotificationClient(client);

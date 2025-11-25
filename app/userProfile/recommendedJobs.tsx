@@ -9,8 +9,12 @@ import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const RecommendedJobs = () => {
-  const { refreshRecommendedJobs, getRecommendedJobs, isLoadingRecommendedJobs, hasValidRecommendedJobsCache } =
-    useUserJobsStore();
+  const {
+    refreshRecommendedJobs,
+    getRecommendations: getRecommendedJobs,
+    isLoadingRecommendedJobs,
+    hasValidRecommendedJobsCache,
+  } = useUserJobsStore();
 
   const jobs = getRecommendedJobs();
   const isLoading = isLoadingRecommendedJobs();

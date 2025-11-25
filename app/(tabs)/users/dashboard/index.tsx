@@ -88,12 +88,6 @@ const Dashboard = () => {
         )}
         {!isLoading && profileSummary && user && (
           <>
-            <View className="px-3 py-4">
-              <Text className="font-quicksand-bold text-2xl text-gray-900">Dashboard</Text>
-              <Text className="font-quicksand-medium text-base text-gray-600">
-                Welcome back {profileSummary.fullName}! Here is your job search overview.
-              </Text>
-            </View>
             <View
               className="bg-white mx-3 mb-4 rounded-2xl p-4 border border-gray-100"
               style={{
@@ -430,7 +424,7 @@ const Dashboard = () => {
               </View>
             )}
             <View
-              className="bg-white mx-3 mb-4 rounded-2xl p-6 border border-gray-100"
+              className="bg-white mx-3 mb-4 rounded-2xl p-4 border border-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -439,52 +433,48 @@ const Dashboard = () => {
                 elevation: 6,
               }}
             >
-              <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
-                  <MaterialIcons name="pie-chart" size={16} color="#10b981" />
+              <View className="flex-row items-center gap-2 mb-3">
+                <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
+                  <MaterialIcons name="pie-chart" size={14} color="#10b981" />
                 </View>
-                <Text className="font-quicksand-bold text-md text-gray-900">Applications Overview</Text>
+                <Text className="font-quicksand-bold text-sm text-gray-900">Applications Overview</Text>
               </View>
-              <View className="gap-2">
+              <View className="gap-1.5">
                 <View className="flex-row items-center gap-2">
-                  <Feather name="check-circle" size={16} color="#3b82f6" />
-                  <Text className="font-quicksand-semibold text-md">
+                  <Feather name="check-circle" size={14} color="blue" />
+                  <Text className="font-quicksand-semibold text-sm text-gray-700">
                     {profileSummaryStats.totalInConsideration} Pending
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
-                  <Feather name="clock" size={16} color="#10b981" />
-                  <Text className="font-quicksand-semibold text-md">
+                  <Feather name="clock" size={14} color="#10b981" />
+                  <Text className="font-quicksand-semibold text-sm text-gray-700">
                     {profileSummaryStats.totalInterviews} In Consideration
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
-                  <Feather name="x-circle" size={16} color="#ef4444" />
-                  <Text className="font-quicksand-semibold text-md">
+                  <Feather name="x-circle" size={14} color="#ef4444" />
+                  <Text className="font-quicksand-semibold text-sm text-gray-700">
                     {profileSummaryStats.totalRejections} Rejected
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                className="bg-emerald-50 border border-green-200 rounded-xl p-3 mt-4 items-center"
-                onPress={() => router.push("/userProfile/appliedJobs")}
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="eye" size={14} color="#10b981" />
-                  <Text className="font-quicksand-semibold text-green-700">View All Applications</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-4 items-center"
-                onPress={() => router.push("/userProfile/interviews")}
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="briefcase" size={14} color="blue" />
-                  <Text className="font-quicksand-semibold text-blue-700">Find Jobs</Text>
-                </View>
-              </TouchableOpacity>
+              <View className="flex-row gap-2 mt-3">
+                <TouchableOpacity
+                  className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg py-2 px-3"
+                  onPress={() => router.push("/userProfile/appliedJobs")}
+                  activeOpacity={0.7}
+                >
+                  <Text className="font-quicksand-semibold text-emerald-700 text-xs text-center">View All</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 bg-emerald-500 rounded-lg py-2 px-3"
+                  onPress={() => router.push("/(tabs)/users/jobs")}
+                  activeOpacity={0.7}
+                >
+                  <Text className="font-quicksand-semibold text-white text-xs text-center">Find Jobs</Text>
+                </TouchableOpacity>
+              </View>
             </View>
             {upcomingInterviews && upcomingInterviews.length > 0 && (
               <View className="mx-3 mb-4">

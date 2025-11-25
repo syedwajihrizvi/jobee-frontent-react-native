@@ -239,26 +239,7 @@ const CompanyProfile = () => {
     <SafeAreaView className="flex-1 bg-gray-50">
       <StatusBar hidden={true} />
       <BackBar label="Edit Company Profile" />
-      <ScrollView>
-        <View className="px-6 py-6">
-          <View
-            className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">
-              View and edit your company information
-            </Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
-              Update your company details, size, location, media, and more.
-            </Text>
-          </View>
-        </View>
+      <ScrollView className="mt-4">
         <View className="py-3 px-6">
           {isLoading ? (
             <View className="flex flex-col items-center justify-center gap-4 mt-10">

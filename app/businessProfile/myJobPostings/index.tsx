@@ -11,6 +11,7 @@ const MyJobPostings = () => {
     <SafeAreaView className="flex-1 bg-gray-50">
       <StatusBar hidden={true} />
       <BackBar label="My Job Postings" />
+      <View className="h-4" />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#0000ff" />

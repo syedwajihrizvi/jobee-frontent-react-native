@@ -427,7 +427,7 @@ export const capFirstLetter = (text: string) => {
 
 export const getMatchConfig = (percentage: number) => {
     if (percentage >= 90) return {
-      bgColor: 'bg-emerald-600',
+      bgColor: 'bg-emerald-500',
       borderColor: 'border-emerald-700',
       shadowColor: '#059669',
       textColor: 'text-white',
@@ -1001,3 +1001,73 @@ export const convertDocumentTypeToLabel = (type: string | undefined) => {
       return "Document";
   }
 }
+
+
+export const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "INTERVIEW_SCHEDULED":
+        return { name: "calendar", color: "#3b82f6", bgColor: "#dbeafe" };
+      case "INTERVIEW_RESULT":
+        return { name: "file-text", color: "#8b5cf6", bgColor: "#ede9fe" };
+      case "INTERVIEW_COMPLETED":
+        return { name: "check-circle", color: "#10b981", bgColor: "#d1fae5" };
+      case "REJECTION":
+        return { name: "x-circle", color: "#ef4444", bgColor: "#fee2e2" };
+      case "GENERAL":
+        return { name: "bell", color: "#6b7280", bgColor: "#f3f4f6" };
+      case "APPLICATION_RECEIVED":
+        return { name: "inbox", color: "#10b981", bgColor: "#d1fae5" };
+      case "APPLICATION_VIEWED":
+        return { name: "eye", color: "#f59e0b", bgColor: "#fef3c7" };
+      case "INTERVIEW_PREP_READY":
+        return { name: "book-open", color: "#14b8a6", bgColor: "#ccfbf1" };
+      case "INTERVIEW_REMINDER":
+        return { name: "clock", color: "#f59e0b", bgColor: "#fef3c7" };
+      case "AI_RESUME_REVIEW_COMPLETE":
+        return { name: "cpu", color: "#8b5cf6", bgColor: "#ede9fe" };
+      default:
+        return { name: "info", color: "#6b7280", bgColor: "#f3f4f6" };
+    }
+  };
+
+  export const getBorderColor = (type: string, isRead: boolean) => {
+    switch (type) {
+      case "INTERVIEW_SCHEDULED":
+        return "#bfdbfe";
+      case "INTERVIEW_RESULT":
+        return "#c4b5fd";
+      case "INTERVIEW_COMPLETED":
+        return "#a7f3d0";
+      case "REJECTION":
+        return "#fecaca";
+      case "GENERAL":
+        return "#d1d5db";
+      case "APPLICATION_RECEIVED":
+        return "#bbf7d0";
+      case "APPLICATION_VIEWED":
+        return "#fed7aa";
+      case "INTERVIEW_PREP_READY":
+        return "#99f6e4";
+      case "INTERVIEW_REMINDER":
+        return "#fbbf24";
+      case "AI_RESUME_REVIEW_COMPLETE":
+        return "#c4b5fd";
+      default:
+        return "#d1d5db";
+    }
+  };
+
+  export const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMins = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMins / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMins < 1) return "Just now";
+    if (diffInMins < 60) return `${diffInMins}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    return date.toLocaleDateString();
+  };

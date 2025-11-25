@@ -153,25 +153,22 @@ const Profile = () => {
         <ActivityIndicator size="large" color="#0000ff" className="mt-20" />
       ) : (
         <View className="p-4">
-          <View className="flex flex-col items-center">
+          <View className="flex flex-row items-center gap-3 py-2">
             <TouchableOpacity className="relative" onPress={handleProfileImagePicker}>
               {uploadingUserProfileImage ? (
                 <ActivityIndicator size="small" color="#0000ff" />
               ) : (
                 <>
                   {renderProfileImage()}
-                  <Entypo
-                    name="edit"
-                    size={16}
-                    color="black"
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1"
-                  />
+                  <View className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white">
+                    <Entypo name="edit" size={10} color="white" />
+                  </View>
                 </>
               )}
             </TouchableOpacity>
-            <View className="mt-1 items-center">
+            <View className="flex-1">
               <View className="flex-row items-center gap-1">
-                <Text className="font-quicksand-bold text-lg">
+                <Text className="font-quicksand-bold text-base">
                   {user?.firstName} {user?.lastName}
                 </Text>
                 {user?.verified && (
@@ -180,7 +177,7 @@ const Profile = () => {
                   </View>
                 )}
               </View>
-              <Text className="font-quicksand-semibold text-sm">
+              <Text className="font-quicksand-semibold text-xs text-gray-600">
                 {user?.title && `${user?.title} @ `}
                 {user?.companyName}
               </Text>
@@ -195,7 +192,7 @@ const Profile = () => {
             <View className="flex flex-col gap-4 pb-20">
               {!user?.verified && (
                 <ProfileLink
-                  icon={<Feather name="check" size={20} />}
+                  icon={<Feather name="check" size={20} color="#10b981" />}
                   label="Verified Account"
                   subtitle="Your account is verified"
                   onPress={() => console.log("Account Settings Pressed")}
@@ -211,14 +208,14 @@ const Profile = () => {
                 />
               ))}
               <ProfileLink
-                icon={<Feather name="settings" size={20} />}
+                icon={<Feather name="settings" size={20} color="#10b981" />}
                 label="Account Settings"
                 subtitle="Manage your account settings and preferences"
                 onPress={() => console.log("Account Settings Pressed")}
                 rightIcon={true}
               />
               <ProfileLink
-                icon={<AntDesign name="logout" size={20} />}
+                icon={<AntDesign name="logout" size={20} color="#10b981" />}
                 label="Sign Out"
                 onPress={handleSignOut}
                 rightIcon={false}

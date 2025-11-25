@@ -123,41 +123,26 @@ const Profile = () => {
         <ActivityIndicator size="large" color="#0000ff" className="mt-20" />
       ) : (
         <View className="p-4">
-          <View className="flex flex-col items-center">
+          <View className="flex flex-row items-center gap-4">
             <TouchableOpacity className="relative" onPress={handleProfileImagePicker}>
               {uploadingUserProfileImage ? (
-                <ActivityIndicator size="small" color="#0000ff" />
+                <ActivityIndicator size="small" color="#10b981" />
               ) : (
                 <>
                   {renderProfileImage()}
-                  <Entypo
-                    name="edit"
-                    size={12}
-                    color="white"
-                    style={{
-                      position: "absolute",
-                      top: -8,
-                      right: -8,
-                      backgroundColor: "#10b981",
-                      borderRadius: 12,
-                      padding: 4,
-                      borderWidth: 2,
-                      borderColor: "white",
-                      shadowColor: "#10b981",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 4,
-                      elevation: 4,
-                    }}
-                  />
+                  <View className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white">
+                    <Entypo name="edit" size={10} color="white" />
+                  </View>
                 </>
               )}
             </TouchableOpacity>
-            <View>
-              <Text className="font-quicksand-bold text-xl ml-2">
+            <View className="flex-1">
+              <Text className="font-quicksand-bold text-lg" numberOfLines={1}>
                 {(user as User)?.firstName} {(user as User)?.lastName}
               </Text>
-              <Text className="font-quicksand-semibold text-md ml-2">{(user as User)?.title}</Text>
+              <Text className="font-quicksand-semibold text-sm text-gray-600" numberOfLines={1}>
+                {(user as User)?.title}
+              </Text>
             </View>
           </View>
           <View className="divider" />
@@ -177,21 +162,21 @@ const Profile = () => {
                 />
               ))}
               <ProfileLink
-                icon={<Feather name="calendar" size={20} />}
+                icon={<Feather name="calendar" size={20} color="#10b981" />}
                 label="Interviews"
                 subtitle="View and manage your interviews"
                 onPress={() => router.push(`/userProfile/interviews?userId=${(user as User)?.id}`)}
                 rightIcon={true}
               />
               <ProfileLink
-                icon={<Feather name="settings" size={20} />}
+                icon={<Feather name="settings" size={20} color="#10b981" />}
                 label="Account Settings"
                 subtitle="Manage your account settings and preferences"
                 onPress={() => console.log("Account Settings Pressed")}
                 rightIcon={true}
               />
               <ProfileLink
-                icon={<AntDesign name="logout" size={20} />}
+                icon={<AntDesign name="logout" size={20} color="#10b981" />}
                 label="Sign Out"
                 onPress={handleSignOut}
                 rightIcon={false}

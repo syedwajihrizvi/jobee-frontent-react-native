@@ -225,11 +225,11 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const state = get();
         return state.loadingCandidatesStates[jobId] || false;
     },
-    // Cache validation methods in interface order
+
     hasValidApplicantCache: (jobId, filters) => {
         const state = get();
         const filterKey = createApplicationsFilterKey(jobId, filters);
-        const CACHE_DURATION = 5 * 60 * 1000;
+        const CACHE_DURATION = 2 * 60 * 1000;
         const lastFetched = state.lastFetchApplicants[filterKey];
         if (!lastFetched) return false;
         const isFresh = Date.now() - lastFetched < CACHE_DURATION;
@@ -324,8 +324,6 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
     },
     
     setApplicationStatus: (jobId, applicationId, status) => {
-        // Find all keys that start with 'jobId-'
-        // and update the status of the matching application in those lists
         const state = get();
         const prefix = `${jobId}-`;
         const updatedApplicationsByJobAndFilter = { ...state.applicationsByJobAndFilter };

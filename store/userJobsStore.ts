@@ -63,7 +63,7 @@ interface UserJobsState {
     getPaginationForFavoriteJobs(): { currentPage: number, hasMore: boolean } | undefined;
     getPaginationForAppliedJobsByFilter(filter: ApplicationStatusFilter): { currentPage: number, hasMore: boolean } | undefined;
 
-    getRecommendedJobs(): { job: Job, match: number }[];
+    getRecommendations(): { job: Job, match: number }[];
     getFavoriteJobs(): Job[];
     getAppliedJobsByFilter(filter: ApplicationStatusFilter): Job[];
 
@@ -88,10 +88,10 @@ interface UserJobsState {
     addAppliedJobs: (jobs: Job[]) => void;
     addViewForJob: (jobId: number) => void;
     addApplicationForJob: (jobId: number) => void;
+    incrementApplicationsForJob: (jobId: number, count: number) => void;
 }
 
 const useUserJobsStore = create<UserJobsState>((set, get) => ({
-    // State variables in interface order
     userJobsByFilter: {},
     recommendedJobs: [],
     favoriteJobs: [],
@@ -348,9 +348,9 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
         return state.paginationAppliedJobsByFilter[filterKey];
     },
 
-    getRecommendedJobs: () => {
+    getRecommendations: () => {
         const state = get();
-        return Object.values(state.recommendedJobs);
+        return state.recommendedJobs;
     },
 
     getFavoriteJobs: () => {
@@ -486,23 +486,29 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
         }))
     },
     addAppliedJob: (job) => {
-        const state = get();
+        const state = get();        
+        // Calculate all updates first, then call set() once
+        const updatedAppliedJobsByFilter = { ...state.appliedJobsByFilter };
+        const updatedTotalAppliedJobsCountByFilter = { ...state.totalAppliedJobsCountByFilter };
+        
         Object.keys(state.appliedJobsByFilter).forEach((filterKey) => {
             if (filterKey === 'all' || filterKey === 'PENDING') {
-            const existingJobs = state.appliedJobsByFilter[filterKey] || [];
-            const updatedJobs = [job, ...existingJobs];
-            set((state) => ({
-                appliedJobsByFilter: {
-                    ...state.appliedJobsByFilter,
-                    [filterKey]: updatedJobs,
-                },
-                totalAppliedJobsCountByFilter: {
-                    ...state.totalAppliedJobsCountByFilter,
-                    [filterKey]: (state.totalAppliedJobsCountByFilter[filterKey] || 0) + 1,
-                }
-            }))
+                const existingJobs = state.appliedJobsByFilter[filterKey] || [];
+                const updatedJobs = [job, ...existingJobs];
+                
+                updatedAppliedJobsByFilter[filterKey] = updatedJobs;
+                updatedTotalAppliedJobsCountByFilter[filterKey] = 
+                    (state.totalAppliedJobsCountByFilter[filterKey] || 0) + 1;
             }
         });
+    
+        set((state) => ({
+            appliedJobsByFilter: updatedAppliedJobsByFilter,
+            totalAppliedJobsCountByFilter: updatedTotalAppliedJobsCountByFilter,
+            recommendedJobs: state.recommendedJobs.filter(rec => rec.job.id !== job.id),
+        }));
+        state.incrementApplicationsForJob(job.id, 1);
+        console.log("Recommended jobs after:", get().recommendedJobs.map(rec => rec.job.id));
     },
     addAppliedJobs: (jobs) => {
         const state = get();
@@ -548,6 +554,16 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
             }
         }))
     },
+    incrementApplicationsForJob: (jobId, count) => {
+        const state = get();
+        const currentApplications = state.totalApplicationsForJobById[jobId] || 0;
+        set(() => ({
+            totalApplicationsForJobById: {
+                ...state.totalApplicationsForJobById,
+                [jobId]: currentApplications + count,
+            }
+        }))
+    }
 }))
 
 export default useUserJobsStore;

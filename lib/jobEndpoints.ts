@@ -2,7 +2,7 @@ import { getAPIUrl } from "@/constants";
 import { Application, CandidateForJob, CreateApplication, CreateJobForm, HiringTeamMemberForm, Job } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const APPLICATION_API_URL = 'http://192.168.2.29:8080/applications'
+const APPLICATION_API_URL = getAPIUrl('applications');
 const JOBS_API_URL = getAPIUrl('jobs');
 const USER_PROFILE_API_URL = getAPIUrl('profiles');
 

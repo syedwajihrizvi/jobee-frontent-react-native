@@ -285,7 +285,6 @@ const FileSelector = ({
           selectedDocumentType,
           documentTitle
         );
-        console.log("Resume upload result:", res);
         handleSuccessFullUpload();
         handleUploadSuccess();
       } catch (error) {

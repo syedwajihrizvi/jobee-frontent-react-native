@@ -108,31 +108,31 @@ export const userProfileLinks: {
   {
     label: "Edit Profile",
     subtitle: "Update your personal information, experience, and more.",
-    icon: <Feather name="user" size={20} color="black" />,
+    icon: <Feather name="user" size={20} color="#10b981" />,
     href: "/userProfile/editProfile",
   },
   {
     label: "Job Applied To",
     subtitle: "View the jobs you have applied to.",
-    icon: <Feather name="briefcase" size={20} color="black" />,
+    icon: <Feather name="briefcase" size={20} color="#10b981" />,
     href: "/userProfile/appliedJobs",
   },
   {
     label: "Favorite Jobs",
     subtitle: "View and manage your favorite job listings.",
-    icon: <Feather name="star" size={20} color="black" />,
+    icon: <Feather name="star" size={20} color="#10b981" />,
     href: "/userProfile/favoriteJobs",
   },
   {
     label: "Favorite Companies",
     subtitle: "View and manage your favorite companies.",
-    icon: <FontAwesome5 name="building" size={20} color="black" />,
+    icon: <FontAwesome5 name="building" size={20} color="#10b981" />,
     href: "/userProfile/favoriteCompanies",
   },
   {
     label: "Manage Documents",
     subtitle: "Upload and manage your resumes, cover letters, and other documents.",
-    icon: <Entypo name="documents" size={20} color="black" />,
+    icon: <Entypo name="documents" size={20} color="#10b981" />,
     href: "/userProfile/manageDocs",
   },
 ];
@@ -146,7 +146,7 @@ export const adminOnlyProfileLinks: {
   {
     label: "Edit Company Profile",
     subtitle: "View and manage your company details, size, location, media, and more.",
-    icon: <FontAwesome5 name="building" size={20} color="black" />,
+    icon: <FontAwesome5 name="building" size={20} color="#10b981" />,
     href: "/businessProfile/companyProfile",
   },
 ];
@@ -160,7 +160,7 @@ export const recruiterOnlyProfileLinks: {
   {
     label: "Invite or Remove Users",
     subtitle: "Manage users associated with your company.",
-    icon: <Feather name="users" size={20} color="black" />,
+    icon: <Feather name="users" size={20} color="#10b981" />,
     href: "/businessProfile/manageUsers",
   },
 ];
@@ -173,19 +173,19 @@ export const businessProfileLinks: {
   {
     label: "Edit Profile",
     subtitle: "Update your personal information, social media links, and more.",
-    icon: <Feather name="user" size={20} color="black" />,
+    icon: <Feather name="user" size={20} color="#10b981" />,
     href: "/businessProfile/editProfile",
   },
   {
     label: "Active Job Postings",
     subtitle: "View the jobs you have posted.",
-    icon: <Feather name="briefcase" size={20} color="black" />,
+    icon: <Feather name="briefcase" size={20} color="#10b981" />,
     href: "/businessProfile/myJobPostings",
   },
   {
     label: "Interviews",
     subtitle: "View interviews with candidates.",
-    icon: <Feather name="calendar" size={20} color="black" />,
+    icon: <Feather name="calendar" size={20} color="#10b981" />,
     href: "/businessProfile/interviews",
   },
 ];

@@ -1,8 +1,10 @@
 import useAuthStore from "@/store/auth.store";
+import { User } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
+import DocumentItem from "./DocumentItem";
 
 const QuickApplyModal = ({
   visible,
@@ -14,18 +16,19 @@ const QuickApplyModal = ({
   visible: boolean;
   label: string;
   canQuickApply: boolean;
+
   handleClose: (apply: boolean, signedIn: boolean) => void;
   handleUnAuthenticatedQuickApply?: () => void;
 }) => {
-  const { isAuthenticated } = useAuthStore();
-
+  const { isAuthenticated, user: authUser } = useAuthStore();
+  const user = authUser as User | null;
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <View className="flex-1 bg-black/45 justify-center items-center">
         <View
           style={{
             width: 300,
-            height: 300,
+            height: 420,
             backgroundColor: "white",
             borderRadius: 16,
             padding: 20,
@@ -70,23 +73,58 @@ const QuickApplyModal = ({
                 </TouchableOpacity>
               </View>
             </View>
-          ) : canQuickApply ? (
+          ) : canQuickApply && user?.primaryResume ? (
             <>
-              <Text className="font-quicksand-bold text-xl">Quick Apply</Text>
-              <Text className="font-quicksand-medium text-center">{label} with primary resume: Resume.pdf</Text>
-              <View className="flex flex-row items-center justify-center w-full gap-2">
-                <TouchableOpacity
-                  className="apply-button w-1/2 items-center justify-center h-14"
-                  onPress={() => handleClose(true, false)}
-                >
-                  <Text className="font-quicksand-bold">Confirm</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="apply-button w-1/2 items-center justify-center h-14"
-                  onPress={() => handleClose(false, false)}
-                >
-                  <Text className="font-quicksand-bold">Cancel</Text>
-                </TouchableOpacity>
+              <View className="items-center w-full">
+                <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+                  <Feather name="check-circle" size={28} color="#10b981" />
+                </View>
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Quick Apply</Text>
+                <Text className="font-quicksand-medium text-center text-gray-600 mb-4 px-2 leading-5">
+                  {label} with your primary resume. You can change your primary resume in the{" "}
+                  <Text
+                    className="underline font-quicksand-bold text-blue-500"
+                    onPress={() => {
+                      handleClose(false, true);
+                      router.push("/userProfile/manageDocs");
+                    }}
+                  >
+                    manage docs
+                  </Text>{" "}
+                  section.
+                </Text>
+
+                <View className="flex-row items-center w-full mb-6 px-2">
+                  <View className="flex-1 mr-3">
+                    <DocumentItem customAction={() => {}} document={user?.primaryResume} canEdit={false} />
+                  </View>
+                </View>
+
+                <View className="flex flex-row items-center justify-center w-full gap-3">
+                  <TouchableOpacity
+                    className="bg-emerald-500 w-1/2 items-center justify-center h-12 rounded-lg flex-row gap-2"
+                    style={{
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                    onPress={() => handleClose(true, false)}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="check" size={16} color="white" />
+                    <Text className="font-quicksand-semibold text-white">Confirm</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-gray-200 w-1/2 items-center justify-center h-12 rounded-lg flex-row gap-2"
+                    onPress={() => handleClose(false, false)}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="x" size={16} color="#6b7280" />
+                    <Text className="font-quicksand-semibold text-gray-700">Cancel</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </>
           ) : (

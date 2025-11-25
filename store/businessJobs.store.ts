@@ -1,4 +1,4 @@
-import { getJobsForBusinessAndFilter } from "@/lib/userEndpoints";
+import { getJobsForBusinessAndFilter, getMostPopularJobs } from "@/lib/userEndpoints";
 import { Job, JobFilters } from "@/type";
 import { create } from "zustand";
 
@@ -23,29 +23,50 @@ interface BusinessJobState {
     pendingApplicationsByJobId: Record<string, number>;
     interviewsByJobId: Record<string, number>;
     loadingJobStates: Record<string, boolean>;
+    loadingMostPopularJobs: boolean;
     totalCounts: Record<string, number>;
+    mostAppliedJobs: Job[];
+    mostViewedJobs: Job[];
+    viewsPerJobId: Record<string, number>;
+    applicationsPerJobId: Record<string, number>;
     pagination: Record<string, { currentPage: number, hasMore: boolean}>;
     lastFetchedJobs: Record<string, number>;
-
+    lastFetchedMostPopularJobs: number;
     fetchJobsForBusinessAndFilter: (filter: JobFilters, page?: number) => Promise<void>;
-
+    fetchMostPopularJobs: () => Promise<void>;
     getInterviewsForJobAndFilter(filter: JobFilters): Job[];
     getTotalCountForJobAndFilter(filter: JobFilters): number;
     getPendingApplicationsForJob(jobId: number): number;
     getInterviewsForJob(jobId: number): number;
     getPaginationForJobAndFilter(filter: JobFilters): { currentPage: number, hasMore: boolean } | undefined;
+    getMostAppliedJobs: () => Job[];
+    getMostViewedJobs: () => Job[];
+    getViewsForJob(jobId: number): number;
+    getApplicationsForJob(jobId: number): number;
     isLoadingJobsForBusinessAndFilter(filter: JobFilters): boolean;
 
     hasValidCachedJobs: (filter: JobFilters) => boolean;
+    hasValidCachedMostPopularJobs: () => boolean;
     refreshJobsForBusinessAndFilter: (filter: JobFilters) => Promise<void>;
     refreshEverything: () => Promise<void>;
+
+    setViewsForJob: (jobId: number, views: number) => void;
+    setApplicationsForJob: (jobId: number, applications: number) => void;
+    setPendingApplicationsForJob: (jobId: number, pendingApplications: number) => void;
+    setInterviewsForJob: (jobId: number, interviews: number) => void;
 }
 
 const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
     businessJobsByIdAndFilter: {},
     loadingJobStates: {},
+    loadingMostPopularJobs: false,
     totalCounts: {},
+    mostAppliedJobs: [],
+    mostViewedJobs: [],
+    viewsPerJobId: {},
+    applicationsPerJobId: {},
     lastFetchedJobs: {},
+    lastFetchedMostPopularJobs: 0,
     pagination: {},
     pendingApplicationsByJobId: {},
     interviewsByJobId: {},
@@ -75,7 +96,15 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
                     interviewsByJobId: {
                         ...state.interviewsByJobId,
                         [job.id]: job.totalInterviews || 0,
-                    }
+                    },
+                    viewsPerJobId: {
+                        ...state.viewsPerJobId,
+                        [job.id]: job.views || 0,
+                    },
+                    applicationsPerJobId: {
+                        ...state.applicationsPerJobId,
+                        [job.id]: job.applicants || 0,
+                    },
                 }))
             })
             set((state) => ({
@@ -114,6 +143,45 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
             }))
         }
     },
+    fetchMostPopularJobs: async () => {
+        const state = get();
+        if (state.loadingMostPopularJobs) return;
+        set({ loadingMostPopularJobs: true });
+        try {
+            const response = await getMostPopularJobs();
+            const { mostAppliedJobs, mostViewedJobs } = response;
+            for (const job of [...mostAppliedJobs, ...mostViewedJobs]) {
+                set((state) => ({
+                    pendingApplicationsByJobId: {
+                        ...state.pendingApplicationsByJobId,
+                        [job.id]: job.pendingApplicationsSize || 0,
+                    },
+                    interviewsByJobId: {
+                        ...state.interviewsByJobId,
+                        [job.id]: job.totalInterviews || 0,
+                    },
+                    viewsPerJobId: {
+                        ...state.viewsPerJobId,
+                        [job.id]: job.views || 0,
+                    },
+                    applicationsPerJobId: {
+                        ...state.applicationsPerJobId,
+                        [job.id]: job.applicants || 0,
+                    },
+                }))
+            }
+            set({
+                mostAppliedJobs,
+                mostViewedJobs,
+                lastFetchedMostPopularJobs: Date.now(),
+            });
+        } catch (error) {
+            
+        } finally {
+            set({ loadingMostPopularJobs: false });
+        }
+    },
+
     getInterviewsForJobAndFilter: (filter) => {
         const filterKey = createFilterKey(filter);
         const state = get();
@@ -137,6 +205,22 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
         const state = get();
         return state.interviewsByJobId[jobId] || 0;
     },
+    getMostAppliedJobs: () => {
+        const state = get();
+        return state.mostAppliedJobs;
+    },
+    getMostViewedJobs: () => {
+        const state = get();
+        return state.mostViewedJobs;
+    },
+    getViewsForJob: (jobId) => {
+        const state = get();
+        return state.viewsPerJobId[jobId] || 0;
+    },
+    getApplicationsForJob: (jobId) => {
+        const state = get();
+        return state.applicationsPerJobId[jobId] || 0;
+    },
     isLoadingJobsForBusinessAndFilter: (filter) => {
         const filterKey = createFilterKey(filter);
         const state = get();
@@ -148,8 +232,16 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
         const lastFetched = state.lastFetchedJobs[filterKey];
         if (!lastFetched) return false;
         const now = Date.now();
-        const FIVE_MINUTES = 5 * 60 * 1000;
-        return (now - lastFetched) < FIVE_MINUTES;
+        const TWO_MINUTES = 2 * 60 * 1000;
+        return (now - lastFetched) < TWO_MINUTES;
+    },
+    hasValidCachedMostPopularJobs: () => {
+        const state = get();
+        const lastFetched = state.lastFetchedMostPopularJobs;
+        if (!lastFetched) return false;
+        const now = Date.now();
+        const TWO_MINUTES = 2 * 60 * 1000;
+        return (now - lastFetched) < TWO_MINUTES;
     },
     refreshJobsForBusinessAndFilter: async (filter) => {
         const filterKey = createFilterKey(filter);
@@ -175,7 +267,63 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
             lastFetchedJobs: {},
         }));
         await newState.fetchJobsForBusinessAndFilter({} as JobFilters, 0);
-    }
+    },
+    setViewsForJob: (jobId, views) => {
+        set((state) => {
+            const currentViews = state.viewsPerJobId[jobId];
+            if (currentViews === undefined || views > currentViews) {
+                return {
+                    viewsPerJobId: {
+                        ...state.viewsPerJobId,
+                        [jobId]: views,
+                    }
+                };
+            }
+            return state;
+        })
+    },
+    setApplicationsForJob: (jobId, applications) => {
+        set((state) => {
+            const currentApplications = state.applicationsPerJobId[jobId];
+            if (currentApplications === undefined || applications > currentApplications) {
+                return {
+                    applicationsPerJobId: {
+                        ...state.applicationsPerJobId,
+                        [jobId]: applications,
+                    }
+                };
+            }
+            return state;
+        })
+    },
+    setPendingApplicationsForJob: (jobId, pendingApplications) => {
+        set((state) => {
+            const currentPendingApplications = state.pendingApplicationsByJobId[jobId];
+            if (currentPendingApplications === undefined || pendingApplications > currentPendingApplications) {
+                return {
+                    pendingApplicationsByJobId: {
+                        ...state.pendingApplicationsByJobId,
+                        [jobId]: pendingApplications,
+                    }
+                };
+            }
+            return state;
+        })
+    },
+    setInterviewsForJob: (jobId, interviews) => {
+        set((state) => {
+            const currentInterviews = state.interviewsByJobId[jobId];
+            if (currentInterviews === undefined || interviews > currentInterviews) {
+                return {
+                    interviewsByJobId: {
+                        ...state.interviewsByJobId,
+                        [jobId]: interviews,
+                    }
+                };
+            }
+            return state;
+        })
+    },
 }))
 
 export default useBusinessJobsStore;

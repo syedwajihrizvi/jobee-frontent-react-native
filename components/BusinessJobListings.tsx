@@ -1,5 +1,6 @@
 import { formatDate, getEmploymentType, getJobLevel, getWorkArrangement } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
+import useBusinessJobsStore from "@/store/businessJobs.store";
 import { BusinessUser, Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -9,7 +10,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 const BusinessJobListings = ({ job }: { job: Job }) => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
-
+  const { getViewsForJob, getApplicationsForJob, getPendingApplicationsForJob } = useBusinessJobsStore();
   return (
     <TouchableOpacity
       className="mb-3 bg-white rounded-xl p-4 border border-gray-100"
@@ -60,7 +61,7 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
             <Feather name="eye" size={10} color="#3b82f6" />
             <Text className="font-quicksand-medium text-xs text-blue-700">Views</Text>
           </View>
-          <Text className="font-quicksand-bold text-sm text-blue-800">{job.views || "0"}</Text>
+          <Text className="font-quicksand-bold text-sm text-blue-800">{getViewsForJob(job.id) || "0"}</Text>
         </View>
 
         <View className="bg-emerald-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">
@@ -68,7 +69,7 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
             <Feather name="users" size={10} color="#10b981" />
             <Text className="font-quicksand-medium text-xs text-emerald-700">Applied</Text>
           </View>
-          <Text className="font-quicksand-bold text-sm text-emerald-800">{job.applicants}</Text>
+          <Text className="font-quicksand-bold text-sm text-emerald-800">{getApplicationsForJob(job.id) || "0"}</Text>
         </View>
 
         <View className="bg-amber-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">
@@ -76,7 +77,9 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
             <Feather name="clock" size={10} color="#f59e0b" />
             <Text className="font-quicksand-medium text-xs text-amber-700">Pending</Text>
           </View>
-          <Text className="font-quicksand-bold text-sm text-amber-800">{job.pendingApplicationsSize || "0"}</Text>
+          <Text className="font-quicksand-bold text-sm text-amber-800">
+            {getPendingApplicationsForJob(job.id) || "0"}
+          </Text>
         </View>
         {job.totalInterviews > 0 && (
           <View className="bg-amber-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">

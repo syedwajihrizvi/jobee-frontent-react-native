@@ -5,8 +5,8 @@ import { QueryFunctionContext, useInfiniteQuery, useQuery } from '@tanstack/reac
 import { getEducationLevel, getExperienceLevel } from '../utils';
 
 const JOBS_API_URL = getAPIUrl('jobs');
-const APPLICATIONS_API_URL = `http://192.168.2.29:8080/applications`;
-const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
+const APPLICATIONS_API_URL = getAPIUrl('applications');
+const INTERVIEWS_API_URL = getAPIUrl('interviews');
 const USER_PROFILE_API_URL = getAPIUrl('profiles');
 
 export const useJobs = (jobFilters: JobFilters) => {
@@ -182,7 +182,8 @@ export const useJobsForBusiness = (jobId: number) => {
   return useQuery<Job, Error>({
     queryKey: ['job', 'business', jobId],
     queryFn: fetchJobForBusiness,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
+    refetchOnMount: true,
     enabled: !!jobId,
   })
 }

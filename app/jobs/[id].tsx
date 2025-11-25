@@ -8,8 +8,9 @@ import FavoriteJob from "@/components/FavoriteJob";
 import JobInfo from "@/components/JobInfo";
 import ModalWithBg from "@/components/ModalWithBg";
 import QuickApply from "@/components/QuickApply";
+import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import ViewMore from "@/components/ViewMore";
-import { sounds, UserDocumentType } from "@/constants";
+import { sounds } from "@/constants";
 import { addViewToJobs, applyToJob, checkJobMatchForUser } from "@/lib/jobEndpoints";
 import { useCompany } from "@/lib/services/useCompany";
 import { useJob } from "@/lib/services/useJobs";
@@ -36,7 +37,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
   const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
-  const { applications, setApplications, isLoadingApplications, setLastApplication } = useUserStore();
+  const { applications, setApplications, isLoadingApplications, setLastApplication, lastApplication } = useUserStore();
   const user = authUser as User | null;
   const { data: job, isLoading } = useJob(Number(jobId));
   const [jobApplication, setJobApplication] = useState<Application | null>(null);
@@ -50,20 +51,13 @@ const JobDetails = () => {
   const { data: company, isLoading: isLoadingCompany } = useCompany(job?.companyId ?? undefined);
   const [showMatchSignInModal, setShowMatchSignInModal] = useState(false);
   const [showJobInfoModal, setShowJobInfoModal] = useState(false);
-  const [openResumeDropdown, setOpenResumeDropdown] = useState(false);
-  const [openCoverLetterDropdown, setOpenCoverLetterDropdown] = useState(false);
-  const [selectedResume, setSelectedResume] = useState<string | null>(null);
-  const [selectedCoverLetter, setSelectedCoverLetter] = useState<string | null>(null);
   const [matchPercentage, setMatchPercentage] = useState<number | null>(null);
   const [isCheckingMatch, setIsCheckingMatch] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const jobBottomRef = useRef<BottomSheet>(null);
   const companyBottomRef = useRef<BottomSheet>(null);
   const applyBottomRef = useRef<BottomSheet>(null);
   const viewApplicationBottomRef = useRef<BottomSheet>(null);
-  const [userDocuments, setUserDocuments] = useState<{
-    RESUMES: UserDocument[];
-    COVER_LETTERS: UserDocument[];
-  } | null>(null);
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
   const userHasResume = user && user.documents && user.documents.some((doc) => doc.documentType === "RESUME");
   const player = useAudioPlayer(sounds.popSound);
@@ -84,20 +78,6 @@ const JobDetails = () => {
     addView();
   }, [jobId]);
 
-  useEffect(() => {
-    if (user && (user as User).documents) {
-      const resumes = (user as User).documents.filter((doc) => doc.documentType === UserDocumentType.RESUME);
-      const coverLetters = (user as User).documents.filter((doc) => doc.documentType === UserDocumentType.COVER_LETTER);
-      setUserDocuments({
-        RESUMES: resumes,
-        COVER_LETTERS: coverLetters,
-      });
-      if (resumes.length > 0) {
-        setSelectedResume(String(resumes[0].id));
-      }
-    }
-  }, [isLoadingUser, user]);
-
   const handleApplyBottomOpen = () => {
     companyBottomRef.current?.close();
     jobBottomRef.current?.close();
@@ -112,29 +92,27 @@ const JobDetails = () => {
     viewApplicationBottomRef.current?.expand();
   };
 
-  const handleSubmitApplication = async () => {
+  const handleSubmitApplication = async (
+    selectedResume: UserDocument | null,
+    selectedCoverLetter: UserDocument | null
+  ) => {
     if (!selectedResume) {
       Alert.alert("Please select a resume to proceeed.");
       return;
     }
+    console.log("Submitting application with resume:", selectedResume, "and cover letter:", selectedCoverLetter);
     setIsSubmittingApplication(true);
     try {
       const applicationInfo: CreateApplication = {
         jobId: Number(jobId),
-        resumeDocumentId: Number(selectedResume),
-        coverLetterDocumentId: selectedCoverLetter ? Number(selectedCoverLetter) : undefined,
+        resumeDocumentId: Number(selectedResume.id),
+        coverLetterDocumentId: selectedCoverLetter ? Number(selectedCoverLetter.id) : undefined,
       };
 
       const res = await applyToJob(applicationInfo);
       if (res) {
-        const newApplication = {
-          id: res.id,
-          appliedAt: res.appliedAt,
-          jobId: Number(jobId),
-          status: res.status,
-        } as Application;
-        setLastApplication(newApplication);
-        setApplications([newApplication, ...applications]);
+        setShowSuccessModal(true);
+        setLastApplication(res);
         addAppliedJob(res.job);
         addApplicationForJob(Number(jobId));
         Alert.alert("Application submitted successfully!");
@@ -154,7 +132,7 @@ const JobDetails = () => {
   const calculateApplyButtonSnapPoints = () => {
     if (!isAuthenticated) return ["30%"];
     if (!userHasResume) return ["32%"];
-    return ["50%"];
+    return ["60%"];
   };
 
   const handleCheckMatch = async () => {
@@ -177,10 +155,11 @@ const JobDetails = () => {
   };
 
   const renderJobMatchView = () => {
+    const buttonWidth = jobApplication ? "w-full" : "w-1/2";
     if (isCheckingMatch) {
       return (
         <TouchableOpacity
-          className="bg-gray-400 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2 w-1/2"
+          className={`bg-gray-400 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2 ${buttonWidth}`}
           style={{
             shadowColor: "#6b7280",
             shadowOffset: { width: 0, height: 3 },
@@ -198,7 +177,7 @@ const JobDetails = () => {
     if (matchPercentage === null) {
       return (
         <TouchableOpacity
-          className="bg-emerald-500 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2 w-1/2"
+          className={`bg-emerald-500 rounded-xl px-2 py-3 items-center justify-center flex-row gap-2 mb-2 ${buttonWidth}`}
           style={{
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 3 },
@@ -216,7 +195,7 @@ const JobDetails = () => {
     }
     const config = getMatchConfig(matchPercentage);
     return (
-      <View className="mb-2 w-1/2">
+      <View className={`mb-2 ${buttonWidth}`}>
         <View
           className={`${config.bgColor} rounded-xl px-2 py-3 items-center justify-center flex-row gap-2`}
           style={{
@@ -230,21 +209,6 @@ const JobDetails = () => {
           <Text className="font-quicksand-bold text-sm text-white">{matchPercentage}% Match</Text>
           <Feather name={config.icon as React.ComponentProps<typeof Feather>["name"]} size={12} color="white" />
         </View>
-        <TouchableOpacity
-          className="bg-emerald-500 border border-gray-200 rounded-xl px-3 py-2 mt-2 flex-row items-center justify-center gap-2"
-          style={{
-            shadowColor: "#6b7280",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-          activeOpacity={0.8}
-          onPress={handleCheckMatch}
-        >
-          <Feather name="refresh-cw" size={12} color="white" />
-          <Text className="font-quicksand-semibold text-xs text-white">Re-analyze Match</Text>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -394,7 +358,7 @@ const JobDetails = () => {
             )}
             <View className="flex-row items-center justify-center gap-2">
               {renderJobMatchView()}
-              <QuickApply job={job!} size="large" />
+              {!jobApplication && <QuickApply job={job!} size="large" />}
             </View>
           </View>
           <View
@@ -495,18 +459,8 @@ const JobDetails = () => {
         <BottomSheetView className="flex-1 bg-white">
           {isAuthenticated && user ? (
             <ApplyBottomSheet
-              userHasResume={!!userHasResume}
-              selectedResume={selectedResume}
-              setSelectedResume={setSelectedResume}
-              openResumeDropdown={openResumeDropdown}
-              setOpenResumeDropdown={setOpenResumeDropdown}
-              selectedCoverLetter={selectedCoverLetter}
-              setSelectedCoverLetter={setSelectedCoverLetter}
-              openCoverLetterDropdown={openCoverLetterDropdown}
-              setOpenCoverLetterDropdown={setOpenCoverLetterDropdown}
-              userDocuments={userDocuments}
-              isSubmittingApplication={isSubmittingApplication}
               handleSubmitApplication={handleSubmitApplication}
+              isSubmittingApplication={isSubmittingApplication}
               closeSheet={() => applyBottomRef.current?.close()}
             />
           ) : (
@@ -568,6 +522,38 @@ const JobDetails = () => {
             </TouchableOpacity>
           </View>
           <JobInfo job={job!} />
+        </View>
+      </ModalWithBg>
+      <ModalWithBg visible={showSuccessModal} customHeight={0.5} customWidth={0.8}>
+        <View className="flex-1 items-center justify-center gap-4 px-6">
+          <View className="w-16 h-16 bg-emerald-500 rounded-full items-center justify-center">
+            <Feather name="check" size={28} color="white" />
+          </View>
+
+          <View className="items-center gap-1">
+            <Text className="font-quicksand-bold text-lg text-gray-800">Applied Successfully!</Text>
+            <Text className="font-quicksand-semibold text-sm text-gray-600 text-center">
+              Applied to {job?.title} at {job?.businessName}. Check your dashboard for updates.
+            </Text>
+          </View>
+
+          <RenderCompanyLogo logoUrl={job?.companyLogoUrl} size={12} />
+
+          <TouchableOpacity
+            className="bg-emerald-500 py-3 px-6 rounded-xl mt-4 w-full items-center justify-center"
+            onPress={() => {
+              setShowSuccessModal(false);
+              const newApplication = {
+                id: lastApplication?.id,
+                appliedAt: lastApplication?.appliedAt,
+                jobId: job?.id,
+                status: lastApplication?.status,
+              } as Application;
+              setApplications([newApplication, ...applications]);
+            }}
+          >
+            <Text className="font-quicksand-bold text-white text-base">Perfect Thanks!</Text>
+          </TouchableOpacity>
         </View>
       </ModalWithBg>
       <Modal transparent animationType="fade" visible={showMatchSignInModal}>

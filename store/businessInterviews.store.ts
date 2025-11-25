@@ -84,7 +84,7 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
                 }
             }))
         }
-    } ,
+    },
     getInterviewsForJobAndFilter: (filter) => {
         const filterKey = createFilterKey(filter);
         const state = get();
@@ -111,7 +111,7 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
         const lastFetched = state.lastFetchedInterviews[filterKey];
         if (!lastFetched) return false;
         const now = Date.now();
-        const fiveMinutes = 20 * 60 * 1000;
+        const fiveMinutes = 2 * 60 * 1000;
         return (now - lastFetched) < fiveMinutes;
     },
     refreshInterviewsForJobAndFilter: async (filter) => {

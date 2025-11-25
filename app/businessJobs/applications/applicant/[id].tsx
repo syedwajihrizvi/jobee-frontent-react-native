@@ -2,7 +2,10 @@ import ApplicantSection from "@/components/ApplicantSection";
 import BackBar from "@/components/BackBar";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import ContactCandidate from "@/components/ContactCandidate";
+import DocumentItem from "@/components/DocumentItem";
 import DocumentModal from "@/components/DocumentModal";
+import DocumentSection from "@/components/DocumentSection";
+import ExpandableText from "@/components/ExpandableText";
 import ModalWithBg from "@/components/ModalWithBg";
 import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import UserVideoIntro from "@/components/UserVideoIntro";
@@ -14,8 +17,8 @@ import { addViewToProfile } from "@/lib/updateUserProfile";
 import { getApplicationStatus } from "@/lib/utils";
 import useApplicationStore from "@/store/applications.store";
 import useAuthStore from "@/store/auth.store";
-import { BusinessUser, User } from "@/type";
-import { Feather, FontAwesome, FontAwesome5, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
+import { BusinessUser, User, UserDocument } from "@/type";
+import { Feather, FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -36,21 +39,29 @@ const ApplicantForBusiness = () => {
     setApplicationStatus,
   } = useApplicationStore();
   const { data: applicationData, isLoading } = useApplicant(Number(id));
+  const [activeTab, setActiveTab] = useState<"overview" | "experience" | "documents">("overview");
+  const [activeExperience, setActiveExperience] = useState<"work" | "education" | "projects" | "skills" | null>(null);
   const [application, setApplication] = useState(applicationData);
   const { userProfile } = application || {};
   const [isUpdatingReject, setIsUpdatingReject] = useState(false);
-  const [showSkills, setShowSkills] = useState(false);
-  const [showExperience, setShowExperience] = useState(false);
-  const [showEducation, setShowEducation] = useState(false);
-  const [showProjects, setShowProjects] = useState(false);
-  const [showCertificates, setShowCertificates] = useState(false);
   const [makingShortListRequest, setMakingShortListRequest] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<string | undefined>();
+  const [userDocuments, setUserDocuments] = useState<{
+    transcripts: UserDocument[];
+    recommendationLetters: UserDocument[];
+    certificates: UserDocument[];
+  }>({ transcripts: [], recommendationLetters: [], certificates: [] });
+
   const user = authUser as BusinessUser | null;
   const isShortListed = isCandidateShortListed(Number(application?.jobId), Number(application?.id));
 
   useEffect(() => {
     if (applicationData && !isLoading) {
+      const { userDocuments } = applicationData;
+      const transcripts = userDocuments.filter((doc) => doc.documentType === "TRANSCRIPT");
+      const recommendationLetters = userDocuments.filter((doc) => doc.documentType === "RECOMMENDATION");
+      const certificates = userDocuments.filter((doc) => doc.documentType === "CERTIFICATE");
+      setUserDocuments({ transcripts, recommendationLetters, certificates });
       setApplication(applicationData);
     }
   }, [applicationData, isLoading]);
@@ -58,9 +69,8 @@ const ApplicantForBusiness = () => {
   useEffect(() => {
     const addProfileView = async () => {
       await addViewToProfile(Number(application?.userProfile.id));
-      console.log("Profile view added");
     };
-    addProfileView();
+    if (application?.userProfile.id) addProfileView();
   }, [application]);
 
   const handleRejectCandidate = async () => {
@@ -187,16 +197,260 @@ const ApplicantForBusiness = () => {
     }
   };
 
-  const handleResumePress = () => {
-    setViewingDocument(application?.resumeUrl);
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return <OverviewTab />;
+      case "experience":
+        return <ExperienceTab />;
+      case "documents":
+        return <DocumentsTab />;
+    }
   };
 
-  const handleCoverLetterPress = () => {
-    setViewingDocument(application?.coverLetterUrl);
-  };
+  const OverviewTab = () => (
+    <View className="py-4 gap-4 pb-20">
+      <View className="bg-white rounded-xl p-4 border border-gray-100">
+        <Text className="font-quicksand-bold text-md text-gray-900">Professional Summary</Text>
+        <ExpandableText text={userProfile?.summary || "No Profile Summary Provided"} length={150} />
+      </View>
+      <View className="bg-white rounded-xl p-4 border border-gray-100">
+        <Text className="font-quicksand-bold text-md text-gray-900 mb-3">Top Skills</Text>
+        <View className="flex-row flex-wrap gap-2">
+          {userProfile?.skills?.slice(0, 10).map((skill) => (
+            <View key={skill.id} className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+              <Text className="font-quicksand-medium text-xs text-emerald-700">{skill.skill.name}</Text>
+            </View>
+          ))}
+          {userProfile?.skills && userProfile.skills.length > 10 && (
+            <TouchableOpacity
+              className="bg-gray-50 border border-gray-200 px-3 py-1 rounded-full"
+              onPress={() => setActiveTab("experience")}
+            >
+              <Text className="font-quicksand-medium text-xs text-gray-600">
+                +{userProfile.skills.length - 10} more
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+      {userProfile?.videoIntroUrl && (
+        <View className="bg-white rounded-xl p-4 border border-gray-100">
+          <Text className="font-quicksand-bold text-md text-gray-900 mb-3">Video Introduction</Text>
+          <UserVideoIntro videoSource={getS3VideoIntroUrl(userProfile.videoIntroUrl)} />
+        </View>
+      )}
+    </View>
+  );
+
+  const ExperienceTab = () => (
+    <View className="py-4 gap-4 pb-20">
+      <CollapsibleSection
+        title="Skills"
+        icon={<Ionicons name="bulb" size={16} color="#10b981" />}
+        titleSize="text-md"
+        isOpen={activeExperience === "skills"}
+        onToggle={() => setActiveExperience(activeExperience === "skills" ? null : "skills")}
+      >
+        <ApplicantSection
+          items={userProfile?.skills || []}
+          emptyIcon={<Ionicons name="bulb" size={24} color="#6b7280" />}
+          emptyMessage="No skills added"
+        >
+          <View className="flex-row flex-wrap gap-2">
+            {userProfile?.skills.map((skill) => (
+              <View
+                key={skill.id}
+                className="bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl"
+                style={{
+                  shadowColor: "#3b82f6",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              >
+                <Text className="text-emerald-700 font-quicksand-semibold text-xs">{skill.skill.name}</Text>
+              </View>
+            ))}
+          </View>
+        </ApplicantSection>
+      </CollapsibleSection>
+      <CollapsibleSection
+        title="Work Experience"
+        titleSize="text-md"
+        icon={<FontAwesome5 name="briefcase" size={16} color="#10b981" />}
+        isOpen={activeExperience === "work"}
+        onToggle={() => setActiveExperience(activeExperience === "work" ? null : "work")}
+      >
+        <ApplicantSection
+          items={userProfile?.experiences || []}
+          emptyIcon={<FontAwesome5 name="briefcase" size={24} color="#6b7280" />}
+          emptyMessage="No work experience added"
+        >
+          <View className="gap-3">
+            {userProfile?.experiences.map((exp) => (
+              <View
+                key={exp.id}
+                className="bg-gray-50 border border-gray-200 rounded-xl p-4"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              >
+                <Text className="font-quicksand-bold text-sm text-gray-900">{exp.title}</Text>
+                <Text className="font-quicksand-semibold text-sm text-emerald-700">{exp.company}</Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600">
+                  {exp.from} - {exp.to || "Present"}
+                </Text>
+                <ExpandableText text={exp.description} length={200} />
+              </View>
+            ))}
+          </View>
+        </ApplicantSection>
+      </CollapsibleSection>
+      <CollapsibleSection
+        title="Education"
+        titleSize="text-md"
+        icon={<FontAwesome name="university" size={16} color="#10b981" />}
+        isOpen={activeExperience === "education"}
+        onToggle={() => setActiveExperience(activeExperience === "education" ? null : "education")}
+      >
+        <ApplicantSection
+          items={userProfile?.education || []}
+          emptyIcon={<FontAwesome name="university" size={24} color="#6b7280" />}
+          emptyMessage="No education details added"
+        >
+          <View className="gap-3">
+            {userProfile?.education.map((edu) => (
+              <View
+                key={edu.id}
+                className="bg-gray-50 border border-gray-200 rounded-xl p-4"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              >
+                <Text className="font-quicksand-bold text-sm text-gray-900">{edu.degree}</Text>
+                <Text className="font-quicksand-semibold text-sm text-emerald-700">{edu.institution}</Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600">
+                  {edu.fromYear} - {edu.toYear || "Present"}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </ApplicantSection>
+      </CollapsibleSection>
+      <CollapsibleSection
+        title="Projects"
+        titleSize="text-md"
+        icon={<FontAwesome name="folder" size={16} color="#10b981" />}
+        isOpen={activeExperience === "projects"}
+        onToggle={() => setActiveExperience(activeExperience === "projects" ? null : "projects")}
+      >
+        <ApplicantSection
+          items={userProfile?.projects || []}
+          emptyIcon={<Feather name="folder" size={24} color="#6b7280" />}
+          emptyMessage="No projects added"
+        >
+          <View className="gap-3">
+            <View className="gap-3">
+              {userProfile?.projects.map((project) => (
+                <View
+                  key={project.id}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-4"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                >
+                  <Text className="font-quicksand-bold text-md text-gray-900">{project.name}</Text>
+                  {project.link && (
+                    <Text className="font-quicksand-semibold text-sm text-emerald-600">{project.link}</Text>
+                  )}
+                  {project.yearCompleted && (
+                    <Text className="font-quicksand-medium text-sm text-gray-600">{project.yearCompleted}</Text>
+                  )}
+                  <ExpandableText text={project.description} length={200} />
+                </View>
+              ))}
+            </View>
+          </View>
+        </ApplicantSection>
+      </CollapsibleSection>
+    </View>
+  );
+
+  const DocumentsTab = () => (
+    <View className="py-4 gap-4 pb-20">
+      {/* Resume & Cover Letter */}
+      <View className="bg-white rounded-xl p-4 border border-gray-100">
+        <Text className="font-quicksand-bold text-md text-gray-900 mb-3">Application Documents</Text>
+        <View className="flex-row gap-3">
+          {application?.resumeDocument && (
+            <DocumentItem
+              document={application?.resumeDocument}
+              customAction={() => {}}
+              customTitle="Resume"
+              canEdit={false}
+            />
+          )}
+          {application?.coverLetterDocument && (
+            <DocumentItem
+              document={application?.coverLetterDocument}
+              customAction={() => {}}
+              customTitle="Cover Letter"
+              canEdit={false}
+            />
+          )}
+        </View>
+      </View>
+
+      {(userDocuments.transcripts.length > 0 ||
+        userDocuments.recommendationLetters.length > 0 ||
+        userDocuments.certificates.length > 0) && (
+        <View className="rounded-xl gap-2">
+          <Text className="font-quicksand-bold text-md text-gray-900 mb-3">Additional Documents</Text>
+
+          {userDocuments.transcripts.length > 0 && (
+            <DocumentSection
+              title="Transcripts"
+              documents={userDocuments.transcripts}
+              icon={<Feather name="book" size={18} color="#10b981" />}
+            />
+          )}
+
+          {userDocuments.recommendationLetters.length > 0 && (
+            <DocumentSection
+              title="Recommendation Letters"
+              documents={userDocuments.recommendationLetters}
+              icon={<Feather name="mail" size={18} color="#10b981" />}
+            />
+          )}
+
+          {userDocuments.certificates.length > 0 && (
+            <DocumentSection
+              title="Certificates"
+              documents={userDocuments.certificates}
+              icon={<Feather name="award" size={18} color="#10b981" />}
+            />
+          )}
+        </View>
+      )}
+    </View>
+  );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 relative pb-20">
+    <SafeAreaView className="flex-1 bg-gray-50 relative">
       {isLoading ? (
         <>
           <BackBar label="Back" />
@@ -218,276 +472,63 @@ const ApplicantForBusiness = () => {
         </>
       ) : (
         <>
-          <BackBar label="Applicant Details" />
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            <View
-              className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              <View className="flex-row items-start justify-between mb-2">
-                <View className="flex-row items-start gap-4 flex-1">
-                  <RenderUserProfileImage user={userProfile} fontSize={20} profileImageSize={14} />
-                  <View className="flex-1">
-                    <View className="flex-row items-center justify-between">
-                      <Text className="font-quicksand-bold text-xl text-gray-900">
-                        {userProfile?.firstName} {userProfile?.lastName}
-                      </Text>
-                      {user?.role !== "EMPLOYEE" && (
-                        <TouchableOpacity className="flex-row gap-1" onPress={() => setShowActionsModal(true)}>
-                          <SimpleLineIcons name="options-vertical" size={16} color="#6b7280" />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-
-                    <Text className="font-quicksand-semibold text-base text-gray-700">{userProfile?.title}</Text>
-                    <View className="flex-row items-center gap-1">
-                      <Feather name="map-pin" size={14} color="#6b7280" />
-                      <Text className="font-quicksand-medium text-sm text-gray-600">{userProfile?.location}</Text>
-                    </View>
-                  </View>
-                </View>
+          <BackBar label="Applicant Profile" />
+          <View className="bg-white border-b border-gray-200 px-4 py-3">
+            <View className="flex-row items-center gap-3">
+              <RenderUserProfileImage user={userProfile} fontSize={18} profileImageSize={10} />
+              <View className="flex-1">
+                <Text className="font-quicksand-bold text-lg text-gray-900">
+                  {userProfile?.firstName} {userProfile?.lastName}
+                </Text>
+                <Text className="font-quicksand-medium text-sm text-gray-600">{userProfile?.title}</Text>
               </View>
-              <View className="mb-2">
-                <Text className="font-quicksand-semibold text-lg text-gray-900">Professional Summary</Text>
-                <Text className="font-quicksand-medium text-base text-gray-700">{userProfile?.summary}</Text>
-              </View>
-              {user?.role === "EMPLOYEE" && (
-                <View className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 flex-row gap-3">
-                  <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center mt-0.5">
-                    <Feather name="info" size={14} color="#3b82f6" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-quicksand-semibold text-sm text-blue-800 mb-1">Shortlisting Process</Text>
-                    <Text className="font-quicksand-medium text-xs text-blue-700 leading-4">
-                      When you shortlist a candidate, your recruiter will be notified to schedule an interview with
-                      them.
-                    </Text>
-                  </View>
-                </View>
-              )}
-              <View className="flex-row flex-wrap gap-3">
+              {user?.role !== "EMPLOYEE" && (
                 <TouchableOpacity
-                  className="bg-white border-2 border-gray-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                  onPress={handleResumePress}
-                  activeOpacity={0.8}
+                  className="bg-emerald-500 rounded-lg px-4 py-2"
+                  onPress={() => setShowActionsModal(true)}
                 >
-                  <View className="w-5 h-5 bg-gray-100 rounded-full items-center justify-center">
-                    <Feather name="file-text" size={14} color="#1f2937" />
-                  </View>
-                  <Text className="font-quicksand-semibold text-gray-900 text-sm">View Resume</Text>
+                  <Text className="font-quicksand-bold text-white text-sm">Actions</Text>
                 </TouchableOpacity>
-
-                {application?.coverLetterUrl && (
-                  <TouchableOpacity
-                    className="bg-white border-2 border-gray-500 rounded-xl px-3 py-2 flex-row items-center gap-2"
-                    style={{
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
-                    onPress={handleCoverLetterPress}
-                    activeOpacity={0.8}
-                  >
-                    <View className="w-5 h-5 bg-gray-100 rounded-full items-center justify-center">
-                      <Feather name="mail" size={14} color="#1f2937" />
-                    </View>
-                    <Text className="font-quicksand-semibold text-gray-900 text-sm">Cover Letter</Text>
-                  </TouchableOpacity>
-                )}
-
-                {renderActionButtons()}
-              </View>
+              )}
             </View>
-            <View className="mx-4 mt-4 gap-4">
-              <CollapsibleSection
-                title="Skills"
-                icon={<Ionicons name="bulb" size={16} color="#f59e0b" />}
-                isOpen={showSkills}
-                onToggle={() => setShowSkills(!showSkills)}
+          </View>
+          <View className="bg-white px-4">
+            <View className="flex-row border-b border-gray-200">
+              <TouchableOpacity
+                className={`flex-1 py-3 ${activeTab === "overview" ? "border-b-2 border-emerald-500" : ""}`}
+                onPress={() => setActiveTab("overview")}
               >
-                <ApplicantSection
-                  items={userProfile?.skills || []}
-                  emptyIcon={<Ionicons name="bulb" size={24} color="#6b7280" />}
-                  emptyMessage="No skills added"
+                <Text
+                  className={`text-center font-quicksand-semibold ${activeTab === "overview" ? "text-emerald-600" : "text-gray-600"}`}
                 >
-                  <View className="flex-row flex-wrap gap-2">
-                    {userProfile?.skills.map((skill) => (
-                      <View
-                        key={skill.id}
-                        className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl"
-                        style={{
-                          shadowColor: "#3b82f6",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      >
-                        <Text className="text-blue-800 font-quicksand-semibold text-sm">{skill.skill.name}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </ApplicantSection>
-              </CollapsibleSection>
-              <CollapsibleSection
-                title="Work Experience"
-                icon={<FontAwesome5 name="briefcase" size={16} color="#10b981" />}
-                isOpen={showExperience}
-                onToggle={() => setShowExperience(!showExperience)}
+                  Overview
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 py-3 ${activeTab === "experience" ? "border-b-2 border-emerald-500" : ""}`}
+                onPress={() => setActiveTab("experience")}
               >
-                <ApplicantSection
-                  items={userProfile?.experiences || []}
-                  emptyIcon={<FontAwesome5 name="briefcase" size={24} color="#6b7280" />}
-                  emptyMessage="No work experience added"
+                <Text
+                  className={`text-center font-quicksand-semibold ${activeTab === "experience" ? "text-emerald-600" : "text-gray-600"}`}
                 >
-                  <View className="gap-3">
-                    {userProfile?.experiences.map((exp) => (
-                      <View
-                        key={exp.id}
-                        className="bg-gray-50 border border-gray-200 rounded-xl p-4 gap-1"
-                        style={{
-                          shadowColor: "#000",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.05,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      >
-                        <Text className="font-quicksand-bold text-base text-gray-900">{exp.title}</Text>
-                        <Text className="font-quicksand-semibold text-sm text-emerald-600">{exp.company}</Text>
-                        <Text className="font-quicksand-medium text-sm text-gray-600">
-                          {exp.from} - {exp.to || "Present"}
-                        </Text>
-                        <Text className="font-quicksand-medium text-sm text-gray-700 leading-5">{exp.description}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </ApplicantSection>
-              </CollapsibleSection>
-              <CollapsibleSection
-                title="Education"
-                icon={<FontAwesome name="university" size={16} color="#8b5cf6" />}
-                isOpen={showEducation}
-                onToggle={() => setShowEducation(!showEducation)}
+                  Experience
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 py-3 ${activeTab === "documents" ? "border-b-2 border-emerald-500" : ""}`}
+                onPress={() => setActiveTab("documents")}
               >
-                <ApplicantSection
-                  items={userProfile?.education || []}
-                  emptyIcon={<FontAwesome name="university" size={24} color="#6b7280" />}
-                  emptyMessage="No education details added"
+                <Text
+                  className={`text-center font-quicksand-semibold ${activeTab === "documents" ? "text-emerald-600" : "text-gray-600"}`}
                 >
-                  <View className="gap-3">
-                    {userProfile?.education.map((edu) => (
-                      <View
-                        key={edu.id}
-                        className="bg-purple-50 border border-purple-200 rounded-xl p-4 gap-1"
-                        style={{
-                          shadowColor: "#8b5cf6",
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      >
-                        <Text className="font-quicksand-bold text-base text-gray-900">{edu.degree}</Text>
-                        <Text className="font-quicksand-semibold text-sm text-purple-600">{edu.institution}</Text>
-                        <Text className="font-quicksand-medium text-sm text-gray-600">
-                          {edu.fromYear} - {edu.toYear || "Present"}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </ApplicantSection>
-              </CollapsibleSection>
-              <CollapsibleSection
-                title="Projects"
-                icon={<FontAwesome5 name="project-diagram" size={16} color="#ef4444" />}
-                isOpen={showProjects}
-                onToggle={() => setShowProjects(!showProjects)}
-              >
-                <ApplicantSection
-                  items={userProfile?.projects || []}
-                  emptyIcon={<Feather name="folder" size={24} color="#6b7280" />}
-                  emptyMessage="No projects added"
-                >
-                  <View className="gap-3">
-                    <View className="gap-3">
-                      {userProfile?.projects.map((project) => (
-                        <View
-                          key={project.id}
-                          className="bg-gray-50 border border-gray-200 rounded-xl p-4 gap-1"
-                          style={{
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
-                            elevation: 1,
-                          }}
-                        >
-                          <Text className="font-quicksand-bold text-base text-gray-900">{project.name}</Text>
-                          <Text className="font-quicksand-semibold text-sm text-emerald-600">{project.link}</Text>
-                          <Text className="font-quicksand-medium text-sm text-gray-600">{project.yearCompleted}</Text>
-                          <Text className="font-quicksand-medium text-sm text-gray-700 leading-5">
-                            {project.description}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                </ApplicantSection>
-              </CollapsibleSection>
-              <CollapsibleSection
-                title="Certificates & Awards"
-                icon={<FontAwesome5 name="award" size={16} color="#f97316" />}
-                isOpen={showCertificates}
-                onToggle={() => setShowCertificates(!showCertificates)}
-              >
-                <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">
-                  <Feather name="award" size={24} color="#6b7280" />
-                  <Text className="font-quicksand-medium text-gray-600 mt-2">No certificates added</Text>
-                </View>
-              </CollapsibleSection>
+                  Documents
+                </Text>
+              </TouchableOpacity>
             </View>
-            {userProfile?.videoIntroUrl && (
-              <View className="mx-4 mt-4">
-                <View
-                  className="bg-white rounded-2xl p-5 border border-gray-100"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 12,
-                    elevation: 6,
-                  }}
-                >
-                  <View className="flex-row items-center gap-3 mb-4">
-                    <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
-                      <Feather name="video" size={16} color="#6366f1" />
-                    </View>
-                    <Text className="font-quicksand-bold text-lg text-gray-900">Video Introduction</Text>
-                  </View>
-                  <UserVideoIntro videoSource={getS3VideoIntroUrl(userProfile.videoIntroUrl)} />
-                </View>
-              </View>
-            )}
-            <View className="flex-1" />
-          </ScrollView>
+          </View>
+          <ScrollView className="flex-1 px-4">{renderTabContent()}</ScrollView>
           <View
-            className="bg-white border-t border-gray-200 px-4 py-6 absolute bottom-0 left-0 right-0"
+            className="bg-white border-t border-gray-200 px-4 pb-10 pt-6 absolute bottom-0 left-0 right-0"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -2 },
@@ -555,19 +596,45 @@ const ApplicantForBusiness = () => {
           handleClose={() => setViewingDocument(undefined)}
         />
       )}
-      <ModalWithBg visible={showActionsModal} customHeight={0.6} customWidth={0.9}>
+      <ModalWithBg visible={showActionsModal} customHeight={0.5} customWidth={0.9}>
         <View className="flex-1">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
-            <Text className="font-quicksand-bold text-lg text-gray-800">Candidate Actions</Text>
+            <Text className="font-quicksand-bold text-md text-gray-800">Candidate Actions</Text>
             <TouchableOpacity onPress={() => setShowActionsModal(false)} className="p-2">
-              <Feather name="x" size={20} color="#6b7280" />
+              <Feather name="x" size={18} color="#6b7280" />
             </TouchableOpacity>
           </View>
 
           <ScrollView className="flex-1 px-6 py-4">
+            <TouchableOpacity
+              className="bg-emerald-50 border border-green-200 rounded-xl p-3 mb-3 flex-row items-center gap-3"
+              style={{
+                shadowColor: "#22c55e",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+              onPress={() => {
+                setShowActionsModal(false);
+                bottomSheetRef.current?.expand();
+              }}
+              activeOpacity={0.7}
+            >
+              <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                <Feather name="message-circle" size={18} color="#22c55e" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-quicksand-bold text-sm text-gray-900">Contact Candidate</Text>
+                <Text className="font-quicksand-medium text-xs text-gray-600">
+                  Send and email, message, or call this candidate
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={14} color="#6b7280" />
+            </TouchableOpacity>
             {application?.status === "PENDING" && user?.role !== "EMPLOYEE" && (
               <TouchableOpacity
-                className="bg-emerald-50 border border-green-200 rounded-xl p-4 mb-4 flex-row items-center gap-4"
+                className="bg-emerald-50 border border-green-200 rounded-xl p-3 mb-3 flex-row items-center gap-3"
                 style={{
                   shadowColor: "#22c55e",
                   shadowOffset: { width: 0, height: 2 },
@@ -583,21 +650,21 @@ const ApplicantForBusiness = () => {
                 }}
                 activeOpacity={0.7}
               >
-                <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
-                  <Feather name="calendar" size={20} color="#22c55e" />
+                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                  <Feather name="calendar" size={18} color="#22c55e" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-quicksand-bold text-base text-gray-900">Schedule Interview</Text>
-                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                  <Text className="font-quicksand-bold text-sm text-gray-900">Schedule Interview</Text>
+                  <Text className="font-quicksand-medium text-xs text-gray-600">
                     Set up an interview with this candidate
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={16} color="#6b7280" />
+                <Feather name="chevron-right" size={14} color="#6b7280" />
               </TouchableOpacity>
             )}
             {application?.status === "PENDING" && (
               <TouchableOpacity
-                className={`border rounded-xl p-4 mb-4 flex-row items-center gap-4 ${
+                className={`border rounded-xl p-3 mb-3 flex-row items-center gap-3 ${
                   isShortListed ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"
                 }`}
                 style={{
@@ -614,32 +681,32 @@ const ApplicantForBusiness = () => {
                 activeOpacity={0.7}
               >
                 <View
-                  className={`w-12 h-12 rounded-full items-center justify-center ${
+                  className={`w-10 h-10 rounded-full items-center justify-center ${
                     isShortListed ? "bg-red-100" : "bg-blue-100"
                   }`}
                 >
                   <Feather
                     name={isShortListed ? "x" : "star"}
-                    size={20}
+                    size={18}
                     color={isShortListed ? "#ef4444" : "#3b82f6"}
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-quicksand-bold text-base text-gray-900">
+                  <Text className="font-quicksand-bold text-sm text-gray-900">
                     {isShortListed ? "Remove from Shortlist" : "Add to Shortlist"}
                   </Text>
-                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                  <Text className="font-quicksand-medium text-xs text-gray-600">
                     {isShortListed
                       ? "Remove this candidate from your shortlist"
                       : "Mark this candidate as a top prospect"}
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={16} color="#6b7280" />
+                <Feather name="chevron-right" size={14} color="#6b7280" />
               </TouchableOpacity>
             )}
             {application?.status === "PENDING" && user?.role !== "EMPLOYEE" && (
               <TouchableOpacity
-                className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 flex-row items-center gap-4"
+                className="bg-red-50 border border-red-200 rounded-xl p-3 mb-3 flex-row items-center gap-3"
                 style={{
                   shadowColor: "#ef4444",
                   shadowOffset: { width: 0, height: 2 },
@@ -653,27 +720,25 @@ const ApplicantForBusiness = () => {
                 }}
                 activeOpacity={0.7}
               >
-                <View className="w-12 h-12 bg-red-100 rounded-full items-center justify-center">
-                  <Feather name="x-circle" size={20} color="#ef4444" />
+                <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center">
+                  <Feather name="x-circle" size={18} color="#ef4444" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-quicksand-bold text-base text-gray-900">Reject Candidate</Text>
-                  <Text className="font-quicksand-medium text-sm text-gray-600">
+                  <Text className="font-quicksand-bold text-sm text-gray-900">Reject Candidate</Text>
+                  <Text className="font-quicksand-medium text-xs text-gray-600">
                     Decline this application permanently
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={16} color="#6b7280" />
+                <Feather name="chevron-right" size={14} color="#6b7280" />
               </TouchableOpacity>
             )}
             {application?.status !== "PENDING" && (
-              <View className="bg-gray-50 border border-gray-200 rounded-xl p-6 items-center">
-                <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
-                  <Feather name="info" size={24} color="#6b7280" />
+              <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">
+                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-3">
+                  <Feather name="info" size={20} color="#6b7280" />
                 </View>
-                <Text className="font-quicksand-bold text-base text-gray-900 text-center mb-2">
-                  No Actions Available
-                </Text>
-                <Text className="font-quicksand-medium text-sm text-gray-600 text-center">
+                <Text className="font-quicksand-bold text-sm text-gray-900 text-center mb-2">No Actions Available</Text>
+                <Text className="font-quicksand-medium text-xs text-gray-600 text-center">
                   This candidate&apos;s application status is &quot;
                   {application?.status.toLowerCase().replace("_", " ")}&quot; and cannot be modified.
                 </Text>

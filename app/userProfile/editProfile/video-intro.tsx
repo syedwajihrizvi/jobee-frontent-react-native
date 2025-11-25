@@ -16,7 +16,6 @@ const VideoIntro = () => {
   const user = authUser as User | null;
   const [uploadedVideo, setUploadedVideo] = useState<ImagePicker.ImagePickerResult | null>(null);
   const handleDeleteVideo = () => {
-    // Handle video deletion
     Alert.alert(
       "Delete Video Introduction",
       "Are you sure you want to delete your video introduction? This action cannot be undone.",
@@ -132,22 +131,28 @@ const VideoIntro = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="px-6 py-6">
           <View
-            className="relative mb-2 border border-gray-200 bg-white rounded-xl p-5"
+            className="relative mb-2 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-6 border border-emerald-200"
             style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
-            <Text className="font-quicksand-bold text-2xl text-gray-800 mb-2">
-              View and update your video introduction
-            </Text>
-            <Text className="font-quicksand-medium text-gray-600 leading-5">
-              When employers view your profile, a video introduction can help you stand out and make a memorable
-              impression. Consider recording a brief video to showcase your personality, communication skills, and
-              enthusiasm for your field.
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center mr-3">
+                <Feather name="briefcase" size={20} color="white" />
+              </View>
+              <View className="bg-emerald-100 px-3 py-1.5 rounded-full">
+                <Text className="font-quicksand-bold text-xs text-emerald-700">VIDEO INTRO</Text>
+              </View>
+            </View>
+            <Text className="font-quicksand-bold text-xl text-gray-800 mb-3">Stand out with an intro.</Text>
+            <Text className="font-quicksand-medium text-gray-600 text-sm leading-6">
+              When employers view your profile, a video introduction can help showcase your personality and
+              communication skills. A short video (under 60 seconds) can make a big difference in making a memorable
+              impression.
             </Text>
           </View>
         </View>
