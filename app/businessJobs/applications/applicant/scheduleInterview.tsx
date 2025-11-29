@@ -1,30 +1,63 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
+import GoogleMeetingCreator from "@/components/GoogleMeetingCreator";
+import MicrosoftTeamsMeetingCreator from "@/components/MicrosoftTeamsMeetingCreator";
 import ModalWithBg from "@/components/ModalWithBg";
 import PlatformButton from "@/components/PlatformButton";
 import RenderMeetingPlatformIcon from "@/components/RenderMeetingPlatformIcon";
+import WebexMeetingCreator from "@/components/WebexMeetingCreator";
+import ZoomMeeetingCreator from "@/components/ZoomMeeetingCreator";
 import { meetingPlatforms } from "@/constants";
 import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
 import {
   convert10DigitNumberToPhoneFormat,
+  formatDateForDisplay,
   validateMeetingLink,
   validatePhoneNumber,
   validateTime,
   validateTimes,
-  validInterviewDate,
 } from "@/lib/utils";
 import useApplicationStore from "@/store/applications.store";
 import useAuthStore from "@/store/auth.store";
+import useBusinessJobsStore from "@/store/businessJobs.store";
 import { BusinessUser, CreateInterviewForm } from "@/type";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Keyboard, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Keyboard,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const getMeetingLinkPlaceholder = (platformType: string) => {
+  switch (platformType) {
+    case "ZOOM":
+      return "https://zoom.us/j/1234567890";
+    case "GOOGLE_MEET":
+      return "https://meet.google.com/abc-defg-hij";
+    case "MICROSOFT_TEAMS":
+      return "https://teams.microsoft.com/l/meetup-join/19%3Ameeting_MjA1Y2Q0Y2QtMTIzOC00NTY3LTg5MDctYWJjZGVmZ2hpamts%40thread.v2/0?context=%7B%22Tid%22%3A%22aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee%22%2C%22Oid%22%3A%22ffffffff-1111-2222-3333-444444444444%22%7D";
+    case "WEBEX":
+      return "https://example.webex.com/meet/johndoe";
+    case "OTHER":
+      return "Enter your meeting link here";
+    default:
+      return "Enter your meeting link here";
+  }
+};
 
 const ScheduleInterview = () => {
   const defaultInterviewForm = {
@@ -47,6 +80,7 @@ const ScheduleInterview = () => {
   };
   const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
   const { setApplicationStatus } = useApplicationStore();
+  const { incrementInterviewsForJob, decrementPendingApplicationsForJob } = useBusinessJobsStore();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
   const conductorNameRef = useRef<TextInput>(null);
@@ -55,15 +89,18 @@ const ScheduleInterview = () => {
   const notesFooterRef = useRef<View>(null);
   const interviewerConductorsRef = useRef<View>(null);
   const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [interviewDetails, setInterviewDetails] = useState<CreateInterviewForm>({ ...defaultInterviewForm });
   const [conductorName, setConductorName] = useState("");
   const [conductorEmail, setConductorEmail] = useState("");
   const [preparationTip, setPreparationTip] = useState("");
+  const [showMeetingCreatorModal, setShowMeetingCreatorModal] = useState(false);
   const [viewingBottomSheetFor, setViewingBottomSheetFor] = useState<"interviewer" | "note">("interviewer");
   const [loadingNewInterview, setLoadingNewInterview] = useState(false);
   const [addedSelf, setAddedSelf] = useState(false);
   const [snapPoints, setSnapPoints] = useState<string[]>(["30%", "40%"]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const user = authUser as BusinessUser | null;
 
   useEffect(() => {
@@ -126,7 +163,6 @@ const ScheduleInterview = () => {
       startTime,
       endTime,
       streetAddress,
-      buildingName,
       meetingLink,
       phoneNumber,
       meetingPlatform,
@@ -155,8 +191,8 @@ const ScheduleInterview = () => {
       Alert.alert("Error", "Please enter interview end time.");
       return;
     }
-    if (!validInterviewDate(interviewDate)) {
-      Alert.alert("Error", "Please enter a valid interview date in MM/DD/YYYY format which is not in the past.");
+    if (!interviewDate) {
+      Alert.alert("Error", "Please enter an interview date.");
       return;
     }
     if (!validateTime(startTime)) {
@@ -182,7 +218,7 @@ const ScheduleInterview = () => {
         Alert.alert("Error", "Please select meeting platform.");
         return;
       }
-      if (!meetingLink) {
+      if (!meetingLink && meetingPlatform !== "OTHER") {
         Alert.alert("Error", "Please enter meeting link.");
         return;
       }
@@ -204,9 +240,15 @@ const ScheduleInterview = () => {
     setShowConfirmationModal(true);
   };
 
+  const createOnlineMeetingOnPlatform = () => {};
+
   const handleScheduleInterviewConfirm = async () => {
     setLoadingNewInterview(true);
     try {
+      // TODO: If meeting platform is selected, create meeting via respective API and set meeting link in interviewDetails
+      if (interviewDetails.interviewType === "ONLINE") {
+        console.log("Creating online meeting on platform: ", interviewDetails.meetingPlatform);
+      }
       const res = await createInterview(
         interviewDetails,
         Number(jobId),
@@ -221,6 +263,8 @@ const ScheduleInterview = () => {
         setApplicationStatus(Number(jobId), Number(applicantId), "INTERVIEW_SCHEDULED");
         Alert.alert("Success", "Interview created successfully.");
         setInterviewDetails({ ...defaultInterviewForm });
+        incrementInterviewsForJob(Number(jobId));
+        decrementPendingApplicationsForJob(Number(jobId));
         router.back();
         return;
       }
@@ -357,7 +401,7 @@ const ScheduleInterview = () => {
       container: `px-4 py-3 rounded-xl flex-row items-center gap-2 border ${
         isSelected ? "bg-emerald-500 border-green-500" : "bg-white border-gray-300"
       }`,
-      text: `font-quicksand-semibold text-sm ${isSelected ? "text-white" : "text-gray-700"}`,
+      text: `font-quicksand-semibold text-xs ${isSelected ? "text-white" : "text-gray-700"}`,
       shadow: isSelected
         ? {
             shadowColor: "#6366f1",
@@ -413,6 +457,18 @@ const ScheduleInterview = () => {
     return text.toUpperCase();
   };
 
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+      const deadline = new Date(date);
+      deadline.setHours(0, 0, 0, 0); // Set to end of the selected day
+      // Format date as YYYY-MM-DD for the form
+      const formattedDateTime = deadline.toISOString().slice(0, 19);
+      setInterviewDetails({ ...interviewDetails, interviewDate: formattedDateTime });
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 relative">
       <BackBar label="Schedule Interview" />
@@ -425,7 +481,7 @@ const ScheduleInterview = () => {
         enableResetScrollToCoords={false}
       >
         <View
-          className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
+          className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-gray-100"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
@@ -434,20 +490,20 @@ const ScheduleInterview = () => {
             elevation: 6,
           }}
         >
-          <View className="flex-row items-center gap-3 mb-3">
-            <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
-              <Feather name="calendar" size={20} color="#6366f1" />
+          <View className="flex-row items-center gap-3 mb-1">
+            <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+              <Feather name="calendar" size={18} color="#10b981" />
             </View>
-            <Text className="font-quicksand-bold text-xl text-gray-900">Interview Details</Text>
+            <Text className="font-quicksand-bold text-lg text-gray-900">Interview Details</Text>
           </View>
-          <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
+          <Text className="font-quicksand-medium text-sm text-gray-600 leading-6">
             Fill in the details below to schedule an interview with the candidate.
           </Text>
         </View>
 
         <View className="px-4 mt-6 gap-6">
           <View
-            className="bg-white rounded-2xl p-5 border border-gray-100"
+            className="bg-white rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -456,12 +512,14 @@ const ScheduleInterview = () => {
               elevation: 3,
             }}
           >
-            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Basic Information</Text>
+            <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">Basic Information</Text>
 
             <View className="gap-4">
               <CustomInput
                 placeholder="e.g. Technical Interview"
+                fontSize={12}
                 label="Interview Title *"
+                customLabelClass="font-quicksand-semibold text-sm text-gray-700"
                 autoCapitalize="words"
                 value={interviewDetails?.title}
                 onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, title: text }))}
@@ -477,7 +535,8 @@ const ScheduleInterview = () => {
               <CustomMultilineInput
                 label="Description *"
                 numberOfLines={4}
-                placeholder="Discuss project experience and technical skills..."
+                customLabelClass="font-quicksand-semibold text-sm text-gray-700"
+                placeholder="e.g. Discuss project experience and technical skills..."
                 value={interviewDetails?.description}
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900 min-h-[100px]"
                 style={{
@@ -498,7 +557,7 @@ const ScheduleInterview = () => {
           </View>
 
           <View
-            className="bg-white rounded-2xl p-5 border border-gray-100"
+            className="bg-white rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -507,7 +566,7 @@ const ScheduleInterview = () => {
               elevation: 3,
             }}
           >
-            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Interview Panel *</Text>
+            <Text className="font-quicksand-bold text-md text-gray-900 mb-2">Interview Panel *</Text>
             <View className="flex-row gap-3 mb-4">
               {!addedSelf ? (
                 <TouchableOpacity
@@ -523,28 +582,28 @@ const ScheduleInterview = () => {
                   activeOpacity={0.8}
                 >
                   <Feather name="user-plus" size={14} color="white" />
-                  <Text className="font-quicksand-semibold text-white text-sm">Add Yourself</Text>
+                  <Text className="font-quicksand-semibold text-white text-xs">Add Yourself</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  className="bg-red-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                  className="bg-red-100 border border-red-300 rounded-xl px-4 py-3 flex-row items-center gap-2"
                   style={{
                     shadowColor: "#ef4444",
                     shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 3,
+                    shadowOpacity: 0.08,
+                    shadowRadius: 2,
+                    elevation: 1,
                   }}
                   onPress={removeBusinessUserFromConductors}
                   activeOpacity={0.8}
                 >
-                  <Feather name="user-minus" size={14} color="white" />
-                  <Text className="font-quicksand-semibold text-white text-sm">Remove Yourself</Text>
+                  <Feather name="user-minus" size={14} color="#ef4444" />
+                  <Text className="font-quicksand-semibold text-red-700 text-xs">Remove Yourself</Text>
                 </TouchableOpacity>
               )}
 
               <TouchableOpacity
-                className="bg-blue-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                className="bg-blue-100 border border-blue-300 rounded-xl px-4 py-3 flex-row items-center gap-2"
                 style={{
                   shadowColor: "#3b82f6",
                   shadowOffset: { width: 0, height: 2 },
@@ -555,8 +614,8 @@ const ScheduleInterview = () => {
                 onPress={() => handleBottomSheetExpand("interviewer")}
                 activeOpacity={0.8}
               >
-                <Feather name="plus" size={14} color="white" />
-                <Text className="font-quicksand-semibold text-white text-sm">Add Interviewer</Text>
+                <Feather name="plus" size={14} color="#3b82f6" />
+                <Text className="font-quicksand-semibold text-blue-700 text-xs">Add Interviewer</Text>
               </TouchableOpacity>
             </View>
 
@@ -568,7 +627,7 @@ const ScheduleInterview = () => {
                 {interviewDetails.conductors.map((conductor, index) => (
                   <View
                     key={index}
-                    className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-row items-center justify-between"
+                    className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex-row items-center justify-between"
                     style={{
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
@@ -578,8 +637,8 @@ const ScheduleInterview = () => {
                     }}
                   >
                     <View className="flex-1">
-                      <Text className="font-quicksand-bold text-base text-gray-900">{conductor.name}</Text>
-                      <Text className="font-quicksand-medium text-sm text-gray-600">{conductor.email}</Text>
+                      <Text className="font-quicksand-bold text-sm text-gray-900">{conductor.name}</Text>
+                      <Text className="font-quicksand-medium text-xs text-gray-600">{conductor.email}</Text>
                     </View>
                     <TouchableOpacity
                       className="w-8 h-8 bg-red-100 rounded-full items-center justify-center"
@@ -596,7 +655,7 @@ const ScheduleInterview = () => {
           </View>
 
           <View
-            className="bg-white rounded-2xl p-5 border border-gray-100"
+            className="bg-white rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -605,13 +664,13 @@ const ScheduleInterview = () => {
               elevation: 3,
             }}
           >
-            <Text className="font-quicksand-bold text-lg text-gray-900 mb-1">Interview Notes for Candidate</Text>
-            <Text className="font-quicksand-medium text-base text-gray-600 leading-6 mb-3">
+            <Text className="font-quicksand-bold text-md text-gray-900 mb-1">Interview Notes for Candidate</Text>
+            <Text className="font-quicksand-medium text-sm text-gray-600 leading-6 mb-3">
               These notes will be shared with the candidate to help them prepare for the interview.
             </Text>
             <View className="flex-row gap-3 mb-4">
               <TouchableOpacity
-                className="bg-blue-500 rounded-xl px-4 py-3 flex-row items-center gap-2"
+                className="bg-amber-100 border border-amber-300 rounded-xl px-4 py-3 flex-row items-center gap-2"
                 style={{
                   shadowColor: "#3b82f6",
                   shadowOffset: { width: 0, height: 2 },
@@ -622,8 +681,8 @@ const ScheduleInterview = () => {
                 onPress={() => handleBottomSheetExpand("note")}
                 activeOpacity={0.8}
               >
-                <Feather name="plus" size={14} color="white" />
-                <Text className="font-quicksand-semibold text-white text-sm">Add Note</Text>
+                <Feather name="plus" size={14} color="#b45309" />
+                <Text className="font-quicksand-semibold text-amber-700 text-xs">Add Note</Text>
               </TouchableOpacity>
             </View>
 
@@ -658,7 +717,7 @@ const ScheduleInterview = () => {
                         <Feather name="check" size={12} color="white" />
                       </View>
                       <View className="flex-1">
-                        <Text className="font-quicksand-medium text-base text-gray-800 leading-6">{tip}</Text>
+                        <Text className="font-quicksand-medium text-sm text-gray-800 leading-6">{tip}</Text>
                       </View>
                       <TouchableOpacity
                         className="w-7 h-7 bg-red-100 rounded-full items-center justify-center ml-2"
@@ -682,7 +741,7 @@ const ScheduleInterview = () => {
           </View>
 
           <View
-            className="bg-white rounded-2xl p-5 border border-gray-100"
+            className="bg-white rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -691,30 +750,38 @@ const ScheduleInterview = () => {
               elevation: 3,
             }}
           >
-            <Text className="font-quicksand-bold text-lg text-gray-900 mb-4">Schedule</Text>
-
+            <Text className="font-quicksand-bold text-md text-gray-900 mb-2">Schedule</Text>
             <View className="gap-4">
               <View>
                 <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Date *</Text>
-                <TextInput
-                  placeholder="YYYY-MM-DD"
-                  onFocus={() => bottomSheetRef.current?.close()}
-                  value={interviewDetails?.interviewDate}
-                  onChangeText={(text) =>
-                    setInterviewDetails((prev) => ({
-                      ...prev,
-                      interviewDate: text,
-                    }))
-                  }
-                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
-                />
+                <TouchableOpacity
+                  className="form-input__input bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
+                  onPress={() => setShowDatePicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={`font-quicksand-medium text-sm ${
+                      interviewDetails.interviewDate ? "text-gray-900" : "text-gray-500"
+                    }`}
+                  >
+                    {interviewDetails.interviewDate
+                      ? formatDateForDisplay(interviewDetails.interviewDate)
+                      : "Select interview date"}
+                  </Text>
+                  <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center">
+                    <Text className="text-blue-600 font-quicksand-bold text-xs">📅</Text>
+                  </View>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={handleDateChange}
+                    minimumDate={new Date()} // Prevent selecting past dates
+                    textColor="#000000"
+                  />
+                )}
               </View>
 
               <View className="flex-row gap-3">
@@ -733,9 +800,12 @@ const ScheduleInterview = () => {
                         };
                       })
                     }
-                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
                     style={{
                       shadowColor: "#000",
+                      fontSize: 12,
+                      lineHeight: 16,
+                      paddingTop: 10,
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
@@ -759,8 +829,11 @@ const ScheduleInterview = () => {
                         };
                       })
                     }
-                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
                     style={{
+                      fontSize: 12,
+                      lineHeight: 16,
+                      paddingTop: 10,
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
@@ -778,9 +851,12 @@ const ScheduleInterview = () => {
                   onFocus={() => bottomSheetRef.current?.close()}
                   placeholder="EST, PST, GMT"
                   onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, timezone: text.toUpperCase() }))}
-                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
                   style={{
                     shadowColor: "#000",
+                    fontSize: 12,
+                    lineHeight: 16,
+                    paddingTop: 10,
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.05,
                     shadowRadius: 2,
@@ -792,7 +868,7 @@ const ScheduleInterview = () => {
           </View>
 
           <View
-            className="bg-white rounded-2xl p-5 border border-gray-100"
+            className="bg-white rounded-2xl p-4 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -801,9 +877,9 @@ const ScheduleInterview = () => {
               elevation: 3,
             }}
           >
-            <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">Interview Format</Text>
+            <Text className="font-quicksand-bold text-md text-gray-900 mb-2">Interview Format</Text>
 
-            <View className="gap-3">
+            <View className="gap-3 flex-row">
               {["IN_PERSON", "ONLINE", "PHONE"].map((type) => {
                 const style = getInterviewTypeButtonStyle(type);
                 const labels = {
@@ -840,10 +916,12 @@ const ScheduleInterview = () => {
                   <CustomInput
                     placeholder="123 Main St, City, State"
                     label="Address *"
+                    customLabelClass="font-quicksand-semibold text-sm text-gray-700"
+                    fontSize={12}
                     autoCapitalize="words"
                     value={interviewDetails?.streetAddress}
                     onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, streetAddress: text }))}
-                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                    customClass="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-md text-gray-900"
                     style={{
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
@@ -855,10 +933,12 @@ const ScheduleInterview = () => {
                   <CustomInput
                     placeholder="Techhub Tower, 5th Floor"
                     autoCapitalize="words"
+                    fontSize={12}
                     label="Building or Office Name"
+                    customLabelClass="font-quicksand-semibold text-sm text-gray-700"
                     value={interviewDetails?.buildingName}
                     onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, buildingName: text }))}
-                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
+                    customClass="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-md text-gray-900"
                     style={{
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
@@ -870,31 +950,37 @@ const ScheduleInterview = () => {
                   <CustomMultilineInput
                     placeholder="Parking available at rear entrance"
                     label="Parking Information"
+                    customLabelClass="font-quicksand-semibold text-sm text-gray-700"
                     value={interviewDetails?.parkingInfo}
                     onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, parkingInfo: text }))}
-                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
+                    customClass="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-sm text-gray-900"
                     style={{
+                      fontSize: 12,
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
                       elevation: 1,
+                      height: 80,
                     }}
                   />
                   <CustomMultilineInput
                     placeholder="Show ID at first floor reception"
                     label="Contact Instructions"
+                    customLabelClass="font-quicksand-semibold text-sm text-gray-700"
                     value={interviewDetails?.contactInstructionsOnArrival}
                     onChangeText={(text) =>
                       setInterviewDetails((prev) => ({ ...prev, contactInstructionsOnArrival: text }))
                     }
-                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
+                    customClass="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-sm text-gray-900"
                     style={{
+                      fontSize: 12,
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
                       elevation: 1,
+                      height: 80,
                     }}
                   />
                 </View>
@@ -911,7 +997,8 @@ const ScheduleInterview = () => {
                     }))
                   }
                   onSubmitEditing={() => {
-                    const phoneNumber = interviewDetails.phoneNumber;
+                    let phoneNumber = interviewDetails.phoneNumber;
+                    phoneNumber = phoneNumber.replaceAll(" ", "").replaceAll("-", "").trim();
                     if (phoneNumber.length === 10) {
                       const formattedNumber = convert10DigitNumberToPhoneFormat(phoneNumber);
                       setInterviewDetails((prev) => ({
@@ -919,17 +1006,23 @@ const ScheduleInterview = () => {
                         phoneNumber: formattedNumber,
                       }));
                     }
-                    if (phoneNumber.length === 11) {
+                    if (phoneNumber.length >= 11) {
+                      const length = phoneNumber.length;
                       const formattedNumber =
-                        phoneNumber[0] + " " + convert10DigitNumberToPhoneFormat(phoneNumber.slice(1));
+                        phoneNumber.slice(0, length - 10) +
+                        " " +
+                        convert10DigitNumberToPhoneFormat(phoneNumber.slice(length - 10, length));
                       setInterviewDetails((prev) => ({
                         ...prev,
                         phoneNumber: formattedNumber,
                       }));
                     }
                   }}
-                  className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                  className="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-base text-gray-900"
                   style={{
+                    fontSize: 12,
+                    lineHeight: 16,
+                    paddingTop: 10,
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.05,
@@ -953,39 +1046,43 @@ const ScheduleInterview = () => {
                             <RenderMeetingPlatformIcon
                               platformColor={platform.textColor}
                               platformType={platform.value}
+                              active={interviewDetails.meetingPlatform !== platform.value}
                             />
                           }
-                          onPress={() =>
+                          onPress={() => {
                             setInterviewDetails((prev) => ({
                               ...prev,
                               meetingPlatform: platform.value,
-                            }))
-                          }
+                            }));
+                            if (platform.value !== "OTHER") setShowMeetingCreatorModal(true);
+                          }}
                           isSelected={interviewDetails.meetingPlatform === platform.value}
                         />
                       ))}
                     </View>
                   </View>
-                  <CustomInput
-                    value={interviewDetails?.meetingLink}
-                    label="Meeting Link *"
-                    placeholder="https://zoom.us/j/1234567890"
-                    onChangeText={(text) =>
-                      setInterviewDetails((prev) => ({
-                        ...prev,
-                        meetingLink: text,
-                      }))
-                    }
-                    customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
-                    style={{
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                    autoCapitalize="none"
-                  />
+                  {interviewDetails.meetingPlatform === "OTHER" && (
+                    <CustomInput
+                      value={interviewDetails?.meetingLink}
+                      placeholder={getMeetingLinkPlaceholder(interviewDetails.meetingPlatform)}
+                      fontSize={12}
+                      onChangeText={(text) =>
+                        setInterviewDetails((prev) => ({
+                          ...prev,
+                          meetingLink: text,
+                        }))
+                      }
+                      customClass="border border-gray-300 rounded-xl p-2 font-quicksand-medium text-md text-gray-900"
+                      style={{
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.05,
+                        shadowRadius: 2,
+                        elevation: 1,
+                      }}
+                      autoCapitalize="none"
+                    />
+                  )}
                 </View>
               )}
             </View>
@@ -993,7 +1090,7 @@ const ScheduleInterview = () => {
         </View>
       </KeyboardAwareScrollView>
       <View
-        className="bg-white border-t border-gray-200 px-4 py-6 absolute bottom-0 left-0 right-0"
+        className="bg-white border-t border-gray-200 px-4 pb-10 pt-6 absolute bottom-0 left-0 right-0"
         style={{
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
@@ -1019,7 +1116,6 @@ const ScheduleInterview = () => {
               <ActivityIndicator color="white" />
             ) : (
               <View className="flex-row items-center gap-2">
-                <Feather name="check" size={18} color="white" />
                 <Text className="font-quicksand-bold text-white text-base">Schedule Interview</Text>
               </View>
             )}
@@ -1039,7 +1135,6 @@ const ScheduleInterview = () => {
             activeOpacity={0.7}
           >
             <View className="flex-row items-center gap-2">
-              <Feather name="x" size={18} color="#6b7280" />
               <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
             </View>
           </TouchableOpacity>
@@ -1068,10 +1163,10 @@ const ScheduleInterview = () => {
           {viewingBottomSheetFor === "interviewer" ? (
             <>
               <View className="flex-row items-center gap-3 mb-6">
-                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                  <Feather name="user-plus" size={20} color="#3b82f6" />
+                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                  <Feather name="user-plus" size={20} color="#10b981" />
                 </View>
-                <Text className="font-quicksand-bold text-xl text-gray-900">Add Interviewer</Text>
+                <Text className="font-quicksand-semibold text-lg text-gray-900">Add Interviewer</Text>
               </View>
 
               <View className="gap-6">
@@ -1082,9 +1177,12 @@ const ScheduleInterview = () => {
                     autoCapitalize="words"
                     onChangeText={(text) => setConductorName(text)}
                     placeholder="Mike Wilson, Emma Johnson"
-                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
                     style={{
                       shadowColor: "#000",
+                      fontSize: 12,
+                      lineHeight: 16,
+                      paddingVertical: 10,
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
@@ -1100,9 +1198,12 @@ const ScheduleInterview = () => {
                     autoCapitalize="none"
                     onChangeText={(text) => setConductorEmail(text)}
                     placeholder="mike.wilson@example.com"
-                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                    className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
                     style={{
                       shadowColor: "#000",
+                      fontSize: 12,
+                      lineHeight: 16,
+                      paddingVertical: 10,
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
@@ -1113,7 +1214,7 @@ const ScheduleInterview = () => {
 
                 <View className="flex-row gap-3 mt-6">
                   <TouchableOpacity
-                    className="flex-1 bg-blue-500 rounded-xl py-4 items-center justify-center"
+                    className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
                     style={{
                       shadowColor: "#3b82f6",
                       shadowOffset: { width: 0, height: 3 },
@@ -1125,7 +1226,6 @@ const ScheduleInterview = () => {
                     activeOpacity={0.8}
                   >
                     <View className="flex-row items-center gap-2">
-                      <Feather name="plus" size={16} color="white" />
                       <Text className="font-quicksand-bold text-white text-base">Add Interviewer</Text>
                     </View>
                   </TouchableOpacity>
@@ -1143,7 +1243,6 @@ const ScheduleInterview = () => {
                     activeOpacity={0.7}
                   >
                     <View className="flex-row items-center gap-2">
-                      <Feather name="x" size={16} color="#6b7280" />
                       <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
                     </View>
                   </TouchableOpacity>
@@ -1153,52 +1252,61 @@ const ScheduleInterview = () => {
           ) : (
             <>
               <View className="flex-row items-center gap-3 mb-6">
-                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                  <Feather name="user-plus" size={20} color="#3b82f6" />
+                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                  <Feather name="user-plus" size={20} color="#10b981" />
                 </View>
-                <Text className="font-quicksand-bold text-xl text-gray-900">Add Note For Candidate</Text>
+                <Text className="font-quicksand-bold text-md text-gray-900">Add Note For Candidate</Text>
               </View>
 
               <View className="gap-6">
                 <View>
                   <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Preparation Note</Text>
-                  <BottomSheetTextInput
-                    value={preparationTip}
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                    autoCapitalize="sentences"
-                    onChangeText={(text) => {
-                      if (text.endsWith("\n") && text.trim() !== "") {
-                        const cleanText = text.replace(/\n$/, "").trim();
-                        setPreparationTip(cleanText);
-                        Keyboard.dismiss();
-                        return;
-                      }
-                      if (text === "\n" && preparationTip === "") {
-                        Keyboard.dismiss();
-                        return;
-                      }
+                  <View className="relative">
+                    <BottomSheetTextInput
+                      value={preparationTip}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                      autoCapitalize="sentences"
+                      onChangeText={(text) => {
+                        if (text.endsWith("\n") && text.trim() !== "") {
+                          const cleanText = text.replace(/\n$/, "").trim();
+                          setPreparationTip(cleanText);
+                          Keyboard.dismiss();
+                          return;
+                        }
+                        if (text === "\n" && preparationTip === "") {
+                          Keyboard.dismiss();
+                          return;
+                        }
 
-                      setPreparationTip(text);
-                    }}
-                    placeholder="e.g. Please be prepared to discuss your previous projects and technical skills."
-                    returnKeyType="done"
-                    maxLength={100}
-                    className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
-                    style={{
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  />
+                        setPreparationTip(text);
+                      }}
+                      placeholder="e.g. Please be prepared to discuss your previous projects and technical skills."
+                      returnKeyType="done"
+                      maxLength={100}
+                      className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-base text-gray-900"
+                      style={{
+                        shadowColor: "#000",
+                        height: 80,
+                        fontSize: 12,
+                        lineHeight: 16,
+                        paddingVertical: 10,
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.05,
+                        shadowRadius: 2,
+                        elevation: 1,
+                      }}
+                    />
+                    <Text className="absolute bottom-2 right-4 font-quicksand-medium text-xs text-gray-400">
+                      {preparationTip.length}/100
+                    </Text>
+                  </View>
                 </View>
 
                 <View className="flex-row gap-3 mt-6">
                   <TouchableOpacity
-                    className="flex-1 bg-blue-500 rounded-xl py-4 items-center justify-center"
+                    className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
                     style={{
                       shadowColor: "#3b82f6",
                       shadowOffset: { width: 0, height: 3 },
@@ -1210,7 +1318,6 @@ const ScheduleInterview = () => {
                     activeOpacity={0.8}
                   >
                     <View className="flex-row items-center gap-2">
-                      <Feather name="plus" size={16} color="white" />
                       <Text className="font-quicksand-bold text-white text-base">Add Note</Text>
                     </View>
                   </TouchableOpacity>
@@ -1228,7 +1335,6 @@ const ScheduleInterview = () => {
                     activeOpacity={0.7}
                   >
                     <View className="flex-row items-center gap-2">
-                      <Feather name="x" size={16} color="#6b7280" />
                       <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
                     </View>
                   </TouchableOpacity>
@@ -1258,28 +1364,25 @@ const ScheduleInterview = () => {
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
           >
-            <View className="px-6 py-4 gap-5">
+            <View className="px-6 py-4 gap-3">
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Basic Information</Text>
-
-                <View className="gap-3">
+                <View className="gap-1">
                   <View>
-                    <Text className="font-quicksand-semibold text-sm text-gray-600">Title</Text>
-                    <Text className="font-quicksand-bold text-base text-gray-900 mt-1">
-                      {interviewDetails.title || "Not specified"}
+                    <Text className="font-quicksand-bold text-base">Title</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-800 leading-5">
+                      {interviewDetails.title || "No description provided"}
                     </Text>
                   </View>
-
                   <View>
-                    <Text className="font-quicksand-semibold text-sm text-gray-600">Description</Text>
-                    <Text className="font-quicksand-medium text-sm text-gray-800 mt-1 leading-5">
+                    <Text className="font-quicksand-bold text-base">Description</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-800 leading-5">
                       {interviewDetails.description || "No description provided"}
                     </Text>
                   </View>
                 </View>
               </View>
               <View className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <Text className="font-quicksand-bold text-base text-blue-900 mb-3">Interview Panel</Text>
+                <Text className="font-quicksand-bold text-base text-blue-900 mb-1">Interview Panel</Text>
 
                 {interviewDetails.conductors && interviewDetails.conductors.length > 0 ? (
                   <View className="gap-2">
@@ -1306,9 +1409,9 @@ const ScheduleInterview = () => {
                 )}
               </View>
               <View className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                <Text className="font-quicksand-bold text-base text-purple-900 mb-3">Schedule</Text>
+                <Text className="font-quicksand-bold text-base text-purple-900 mb-2">Schedule</Text>
 
-                <View className="gap-3">
+                <View className="gap-2">
                   <View className="flex-row gap-4">
                     <View className="flex-1">
                       <Text className="font-quicksand-semibold text-sm text-purple-700">Date</Text>
@@ -1341,10 +1444,10 @@ const ScheduleInterview = () => {
                 </View>
               </View>
               <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
+                <Text className="font-quicksand-bold text-base text-emerald-900 mb-2">Interview Format</Text>
 
                 <View className="flex-row items-center gap-3 mb-4">
-                  <View className="w-10 h-10 bg-emerald-500 rounded-full items-center justify-center">
+                  <View className="w-8 h-8 bg-emerald-500 rounded-full items-center justify-center">
                     {getInterviewTypeIcon(interviewDetails.interviewType)}
                   </View>
                   <View>
@@ -1402,6 +1505,7 @@ const ScheduleInterview = () => {
                           <RenderMeetingPlatformIcon
                             platformColor="#059669"
                             platformType={interviewDetails.meetingPlatform}
+                            active={true}
                           />
                           <Text className="font-quicksand-bold text-sm text-emerald-900">
                             {meetingPlatforms.find((p) => p.value === interviewDetails.meetingPlatform)?.label}
@@ -1482,11 +1586,34 @@ const ScheduleInterview = () => {
                 activeOpacity={0.7}
               >
                 <View className="flex-row items-center gap-2">
-                  <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+                  <Text className="font-quicksand-bold text-white text-base">Cancel</Text>
                 </View>
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </ModalWithBg>
+      <ModalWithBg visible={showMeetingCreatorModal} customHeight={0.3} customWidth={0.8}>
+        <View className="flex-1">
+          <View className="px-4 py-3 border-b border-gray-200 bg-white flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <RenderMeetingPlatformIcon
+                platformType={interviewDetails.meetingPlatform}
+                platformColor="purple"
+                active={true}
+                size={24}
+              />
+            </View>
+            <TouchableOpacity onPress={() => setShowMeetingCreatorModal(false)}>
+              <Feather name="x" size={24} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView>
+            {interviewDetails.meetingPlatform === "GOOGLE_MEET" && <GoogleMeetingCreator />}
+            {interviewDetails.meetingPlatform === "MICROSOFT_TEAMS" && <MicrosoftTeamsMeetingCreator />}
+            {interviewDetails.meetingPlatform === "ZOOM" && <ZoomMeeetingCreator />}
+            {interviewDetails.meetingPlatform === "WEBEX" && <WebexMeetingCreator />}
+          </ScrollView>
         </View>
       </ModalWithBg>
     </SafeAreaView>

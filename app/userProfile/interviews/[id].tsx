@@ -231,7 +231,7 @@ const InterviewDetails = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50 pb-20">
       <BackBar label="Interview Details" />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
@@ -261,7 +261,7 @@ const InterviewDetails = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-start justify-between mb-2">
+            <View className="flex-row items-start justify-between mb-1">
               <View className="flex-1 mr-3">
                 <CompanyInformation
                   companyName={interviewDetails?.companyName!}
@@ -269,7 +269,7 @@ const InterviewDetails = () => {
                 />
               </View>
             </View>
-            <Text className="font-quicksand-bold text-2xl text-gray-900 leading-8 mb-2">{interviewDetails?.title}</Text>
+            <Text className="font-quicksand-bold text-xl text-gray-900 leading-8 mb-1">{interviewDetails?.title}</Text>
 
             <Text className="font-quicksand-medium text-base text-gray-600 leading-6 mb-2">
               {interviewDetails?.description}
@@ -303,10 +303,10 @@ const InterviewDetails = () => {
             }}
           >
             <View className="flex-row items-center gap-3 mb-4">
-              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                <Feather name="calendar" size={20} color="#3b82f6" />
+              <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                <Feather name="calendar" size={20} color="#10b981" />
               </View>
-              <Text className="font-quicksand-bold text-xl text-gray-900">Interview Details</Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900">Interview Details</Text>
             </View>
             <View className="flex-row flex-wrap gap-2 mb-4">
               <View className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl flex-row items-center gap-2">
@@ -369,7 +369,7 @@ const InterviewDetails = () => {
                 <Feather name="users" size={20} color="#22c55e" />
               </View>
               <View>
-                <Text className="font-quicksand-bold text-xl text-gray-900">Your Interviewers</Text>
+                <Text className="font-quicksand-bold text-lg text-gray-900">Your Interviewers</Text>
                 <Text className="font-quicksand text0sm text-gray-600">
                   {totalInterviewers} {totalInterviewers === 1 ? "Interviewer" : "Interviewers"}
                 </Text>

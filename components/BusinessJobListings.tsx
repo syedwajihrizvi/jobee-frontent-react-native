@@ -10,7 +10,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 const BusinessJobListings = ({ job }: { job: Job }) => {
   const { user: authUser } = useAuthStore();
   const user = authUser as BusinessUser | null;
-  const { getViewsForJob, getApplicationsForJob, getPendingApplicationsForJob } = useBusinessJobsStore();
+  const { getViewsForJob, getApplicationsForJob, getPendingApplicationsForJob, getInterviewsForJob } =
+    useBusinessJobsStore();
   return (
     <TouchableOpacity
       className="mb-3 bg-white rounded-xl p-4 border border-gray-100"
@@ -81,15 +82,13 @@ const BusinessJobListings = ({ job }: { job: Job }) => {
             {getPendingApplicationsForJob(job.id) || "0"}
           </Text>
         </View>
-        {job.totalInterviews > 0 && (
-          <View className="bg-amber-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">
-            <View className="flex-row items-center gap-1">
-              <Feather name="calendar" size={10} color="#f59e0b" />
-              <Text className="font-quicksand-medium text-xs text-amber-700">Interviews</Text>
-            </View>
-            <Text className="font-quicksand-bold text-sm text-amber-800">{job.totalInterviews || "0"}</Text>
+        <View className="bg-amber-50 rounded-lg px-2 py-1 items-center justify-between flex-row gap-3">
+          <View className="flex-row items-center gap-1">
+            <Feather name="calendar" size={10} color="#f59e0b" />
+            <Text className="font-quicksand-medium text-xs text-amber-700">Interviews</Text>
           </View>
-        )}
+          <Text className="font-quicksand-bold text-sm text-amber-800">{getInterviewsForJob(job.id) || "0"}</Text>
+        </View>
       </View>
 
       <View className="flex-row items-center justify-between pt-2 border-t border-gray-100">

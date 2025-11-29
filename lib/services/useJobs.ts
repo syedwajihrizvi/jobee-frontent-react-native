@@ -182,7 +182,7 @@ export const useJobsForBusiness = (jobId: number) => {
   return useQuery<Job, Error>({
     queryKey: ['job', 'business', jobId],
     queryFn: fetchJobForBusiness,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 60 * 0.5,
     refetchOnMount: true,
     enabled: !!jobId,
   })

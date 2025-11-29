@@ -1,4 +1,5 @@
-import { formatDate, getApplicationStatus } from "@/lib/utils";
+import { formatDate, getApplicationStatusLabel } from "@/lib/utils";
+import useApplicationStore from "@/store/applications.store";
 import { Application } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -28,7 +29,8 @@ const getStatusColor = (status: string) => {
 };
 
 const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
-  const statusColors = getStatusColor(item.status);
+  const { getApplicationStatus } = useApplicationStore();
+  const statusColors = getStatusColor(getApplicationStatus(item.id) || item.status);
   return (
     <TouchableOpacity
       className="bg-white mx-4 mb-4 rounded-2xl p-5 border border-gray-100"
@@ -71,7 +73,7 @@ const ApplicantCard = ({ jobId, item, isShortListed }: Props) => {
           )}
           <View className={`${statusColors.bg} ${statusColors.border} border px-2 py-1 rounded-full`}>
             <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
-              {getApplicationStatus(item.status)}
+              {getApplicationStatusLabel(getApplicationStatus(item.id) || item.status)}
             </Text>
           </View>
         </View>

@@ -1,3 +1,4 @@
+// TODO: Update name of the file
 
 import { GoogleDriveFile } from '@/type';
 import * as AuthSession from 'expo-auth-session';
@@ -9,7 +10,6 @@ export const connectToGoogleDriveOAuth = async () => {
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
     });
-    console.log('Redirect URI:', REDIRECT_URI);
     const DISCOVERY = {
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
         tokenEndpoint: 'https://oauth2.googleapis.com/token',
@@ -18,17 +18,15 @@ export const connectToGoogleDriveOAuth = async () => {
     const request = new AuthSession.AuthRequest({
         clientId: CLIENT_ID,
         redirectUri: REDIRECT_URI,
-        scopes: ['https://www.googleapis.com/auth/drive.readonly', 'profile', 'email'],
+        scopes: ['https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/calendar','profile', 'email'],
         responseType: AuthSession.ResponseType.Code,
     });
     const result = await request.promptAsync(DISCOVERY);
     const { codeVerifier } = request
-    console.log('OAuth Result:', result);
     const successful = result.type === 'success';
     if (successful && codeVerifier) {
         const {code} =  result.params
         const tokens = await exhchangeGoogleOAuthCodeForToken(code, codeVerifier);
-        console.log('OAuth Tokens:', tokens);
         return tokens;
     }
     return null;
@@ -46,7 +44,6 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
     params.append('redirect_uri', REDIRECT_URI);
     params.append('grant_type', 'authorization_code');
     const queryParams = params.toString();
-    console.log('Token Request Params:', queryParams);
     const response = await fetch(`https://oauth2.googleapis.com/token?${queryParams}`, {
         method: 'POST',
         headers: {
@@ -54,25 +51,26 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
         },
     });
     const data = await response.json();
-    const { access_token, refresh_token, expires_in, id_token } = data;
+    const { access_token, refresh_token, expires_in, id_token, refresh_token_expires_in } = data;
     const res = await storeGoogleTokensOnDevice({
         accessToken: access_token,
         refreshToken: refresh_token,
         expiresIn: expires_in,
-        idToken: id_token
+        idToken: id_token,
+        refreshTokenExpiresIn: refresh_token_expires_in
     })
     if (!res) {
         return null
     } 
-    console.log('Token Response:', data);
     return true;
 }
 
-export const storeGoogleTokensOnDevice = async ({accessToken, refreshToken, expiresIn, idToken}: {
+export const storeGoogleTokensOnDevice = async ({accessToken, refreshToken, expiresIn, idToken, refreshTokenExpiresIn}: {
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
     idToken: string;
+    refreshTokenExpiresIn: number;
 }) => {
     const storedAt = Date.now();
     const expiresAt = storedAt + expiresIn * 1000;
@@ -82,6 +80,7 @@ export const storeGoogleTokensOnDevice = async ({accessToken, refreshToken, expi
         await SecureStore.setItemAsync('googleDriveExpiresIn', expiresIn.toString());
         await SecureStore.setItemAsync('googleDriveStoredAt', storedAt.toString());
         await SecureStore.setItemAsync('googleDriveExpiresAt', expiresAt.toString());
+        await SecureStore.setItemAsync('googleDriveRefreshTokenExpiresIn', refreshTokenExpiresIn.toString());
         await SecureStore.setItemAsync('googleDriveIdToken', idToken);
         return true;
     } catch (error) {
@@ -127,17 +126,38 @@ export const isGoogleDriveAccessTokenValid = async () => {
     return true;
 }
 
+export const isGoogleDriveRefreshTokenValid = async () => {
+    const refreshToken = await getStoredGoogleDriveRefreshToken();
+    if (!refreshToken) {
+        return false;
+    }
+    const refreshTokenExpiryStr = await SecureStore.getItemAsync('googleDriveRefreshTokenExpiresIn');
+    if (!refreshTokenExpiryStr) {
+        return false;
+    }
+    const refreshTokenExpiry = parseInt(refreshTokenExpiryStr, 10);
+    const storedAtStr = await SecureStore.getItemAsync('googleDriveStoredAt');
+    if (!storedAtStr) {
+        return false;
+    }
+    const storedAt = parseInt(storedAtStr, 10);
+    const refreshTokenExpiresAt = storedAt + refreshTokenExpiry * 1000;
+    const currentTime = Date.now();
+    if (currentTime >= refreshTokenExpiresAt) {
+        return false;
+    }
+    return true;
+}
+
 export const getGoogleDriveFiles = async (pageToken?: string, folderId?: string) => {
     const accessToken = await fetchGoogleDriveAccessToken();
     if (!accessToken) {
-    console.log('No access token found.');
     return null;
     }
 
     const tokenExpiry = await getStoredGoogleDriveTokenExpiry();
     const currentTime = Date.now();
     if (tokenExpiry && currentTime >= tokenExpiry) {
-    console.log('Access token has expired. Use refresh token to get a new access token.');
     return null;
     }
 
@@ -150,7 +170,6 @@ export const getGoogleDriveFiles = async (pageToken?: string, folderId?: string)
     if (pageToken) {
     urlParams.append('pageToken', pageToken);
     }
-    console.log('Fetching Google Drive files with params:', urlParams.toString());
     const files = await fetch(`https://www.googleapis.com/drive/v3/files?${urlParams.toString()}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -169,7 +188,6 @@ export const fetchGoogleDocAsPdfAndCreateTempFile = async (fileId: string, fileN
     const exportUrl = fileMimeType === "application/vnd.google-apps.document"
         ? `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`
         : `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    console.log('Export URL:', exportUrl);
     const destination = new Directory(Paths.cache, 'googleDriveDownloads');
     if (!destination.exists) {
         console.log('Creating directory for Google Drive downloads at:', destination.uri);
@@ -181,8 +199,6 @@ export const fetchGoogleDocAsPdfAndCreateTempFile = async (fileId: string, fileN
         console.log('File already exists at:', file.uri);
         file.delete()
     }
-    const fileUri = file.uri;
-    console.log('Downloading Google Doc to:', fileUri);
     try {
         const downloadUri = await File.downloadFileAsync(exportUrl, file, {
             headers: { Authorization: `Bearer ${accessToken}` },
@@ -195,10 +211,109 @@ export const fetchGoogleDocAsPdfAndCreateTempFile = async (fileId: string, fileN
     }
 }
 
-export const useRefreshTokenToGetNewAccessToken = async () => {
+export const refreshGoogleToken = async () => {
     const refreshToken = await getStoredGoogleDriveRefreshToken();
     if (!refreshToken) {
         console.log('No refresh token found.');
         return null;
     }
+    try {
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                client_id: '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com',
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+            }).toString(),
+        });
+        const data = await response.json();
+        console.log('Google Token Refresh Response:', data);
+        const { access_token, expires_in, id_token, refresh_token_expires_in } = data;
+        const res = await storeGoogleTokensOnDevice({
+            accessToken: access_token,
+            refreshToken: refreshToken,
+            expiresIn: expires_in,
+            idToken: id_token,
+            refreshTokenExpiresIn: refresh_token_expires_in
+        })
+        if (!res) {
+            return null;
+        }
+        return true;
+    } catch (error) {
+        console.log('Error refreshing Google Drive access token:', error);
+        return null;
+    }
+}
+
+export const createGoogleMeetEvent = async (title: string, description: string, start: string, end: string, timeZone: string) => {
+    const accessToken = await fetchGoogleDriveAccessToken();
+    if (!accessToken) {
+        console.log('No access token found.');
+        return null;
+    }
+    const eventDetails = {
+        summary: title,
+        description: description,
+        start: {
+            dateTime: start,
+            timeZone
+        },
+        end: {
+            dateTime: end,
+            timeZone
+        },
+        conferenceData: {
+            createRequest: {
+                requestId: `meet-${Date.now()}`,
+                conferenceSolutionKey: {
+                    type: 'hangoutsMeet'
+                }
+            }
+        }
+    }
+    console.log("Access Token:", accessToken);
+    console.log('Event Details:', eventDetails);
+}
+
+export const createGoogleCalendarEvent = async () => {
+    const accessToken = await fetchGoogleDriveAccessToken();
+    if (!accessToken) {
+        console.log('No access token found.');
+        return null;
+    }
+    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+            summary: 'Test Event from App',
+            description: 'This is a test event created from the mobile app.',
+            start: {
+                dateTime: '2024-07-01T10:00:00-07:00',
+                timeZone: 'America/Los_Angeles',
+            },
+            end: {
+                dateTime: '2024-07-01T11:00:00-07:00',
+                timeZone: 'America/Los_Angeles',
+            },
+            attendees: [
+                { email: 'example@example.com' },
+                { email: 'example2@example.com' }
+            ],
+            conferenceData: {
+                createRequest: {
+                    requestId: `meet-${Date.now()}`
+                }
+            }
+        }),
+    });
+    const data = await response.json();
+    console.log('Google Calendar Event Creation Response:', data);
+    return data;
 }

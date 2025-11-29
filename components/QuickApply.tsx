@@ -21,7 +21,7 @@ type Props = {
 const QuickApply = ({ job, size = "small" }: Props) => {
   const { user: authUser } = useAuthStore();
   const user = authUser as User | null;
-  const { setApplications, applications, setLastApplication, lastApplication } = useUserStore();
+  const { addApplication, setLastApplication, lastApplication } = useUserStore();
   const { addAppliedJob } = useUserJobsStore();
   const [quickApplyLabel, setQuickApplyLabel] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -42,12 +42,13 @@ const QuickApply = ({ job, size = "small" }: Props) => {
     setShowQuickApplyModal(false);
     if (apply && job) {
       const res = await quickApplyToJob(job.id);
+      console.log("Quick Apply Response: ", res?.job.id);
       if (res != null) {
-        setShowSuccessModal(true);
         setLastApplication(res);
         addAppliedJob(job);
         player.seekTo(0);
         player.play();
+        setShowSuccessModal(true);
       }
     }
   };
@@ -109,10 +110,11 @@ const QuickApply = ({ job, size = "small" }: Props) => {
               const newApplication = {
                 id: lastApplication?.id,
                 appliedAt: lastApplication?.appliedAt,
-                jobId: job.id,
+                job: lastApplication?.job,
+                jobId: lastApplication?.job.id,
                 status: lastApplication?.status,
               } as Application;
-              setApplications([newApplication, ...applications]);
+              addApplication(newApplication);
             }}
           >
             <Text className="font-quicksand-bold text-white text-base">Perfect Thanks!</Text>

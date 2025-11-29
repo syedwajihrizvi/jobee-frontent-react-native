@@ -6,6 +6,7 @@ type Props = {
   label?: string;
   placeholder: string;
   numberOfLines?: number;
+  customLabelClass?: string;
   customClass?: string;
   style?: object;
   minHeight?: number;
@@ -15,6 +16,7 @@ type Props = {
 const CustomMultilineInput = ({
   value,
   label,
+  customLabelClass,
   placeholder,
   numberOfLines = 8,
   customClass,
@@ -47,7 +49,7 @@ const CustomMultilineInput = ({
 
   return (
     <View className="form-input">
-      {label && <Text className="form-input__label">{label}</Text>}
+      {label && <Text className={customLabelClass ? customLabelClass : "form-input__label"}>{label}</Text>}
       <TextInput
         multiline
         blurOnSubmit={true}

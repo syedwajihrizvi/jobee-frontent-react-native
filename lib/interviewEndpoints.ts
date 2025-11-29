@@ -1,9 +1,10 @@
+import { getAPIUrl } from "@/constants";
 import { CreateInterviewForm, InterviewDetails, InterviewerProfileSummary, InterviewPrepQuestion } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { extract24HourTime } from "./utils";
 
-const INTERVIEWS_API_URL = 'http://192.168.2.29:8080/interviews'
-const BUSINESS_PROFILES_API_URL = 'http://192.168.2.29:8080/business-profiles'
+const INTERVIEWS_API_URL = getAPIUrl('interviews'); 
+const BUSINESS_PROFILES_API_URL = getAPIUrl('business-profiles');
 
 export const createInterview = async (
         interview: CreateInterviewForm, 
@@ -49,10 +50,8 @@ export const getMostRecentInterviewForJob = async (jobId: number) : Promise<Inte
             'Content-Type': 'application/json',
         }
     })
-    console.log("Fetch most recent interview for job response status: ", result.status)
     if (result.status !== 200) return null
     const interview = await result.json()
-    console.log("Fetched interviews for job:", interview)
     // get the first one as it is the most recent one
     return interview[0] as InterviewDetails
 }

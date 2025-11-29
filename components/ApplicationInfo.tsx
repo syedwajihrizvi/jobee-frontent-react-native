@@ -1,5 +1,5 @@
 import { useApplicationById } from "@/lib/services/useJobs";
-import { formatDate, getApplicationStatus, getStatusColor } from "@/lib/utils";
+import { formatDate, getApplicationStatusLabel, getStatusColor } from "@/lib/utils";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -80,7 +80,7 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
     }
   };
 
-  const statusColors = getStatusColor(getApplicationStatus(application.status || ""));
+  const statusColors = getStatusColor(getApplicationStatusLabel(application.status || ""));
 
   return (
     <View className="flex-1 bg-white">
@@ -119,7 +119,7 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
               </View>
               <View className={`${statusColors.bg} ${statusColors.border} border rounded-lg px-3 py-1`}>
                 <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
-                  {getApplicationStatus(application.status)}
+                  {getApplicationStatusLabel(application.status)}
                 </Text>
               </View>
             </View>

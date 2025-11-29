@@ -29,8 +29,6 @@ const InterviewDetailsForBusiness = () => {
   const totalInterviewers = [...(interviewDetails?.interviewers ?? []), ...(interviewDetails?.otherInterviewers ?? [])]
     .length;
 
-  console.log(isLoading);
-  console.log(interview);
   useEffect(() => {
     if (!isLoading && interviewDetails) {
       setInterview(interviewDetails);
@@ -116,7 +114,7 @@ const InterviewDetailsForBusiness = () => {
           </View>
         ) : (
           <View
-            className="bg-white mt-4 rounded-2xl p-4 border border-gray-100 gap-4"
+            className="bg-white mt-4 rounded-2xl p-4 border border-gray-100 gap-2"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -131,11 +129,6 @@ const InterviewDetailsForBusiness = () => {
                 <Text className="font-quicksand-semibold text-base text-gray-700">
                   {interview?.status === "SCHEDULED" ? "Upcoming" : "Completed"}
                 </Text>
-              </View>
-              <View
-                className={`bg-${interview?.status === "SCHEDULED" ? "emerald" : "gray"}-100 px-3 py-1 rounded-full`}
-              >
-                <Text className="font-quicksand-bold text-xs text-emerald-700">{interview?.interviewDate}</Text>
               </View>
             </View>
             {interview?.status === "SCHEDULED" && (
@@ -160,14 +153,14 @@ const InterviewDetailsForBusiness = () => {
             )}
             {interview?.status === "COMPLETED" && <View>{renderDecisionButton(interview?.decisionResult!)}</View>}
             <View>
-              <Text className="font-quicksand-bold text-2xl text-gray-900 mb-2">{interview?.jobTitle}</Text>
+              <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">{interview?.jobTitle}</Text>
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <Text className="font-quicksand-bold text-lg text-gray-800 mb-2">{interview?.title}</Text>
+                <Text className="font-quicksand-bold text-lg text-gray-800">{interview?.title}</Text>
                 <Text className="font-quicksand-medium text-sm text-gray-600 leading-6">{interview?.description}</Text>
               </View>
             </View>
             <View
-              className="bg-white mt-4 rounded-2xl p-5 border border-gray-100"
+              className="bg-white mt-4 rounded-2xl p-4 border border-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -176,14 +169,14 @@ const InterviewDetailsForBusiness = () => {
                 elevation: 6,
               }}
             >
-              <View className="flex-row items-start gap-4">
+              <View className="flex-row items-start gap-2">
                 <RenderUserProfileImage
                   profileImageUrl={interview?.candidateProfileImageUrl}
                   profileImageSize={12}
                   fullName={interview?.candidateName || "Candidate"}
                 />
                 <View className="flex-1">
-                  <Text className="font-quicksand-bold text-xl text-gray-900">
+                  <Text className="font-quicksand-bold text-lg text-gray-900">
                     {interview?.candidateName || "Candidate Name"}
                   </Text>
                   <View className="flex-row items-center gap-1">
@@ -203,29 +196,31 @@ const InterviewDetailsForBusiness = () => {
                 }}
                 onPress={() =>
                   router.push(
-                    `/businessJobs/applications/applicant/${interview?.candidateId}?jobId=${interview?.jobId}&candidateId=${interview?.candidateId}`
+                    `/businessJobs/applications/applicant/${interview?.applicationId}?jobId=${interview?.jobId}&candidateId=${interview?.candidateId}`
                   )
                 }
                 activeOpacity={0.8}
               >
                 <View className="flex-row items-center gap-2">
                   <Feather name="eye" size={14} color="white" />
-                  <Text className="font-quicksand-bold text-white text-sm">View</Text>
+                  <Text className="font-quicksand-bold text-white text-sm">View Candidate</Text>
                 </View>
               </TouchableOpacity>
             </View>
             <View className="gap-3">
               <View className="flex-row items-center gap-3">
-                <Feather name="clock" size={16} color="#6b7280" />
-                <Text className="font-quicksand-medium text-base text-gray-700">
+                <Feather name="calendar" size={16} color="#10b981" />
+                <Text className="font-quicksand-semibold text-base">{interview?.interviewDate}</Text>
+              </View>
+              <View className="flex-row items-center gap-3">
+                <Feather name="clock" size={16} color="#10b981" />
+                <Text className="font-quicksand-semibold">
                   {convertTo12Hour(interview?.startTime!)} - {convertTo12Hour(interview?.endTime!)} (
                   {interview?.timezone})
                 </Text>
               </View>
             </View>
-            <View className="p-4">
-              <InterviewFormatSummary interviewDetails={interview || null} />
-            </View>
+            <InterviewFormatSummary interviewDetails={interview || null} />
             <View
               className="bg-white mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
               style={{
@@ -237,11 +232,11 @@ const InterviewDetailsForBusiness = () => {
               }}
             >
               <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
-                  <Feather name="users" size={20} color="#22c55e" />
+                <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+                  <Feather name="users" size={12} color="#22c55e" />
                 </View>
                 <View>
-                  <Text className="font-quicksand-bold text-xl text-gray-900">Interviewers</Text>
+                  <Text className="font-quicksand-bold text-lg text-gray-900">Interviewers</Text>
                   <Text className="font-quicksand text0sm text-gray-600">
                     {totalInterviewers} {totalInterviewers === 1 ? "Interviewer" : "Interviewers"}
                   </Text>

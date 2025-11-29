@@ -6,6 +6,7 @@ import { ReturnKeyTypeOptions, Text, TextInput, TouchableOpacity, View } from "r
 const CustomInput = ({
   placeholder,
   label,
+  customLabelClass,
   value,
   returnKeyType = "default",
   secureField = false,
@@ -22,7 +23,7 @@ const CustomInput = ({
   const [passwordVisible, setPasswordVisible] = useState(false);
   return (
     <View className={`relative form-input${fullWidth ? " w-full" : ""}`}>
-      {label && <Text className="form-input__label">{label}</Text>}
+      {label && <Text className={customLabelClass ? customLabelClass : "form-input__label"}>{label}</Text>}
       <TextInput
         secureTextEntry={secureField && !passwordVisible}
         placeholder={placeholder}

@@ -4,6 +4,7 @@ import { useUserNotifications } from "@/lib/services/useUserNotifications";
 import useAuthStore from "@/store/auth.store";
 import useNotificationStore from "@/store/notifications.store";
 import useUserStore from "@/store/user.store";
+import useUserJobsStore from "@/store/userJobsStore";
 import { Notification } from "@/type";
 import { Client } from "@stomp/stompjs";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,39 +36,56 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
     setInterviewDecision,
     refetchInterviews,
   } = useUserStore();
+  const { updateAppliedJobs } = useUserJobsStore();
   const player = useAudioPlayer(sounds.newNotification);
 
   const queryClient = useQueryClient();
   const stompClientRef = useRef<any>(null);
 
   const handleNewNotification = ({ notificationType, context }: Notification) => {
+    const { applicationId, interviewId, jobId } = context;
+    let newStatus = "";
     if (notificationType === "REJECTION") {
-      const { applicationId, interviewId } = context;
       if (applicationId) {
-        setApplicationStatus(applicationId, "REJECTED");
+        setApplicationStatus(applicationId, "REJECTED", jobId!);
+        newStatus = "REJECTED";
       }
       if (interviewId) {
         setInterviewDecision(interviewId, "REJECTED");
         queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
+        newStatus = "REJECTED";
       }
     } else if (notificationType === "INTERVIEW_COMPLETED") {
-      const { applicationId, interviewId } = context;
+      const { applicationId, interviewId, jobId } = context;
       if (applicationId) {
-        setApplicationStatus(applicationId, "INTERVIEW_COMPLETED");
+        setApplicationStatus(applicationId, "INTERVIEW_COMPLETED", jobId!);
+        newStatus = "INTERVIEW_COMPLETED";
       }
       if (interviewId) {
         setInterviewToStatus(interviewId, "COMPLETED");
         queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
+        newStatus = "COMPLETED";
       }
     } else if (notificationType === "INTERVIEW_SCHEDULED") {
-      const { applicationId } = context;
+      const { applicationId, jobId } = context;
       if (applicationId) {
-        setApplicationStatus(applicationId, "INTERVIEW_SCHEDULED");
+        console.log(
+          "Setting application status to INTERVIEW_SCHEDULED for applicationId:",
+          applicationId,
+          " jobId:",
+          jobId
+        );
+        setApplicationStatus(applicationId, "INTERVIEW_SCHEDULED", jobId!);
+        newStatus = "INTERVIEW_SCHEDULED";
       }
       refetchInterviews();
     } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
       queryClient.invalidateQueries({ queryKey: ["profileCompleteness"] });
       refetchCandidateInformation();
+    }
+    if (notificationType !== "AI_RESUME_REVIEW_COMPLETE" && jobId) {
+      console.log("Updating applied jobs for jobId:", jobId, " to status:", newStatus);
+      updateAppliedJobs(jobId, newStatus);
     }
   };
   useEffect(() => {

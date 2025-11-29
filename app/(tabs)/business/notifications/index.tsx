@@ -54,17 +54,19 @@ const Notifications = () => {
     markNotificationAsRead(notification.id!);
     updateNotificationStatusToRead(notification.id!);
     const { notificationType, context } = notification;
+    const { interviewId } = context;
     if (
       notificationType === "INTERVIEW_SCHEDULED" ||
       notificationType === "INTERVIEW_COMPLETED" ||
       notificationType === "REJECTION"
     ) {
-      const { interviewId } = context;
       if (interviewId) {
         router.push(`/userProfile/interviews/${interviewId}`);
       }
     } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
       router.push("/userProfile/editProfile");
+    } else if (notificationType === "INTERVIEW_CREATED_SUCCESSFULLY" && interviewId) {
+      router.push(`/businessJobs/interviews/interview/${interviewId}`);
     }
   };
 
@@ -105,7 +107,7 @@ const Notifications = () => {
         <View className="p-4">
           <View className="flex-row items-start gap-3">
             {companyId ? (
-              <RenderCompanyLogo logoUrl={companyLogoUrl} size={12} />
+              <RenderCompanyLogo logoUrl={companyLogoUrl} size={6} />
             ) : (
               <View
                 className="w-12 h-12 items-center justify-center"
@@ -274,7 +276,7 @@ const Notifications = () => {
             </Text>
 
             <TouchableOpacity
-              className="bg-blue-500 px-3 py-1 rounded-lg"
+              className="bg-blue-500 px-3 py-3 rounded-lg"
               activeOpacity={0.7}
               onPress={handleMarkAllAsRead}
             >

@@ -7,7 +7,7 @@ import useUserJobsStore from "@/store/userJobsStore";
 import { ApplicationStatusFilter, Job } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -43,6 +43,149 @@ const AppliedJobs = () => {
     }
   }, [filter]);
 
+  const renderEmptyComponent = useMemo(() => {
+    if (filter == null && totalCount === 0) {
+      return {
+        icon: (
+          <View
+            className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="briefcase" size={32} color="#10b981" />
+          </View>
+        ),
+        title: "No Job Applications Yet",
+        description:
+          "Start your job search journey! Browse available positions and apply to jobs that match your skills and interests.",
+        subtitle: "Get started by exploring job opportunities",
+        buttonText: "Browse Jobs",
+        onButtonPress: () => router.push("/(tabs)/users/jobs"),
+      };
+    } else if (filter === "PENDING" && totalCount === 0) {
+      return {
+        icon: (
+          <View
+            className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#3b82f6",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="clock" size={32} color="#3b82f6" />
+          </View>
+        ),
+        title: "No Pending Applications",
+        description:
+          "You have no job applications currently pending. Explore new job opportunities and apply to positions that interest you.",
+        subtitle: "Keep track of your applications here",
+        buttonText: "Browse Jobs",
+        onButtonPress: () => router.push("/(tabs)/users/jobs"),
+      };
+    } else if (filter === "REJECTED" && totalCount === 0) {
+      return {
+        icon: (
+          <View
+            className="w-20 h-20 bg-red-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#ef4444",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="x-circle" size={32} color="#ef4444" />
+          </View>
+        ),
+        title: "No Rejected Applications",
+        description:
+          "Great news! You have no rejected job applications. Keep applying to positions that match your skills and interests.",
+        subtitle: "Stay positive and keep exploring",
+        buttonText: "Browse Jobs",
+        onButtonPress: () => router.push("/(tabs)/users/jobs"),
+      };
+    } else if (filter === "INTERVIEW_SCHEDULED" && totalCount === 0) {
+      return {
+        icon: (
+          <View
+            className="w-20 h-20 bg-amber-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#f59e0b",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="calendar" size={32} color="#f59e0b" />
+          </View>
+        ),
+        title: "No Scheduled Interviews",
+        description:
+          "You have no interviews scheduled at the moment. Keep applying to jobs and prepare for upcoming opportunities.",
+        subtitle: "Your next interview could be just around the corner",
+        buttonText: "Browse Jobs",
+        onButtonPress: () => router.push("/(tabs)/users/jobs"),
+      };
+    } else if (filter === "INTERVIEW_COMPLETED" && totalCount === 0) {
+      return {
+        icon: (
+          <View
+            className="w-20 h-20 bg-purple-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#a855f7",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="check-circle" size={32} color="#a855f7" />
+          </View>
+        ),
+        title: "No Completed Interviews",
+        description:
+          "You have no completed interviews recorded. Keep applying and preparing for future interview opportunities.",
+        subtitle: "Every interview is a step closer to your dream job",
+        buttonText: "Browse Jobs",
+        onButtonPress: () => router.push("/(tabs)/users/jobs"),
+      };
+    } else if (filter === "OFFER_MADE" && totalCount === 0) {
+      return {
+        icon: (
+          <View
+            className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-6"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Feather name="award" size={32} color="#10b981" />
+          </View>
+        ),
+        title: "No Job Offers Yet",
+        description:
+          "You have no job offers at the moment. Keep applying and interviewing to increase your chances of receiving an offer.",
+        subtitle: "Your dream job could be just an application away",
+        buttonText: "Browse Jobs",
+        onButtonPress: () => router.push("/(tabs)/users/jobs"),
+      };
+    }
+    return null;
+  }, [filter, totalCount]);
+
   return (
     <SafeAreaView className="relative flex-1 bg-white">
       <BackBar label="Applied Jobs" />
@@ -50,7 +193,7 @@ const AppliedJobs = () => {
         <ActivityIndicator size="large" color="#0000ff" className="flex-1 justify-center items-center" />
       ) : (
         <FlatList
-          className="w-full px-4"
+          className="w-full px-4 mt-4"
           data={applications}
           renderItem={({ item }: { item: Job }) => (
             <JobListing job={item} showQuickApply={true} canQuickApply={false} />
@@ -146,57 +289,28 @@ const AppliedJobs = () => {
           ListFooterComponent={() => {
             return isLoadingApplicationsForFilter ? <ActivityIndicator size="large" color="#8b5cf6" /> : null;
           }}
-          ListEmptyComponent={() => {
-            return filter != null && totalCount > 0 ? null : (
-              <View className="flex-1 items-center justify-center px-6 py-20">
-                <View
-                  className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-6"
-                  style={{
-                    shadowColor: "#10b981",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 8,
-                    elevation: 4,
-                  }}
-                >
-                  <Feather name="briefcase" size={32} color="#10b981" />
-                </View>
-
-                <Text className="font-quicksand-bold text-xl text-gray-900 mb-3 text-center">
-                  No Job Applications Yet
+          ListEmptyComponent={() =>
+            renderEmptyComponent ? (
+              <View className="flex-1 items-center justify-center py-12 px-6">
+                {renderEmptyComponent.icon}
+                <Text className="font-quicksand-bold text-lg text-gray-900 mb-2 text-center">
+                  {renderEmptyComponent.title}
                 </Text>
-
-                <Text className="font-quicksand-medium text-gray-600 text-center leading-6 mb-8">
-                  Start your job search journey! Browse available positions and apply to jobs that match your skills and
-                  interests.
+                <Text className="font-quicksand-medium text-base text-gray-600 mb-2 text-center">
+                  {renderEmptyComponent.description}
                 </Text>
-
+                <Text className="font-quicksand-medium text-sm text-gray-500 mb-4 text-center">
+                  {renderEmptyComponent.subtitle}
+                </Text>
                 <TouchableOpacity
-                  className="bg-emerald-500 px-6 py-3 rounded-xl flex-row items-center gap-2"
-                  style={{
-                    shadowColor: "#10b981",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}
-                  onPress={() => router.push("/(tabs)/users/jobs")}
-                  activeOpacity={0.8}
+                  className="bg-emerald-500 px-6 py-3 rounded-xl"
+                  onPress={renderEmptyComponent.onButtonPress}
                 >
-                  <Feather name="search" size={16} color="white" />
-                  <Text className="font-quicksand-bold text-white">Browse Jobs</Text>
+                  <Text className="font-quicksand-bold text-white text-base">{renderEmptyComponent.buttonText}</Text>
                 </TouchableOpacity>
-
-                <View className="mt-6 flex-row items-center gap-3">
-                  <View className="w-1 h-1 bg-gray-300 rounded-full" />
-                  <Text className="font-quicksand-medium text-xs text-gray-500">
-                    Get started by exploring job opportunities
-                  </Text>
-                  <View className="w-1 h-1 bg-gray-300 rounded-full" />
-                </View>
               </View>
-            );
-          }}
+            ) : null
+          }
           ItemSeparatorComponent={() => <View className="divider" />}
         />
       )}

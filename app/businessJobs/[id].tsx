@@ -1,6 +1,6 @@
 import BackBar from "@/components/BackBar";
 import ExpandableText from "@/components/ExpandableText";
-import { getS3BusinessProfileImage } from "@/lib/s3Urls";
+import RenderBusinessProfileImage from "@/components/RenderBusinessProfileImage";
 import { useJobsForBusiness } from "@/lib/services/useJobs";
 import { getEmploymentType, getWorkArrangement } from "@/lib/utils";
 import useApplicationStore from "@/store/applications.store";
@@ -8,7 +8,7 @@ import useBusinessJobsStore from "@/store/businessJobs.store";
 import { Feather, Fontisto } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const BusinessJobDetails = () => {
@@ -35,8 +35,11 @@ const BusinessJobDetails = () => {
   useEffect(() => {
     if (!isLoading && job) {
       setViewsForJob(Number(job.id), job.views || 0);
+      // If the number of applications has increased, pending will increase as well
+      if (job.applicants > getApplicationsForJob(Number(job.id))) {
+        setPendingApplicationsForJob(Number(job.id), job.pendingApplicationsSize || 0);
+      }
       setApplicationsForJob(Number(job.id), job.applicants || 0);
-      setPendingApplicationsForJob(Number(job.id), job.pendingApplicationsSize || 0);
       setInterviewsForJob(Number(job.id), job.totalInterviews || 0);
     }
   }, [job, isLoading]);
@@ -199,45 +202,33 @@ const BusinessJobDetails = () => {
               <Text className="font-quicksand-bold text-lg text-gray-900">Hiring Team</Text>
             </View>
 
-            <View>
-              {job.hiringTeam.map((member) => (
+            <FlatList
+              data={job.hiringTeam}
+              keyExtractor={(_, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => (
                 <View
-                  key={member.email}
-                  className="bg-white rounded-xl border border-gray-200 p-4 mb-3"
+                  className="items-center p-4 bg-gray-50 rounded-xl border border-gray-200 w-[120px]"
                   style={{
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.05,
-                    shadowRadius: 6,
+                    shadowRadius: 4,
                     elevation: 2,
                   }}
                 >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-3 flex-1">
-                      <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                        {member.profileImageUrl ? (
-                          <Image
-                            source={{ uri: getS3BusinessProfileImage(member?.profileImageUrl) }}
-                            className="size-10 rounded-full"
-                          />
-                        ) : (
-                          <Text className="font-quicksand-bold text-blue-600 text-sm">
-                            {member.firstName.charAt(0)}
-                            {member.lastName.charAt(0)}
-                          </Text>
-                        )}
-                      </View>
-                      <View className="flex-1">
-                        <Text className="font-quicksand-bold text-base text-gray-900">
-                          {member.firstName} {member.lastName}
-                        </Text>
-                        <Text className="font-quicksand-medium text-sm text-gray-600">{member.email}</Text>
-                      </View>
-                    </View>
-                  </View>
+                  <RenderBusinessProfileImage
+                    profileImageUrl={item.profileImageUrl}
+                    profileImageSize={16}
+                    fullName={`${item.firstName} ${item.lastName}`}
+                    fontSize={16}
+                  />
+                  <Text className="font-quicksand-semibold text-sm text-gray-900 text-center mt-1">{`${item.firstName} ${item.lastName}`}</Text>
                 </View>
-              ))}
-            </View>
+              )}
+              ItemSeparatorComponent={() => <View className="w-3" />}
+            />
           </View>
           <View className="flex-1" />
         </ScrollView>

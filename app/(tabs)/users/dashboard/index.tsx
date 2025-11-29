@@ -3,10 +3,11 @@ import RenderCompanyLogo from "@/components/RenderCompanyLogo";
 import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import UserInterviewCard from "@/components/UserInterviewCard";
 import { useProfileCompleteness } from "@/lib/services/useProfileCompleteness";
-import { formatDate, getApplicationStatus } from "@/lib/utils";
+import { formatDate, getApplicationStatusLabel } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
 import useProfileSummaryStore from "@/store/profile-summary.store";
 import useUserStore from "@/store/user.store";
+import useUserJobsStore from "@/store/userJobsStore";
 import { InterviewSummary, User } from "@/type";
 import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -29,6 +30,9 @@ const Dashboard = () => {
     lastApplication,
     isLoadingLastApplication,
   } = useUserStore();
+
+  const { getTotalCountForAppliedJobsByFilter, hasValidAppliedJobsCache, fetchAppliedJobsForUserAndFilter } =
+    useUserJobsStore();
   const [upcomingInterviews, setUpcomingInterviews] = useState<InterviewSummary[]>();
   const [profileSummaryStats, setProfileSummaryStats] = useState({
     totalInConsideration: 0,
@@ -42,6 +46,32 @@ const Dashboard = () => {
       fetchLastApplication();
     }
   }, []);
+
+  useEffect(() => {
+    if (!hasValidAppliedJobsCache("PENDING")) {
+      fetchAppliedJobsForUserAndFilter("PENDING", 0);
+    }
+    if (!hasValidAppliedJobsCache(null)) {
+      fetchAppliedJobsForUserAndFilter(null, 0);
+    }
+    if (!hasValidAppliedJobsCache("REJECTED")) {
+      fetchAppliedJobsForUserAndFilter("REJECTED", 0);
+    }
+    if (!hasValidAppliedJobsCache("INTERVIEW_SCHEDULED")) {
+      fetchAppliedJobsForUserAndFilter("INTERVIEW_SCHEDULED", 0);
+    }
+    if (!hasValidAppliedJobsCache("INTERVIEW_COMPLETED")) {
+      fetchAppliedJobsForUserAndFilter("INTERVIEW_COMPLETED", 0);
+    }
+  }, []);
+
+  const totalAppliedJobs = getTotalCountForAppliedJobsByFilter(null);
+  const totalPending = getTotalCountForAppliedJobsByFilter("PENDING");
+  const totalRejections = getTotalCountForAppliedJobsByFilter("REJECTED");
+  const totalInInterviewProcess =
+    getTotalCountForAppliedJobsByFilter("INTERVIEW_SCHEDULED") +
+    getTotalCountForAppliedJobsByFilter("INTERVIEW_COMPLETED");
+
   useEffect(() => {
     if (interviews && !isLoadingInterviews) {
       const upcoming = interviews.filter((interview) => interview.status === "SCHEDULED");
@@ -424,7 +454,7 @@ const Dashboard = () => {
               </View>
             )}
             <View
-              className="bg-white mx-3 mb-4 rounded-2xl p-4 border border-gray-100"
+              className="bg-white mx-3 mb-4 rounded-2xl border border-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
@@ -433,42 +463,60 @@ const Dashboard = () => {
                 elevation: 6,
               }}
             >
-              <View className="flex-row items-center gap-2 mb-3">
-                <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
-                  <MaterialIcons name="pie-chart" size={14} color="#10b981" />
+              <View className="flex-row items-center gap-2 px-4 pt-4 pb-2 border-b border-gray-100">
+                <View className="w-7 h-7 bg-emerald-100 rounded-full items-center justify-center">
+                  <MaterialIcons name="pie-chart" size={16} color="#10b981" />
                 </View>
-                <Text className="font-quicksand-bold text-sm text-gray-900">Applications Overview</Text>
+                <Text className="font-quicksand-bold text-base text-gray-900">Applications Overview</Text>
               </View>
-              <View className="gap-1.5">
-                <View className="flex-row items-center gap-2">
-                  <Feather name="check-circle" size={14} color="blue" />
-                  <Text className="font-quicksand-semibold text-sm text-gray-700">
-                    {profileSummaryStats.totalInConsideration} Pending
-                  </Text>
+              <View className="flex-row justify-between px-4 py-3 gap-3">
+                <View className="items-center flex-1 bg-emerald-50 rounded-lg py-2">
+                  <Text className="font-quicksand-bold text-lg text-emerald-700">{totalAppliedJobs}</Text>
+                  <View className="flex-row items-center justify-center gap-0.5">
+                    <Text className="font-quicksand-medium text-xs text-gray-500">Total</Text>
+                    <View className="w-4 h-4 bg-emerald-100 rounded-full items-center justify-center mt-0.5">
+                      <Feather name="check-circle" size={10} color="#10b981" />
+                    </View>
+                  </View>
                 </View>
-                <View className="flex-row items-center gap-2">
-                  <Feather name="clock" size={14} color="#10b981" />
-                  <Text className="font-quicksand-semibold text-sm text-gray-700">
-                    {profileSummaryStats.totalInterviews} In Consideration
-                  </Text>
+                <View className="items-center flex-1 bg-amber-50 rounded-lg py-2">
+                  <Text className="font-quicksand-bold text-lg text-amber-700">{totalInInterviewProcess}</Text>
+                  <View className="flex-row items-center justify-center gap-0.5">
+                    <Text className="font-quicksand-medium text-xs text-gray-500 text-center">Interview</Text>
+                    <View className="w-4 h-4 bg-amber-100 rounded-full items-center justify-center mt-0.5">
+                      <Feather name="clock" size={10} color="#f59e0b" />
+                    </View>
+                  </View>
                 </View>
-                <View className="flex-row items-center gap-2">
-                  <Feather name="x-circle" size={14} color="#ef4444" />
-                  <Text className="font-quicksand-semibold text-sm text-gray-700">
-                    {profileSummaryStats.totalRejections} Rejected
-                  </Text>
+                <View className="items-center flex-1 bg-blue-50 rounded-lg py-2">
+                  <Text className="font-quicksand-bold text-lg text-blue-700">{totalPending}</Text>
+                  <View className="flex-row items-center justify-center gap-0.5">
+                    <Text className="font-quicksand-medium text-xs text-gray-500">Pending</Text>
+                    <View className="w-4 h-4 bg-blue-100 rounded-full items-center justify-center mt-0.5">
+                      <Feather name="check-circle" size={10} color="#3b82f6" />
+                    </View>
+                  </View>
+                </View>
+                <View className="items-center flex-1 bg-red-50 rounded-lg py-2">
+                  <Text className="font-quicksand-bold text-lg text-red-700">{totalRejections}</Text>
+                  <View className="flex-row items-center justify-center gap-0.5">
+                    <Text className="font-quicksand-medium text-xs text-gray-500">Rejected</Text>
+                    <View className="w-4 h-4 bg-red-100 rounded-full items-center justify-center mt-0.5">
+                      <Feather name="x-circle" size={10} color="#ef4444" />
+                    </View>
+                  </View>
                 </View>
               </View>
-              <View className="flex-row gap-2 mt-3">
+              <View className="flex-row gap-2 px-4 pb-4">
                 <TouchableOpacity
-                  className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg py-2 px-3"
+                  className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg py-2"
                   onPress={() => router.push("/userProfile/appliedJobs")}
                   activeOpacity={0.7}
                 >
                   <Text className="font-quicksand-semibold text-emerald-700 text-xs text-center">View All</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-emerald-500 rounded-lg py-2 px-3"
+                  className="flex-1 bg-emerald-500 rounded-lg py-2"
                   onPress={() => router.push("/(tabs)/users/jobs")}
                   activeOpacity={0.7}
                 >
@@ -542,7 +590,7 @@ const Dashboard = () => {
                       </View>
 
                       <Text className="font-quicksand-semibold text-sm px-2 border border-purple-300 rounded-full text-purple-800">
-                        {getApplicationStatus(lastApplication.status)}
+                        {getApplicationStatusLabel(lastApplication.status)}
                       </Text>
                     </View>
                     <Text className="font-quicksand-medium text-md text-purple-700">{lastApplication.job.title}</Text>

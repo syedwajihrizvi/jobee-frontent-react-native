@@ -20,6 +20,7 @@ const createApplicationsFilterKey = (jobId: number, filters: ApplicantFilters) =
 }
 
 interface ApplicationsState {
+    applicationIdToStatus: Record<number, string>;
     applicationsPerJob: Record<number, number>;
     applicationsByJobAndFilter: Record<string, Application[]>;
     shortListedApplicationsByJob: Record<number, number[]>;
@@ -49,6 +50,7 @@ interface ApplicationsState {
     getCandidatesForJob: (jobId: number) => CandidateForJob[] | undefined;
     getPaginationForJobAndFilter: (jobId: number, filters: ApplicantFilters) => { currentPage: number; hasMore: boolean } | undefined;
     getApplicationsCountForJob: (jobId: number, filters: ApplicantFilters) => number | undefined;
+    getApplicationStatus: (applicationId: number) => string | undefined;
 
     isLoadingApplicationStatesForJob: (jobId: number, filters: ApplicantFilters) => boolean;
     isLoadingShortListedStatesForJob: (jobId: number) => boolean;
@@ -61,16 +63,19 @@ interface ApplicationsState {
     refreshApplicationsForJobAndFilter: (jobId: number, filters: ApplicantFilters) => Promise<void>;
     refreshShortListedApplicationsForJob: (jobId: number) => Promise<void>;
     refreshCandidatesForJob: (jobId: number) => Promise<void>;
+    refreshAllApplicationsDataForJob: (jobId: number) => void
 
     addToShortListedApplications: (jobId: number, applicationId: number) => void;
     removeFromShortListedApplications: (jobId: number, applicationId: number) => void;
     setApplicationStatus: (jobId: number, applicationId: number, status: string) => void;
-
+    resetShortListedFilters: (jobId: number, status: string) => void;
+    resetFiltersWithStatus: (jobId: number, oldStatus: string, newStatus: string) => void;
     isCandidateShortListed: (jobId: number, applicationId: number) => boolean;
 }
 
 const useApplicationStore = create<ApplicationsState>((set, get) => ({
     // State variables in interface order
+    applicationIdToStatus: {},
     applicationsPerJob: {},
     applicationsByJobAndFilter: {},
     shortListedApplicationsByJob: {},
@@ -122,6 +127,10 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
             const { content: newApplications, totalElements, hasMore } = response;
             const existingApplications = state.applicationsByJobAndFilter[filterKey] || [];
             const updatedApplications = [...existingApplications, ...newApplications];
+            const updatedApplicationIdToStatus = { ...state.applicationIdToStatus };
+            newApplications.forEach(app => {
+                updatedApplicationIdToStatus[app.id] = app.status;
+            });
             set((state) => ({
                 applicationsPerJob: {
                     ...state.applicationsPerJob,
@@ -145,7 +154,8 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
                 lastFetchApplicants: {
                     ...state.lastFetchApplicants,
                     [filterKey]: Date.now()
-                }
+                },
+                applicationIdToStatus: updatedApplicationIdToStatus
             }))
         } catch (error) {
             console.log("SYED-DEBUG: Applications Store - Error fetching applications for job", error);
@@ -208,6 +218,11 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const state = get();
         const filterKey = createApplicationsFilterKey(jobId, filters);
         return state.totalCounts[filterKey];
+    },
+    getApplicationStatus: (applicationId) => {
+        const state = get();
+        console.log("SYED-DEBUG: Getting status for applicationId:", applicationId, "Status:", state.applicationIdToStatus[applicationId]);
+        return state.applicationIdToStatus[applicationId];
     },
     // Loading state methods in interface order
     isLoadingApplicationStatesForJob: (jobId, filters) => {
@@ -295,6 +310,31 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         }
         await newState.fetchCandidatesForJob(jobId);
     },
+    refreshAllApplicationsDataForJob: (jobId) => {
+        const state = get();
+        Object.keys(state.applicationsByJobAndFilter).forEach(key => {
+            if (key.startsWith(`${jobId}-`)) {
+                delete state.applicationsByJobAndFilter[key];
+                delete state.pagination[key];
+                delete state.totalCounts[key];
+                delete state.lastFetchApplicants[key];
+            }
+        });
+        delete state.shortListedApplicationsByJob[jobId];
+        delete state.lastFetchedShortListedApplicants[jobId];
+        delete state.candidatesForJob[jobId];
+        delete state.lastFetchedCandidates[jobId];
+        set(() => ({
+            applicationsByJobAndFilter: { ...state.applicationsByJobAndFilter },
+            pagination: { ...state.pagination },
+            totalCounts: { ...state.totalCounts },
+            lastFetchApplicants: { ...state.lastFetchApplicants },
+            shortListedApplicationsByJob: { ...state.shortListedApplicationsByJob },
+            lastFetchedShortListedApplicants: { ...state.lastFetchedShortListedApplicants },
+            candidatesForJob: { ...state.candidatesForJob },
+            lastFetchedCandidates: { ...state.lastFetchedCandidates }
+        }));
+    },
     addToShortListedApplications: (jobId, applicationId) => {
         const state = get();
         const existingList = state.shortListedApplicationsByJob[jobId] || [];
@@ -306,9 +346,9 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
                     [jobId]: updatedList
                 }
             }));
+            state.resetShortListedFilters(jobId, 'shortlisted');
         }
     },
-
     removeFromShortListedApplications: (jobId, applicationId) => {
         const state = get();
         const existingList = state.shortListedApplicationsByJob[jobId] || [];
@@ -320,25 +360,58 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
                     [jobId]: updatedList
                 }
             }));
+            state.resetShortListedFilters(jobId, 'shortlisted');
         }
     },
-    
+    resetShortListedFilters: (jobId, status) => {
+        const state = get();
+        Object.keys(state.applicationsByJobAndFilter).forEach(key => {
+            if (key.startsWith(`${jobId}-`) && key.toLowerCase().includes('shortlisted')) {
+                console.log("SYED-DEBUG: Removing cached applications for key:", key);
+                delete state.applicationsByJobAndFilter[key];
+                delete state.pagination[key];
+                delete state.totalCounts[key];
+                delete state.lastFetchApplicants[key];
+
+            }
+        });
+        set(() => ({
+            applicationsByJobAndFilter: { ...state.applicationsByJobAndFilter },
+            pagination: { ...state.pagination },
+            totalCounts: { ...state.totalCounts },
+            lastFetchApplicants: { ...state.lastFetchApplicants }
+        }));
+    }, 
+    resetFiltersWithStatus: (jobId, oldStatus, newStatus) => {
+        const state = get();
+        Object.keys(state.applicationsByJobAndFilter).forEach(key => {
+            if (key.startsWith(`${jobId}-`) && (key.toLowerCase().includes(oldStatus.toLowerCase()) || key.toLowerCase().includes(newStatus.toLowerCase()))) {
+                console.log("SYED-DEBUG: Removing cached applications for key due to status change:", key);
+                delete state.applicationsByJobAndFilter[key];
+                delete state.pagination[key];
+                delete state.totalCounts[key];
+                delete state.lastFetchApplicants[key];
+            }
+        });
+        set(() => ({
+            applicationsByJobAndFilter: { ...state.applicationsByJobAndFilter },
+            pagination: { ...state.pagination },
+            totalCounts: { ...state.totalCounts },
+            lastFetchApplicants: { ...state.lastFetchApplicants }
+        }));
+    },  
     setApplicationStatus: (jobId, applicationId, status) => {
         const state = get();
-        const prefix = `${jobId}-`;
         const updatedApplicationsByJobAndFilter = { ...state.applicationsByJobAndFilter };
-        Object.keys(updatedApplicationsByJobAndFilter).forEach(key => {
-            if (key.startsWith(prefix)) {
-                const applications = updatedApplicationsByJobAndFilter[key];
-                const updatedApplications = applications.map(app =>
-                    app.id === applicationId ? { ...app, status } : app
-                );
-                updatedApplicationsByJobAndFilter[key] = updatedApplications;
-            }
-        })
         set(() => ({
             applicationsByJobAndFilter: updatedApplicationsByJobAndFilter
         }));
+        const oldStatus = state.applicationIdToStatus[applicationId];
+        state.applicationIdToStatus[applicationId] = status;
+        if (status !== 'PENDING') {
+
+        }   
+        state.resetFiltersWithStatus(Number(jobId), oldStatus, status);
     },
     isCandidateShortListed: (jobId, applicationId) => {
         const state = get();

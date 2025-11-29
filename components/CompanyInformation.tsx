@@ -11,11 +11,11 @@ type Props = {
 const CompanyInformation = ({ companyName, companyLogoUrl, jobTitle }: Props) => {
   if (jobTitle) {
     return (
-      <View className="flex-row items-center gap-2 w-2/3">
+      <View className="flex-row items-center gap-2 w-4/5">
         <RenderCompanyLogo logoUrl={companyLogoUrl} />
         <View>
           <Text className="font-quicksand-bold text-sm">{companyName}</Text>
-          <Text className="font-quicksand-bold text-lg" numberOfLines={2} style={{ lineHeight: 20 }}>
+          <Text className="font-quicksand-bold text-lg" numberOfLines={4} style={{ lineHeight: 20 }}>
             {jobTitle}
           </Text>
         </View>

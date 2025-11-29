@@ -102,10 +102,10 @@ const Notifications = () => {
         activeOpacity={0.7}
         onPress={() => handleNotificationPress(item)}
       >
-        <View className="p-4">
+        <View className="p-2">
           <View className="flex-row items-start gap-3">
             {companyId ? (
-              <RenderCompanyLogo logoUrl={companyLogoUrl} size={12} />
+              <RenderCompanyLogo logoUrl={companyLogoUrl} size={6} />
             ) : (
               <View
                 className="w-12 h-12 items-center justify-center"
@@ -117,7 +117,7 @@ const Notifications = () => {
 
             <View className="flex-1">
               <Text
-                className={`font-quicksand-semibold text-sm leading-5 ${item.read ? "text-gray-700" : "text-gray-900"}`}
+                className={`font-quicksand-semibold text-xs leading-5 ${item.read ? "text-gray-700" : "text-gray-900"}`}
               >
                 {item.message}
               </Text>
@@ -274,7 +274,7 @@ const Notifications = () => {
             </Text>
 
             <TouchableOpacity
-              className="bg-blue-500 px-3 py-1 rounded-lg"
+              className="bg-blue-500 px-3 py-3 rounded-lg"
               activeOpacity={0.7}
               onPress={handleMarkAllAsRead}
             >
@@ -315,6 +315,7 @@ const Notifications = () => {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Notifications" />
+      {renderHeader()}
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#3b82f6" />
@@ -325,7 +326,6 @@ const Notifications = () => {
           data={filterNotifications()}
           keyExtractor={(item) => item.id!.toString()}
           renderItem={renderNotificationItem}
-          ListHeaderComponent={renderHeader}
           ListEmptyComponent={renderEmptyState}
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}

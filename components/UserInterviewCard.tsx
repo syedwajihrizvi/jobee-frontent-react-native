@@ -52,7 +52,11 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
     >
       <View className="flex-row items-start justify-between mb-4">
         <View className="flex-1">
-          <CompanyInformation companyName={item.companyName} companyLogoUrl={""} jobTitle={item.jobTitle} />
+          <CompanyInformation
+            companyName={item.companyName}
+            companyLogoUrl={item.companyLogoUrl}
+            jobTitle={item.jobTitle}
+          />
         </View>
         <View
           className="bg-indigo-100 px-3 py-1 rounded-full"

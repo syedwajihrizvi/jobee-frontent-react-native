@@ -126,7 +126,7 @@ export const getExperienceLevel = (level: string) => {
       return "LEAD";
   }
 }
-export const getApplicationStatus = (status: string) => {
+export const getApplicationStatusLabel = (status: string) => {
   switch(status) {
     case 'PENDING':
       return "Pending";
@@ -1005,8 +1005,10 @@ export const convertDocumentTypeToLabel = (type: string | undefined) => {
 
 export const getNotificationIcon = (type: string) => {
     switch (type) {
+      case "INTERVIEW_CREATED_SUCCESSFULLY":
+        return { name: "calendar", color: "#10b981", bgColor: "#d1fae5" };
       case "INTERVIEW_SCHEDULED":
-        return { name: "calendar", color: "#3b82f6", bgColor: "#dbeafe" };
+        return { name: "calendar", color: "#10b981", bgColor: "#d1fae5" };
       case "INTERVIEW_RESULT":
         return { name: "file-text", color: "#8b5cf6", bgColor: "#ede9fe" };
       case "INTERVIEW_COMPLETED":
@@ -1070,4 +1072,15 @@ export const getNotificationIcon = (type: string) => {
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInDays < 7) return `${diffInDays}d ago`;
     return date.toLocaleDateString();
+  };
+
+
+export const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };

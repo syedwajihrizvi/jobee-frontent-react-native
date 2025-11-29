@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getEducationLevel, getExperienceLevel } from "./utils";
 
 const APPLICATIONS_API_URL = getAPIUrl('applications');
-const INTERVIEWS_API_URL = `http://192.168.2.29:8080/interviews`;
+const INTERVIEWS_API_URL = getAPIUrl('interviews');
 const JOBS_API_URL = getAPIUrl('jobs');
 const USER_PROFILE_API_URL = getAPIUrl('profiles');
 const USER_SKILL_API = getAPIUrl('profiles/skills');
@@ -22,6 +22,7 @@ export const getUserInterviews = async () => {
             'x-auth-token': `Bearer ${token}`
         }
     })
+    console.log("User Interviews Response:", response);
     const data = await response.json()
     return data as InterviewDetails[];
 }

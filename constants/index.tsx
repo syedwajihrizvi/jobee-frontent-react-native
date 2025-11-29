@@ -60,28 +60,10 @@ export const meetingPlatforms = [
     textColor: "#5A2D91", // Teams purple
   },
   {
-    label: "Skype",
-    value: "SKYPE",
-    bgColor: "#E0F7FA", // Light cyan
-    textColor: "#00AFF0", // Skype blue
-  },
-  {
     label: "Webex",
     value: "WEBEX",
     bgColor: "#E0F2F1", // Light teal
     textColor: "#00897B", // Webex teal
-  },
-  {
-    label: "CoderPad",
-    value: "CODERPAD",
-    bgColor: "#FBE9E7", // Light orange
-    textColor: "red", // CoderPad orange-red
-  },
-  {
-    label: "CodeSignal",
-    value: "CODESIGNAL",
-    bgColor: "#E3F2FD", // Light blue
-    textColor: "#2E8BE6", // CodeSignal blue
   },
   {
     label: "Other",
@@ -279,6 +261,46 @@ export const applicationStatusOptions = [
     activeTextColor: "#ffffff", // White
   },
 ];
+
+export const getInterviewEmptyContent = (status: string | undefined) => {
+  switch (status) {
+    case "PENDING":
+      return {
+        title: "No Pending Interviews",
+        message: "You do not have any pending interviews at the moment.",
+        textColor: "#10b981", // emerld-500
+        bgColor: "#ecfdf5", // emerald-100
+      };
+    case "SCHEDULED":
+      return {
+        title: "No Scheduled Interviews",
+        message: "You do not have any upcoming interviews scheduled.",
+        textColor: "#f59e0b", // blue-500
+        bgColor: "#fffbeb", // blue-100
+      };
+    case "COMPLETED":
+      return {
+        title: "No Completed Interviews",
+        message: "You have not completed any interviews yet.",
+        textColor: "#8b5cf6", // purple-500
+        bgColor: "#faf5ff", // purple-100
+      };
+    case "REJECTED":
+      return {
+        title: "No Rejected Interviews",
+        message: "You have not had any interviews that were rejected.",
+        textColor: "#ef4444", // red-500
+        bgColor: "#fef2f2", // red-100
+      };
+    default:
+      return {
+        title: "No Interviews Yet",
+        message: "When you schedule interviews, they will appear here.",
+        textColor: "#3b82f6", // blue-500
+        bgColor: "#eff6ff", // blue-100
+      };
+  }
+};
 
 export const interviewFilterOptions = [
   {

@@ -3,51 +3,48 @@ import * as AuthSession from 'expo-auth-session';
 import { Directory, File, Paths } from "expo-file-system";
 import * as SecureStore from 'expo-secure-store';
 
-export const connectToOneDriveOAuth = async () => {
+export const connectToOneDriveOAuth = async (type: 'common' | 'organizations' = 'common') => {
     const CLIENT_ID = '055caa21-84fa-47d0-865b-05f5999fe8ec'
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.syedwajihrizvi.JobeeFrontEnd',
         path: 'redirect'
     })
     const DISCOVERY = {
-        authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-        tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        authorizationEndpoint: `https://login.microsoftonline.com/${type}/oauth2/v2.0/authorize`,
+        tokenEndpoint: `https://login.microsoftonline.com/${type}/oauth2/v2.0/token`,
     };
 
     const request = new AuthSession.AuthRequest({
         clientId: CLIENT_ID,
         redirectUri: REDIRECT_URI,
-        scopes: ['Files.Read', 'User.Read', 'Files.ReadWrite.All'],
+        scopes: ['Files.Read', 'User.Read', 'Files.ReadWrite.All', "OnlineMeetings.ReadWrite", "offline_access"],
         responseType: AuthSession.ResponseType.Code
     })
 
     const result = await request.promptAsync(DISCOVERY);
-    console.log('OneDrive OAuth Result:', result);
     const { codeVerifier } = request
     if (result.type === 'success' && codeVerifier) {
         const { code} = result.params
-        const tokens = await exchangeOneDriveOAuthCodeForToken(code, codeVerifier);
-        console.log(tokens)
+        const tokens = await exchangeOneDriveOAuthCodeForToken(code, codeVerifier, type);
         return tokens;
     }
 }
 
-export const exchangeOneDriveOAuthCodeForToken = async (code: string, codeVerifier: string) => {
+export const exchangeOneDriveOAuthCodeForToken = async (code: string, codeVerifier: string, type: 'common' | 'organizations' = 'common') => {
     const CLIENT_ID = '055caa21-84fa-47d0-865b-05f5999fe8ec'
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.syedwajihrizvi.JobeeFrontEnd',
         path: 'redirect'
     })
-    const TOKEN_ENDPOINT = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+    const TOKEN_ENDPOINT = `https://login.microsoftonline.com/${type}/oauth2/v2.0/token`
     const body = new URLSearchParams({
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         code: code,
         code_verifier: codeVerifier,
         grant_type: 'authorization_code',
-        scope: 'Files.Read User.Read Files.ReadWrite.All',
+        scope: 'Files.Read User.Read Files.ReadWrite.All OnlineMeetings.ReadWrite offline_access',
     })
-    console.log('OneDrive Token Request Params:', body.toString());
     try {
         const response = await fetch(TOKEN_ENDPOINT, {
             method: 'POST',
@@ -56,17 +53,18 @@ export const exchangeOneDriveOAuthCodeForToken = async (code: string, codeVerifi
             },
             body: body.toString(),
         });
-        console.log('OneDrive Token Response Status:', response);
         const data = await response.json();
-        const { access_token, expires_in} = data
+        console.log('OneDrive OAuth Token Response:', data);
+        const { access_token, expires_in, refresh_token } = data
+        console.log("OneDrive Access Token:", access_token);
         const res = await storeOneDriveTokensOnDevice({
             accessToken: access_token,
-            expiresIn: expires_in
+            expiresIn: expires_in,
+            refreshToken: refresh_token
         })
         if (!res) {
             return null;
         }
-        console.log('OneDrive Token Response:', data);
         return true;
     } catch (error) {
         console.log('Error exchanging OneDrive OAuth code for token:', error);
@@ -74,11 +72,11 @@ export const exchangeOneDriveOAuthCodeForToken = async (code: string, codeVerifi
     }
 }
 
-export const storeOneDriveTokensOnDevice = async ({accessToken, expiresIn}: {
+export const storeOneDriveTokensOnDevice = async ({accessToken, expiresIn, refreshToken}: {
     accessToken: string;
     expiresIn: number;
+    refreshToken: string;
 }) => {
-    console.log('Storing OneDrive tokens:', { accessToken, expiresIn });
     const storedAt = Date.now();
     const expiresAt = storedAt + expiresIn * 1000;
     try {
@@ -86,6 +84,7 @@ export const storeOneDriveTokensOnDevice = async ({accessToken, expiresIn}: {
         await SecureStore.setItemAsync('oneDriveExpiresIn', expiresIn.toString());
         await SecureStore.setItemAsync('oneDriveStoredAt', storedAt.toString());
         await SecureStore.setItemAsync('oneDriveExpiresAt', expiresAt.toString());
+        await SecureStore.setItemAsync('oneDriveRefreshToken', refreshToken);
         return true;
     } catch (error) {
         console.error('Error storing OneDrive tokens:', error);
@@ -96,6 +95,11 @@ export const storeOneDriveTokensOnDevice = async ({accessToken, expiresIn}: {
 export const fetchOneDriveAccessToken = async () => {
     const accessToken = await SecureStore.getItemAsync('oneDriveAccessToken');
     return accessToken;
+}
+
+export const getStoredOneDriveRefreshToken = async () => {
+    const refreshToken = await SecureStore.getItemAsync('oneDriveRefreshToken');
+    return refreshToken;
 }
 
 export const getStoredOneDriveTokenExpiry = async () => {
@@ -124,7 +128,6 @@ export const isOneDriveAccessTokenValid = async () => {
 }
 
 export const getOneDriveFiles = async (folderPath?: string, nextLink?: string) => {
-    console.log('Fetching OneDrive files. Next link:', nextLink);
     const accessToken = await fetchOneDriveAccessToken();
     if (!accessToken) {
         console.log('No OneDrive access token found.');
@@ -183,4 +186,103 @@ export const fetchOneDriveFileAsPdfAndCreateTempFile = async (downloadUrl: strin
         console.log('Error downloading OneDrive file:', error);
         return null;
     }
+}
+
+export const refreshMicrosoftToken = async (type: 'common' | 'organizations' = 'common') => {
+    const refreshToken = await getStoredOneDriveRefreshToken();
+    if (!refreshToken) {
+        return null;
+    }
+    try {
+        const CLIENT_ID = '055caa21-84fa-47d0-865b-05f5999fe8ec'
+        const TOKEN_ENDPOINT = `https://login.microsoftonline.com/${type}/oauth2/v2.0/token`
+        const body = new URLSearchParams({
+            client_id: CLIENT_ID,
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+            scope: 'Files.Read User.Read Files.ReadWrite.All OnlineMeetings.ReadWrite offline_access',
+        })
+        const response = await fetch(TOKEN_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+        });
+        const data = await response.json();
+        console.log('Microsoft Token Refresh Response:', data);
+        const { access_token, expires_in, refresh_token } = data
+        const res = await storeOneDriveTokensOnDevice({
+            accessToken: access_token,
+            expiresIn: expires_in,
+            refreshToken: refresh_token
+        })
+        if (!res) {
+            return null;
+        }
+        return true;
+    } catch (error) {
+        console.log('Error refreshing Microsoft access token:', error);
+        return null;
+    }
+}
+
+export const createTeamsMeeting = async () => {
+    await userHasTeamsLicense();
+    const accessToken = await fetchOneDriveAccessToken();
+    console.log("OneDrive Access Token:", accessToken);
+    if (!accessToken) {
+        console.log('No OneDrive access token found.');
+        return null;
+    }
+    const res = await fetch("https://graph.microsoft.com/v1.0/me/onlineMeetings", {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            startDateTime: "2024-10-01T14:30:00Z",
+            endDateTime: "2024-10-01T15:00:00Z",
+            subject: "Jobee Scheduled Meeting",
+            participants: {
+                organizer: {
+                    identity: { user: { id: "me"}}
+                },
+                attendees: [
+                    {
+                        identity: { user: { id: "candidateemail@example.com"}},
+                        role: "attendee"
+                    },
+                    {
+                        identity: { user: { id: "worker@example.com"}},
+                        role: "attendee"
+                    }
+                ]
+            }
+        })
+    });
+    const response = await res.json();
+    console.log(response)
+}
+
+export const userHasTeamsLicense = async () => {
+    const accessToken = await fetchOneDriveAccessToken();
+    const response = await fetch("https://graph.microsoft.com/v1.0/me/licenseDetails", {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    const data = await response.json();
+    if (!data || !data.value || data.value.length === 0) {
+        return false;
+    }
+    const { servicePlans} = data.value[0]
+    servicePlans.forEach((plan: any) => {
+        if (plan.servicePlanName.toUpperCase().includes("TEAMS") && plan.provisioningStatus === "Success") {
+            return true;
+        }
+    })
+    return false
 }

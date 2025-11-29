@@ -36,8 +36,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const JobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
-  const { user: authUser, isAuthenticated, isLoading: isLoadingUser } = useAuthStore();
-  const { applications, setApplications, isLoadingApplications, setLastApplication, lastApplication } = useUserStore();
+  const { user: authUser, isAuthenticated } = useAuthStore();
+  const { applications, setApplications, isLoadingApplications, setLastApplication, lastApplication, addApplication } =
+    useUserStore();
   const user = authUser as User | null;
   const { data: job, isLoading } = useJob(Number(jobId));
   const [jobApplication, setJobApplication] = useState<Application | null>(null);
@@ -114,7 +115,9 @@ const JobDetails = () => {
         setShowSuccessModal(true);
         setLastApplication(res);
         addAppliedJob(res.job);
-        addApplicationForJob(Number(jobId));
+        addApplication(res);
+        console.log("Adding application: ", res.job);
+        addApplicationForJob(Number(res.job.id));
         Alert.alert("Application submitted successfully!");
         applyBottomRef.current?.close();
         player.seekTo(0);

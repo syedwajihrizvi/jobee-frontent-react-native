@@ -81,6 +81,7 @@ interface UserJobsState {
     refreshFavoriteJobs: () => Promise<void>;
     refreshRecommendedJobs: () => Promise<void>;
     refreshAppliedJobsForUserAndFilter: (filter: ApplicationStatusFilter) => Promise<void>;
+    updateAppliedJobs: (jobId: number, status: string) => Promise<void>;
 
     addJobToFavorites: (job: Job) => void;
     removeJobFromFavorites: (jobId: number) => void;
@@ -454,7 +455,22 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
         }));
         await newState.fetchRecommendedJobs();
     },
+    updateAppliedJobs: async (jobId, status) => {
+        const state = get();
+        const appliedJobsByFilter = state.appliedJobsByFilter;
+        Object.keys(appliedJobsByFilter).forEach((filterKey) => {
 
+                delete state.appliedJobsByFilter[filterKey];
+                delete state.totalAppliedJobsCountByFilter[filterKey];
+                delete state.paginationAppliedJobsByFilter[filterKey];
+                delete state.lastFetchedAppliedJobsByFilter[filterKey];
+                set(() => ({
+                    ...state
+                }));
+                const filter = (filterKey === 'all' ? null : filterKey)as ApplicationStatusFilter;
+                state.fetchAppliedJobsForUserAndFilter(filter, 0);
+        })
+    },
     refreshAppliedJobsForUserAndFilter: async (filter) => {
         const filterKey = createAppliedJobsByFilterKey(filter);
         const newState = get();
@@ -487,7 +503,6 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
     },
     addAppliedJob: (job) => {
         const state = get();        
-        // Calculate all updates first, then call set() once
         const updatedAppliedJobsByFilter = { ...state.appliedJobsByFilter };
         const updatedTotalAppliedJobsCountByFilter = { ...state.totalAppliedJobsCountByFilter };
         
@@ -508,7 +523,6 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
             recommendedJobs: state.recommendedJobs.filter(rec => rec.job.id !== job.id),
         }));
         state.incrementApplicationsForJob(job.id, 1);
-        console.log("Recommended jobs after:", get().recommendedJobs.map(rec => rec.job.id));
     },
     addAppliedJobs: (jobs) => {
         const state = get();

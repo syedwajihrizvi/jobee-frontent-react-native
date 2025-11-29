@@ -1,4 +1,4 @@
-import { interviewFilterOptions } from "@/constants";
+import { getInterviewEmptyContent, interviewFilterOptions } from "@/constants";
 import { getInterviewFilterText } from "@/lib/utils";
 import useBusinessInterviewsStore from "@/store/businessInterviews.store";
 import { InterviewFilter, InterviewFilters } from "@/type";
@@ -100,11 +100,38 @@ const RenderInterviews = ({ jobId, status, filtersVisibile = true }: Props) => {
   const interviewsData = getInterviewsForJobAndFilter(filters);
   const isLoading = isLoadingInterviewsForJobAndFilter(filters);
 
+  const renderEmptyComponent = () => {
+    const { title, message, textColor, bgColor } = getInterviewEmptyContent(filters.status || filters.decisionResult);
+    return (
+      <View className="flex-1 justify-center items-center p-6">
+        <View
+          className="w-20 h-20 rounded-full items-center justify-center mb-6"
+          style={{
+            shadowColor: "#3b82f6",
+            backgroundColor: bgColor,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 4,
+          }}
+        >
+          <RenderInterviewFilterIcon
+            filter={(filters.status || filters.decisionResult || "SCHEDULED") as InterviewFilter}
+            color={textColor}
+            size={32}
+          />
+        </View>
+        <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">{title}</Text>
+        <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">{message}</Text>
+      </View>
+    );
+  };
+
   return isLoading ? (
     <ActivityIndicator size="large" className="mt-10" />
   ) : (
     <FlatList
-      className="p-2"
+      className="p-4"
       data={interviewsData}
       renderItem={({ item }) => (
         <InterviewCard
@@ -112,26 +139,7 @@ const RenderInterviews = ({ jobId, status, filtersVisibile = true }: Props) => {
           handlePress={() => router.push(`/businessJobs/interviews/interview/${item.id}`)}
         />
       )}
-      ListEmptyComponent={() => (
-        <View className="flex-1 justify-center items-center p-6">
-          <View
-            className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6"
-            style={{
-              shadowColor: "#3b82f6",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
-          >
-            <Feather name="calendar" size={32} color="#3b82f6" />
-          </View>
-          <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Interviews Yet</Text>
-          <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6">
-            When you schedule interviews for this job, they will appear here.
-          </Text>
-        </View>
-      )}
+      ListEmptyComponent={() => renderEmptyComponent()}
       ListHeaderComponent={() =>
         filtersVisibile && (
           <>
@@ -177,7 +185,7 @@ const RenderInterviews = ({ jobId, status, filtersVisibile = true }: Props) => {
                             onPress={() => handleFilterStatusChange(option.value as InterviewFilter)}
                           >
                             <RenderInterviewFilterIcon
-                              filter={option.label as InterviewFilter}
+                              filter={option.value as InterviewFilter}
                               color={active ? option.activeTextColor : option.textColor}
                             />
                             <Text

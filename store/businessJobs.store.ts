@@ -54,6 +54,8 @@ interface BusinessJobState {
     setApplicationsForJob: (jobId: number, applications: number) => void;
     setPendingApplicationsForJob: (jobId: number, pendingApplications: number) => void;
     setInterviewsForJob: (jobId: number, interviews: number) => void;
+    decrementPendingApplicationsForJob: (jobId: number) => void;
+    incrementInterviewsForJob: (jobId: number) => void;
 }
 
 const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
@@ -158,7 +160,7 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
                     },
                     interviewsByJobId: {
                         ...state.interviewsByJobId,
-                        [job.id]: job.totalInterviews || 0,
+                        [job.id]: job.interviews || 0,
                     },
                     viewsPerJobId: {
                         ...state.viewsPerJobId,
@@ -203,6 +205,7 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
     },
     getInterviewsForJob: (jobId) => {
         const state = get();
+        console.log(state.interviewsByJobId)
         return state.interviewsByJobId[jobId] || 0;
     },
     getMostAppliedJobs: () => {
@@ -324,6 +327,30 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
             return state;
         })
     },
+    decrementPendingApplicationsForJob: (jobId) => {
+        set((state) => {
+            const currentPendingApplications = state.pendingApplicationsByJobId[jobId] || 0;
+            const newPendingApplications = Math.max(0, currentPendingApplications - 1);
+            return {
+                pendingApplicationsByJobId: {
+                    ...state.pendingApplicationsByJobId,
+                    [jobId]: newPendingApplications,
+                }
+            };
+        })
+    },
+    incrementInterviewsForJob: (jobId) => {
+        set((state) => {
+            const currentInterviews = state.interviewsByJobId[jobId] || 0;
+            const newInterviews =  currentInterviews + 1;
+            return {
+                interviewsByJobId: {
+                    ...state.interviewsByJobId,
+                    [jobId]: newInterviews,
+                }
+            };
+        })
+    }
 }))
 
 export default useBusinessJobsStore;

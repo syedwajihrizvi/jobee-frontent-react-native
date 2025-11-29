@@ -266,7 +266,7 @@ const General = () => {
                         <CustomInput
                           placeholder={getCustomProfilePlaceholderForField(editingField || "")}
                           label=""
-                          autoCapitalize="words"
+                          autoCapitalize={editingField === "Email" ? "none" : "words"}
                           onChangeText={(text) => setProfileForm({ value: text })}
                           value={profileForm.value}
                           customClass="border border-gray-300 rounded-xl p-3 w-full font-quicksand-medium"

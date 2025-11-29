@@ -42,7 +42,7 @@ const PlatformButton = ({ label, onPress, icon, bgColor, textColor, isSelected }
       </View>
 
       <Text
-        className={`font-quicksand-semibold text-sm ${isSelected ? "font-quicksand-bold" : ""}`}
+        className={`font-quicksand-semibold text-xs ${isSelected ? "font-quicksand-bold" : ""}`}
         style={{ color: isSelected ? bgColor : textColor }}
       >
         {label}

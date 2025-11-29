@@ -43,7 +43,6 @@ export const exchangeDropboxOAuthCodeForToken = async (code: string, codeVerifie
     params.append('redirect_uri', REDIRECT_URI);
     params.append('grant_type', 'authorization_code');
     const queryParams = params.toString();
-    console.log('Dropbox Token Request Params:', queryParams);
     const response = await fetch(`https://api.dropboxapi.com/oauth2/token?${queryParams}`, {
         method: 'POST',
         headers: {

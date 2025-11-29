@@ -33,7 +33,7 @@ export type SignUpViaCodeParams = {
 export type CustomInputProps = {
     placeholder: string;
     secureField?: boolean;
-    label: string?;
+    label?: string;
     fontSize?: number;
     value?: string;
     multiline?: boolean;
@@ -41,6 +41,7 @@ export type CustomInputProps = {
     autocorrect?: boolean;
     fullWidth?: boolean;
     customClass?: string;
+    customLabelClass?: string;
     returnKeyType?: string;
     keyboardType?: string;
     autoCapitalize?: string;
@@ -587,6 +588,7 @@ export type InterviewSummary = {
     interviewType: string;
     timezone: string;
     companyName: string;
+    companyLogoUrl: string;
 }
 
 export type InterviewPrepQuestion = {
@@ -729,13 +731,13 @@ export type NotificationContext = {
     companyName?: string;
     jobTitle?: string;
 }
-export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED" | "AI_RESUME_REVIEW_COMPLETE";
+export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED" | "INTERVIEW_CREATED_SUCCESSFULLY" | "AI_RESUME_REVIEW_COMPLETE";
 
 type ApplicationStatusFilter =
   | "PENDING"
   | "SHORTLISTED"
   | "REJECTED"
-  | "OFFERED"
+  | "OFFER_MADE"
   | "INTERVIEW_SCHEDULED"
   | "INTERVIEW_COMPLETED"
   | null;

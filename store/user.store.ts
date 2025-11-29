@@ -17,6 +17,8 @@ type UserType = {
     isLoadingSocialMedias: boolean,
     isLoadingDocuments: boolean,
     interviews: InterviewDetails[],
+    // Map of JobId to Application
+    applicationStatuses: Record<number, Application>,
     applications: Application[],
     skills: UserSkill[],
     experiences: Experience[],
@@ -52,11 +54,13 @@ type UserType = {
     setInterviews: (interviews: InterviewDetails[]) => void,
     setApplications: (applications: Application[]) => void,
     setSkills: (skills: UserSkill[]) => void,
-    setApplicationStatus: (applicationId: number, status: string) => void,
+    setApplicationStatus: (applicationId: number, status: string, jobId: number) => void,
     setInterviewStatus: (interviewId: number, status: string) => void,
     setInterviewDecision: (interviewId: number, decision: string) => void,
+    addApplication: (application: Application) => void,
     setLastApplication: (application: Application | null) => void,
     getLastApplication: () => Application | null,
+    getApplicationStatus: (jobId: number) => Application | undefined,
     getSkills: () => UserSkill[],
     getExperiences: () => Experience[],
     getEducations: () => Education[],
@@ -101,6 +105,7 @@ const useUserStore = create<UserType>((set, get) => ({
     isLoadingSocialMedias: false,
     isLoadingDocuments: false,
     interviews: [],
+    applicationStatuses: {},
     applications: [],
     skills: [],
     experiences: [],
@@ -146,6 +151,15 @@ const useUserStore = create<UserType>((set, get) => ({
         
         if (applicationsResult.status === 'fulfilled') {
             set({ applications: applicationsResult.value });
+            // Update the applicationStatuses map
+            applicationsResult.value.forEach(app => {
+                set((state) => ({
+                    applicationStatuses: {
+                        ...state.applicationStatuses,
+                        [app.jobId]: app
+                    }
+                }));
+            });
         } else {
             console.error("Error fetching user applications:", applicationsResult.reason);
         }
@@ -289,10 +303,25 @@ const useUserStore = create<UserType>((set, get) => ({
         )
     })),
     setApplications: (applications: Application[]) => set({ applications }),
-    setApplicationStatus: (applicationId: number, status: string) => set((state) => ({
+    setApplicationStatus: (applicationId: number, status: string, jobId: number) => set((state) => ({
         applications: state.applications.map(app => 
             app.id === applicationId ? { ...app, status } : app
-        )
+        ),
+        lastApplication: state.lastApplication && state.lastApplication.id === applicationId ? { ...state.lastApplication, status } : state.lastApplication,
+        applicationStatuses: {
+            ...state.applicationStatuses,
+            [jobId]: {
+                ...state.applicationStatuses[jobId],
+                status
+            }
+        }
+    })),
+    addApplication: (application: Application) => set((state) => ({
+        applications: [application, ...state.applications],
+        applicationStatuses: {
+            ...state.applicationStatuses,
+            [application.job.id]: application
+        }
     })),
     getLastApplication: () => {
         return get().lastApplication;
@@ -336,6 +365,9 @@ const useUserStore = create<UserType>((set, get) => ({
     getRecommendationDocuments: () => {
         return get().recommendationDocuments;
     },
+    getApplicationStatus: (jobId: number) => {
+        return get().applicationStatuses[jobId] ;
+    },  
     setInterviewDecision: (interviewId: number, decision: string) => set((state) => ({
         interviews: state.interviews.map(interview => 
             interview.id === interviewId ? { ...interview, decision } : interview
@@ -353,8 +385,8 @@ const useUserStore = create<UserType>((set, get) => ({
     hasValidLastApplication: () => {
         const { lastApplication, lastFetchedLastApplication } = get();
         if (!lastApplication || !lastFetchedLastApplication) return false;
-        const THIRTY_MINUTES = 30 * 60 * 1000;
-        return (Date.now() - lastFetchedLastApplication) < THIRTY_MINUTES;
+        const FIVE_MINUTES = 5 * 60 * 1000;
+        return (Date.now() - lastFetchedLastApplication) < FIVE_MINUTES;
     },
     hasValidSkills: () => {
         const { skills, lastFetchedSkills } = get();

@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 
 import RenderMarkdown from "@/components/RenderMarkdown";
+import { formatDateForDisplay } from "@/lib/utils";
 import {
   ActivityIndicator,
   Alert,
@@ -87,15 +88,6 @@ const CreateJob = () => {
     }
   };
 
-  const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
   const handleCreateJob = async () => {
     const {
       title,
@@ -255,6 +247,7 @@ const CreateJob = () => {
               <CustomInput
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                 label="Title"
+                fontSize={12}
                 placeholder="eg. Software Engineer"
                 autoCapitalize="words"
                 value={createJobForm.title}
@@ -266,6 +259,7 @@ const CreateJob = () => {
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                 label="Street Address"
                 autoCapitalize="words"
+                fontSize={12}
                 placeholder="eg. 123 Main St"
                 value={createJobForm.streetAddress}
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, streetAddress: text })}
@@ -277,6 +271,7 @@ const CreateJob = () => {
                 label="Country"
                 autoCapitalize="words"
                 placeholder="eg. United States"
+                fontSize={12}
                 value={createJobForm.country}
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, country: text })}
               />
@@ -287,6 +282,7 @@ const CreateJob = () => {
                 label="City"
                 autoCapitalize="words"
                 placeholder="eg. New York City"
+                fontSize={12}
                 value={createJobForm.city}
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, city: text })}
               />
@@ -306,6 +302,7 @@ const CreateJob = () => {
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                 autoCapitalize="characters"
                 label="Postal Code/ZIP"
+                fontSize={12}
                 placeholder="eg. 12345-6789 "
                 value={createJobForm.postalCode}
                 onChangeText={(text) => setCreateJobForm({ ...createJobForm, postalCode: text })}
@@ -324,6 +321,7 @@ const CreateJob = () => {
               <CustomInput
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                 label="Department"
+                fontSize={12}
                 autoCapitalize="words"
                 placeholder="eg. Engineering"
                 value={createJobForm.department}
@@ -441,6 +439,7 @@ const CreateJob = () => {
               <View className="w-1/2 form-input">
                 <CustomInput
                   placeholder="eg. 80000"
+                  fontSize={12}
                   keyboardType="numeric"
                   customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                   label="Min Salary"
@@ -452,6 +451,7 @@ const CreateJob = () => {
                 <CustomInput
                   placeholder="eg. 120000"
                   keyboardType="numeric"
+                  fontSize={12}
                   customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                   label="Max Salary"
                   value={createJobForm.maxSalary}
@@ -464,6 +464,7 @@ const CreateJob = () => {
                 <Text className="form-input__label">Skills</Text>
                 <TextInput
                   autoCapitalize="words"
+                  style={{ fontSize: 12 }}
                   className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
                   onSubmitEditing={(event) => handleAddTag(event.nativeEvent.text.trim())}
                   ref={tagInputRef}
