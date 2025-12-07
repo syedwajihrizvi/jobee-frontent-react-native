@@ -102,7 +102,7 @@ const InterviewDecision = () => {
               </View>
 
               <View className="flex-1">
-                <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Make Job Offer</Text>
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-1">Make Job Offer</Text>
                 <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
                   Send an official job offer with salary, benefits, and start date details.
                 </Text>
@@ -145,7 +145,7 @@ const InterviewDecision = () => {
               </View>
 
               <View className="flex-1">
-                <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Schedule Next Round</Text>
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-1">Schedule Next Round</Text>
                 <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
                   Arrange another interview round with different team members or stakeholders.
                 </Text>
@@ -184,7 +184,7 @@ const InterviewDecision = () => {
               </View>
 
               <View className="flex-1">
-                <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Reject Candidate</Text>
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-1">Reject Candidate</Text>
                 <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
                   Send a polite rejection notice and provide feedback if desired.
                 </Text>
@@ -204,7 +204,10 @@ const InterviewDecision = () => {
         jobId={Number(jobId)}
         interviewId={Number(id)}
         visible={showRejectModal}
-        handleClose={() => setShowRejectModal(false)}
+        handleClose={() => {
+          setShowRejectModal(false);
+          router.replace(`/businessJobs/applications/applicant/${applicantId}`);
+        }}
       />
     </SafeAreaView>
   );

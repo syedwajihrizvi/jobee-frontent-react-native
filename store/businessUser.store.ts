@@ -19,7 +19,6 @@ const useBusinessUserStore = create<BusinessUserType>((set, get) => ({
         set({ isLoadingInterviews: true });
         try {
             const interviews = await getBusinessUserInterviews();
-            console.log("Fetched business user interviews:", interviews);
             set({ interviews });
         } catch (error) {
             console.error("Error fetching business user interviews:", error);

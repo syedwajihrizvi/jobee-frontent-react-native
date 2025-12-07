@@ -7,7 +7,7 @@ import { File } from 'expo-file-system';
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from 'react-native';
 import { fetchDropboxFileAsPdfAndCreateTempFile } from './oauth/dropbox';
-import { fetchGoogleDocAsPdfAndCreateTempFile } from './oauth/googledrive';
+import { fetchGoogleDocAsPdfAndCreateTempFile } from './oauth/google';
 import { fetchOneDriveFileAsPdfAndCreateTempFile } from './oauth/onedrive';
 import { isValidGoogleDriveLink } from './utils';
 
@@ -16,8 +16,7 @@ const USER_DOCS_API_URL = getAPIUrl('user-documents');
 export const uploadUserDocument = async (
     document: DocumentPicker.DocumentPickerResult,
     documentType: string,
-    documentTitle: string,
-    generateSummary: boolean = false
+    documentTitle: string
     ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -43,7 +42,7 @@ export const uploadUserDocument = async (
         },
         body: formData
     })
-    if (response.status !== 201)
+    if (response.status !== 201 && response.status !== 200)
         return null;
     const data = await response.json();
     return data as UserDocument;
@@ -79,7 +78,7 @@ export const uploadUserDocumentViaImage = async (
         },
         body: formData
     })
-    if (response.status !== 201)
+    if (response.status !== 201 && response.status !== 200)
         return false
     return true
 }
@@ -113,7 +112,7 @@ export const uploadGoogleDriveDocumentToServer = async (
         },
         body: formData
     })
-    if (response.status !== 201)
+    if (response.status !== 201 && response.status !== 200)
         return null;
     const data = await response.json();
     return data as UserDocument;
@@ -123,7 +122,6 @@ export const uploadDropboxDocumentToServer = async (
     document: File,
     documentType: string,
     documentTitle: string,
-    generateSummary: boolean = false
 ) => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (!token) return null;
@@ -149,7 +147,7 @@ export const uploadDropboxDocumentToServer = async (
         },
         body: formData
     })
-    if (response.status !== 201)
+    if (response.status !== 201 && response.status !== 200)
         return null
     const data = await response.json();
     return data as UserDocument;
@@ -185,7 +183,7 @@ export const uploadOneDriveDocumentToServer = async (
         },
         body: formData
     })
-    if (response.status !== 201)
+    if (response.status !== 201 && response.status !== 200)
         return null
     const data = await response.json();
     return data as UserDocument;
@@ -213,7 +211,6 @@ export const sendDocumentLinkToServer = async (
             documentUrlType: documentUrlType
         })
     })
-    console.log(response)
     if (response.status !== 201)
         return false
     return true

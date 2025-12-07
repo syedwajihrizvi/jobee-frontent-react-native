@@ -291,6 +291,7 @@ const CreateJob = () => {
               <CustomInput
                 customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
                 label="State/Province"
+                fontSize={12}
                 autoCapitalize="words"
                 placeholder="eg. New York"
                 value={createJobForm.state}
@@ -464,7 +465,7 @@ const CreateJob = () => {
                 <Text className="form-input__label">Skills</Text>
                 <TextInput
                   autoCapitalize="words"
-                  style={{ fontSize: 12 }}
+                  style={{ fontSize: 12, paddingTop: 10, lineHeight: 16 }}
                   className="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-sm text-gray-900"
                   onSubmitEditing={(event) => handleAddTag(event.nativeEvent.text.trim())}
                   ref={tagInputRef}
@@ -583,12 +584,12 @@ const CreateJob = () => {
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
           >
-            <View className="px-6 py-4 space-y-6 flex-col gap-4">
-              <View className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                <Text className="font-quicksand-bold text-lg text-blue-900">{createJobForm.title}</Text>
+            <View className="px-6 py-4 space-y-6 flex-col gap-2">
+              <View className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-2">
+                <Text className="font-quicksand-bold text-md text-emerald-900">{createJobForm.title}</Text>
                 <View className="flex-row items-center gap-2">
-                  <FontAwesome name="map-marker" size={12} color="#3b82f6" />
-                  <Text className="font-quicksand-medium text-blue-800 text-sm">
+                  <FontAwesome name="map-marker" size={12} color="#10b981" />
+                  <Text className="font-quicksand-medium text-emerald-800 text-sm">
                     {createJobForm.streetAddress && `${createJobForm.streetAddress}, `}
                     {createJobForm.city}
                     {createJobForm.state && `, ${createJobForm.state}`}
@@ -598,10 +599,10 @@ const CreateJob = () => {
                 </View>
               </View>
               <View>
-                <View className="flex-row items-center justify-between mb-2">
+                <View className="flex-row items-center justify-between mb-1">
                   <Text className="font-quicksand-semibold text-base text-gray-900">Job Description</Text>
                   <TouchableOpacity
-                    className="bg-emerald-500 px-4 py-2 rounded-full flex-row items-center gap-2 border-2 border-amber-300"
+                    className="bg-blue-500 px-4 py-2 rounded-full flex-row items-center gap-2 border-2 border-amber-300"
                     style={{
                       shadowColor: "#10b981",
                       shadowOffset: { width: 0, height: 4 },
@@ -621,13 +622,12 @@ const CreateJob = () => {
                     ) : (
                       <>
                         <Ionicons name="sparkles" size={16} color="#fbbf24" />
-                        <Text className="font-quicksand-bold text-white text-sm">AI Write</Text>
-                        <Text className="font-quicksand-medium text-emerald-100 text-xs">NEW</Text>
+                        <Text className="font-quicksand-bold text-white text-sm">Enhance</Text>
                       </>
                     )}
                   </TouchableOpacity>
                 </View>
-                <View className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
+                <View className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-2">
                   <RenderMarkdown text={createJobForm.description} />
                 </View>
               </View>
@@ -686,8 +686,8 @@ const CreateJob = () => {
                   <View className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                     <View className="flex-row flex-wrap gap-2">
                       {createJobForm.tags.map((tag, index) => (
-                        <View key={index} className="bg-blue-100 border border-blue-300 px-3 py-2 rounded-lg">
-                          <Text className="font-quicksand-semibold text-blue-800 text-sm">{tag}</Text>
+                        <View key={index} className="bg-emerald-100 border border-emerald-300 px-3 py-2 rounded-lg">
+                          <Text className="font-quicksand-semibold text-emerald-800 text-sm">{tag}</Text>
                         </View>
                       ))}
                     </View>
@@ -709,8 +709,8 @@ const CreateJob = () => {
                     <View className="space-y-3">
                       {hiringTeam.map((member, index) => (
                         <View key={index} className="flex-row items-center gap-3 py-2">
-                          <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-                            <Text className="font-quicksand-bold text-blue-600 text-sm">
+                          <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                            <Text className="font-quicksand-bold text-emerald-600 text-sm">
                               {member.firstName.charAt(0)}
                               {member.lastName.charAt(0)}
                             </Text>

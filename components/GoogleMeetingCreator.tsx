@@ -1,9 +1,4 @@
-import {
-  connectToGoogleDriveOAuth,
-  createGoogleCalendarEvent,
-  isGoogleDriveAccessTokenValid,
-  refreshGoogleToken,
-} from "@/lib/oauth/googledrive";
+import { connectToGoogleDriveOAuth, isGoogleDriveAccessTokenValid, refreshGoogleToken } from "@/lib/oauth/google";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
@@ -14,7 +9,7 @@ const GoogleMeetingCreator = () => {
   const [isConnectedToGoogleDrive, setIsConnectedToGoogleDrive] = useState(false);
 
   useEffect(() => {
-    const checkGoogleDriveAccessToken = async () => {
+    const checkGoogleToken = async () => {
       if (await isGoogleDriveAccessTokenValid()) {
         setIsConnectedToGoogleDrive(true);
       } else {
@@ -24,22 +19,18 @@ const GoogleMeetingCreator = () => {
         }
       }
     };
-    checkGoogleDriveAccessToken();
+    checkGoogleToken();
   }, []);
 
-  const handleGoogleDrivePress = async () => {
+  const handleGooglePress = async () => {
     if (!isConnectedToGoogleDrive) {
       const result = await connectToGoogleDriveOAuth();
       if (result) {
         setIsConnectedToGoogleDrive(true);
       } else {
-        Alert.alert("Connection Failed", "Unable to connect to Google Drive. Please try again.");
+        Alert.alert("Connection Failed", "Unable to connect to Google. Please try again.");
       }
     }
-  };
-
-  const createGoogleMeet = async () => {
-    await createGoogleCalendarEvent();
   };
 
   return (
@@ -56,7 +47,7 @@ const GoogleMeetingCreator = () => {
             shadowRadius: 4,
             elevation: 2,
           }}
-          onPress={handleGoogleDrivePress}
+          onPress={handleGooglePress}
           activeOpacity={0.7}
         >
           <View
@@ -93,7 +84,7 @@ const GoogleMeetingCreator = () => {
         <View className="flex-col items-center justify-center gap-3 rounded-xl p-3">
           <AntDesign name="check-circle" size={32} color="#10B981" />
           <View className="flex-1">
-            <Text className="font-quicksand-bold text-lg text-emerald-700 text-center">Connected to Google Drive</Text>
+            <Text className="font-quicksand-bold text-lg text-emerald-700 text-center">Connected to Google</Text>
             <Text className="font-quicksand-medium text-emerald-600 text-center text-md">
               When you create the interview, a Google Meet will be automatically generated and the link will be sent to
               all parties.

@@ -4,6 +4,7 @@ import CompanyInformation from "@/components/CompanyInformation";
 import InterviewersFlatList from "@/components/InterviewersFlatList";
 import InterviewFormatSummary from "@/components/InterviewFormatSummary";
 import PrepareWithJobee from "@/components/PrepareWithJobee";
+import RescheduleModal from "@/components/RescheduleModal";
 import ViewInterviewerModal from "@/components/ViewInterviewerModal";
 import { getInterviewerProfileSummary, prepareForInterview } from "@/lib/interviewEndpoints";
 import { useInterviewDetails } from "@/lib/services/useProfile";
@@ -20,6 +21,7 @@ const InterviewDetails = () => {
   const [showInterviewPrepModal, setShowInterviewPrepModal] = useState(false);
   const [interviewModalVisible, setInterviewModalVisible] = useState(false);
   const [loadingInterviewer, setLoadingInterviewer] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] = useState(false);
   const [interviewerDetails, setInterviewerDetails] = useState<InterviewerProfileSummary | null>(null);
   const { data: interviewDetails, isLoading } = useInterviewDetails(Number(interviewId));
@@ -231,7 +233,7 @@ const InterviewDetails = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 pb-20">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Details" />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
@@ -348,14 +350,11 @@ const InterviewDetails = () => {
                   </View>
                   <Text className="font-quicksand-bold text-lg text-gray-900">Preparation Tips from Inteviewers</Text>
                 </View>
-
-                <View className="bg-amber-50 border border-amber-200 rounded-xl p-2">
-                  <CheckList items={interviewDetails?.preparationTipsFromInterviewer || []} withBorder={false} />
-                </View>
+                <CheckList items={interviewDetails?.preparationTipsFromInterviewer || []} withBorder={false} />
               </View>
             )}
           <View
-            className="bg-white mx-4 mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
+            className="bg-white mx-4 mt-4 mb-20 rounded-2xl p-6 border border-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
@@ -416,7 +415,6 @@ const InterviewDetails = () => {
                 <Text className="font-quicksand-bold text-white text-base">{renderInterviewPrepText()}</Text>
               </View>
             </TouchableOpacity>
-
             <TouchableOpacity
               className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
               style={{
@@ -426,6 +424,7 @@ const InterviewDetails = () => {
                 shadowRadius: 4,
                 elevation: 2,
               }}
+              onPress={() => setShowRescheduleModal(true)}
               activeOpacity={0.7}
             >
               <View className="flex-row items-center gap-2">
@@ -449,6 +448,13 @@ const InterviewDetails = () => {
         loadingInterviewer={loadingInterviewer}
         interviewerDetails={interviewerDetails}
       />
+      {interviewDetails && (
+        <RescheduleModal
+          visible={showRescheduleModal}
+          handleClose={() => setShowRescheduleModal(false)}
+          interviewDetails={interviewDetails!}
+        />
+      )}
     </SafeAreaView>
   );
 };

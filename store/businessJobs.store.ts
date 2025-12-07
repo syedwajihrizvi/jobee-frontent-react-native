@@ -205,7 +205,6 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
     },
     getInterviewsForJob: (jobId) => {
         const state = get();
-        console.log(state.interviewsByJobId)
         return state.interviewsByJobId[jobId] || 0;
     },
     getMostAppliedJobs: () => {

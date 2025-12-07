@@ -15,7 +15,6 @@ type Props = {
 
 const ContactCandidate = ({ userProfile, customSMSBody, customEmailSubject }: Props) => {
   const handleEmailApplicant = () => {
-    console.log("Email Applicant @ ", userProfile?.email);
     let emailUrl = `mailto:${userProfile?.email}`;
     const query = [];
     query.push(`subject=${encodeURIComponent(customEmailSubject || "Subject")}`);
@@ -35,7 +34,6 @@ const ContactCandidate = ({ userProfile, customSMSBody, customEmailSubject }: Pr
   };
 
   const handleCallApplicant = () => {
-    console.log("Call Applicant @ ", userProfile?.phoneNumber);
     const phoneURL = `tel:${userProfile?.phoneNumber}`;
     Linking.canOpenURL(phoneURL)
       .then((supported) => {
@@ -52,15 +50,11 @@ const ContactCandidate = ({ userProfile, customSMSBody, customEmailSubject }: Pr
     try {
       const res = await fetchConversationBetweenUsers(userProfile.id, "USER");
       if (res == null) {
-        console.log("No existing conversation found. Creating a new one.");
-        // Need to create a new conversation
         const conversationId = await createConversationBetweenUsers(userProfile.id, "USER");
-        console.log("Created new conversation with ID:", conversationId);
         router.push(
-          `/messages/${userProfile.id}?name=${userProfile.firstName}%20${userProfile.lastName}&role=USER&conversationId=${conversationId}`
+          `/messages/${userProfile.id}?name=${userProfile.firstName}%20${userProfile.lastName}&role=USER&conversationId=${conversationId}&profileImageUrl=${userProfile.profileImageUrl}&phoneNumber=${userProfile.phoneNumber}`
         );
       }
-      console.log("In-app messaging to Applicant ID:", userProfile?.id, "Conversation:", res);
     } catch {
     } finally {
       console.log("In-app messaging to Applicant ID:", userProfile?.id);
@@ -68,7 +62,6 @@ const ContactCandidate = ({ userProfile, customSMSBody, customEmailSubject }: Pr
   };
 
   const handleSMSApplicant = () => {
-    console.log("Sending SMS to Applicant @ ", userProfile?.phoneNumber);
     const body = "?body=Hello " + encodeURIComponent(userProfile?.firstName || "") + `. ${customSMSBody}`;
     const smsURL = `sms:${userProfile?.phoneNumber}${body}`;
     Linking.canOpenURL(smsURL)

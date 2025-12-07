@@ -1,4 +1,12 @@
-import { convertTo12Hour, getDecisionString, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
+import { mapTimezoneValueToLabel } from "@/constants";
+import {
+  convertTo12Hour,
+  getDecisionString,
+  getDecisionStyle,
+  getInterviewStyle,
+  interviewStatusStyles,
+} from "@/lib/utils";
+import useBusinessInterviewsStore from "@/store/businessInterviews.store";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
@@ -11,20 +19,23 @@ type Props = {
 };
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
+  const { getInterviewStatus } = useBusinessInterviewsStore();
   const renderInterviewDecision = (decision: string) => {
+    const decisionStyle = getDecisionStyle(decision);
+    const { bgColor, textColor, shadowColor } = decisionStyle;
     const decisionString = getDecisionString(decision);
     return (
       <View
-        className="bg-emerald-100 px-3 py-1 rounded-full"
+        className={`${bgColor} px-3 py-1 rounded-full`}
         style={{
-          shadowColor: "#6366f1",
+          shadowColor: shadowColor,
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.2,
           shadowRadius: 2,
           elevation: 1,
         }}
       >
-        <Text className="font-quicksand-bold text-xs text-emerald-700">{decisionString}</Text>
+        <Text className={`font-quicksand-bold text-xs ${textColor}`}>{decisionString}</Text>
       </View>
     );
   };
@@ -48,7 +59,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
             elevation: 2,
           }}
         >
-          <Feather name="chevron-right" size={16} color="#6366f1" />
+          <Feather name="chevron-right" size={16} color={style.chevronHexaColor} />
         </View>
       </View>
     );
@@ -100,11 +111,6 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
       activeOpacity={0.7}
       onPress={handlePress}
     >
-      <View className="flex-row items-center justify-between mb-2">
-        {interview.status === "COMPLETED" &&
-          interview.decisionResult &&
-          renderInterviewDecision(interview.decisionResult)}
-      </View>
       <View className="flex-row items-center gap-2 mb-1">
         <RenderUserProfileImage
           profileImageUrl={interview.candidateProfileImageUrl}
@@ -121,6 +127,11 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
             <Text className="font-quicksand-medium text-xs text-gray-600">Job Applicant</Text>
           </View>
         </View>
+        <View className="flex-row items-center justify-between mb-2">
+          {interview.status === "COMPLETED" &&
+            interview.decisionResult &&
+            renderInterviewDecision(interview.decisionResult)}
+        </View>
       </View>
       <Text className="font-quicksand-bold text-sm text-gray-900 mb-1">{interview.jobTitle}</Text>
       <View className="flex-row flex-wrap gap-1 mb-2">
@@ -133,7 +144,9 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
         </View>
         <View className="bg-blue-100 border border-blue-200 px-2 py-1 rounded-xl flex-row items-center gap-1">
           <Feather name="globe" size={10} color="#2563eb" />
-          <Text className="font-quicksand-semibold text-xs text-blue-800">{interview.timezone}</Text>
+          <Text className="font-quicksand-semibold text-xs text-blue-800">
+            {mapTimezoneValueToLabel(interview.timezone)}
+          </Text>
         </View>
         <View className="bg-purple-100 border border-purple-200 px-2 py-1 rounded-xl flex-row items-center gap-1">
           <Feather
@@ -148,7 +161,7 @@ const InterviewCard = ({ interview, handlePress }: Props) => {
           </Text>
         </View>
       </View>
-      {renderInterviewStatus(interview.status)}
+      {renderInterviewStatus(getInterviewStatus(interview.id) || interview.status)}
     </TouchableOpacity>
   );
 };

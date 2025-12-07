@@ -1,4 +1,4 @@
-import { getGoogleDriveFiles } from "@/lib/oauth/googledrive";
+import { getGoogleDriveFiles } from "@/lib/oauth/google";
 import { formatDate, isValidFileType } from "@/lib/utils";
 import useOAuthDocStore from "@/store/oauth-doc.store";
 import { GoogleDrivePathContent } from "@/type";
@@ -26,13 +26,10 @@ const GoogleDriveFileSelector = ({ onClose }: Props) => {
           nextPageToken || undefined,
           currentPathByIds ? currentPathByIds[currentPathByIds.length - 1] : undefined
         );
-        console.log(result);
         if (!result) {
           return;
         }
         const rootPathContents = result.files.map((file) => {
-          console.log(file);
-          console.log(file.modifiedTime);
           return {
             id: file.id,
             modifiedTime: file.modifiedTime,

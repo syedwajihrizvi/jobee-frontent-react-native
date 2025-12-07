@@ -1,5 +1,7 @@
+import { ZoomMeetingCreationResult } from '@/type';
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
+import { combineDateAndTime, convertTimeZoneToIANA, getDurationInMinutes } from '../utils';
 
     const CLIENT_ID = "vZpkSm4wTcecLmDo2xMjdQ";
     const REDIRECT_URI = "https://dauntless-aron-unprobationary.ngrok-free.dev/oauth2/zoom-redirect"
@@ -141,8 +143,19 @@ export const refreshZoomAccessToken = async () => {
 
 }
 
-export const createZoomMeeting = async () => {
+export const createZoomMeeting = async (
+    title: string,
+    agenda: string,
+    selectedDate: string,
+    startTime: string, 
+    endTime: string, timezone: string,
+    invitees: {email: string, fullName: string}[]) : Promise<ZoomMeetingCreationResult | null> => {
     const accessToken = await fetchZoomAccessToken();
+    
+    const fromTime = combineDateAndTime(selectedDate, startTime);
+    const toTime = combineDateAndTime(selectedDate, endTime);
+    const duration = getDurationInMinutes(fromTime, toTime, timezone);
+    const IANATimezone = convertTimeZoneToIANA(timezone);
     const response = await fetch("https://api.zoom.us/v2/users/me/meetings", {
         method: 'POST',
         headers: {
@@ -150,10 +163,141 @@ export const createZoomMeeting = async () => {
             'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
-            topic: "New Meeting",
-            type: 1
+            topic: title,
+            agenda: agenda,
+            type: 2,
+            start_time: fromTime,
+            duration: duration,
+            timezone: IANATimezone,
+            settings: {
+                approval_type: 0,
+                registration_type: 1,
+            }
         })
     });
+    const meeting = await response.json();
+    if (!meeting.id) {
+        return null;
+    }
+    const isFree = await isFreeAccount();
+    const res = {
+            meetingId: meeting.id,
+            startUrl: meeting.start_url,
+            joinUrl: meeting.join_url, 
+            meetingPassword: meeting.password,
+            timezone: meeting.timezone,
+            registrants: [] as {email: string; joinUrl: string}[],
+            needToSendEmailInvites: !isFree,   
+    }
+    if (!isFree) {
+        const registrantJoinLinks : {email: string; joinUrl: string}[] = [];
+        const registrantsPromises = invitees.map(async (invitee) => {
+            const { email, fullName } = invitee;
+            const firstName = fullName.split(' ')[0];
+            const response = await fetch(`https://api.zoom.us/v2/meetings/${meeting.id}/registrants`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    email: email,
+                    first_name: firstName
+                })
+            });
+            const data = await response.json();
+            if (data.join_url) {
+                registrantJoinLinks.push({
+                email,
+                joinUrl: data.join_url,
+                });
+            } else {
+                console.error("Failed to add registrant:", email, data);
+            }
+        });
+        await Promise.all(registrantsPromises);
+        res['registrants'] = registrantJoinLinks;
+    } else {
+        console.log("Free Zoom account detected, skipping registrant addition.");
+        // Skip step but just add the join URL for all invitees
+        invitees.forEach((invitee) => {
+            res['registrants'].push({
+                email: invitee.email,
+                joinUrl: meeting.join_url,
+            });
+        });
+    }
+    return res;
+
+}
+
+export const checkZoomMeetingTimeConflict = async (
+    proposedStartTime: string, proposedEndTime: string, selectedDate: string,timezone: string) => {
+    const fromDate = combineDateAndTime(selectedDate, proposedStartTime);
+    const toDate = combineDateAndTime(selectedDate, proposedEndTime);
+    const IANATimezone = convertTimeZoneToIANA(timezone);
+    const accessToken = await fetchZoomAccessToken();
+    const response = await fetch(`https://api.zoom.us/v2/users/me/meetings?type=scheduled&from=${fromDate.slice(0, 10)}&to=${toDate.slice(0, 10)}&timezone=${IANATimezone}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    if (!response.ok) {
+        return null;
+    }
     const data = await response.json();
-    console.log("Zoom Meeting Created:", data);
-}   
+    const meetings = data.meetings;
+    console.log("Existing meetings fetched for conflict check:", meetings);
+    // Check for conflicts
+    for (const meeting of meetings) {
+        const meetingStart = new Date(meeting.start_time);
+        const meetingEnd = new Date(meetingStart.getTime() + meeting.duration * 60000);
+        const proposedStart = new Date(fromDate);
+        const proposedEnd = new Date(toDate);
+        if (
+            (proposedStart >= meetingStart && proposedStart < meetingEnd) ||
+            (proposedEnd > meetingStart && proposedEnd <= meetingEnd) ||
+            (proposedStart <= meetingStart && proposedEnd >= meetingEnd)
+        ) {
+            console.log("Conflict found with meeting:", meeting);
+            return meeting.topic || "Unnamed Meeting";
+        }
+    }
+    return null; // No conflict found
+}
+
+export const isFreeAccount = async () => {
+    const accessToken = await fetchZoomAccessToken();
+    if (!accessToken) {
+        return false
+    }
+    const response = await fetch("https://api.zoom.us/v2/users/me", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    const data = await response.json();
+    return data.type === 1;
+}
+
+
+export const deleteZoomMeeting = async (meetingId: string, sendUpdates:boolean = false) => {
+    const accessToken = await fetchZoomAccessToken();
+    if (!accessToken) {
+        return false;
+    }
+    console.log("SYED-DEBUG: Deleting Zoom meeting with ID:", meetingId);
+    const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}?schedule_for_reminder=${sendUpdates}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    console.log("Zoom meeting deletion response status:", response);
+    return response.status === 204;
+}

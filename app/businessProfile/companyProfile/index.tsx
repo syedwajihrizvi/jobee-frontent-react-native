@@ -130,7 +130,6 @@ const CompanyProfile = () => {
   const handleEditPress = (field: string) => {
     setUpdateSuccess(false);
     setEditingField(field);
-    console.log("Editing field:", field);
     if (field !== "Location") {
       const currentValue = getCurrentFieldValue(field);
       setCompanyForm({ value: currentValue || "" });

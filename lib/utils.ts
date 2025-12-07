@@ -1,5 +1,6 @@
 import { UserDocumentType } from "@/constants";
 import { Application, Experience, OneDriveFile, Project, User, UserDocument } from "@/type";
+import { fromZonedTime } from "date-fns-tz";
 import * as Haptics from 'expo-haptics';
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -22,7 +23,6 @@ export const formatTime = (time: string) => {
 }
 
 export const calculateRemainingTime = (nextApplyTime: string | undefined) => {
-  console.log("Next Apply Time:", nextApplyTime);
   if (!nextApplyTime) return { hours: 0, minutes: 0, progress: 100 };
 
   const nextApplyDate = new Date(nextApplyTime);
@@ -224,7 +224,10 @@ export const getJobLevelColor = (
     if (normalizedStatus.includes("pending") || normalizedStatus.includes("review")) {
       return { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200" };
     }
-    if (normalizedStatus.includes("interview")) {
+    if (normalizedStatus.includes("completed")) {
+      return { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200" };
+    }
+    if (normalizedStatus.includes("scheduled")) {
       return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" };
     }
     if (normalizedStatus.includes("accepted") || normalizedStatus.includes("hired")) {
@@ -254,7 +257,7 @@ export const convert10DigitNumberToPhoneFormat = (num: string | undefined) => {
   const areaCode = num.slice(0, 3);
   const centralOfficeCode = num.slice(3, 6);
   const lineNumber = num.slice(6);
-  return `(${areaCode}) ${centralOfficeCode}-${lineNumber}`;
+  return `(${areaCode})-${centralOfficeCode}-${lineNumber}`;
 }
 
 export const convert11Or10DigitNumberToPhoneFormat = (num: string | undefined) => {
@@ -263,7 +266,7 @@ export const convert11Or10DigitNumberToPhoneFormat = (num: string | undefined) =
     return convert10DigitNumberToPhoneFormat(num);
   }
   if (num.length === 11) {
-    return `+${num[0]} ${convert10DigitNumberToPhoneFormat(num.slice(1))}`;
+    return `+${num[0]}-${convert10DigitNumberToPhoneFormat(num.slice(1))}`;
   }
 }
 
@@ -396,22 +399,45 @@ export const interviewStatusStyles = {
       bgColor: "bg-emerald-500",
       chevronColor: "bg-emerald-100",
       chevronShadowColor: "#6366f1",
-      text: "Interview Scheduled"
+      text: "Interview Scheduled",
+      chevronHexaColor: "#10b981"
     },
     COMPLETED: {
       bgColor: "bg-blue-500",
       chevronColor: "bg-blue-100",
       chevronShadowColor: "#3b82f6",
-      text: "Interview Completed"
+      text: "Interview Completed",
+      chevronHexaColor: "#3b82f6"
     },
+    CANCELLED: {
+      bgColor: "bg-orange-500",
+      chevronColor: "bg-orange-100",
+      chevronShadowColor: "#f59e0b",
+      text: "Interview Cancelled",
+      chevronHexaColor: "#f59e0b"
+    }
   };
 
+export const getDecisionStyle = (decision: string) => {
+    switch(decision) {
+      case 'NEXT_ROUND':
+        return { bgColor: "bg-emerald-100", textColor: "text-emerald-700", shadowColor: "#10b981" };
+      case 'REJECTED':
+        return { bgColor: "bg-red-100", textColor: "text-red-700", shadowColor: "#ef4444" };
+      case 'PENDING':
+        return { bgColor: "bg-yellow-100", textColor: "text-yellow-700", shadowColor: "#f59e0b" };
+      case 'HIRED':
+        return { bgColor: "bg-blue-100", textColor: "text-blue-700", shadowColor: "#3b82f6" };
+      default:
+        return { bgColor: "bg-gray-100", textColor: "text-gray-700", shadowColor: "#6b7280" };
+    }
+  }
 export const getDecisionString = (decision: string) => {
   switch(decision) {
     case 'NEXT_ROUND':
       return "Candidate moved to next round";
     case 'REJECTED':
-      return "Candidate has been rejected";
+      return "Rejected";
     case 'PENDING':
       return "Decision is still pending";
     case 'HIRED':
@@ -1078,9 +1104,131 @@ export const getNotificationIcon = (type: string) => {
 export const formatDateForDisplay = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    const val = date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+    return val;
   };
+
+export const convertTimeZoneToIANA = (timezone: string) => {
+  switch(timezone.toUpperCase()) {
+    case 'ET':
+      return 'America/New_York';
+    case 'UTC':
+      return 'UTC';
+    case 'CT':
+      return 'America/Chicago';
+    case 'MT':
+      return 'America/Denver';
+    case 'PT':
+      return 'America/Los_Angeles';
+    case 'UK':
+      return 'Europe/London';
+    case 'CET':
+      return 'Europe/Berlin';
+    case 'UAE':
+      return 'Asia/Dubai';
+    case 'IST':
+      return 'Asia/Kolkata';
+    case 'SINGAPORE':
+      return 'Asia/Singapore';
+    case 'CHINA':
+      return 'Asia/Shanghai';
+    case 'TOKYO':
+      return 'Asia/Tokyo';
+    case 'AUSTRALIA':
+      return 'Australia/Sydney';
+    default:
+      return timezone;
+  }
+}
+
+export const convertFromIANAToTimeZone = (ianaTimezone: string) => {
+  switch(ianaTimezone) {
+    case 'America/New_York':
+      return 'ET';
+    case 'UTC':
+      return 'UTC';
+    case 'America/Chicago':
+      return 'CT';
+    case 'America/Denver':
+      return 'MT';
+    case 'America/Los_Angeles':
+      return 'PT';
+    case 'Europe/London':
+      return 'UK';
+    case 'Europe/Berlin':
+      return 'CET';
+    case 'Asia/Dubai':
+      return 'UAE';
+    case 'Asia/Kolkata':
+      return 'IST';
+    case 'Asia/Singapore':
+      return 'SINGAPORE';
+    case 'Asia/Shanghai':
+      return 'CHINA';
+    case 'Asia/Tokyo':
+      return 'TOKYO';
+    case 'Australia/Sydney':
+      return 'AUSTRALIA';
+    default:
+      return ianaTimezone;
+  }
+}
+
+export const convertToUTCDateString = (time: string, date: string, timezone: string) => {
+  const ianaTimezone = convertTimeZoneToIANA(timezone);
+  const isPM = time.toUpperCase().includes("PM");
+  const isAM = time.toUpperCase().includes("AM");
+
+  let [hours, minutes] = time
+    .replace(/AM|PM/i, "")
+    .trim()
+    .split(":")
+    .map(Number);
+
+  if (isPM && hours < 12) hours += 12;
+  if (isAM && hours === 12) hours = 0;
+  const hh = hours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+
+  const isoLocal = `${date.slice(0, 10)}T${hh}:${mm}:00`;
+  const result = fromZonedTime(isoLocal, ianaTimezone);
+  return result.toISOString();
+};
+
+export function combineDateAndTime(
+  dateString: string, // yyyy-MM-dd
+  timeString: string // "5:00 PM"
+) {
+  const [time, modifier] = timeString.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (modifier.toLowerCase() === "pm" && hours < 12) hours += 12;
+  if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
+
+  const hh = hours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+
+  return `${dateString.slice(0, 10)}T${hh}:${mm}:00`;
+}
+
+export const getDurationInMinutes = (from: string, to: string, timezone: string) => {
+  const ianaTimezone = convertTimeZoneToIANA(timezone);
+  const fromDate = fromZonedTime(from, ianaTimezone);
+  const toDate = fromZonedTime(to, ianaTimezone);
+  const diffInMs = toDate.getTime() - fromDate.getTime();
+  return Math.floor(diffInMs / (1000 * 60));
+}
+
+export const formatTimeForDisplay = (time: Date) => {
+      const hours = time.getHours();
+      const minutes = time.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+      const formattedTime = `${formattedHours}:${formattedMinutes} ${ampm}`;  
+      return formattedTime
+}

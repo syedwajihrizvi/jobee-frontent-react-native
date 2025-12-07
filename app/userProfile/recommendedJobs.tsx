@@ -27,7 +27,6 @@ const RecommendedJobs = () => {
     }
   }, []);
 
-  jobs.map((job) => console.log(job.match));
   return (
     <SafeAreaView className="flex-1 bg-white">
       <BackBar label="Recommended Jobs" />

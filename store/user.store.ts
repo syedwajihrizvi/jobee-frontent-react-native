@@ -145,7 +145,6 @@ const useUserStore = create<UserType>((set, get) => ({
         if (interviewsResult.status === 'fulfilled') {
             set({ interviews: interviewsResult.value });
         } else {
-            console.log(interviewsResult)
             console.error("Error fetching user interviews:", interviewsResult.reason);
         }
         

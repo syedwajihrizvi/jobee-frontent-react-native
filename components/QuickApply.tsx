@@ -42,7 +42,6 @@ const QuickApply = ({ job, size = "small" }: Props) => {
     setShowQuickApplyModal(false);
     if (apply && job) {
       const res = await quickApplyToJob(job.id);
-      console.log("Quick Apply Response: ", res?.job.id);
       if (res != null) {
         setLastApplication(res);
         addAppliedJob(job);

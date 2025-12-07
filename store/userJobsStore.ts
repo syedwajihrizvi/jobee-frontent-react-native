@@ -548,15 +548,12 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
     addViewForJob: (jobId) => {
         const state = get();
         const currentViews = state.totalViewsForJobById[jobId] || 0;
-        console.log("Current views for job:", jobId, currentViews);
         set(() => ({
             totalViewsForJobById: {
                 ...state.totalViewsForJobById,
                 [jobId]: currentViews + 1,
             }
         }))
-        console.log("Added view for job:", jobId);
-        console.log("New total views:", get().totalViewsForJobById);
     },
     addApplicationForJob: (jobId) => {
         const state = get();

@@ -88,10 +88,8 @@ export const updateNotificationStatusToRead = async (notificationId: number) => 
             'x-auth-token': `Bearer ${token}`
         }
     })
-    console.log("Update notification status to read response status: ", result.status)
     if (result.status !== 200) return false
     return true
-
 }
 
 export const deleteAllReadNotificationsFromDB = async () => {
@@ -104,7 +102,6 @@ export const deleteAllReadNotificationsFromDB = async () => {
             'x-auth-token': `Bearer ${token}`
         }
     })
-    console.log("Delete all read notifications response status: ", result.status)
     if (result.status !== 204) return false
     return true
 }

@@ -1,8 +1,9 @@
+import { getAPIUrl } from "@/constants";
 import { Conversation } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const MESSAGES_API_URL = 'http://192.168.2.29:8080/messages'
+const MESSAGES_API_URL = getAPIUrl('messages');
 
 export const useConversations = (search: string, isAuthenticated: boolean) => {
     const fetchMessages = async () => {
@@ -26,5 +27,6 @@ export const useConversations = (search: string, isAuthenticated: boolean) => {
         queryKey: ['conversations', search],
         queryFn: fetchMessages,
         enabled: isAuthenticated,
+        refetchInterval: 60000
     })
 }

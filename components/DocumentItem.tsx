@@ -1,5 +1,5 @@
 import { deleteUserDocument, updateUserDocument } from "@/lib/manageUserDocs";
-import { getS3DocumentPreviewUrl, getS3DocumentUrl } from "@/lib/s3Urls";
+import { getS3DocumentPreviewUrl, getS3DocumentUrl, getS3MessageAttachmentUrl } from "@/lib/s3Urls";
 import { updatePrimaryResume } from "@/lib/updateUserProfile";
 import { convertDocumentTypeToLabel, documentTypes } from "@/lib/utils";
 import useAuthStore from "@/store/auth.store";
@@ -28,6 +28,7 @@ const DocumentItem = ({
   canEdit = true,
   canDelete = false,
   handleDelete,
+  forMessageAttachment = false,
 }: {
   document: UserDocument;
   actionIcon?: string;
@@ -40,6 +41,7 @@ const DocumentItem = ({
   canEdit?: boolean;
   canDelete?: boolean;
   handleDelete?: () => void;
+  forMessageAttachment?: boolean;
 }) => {
   const { user: authUser, setUser } = useAuthStore();
   const { refetchUserDocuments } = useUserStore();
@@ -211,7 +213,11 @@ const DocumentItem = ({
             )}
 
             <Image
-              source={{ uri: getS3DocumentPreviewUrl(document) }}
+              source={{
+                uri: forMessageAttachment
+                  ? getS3MessageAttachmentUrl(document.documentUrl)
+                  : getS3DocumentPreviewUrl(document),
+              }}
               className="w-full h-full rounded-lg"
               resizeMode="cover"
             />
@@ -305,7 +311,11 @@ const DocumentItem = ({
               </View>
             </View>
             <WebView
-              source={{ uri: getS3DocumentUrl(document.documentUrl) }}
+              source={{
+                uri: forMessageAttachment
+                  ? getS3MessageAttachmentUrl(document.documentUrl)
+                  : getS3DocumentUrl(document.documentUrl),
+              }}
               style={{ flex: 1 }}
               scalesPageToFit
               javaScriptEnabled

@@ -9,8 +9,8 @@ import {
   uploadUserDocumentViaImage,
 } from "@/lib/manageUserDocs";
 import { connectToDropboxOAuth, isDropboxAccessTokenValid } from "@/lib/oauth/dropbox";
-import { connectToGoogleDriveOAuth, isGoogleDriveAccessTokenValid } from "@/lib/oauth/googledrive";
-import { connectToOneDriveOAuth, isOneDriveAccessTokenValid } from "@/lib/oauth/onedrive";
+import { connectToGoogleDriveOAuth, isGoogleDriveAccessTokenValid } from "@/lib/oauth/google";
+import { connectToOneDriveOAuth, isMicrosoftTokenValid } from "@/lib/oauth/onedrive";
 import {
   compressImage,
   converOAuthProviderToText,
@@ -38,6 +38,10 @@ type Props = {
   handleUploadSuccess: () => void;
   customHandleUploadMethod?: boolean;
   customUploadMethod?: () => void;
+  showTitleInput?: boolean;
+  excludeLinkOption?: boolean;
+  givenTitle?: string;
+  showDocumentDetailsOnConfirmation?: boolean;
 };
 
 const documentTypes = [
@@ -55,6 +59,10 @@ const FileSelector = ({
   handleUploadSuccess,
   customHandleUploadMethod = false,
   customUploadMethod,
+  showTitleInput = true,
+  excludeLinkOption = false,
+  givenTitle = "",
+  showDocumentDetailsOnConfirmation = true,
 }: Props) => {
   const { refetchUserDocuments, refetchCandidateInformation } = useUserStore();
   const [uploadView, setUploadView] = useState<"Direct" | "Cloud" | "Link">("Direct");
@@ -64,7 +72,7 @@ const FileSelector = ({
   const [isConnectedToGoogleDrive, setIsConnectedToGoogleDrive] = useState(false);
   const [isConnectedToDropbox, setIsConnectedToDropbox] = useState(false);
   const [isConnectedToOneDrive, setIsConnectedToOneDrive] = useState(false);
-  const [documentTitle, setDocumentTitle] = useState("");
+  const [documentTitle, setDocumentTitle] = useState(givenTitle);
   const [showOauthPickerModal, setShowOauthPickerModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [activeOAuthProvider, setActiveOAuthProvider] = useState<"GOOGLE_DRIVE" | "DROPBOX" | "ONEDRIVE" | null>(null);
@@ -93,7 +101,7 @@ const FileSelector = ({
       }
     };
     const checkOneDriveAccessToken = async () => {
-      if (await isOneDriveAccessTokenValid()) {
+      if (await isMicrosoftTokenValid()) {
         setIsConnectedToOneDrive(true);
       }
     };
@@ -133,7 +141,6 @@ const FileSelector = ({
             quality: 1,
           });
           if (!cameraResult.canceled && cameraResult.assets && cameraResult.assets.length > 0) {
-            console.log("Image picked from camera:", cameraResult.assets[0]);
             setSelectedImage(cameraResult);
           }
           return;
@@ -147,7 +154,6 @@ const FileSelector = ({
             quality: 1,
           });
           if (!galleryResult.canceled && galleryResult.assets && galleryResult.assets.length > 0) {
-            console.log("Image picked from gallery:", galleryResult.assets[0]);
             setSelectedImage(galleryResult);
           }
         },
@@ -181,7 +187,6 @@ const FileSelector = ({
         setUploadedDocument(document);
       }
     } catch (error) {
-      console.error("Error picking document: ", error);
       Alert.alert("Error", "Failed to upload document. Please try again.");
     } finally {
       setUploadingDocument(false);
@@ -275,7 +280,7 @@ const FileSelector = ({
     setUploadingDocument(true);
     if (selectedDocumentType === "RESUME") {
       try {
-        const res = await uploadResume(
+        await uploadResume(
           uploadMethod!,
           uploadedDocument,
           documentLink,
@@ -336,6 +341,7 @@ const FileSelector = ({
           }
         } else if (uploadMethod === "GOOGLE_DRIVE") {
           const res = await handleGoogleDriveUpload(googleDriveFile, selectedDocumentType, documentTitle);
+          console.log("Google Drive upload result:", res);
           if (!res) {
             Alert.alert("Error", "An error occurred while uploading the Google Drive document.");
             return;
@@ -554,27 +560,30 @@ const FileSelector = ({
   const getDocumentTypeInfo = (type: string) => {
     return documentTypes.find((doc) => doc.value === type) || documentTypes[0];
   };
+
   const selectedDocInfo = getDocumentTypeInfo(selectedDocumentType);
   return (
     <>
-      <View className="mb-2">
-        <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Document Title</Text>
-        <TextInput
-          className="border border-gray-200 rounded-xl p-4 font-quicksand-medium bg-white"
-          autoCapitalize="words"
-          style={{
-            fontSize: 14,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 2,
-            elevation: 1,
-          }}
-          placeholder="e.g., Software Engineer Resume 2024"
-          value={documentTitle}
-          onChangeText={setDocumentTitle}
-        />
-      </View>
+      {showTitleInput && (
+        <View className="mb-2">
+          <Text className="font-quicksand-bold text-base text-gray-900 mb-3">Document Title</Text>
+          <TextInput
+            className="border border-gray-200 rounded-xl p-4 font-quicksand-medium bg-white"
+            autoCapitalize="words"
+            style={{
+              fontSize: 14,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+            placeholder="e.g., Software Engineer Resume 2024"
+            value={documentTitle}
+            onChangeText={setDocumentTitle}
+          />
+        </View>
+      )}
       {uploadedDocument?.assets?.[0]?.name && (
         <View
           className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-2"
@@ -618,7 +627,7 @@ const FileSelector = ({
           Select how you would like to add your document
         </Text>
         <View className="flex-row gap-2 mb-4">
-          {["Direct", "Cloud", "Link"].map((method) => (
+          {["Direct", "Cloud", ...(!excludeLinkOption ? ["Link"] : [])].map((method) => (
             <TouchableOpacity
               key={method}
               onPress={() => setUploadView(method as "Direct" | "Cloud" | "Link")}
@@ -947,26 +956,30 @@ const FileSelector = ({
               </View>
             </View>
           </View>
-          <View className="py-4">
-            <Text className="font-quicksand-bold text-base text-gray-900 mb-4">Document Details</Text>
-            <View className="bg-gray-50 rounded-xl p-4 mb-4">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="font-quicksand-medium text-sm text-gray-600">Title</Text>
-                <Text className="font-quicksand-bold text-sm text-gray-900 flex-1 text-right" numberOfLines={1}>
-                  {documentTitle || "Untitled Document"}
-                </Text>
-              </View>
-              <View className="flex-row justify-between items-center">
-                <Text className="font-quicksand-medium text-sm text-gray-600">Type</Text>
-                <View className="flex-row items-center gap-2">
-                  <Feather name={selectedDocInfo.icon as any} size={14} color={selectedDocInfo.color} />
-                  <Text className="font-quicksand-bold text-sm text-gray-900">{selectedDocInfo.label}</Text>
+          {showDocumentDetailsOnConfirmation ? (
+            <View className="py-4">
+              <Text className="font-quicksand-bold text-base text-gray-900 mb-4">Document Details</Text>
+              <View className="bg-gray-50 rounded-xl p-4 mb-4">
+                <View className="flex-row justify-between items-center mb-3">
+                  <Text className="font-quicksand-medium text-sm text-gray-600">Title</Text>
+                  <Text className="font-quicksand-bold text-sm text-gray-900 flex-1 text-right" numberOfLines={1}>
+                    {documentTitle || "Untitled Document"}
+                  </Text>
+                </View>
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-quicksand-medium text-sm text-gray-600">Type</Text>
+                  <View className="flex-row items-center gap-2">
+                    <Feather name={selectedDocInfo.icon as any} size={14} color={selectedDocInfo.color} />
+                    <Text className="font-quicksand-bold text-sm text-gray-900">{selectedDocInfo.label}</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
+          ) : (
+            <View className="h-4" />
+          )}
           <View>
-            <Text className="font-quicksand-bold text-base text-gray-900">Upload Method</Text>
+            <Text className="font-quicksand-bold text-base text-gray-900 mb-4">Upload Method</Text>
             {multipleUploadMethodsSelected() ? (
               <View className="gap-3">
                 <Text className="font-quicksand-semibold text-MD text-gray-600 mt-4">

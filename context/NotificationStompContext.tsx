@@ -56,7 +56,6 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
         newStatus = "REJECTED";
       }
     } else if (notificationType === "INTERVIEW_COMPLETED") {
-      const { applicationId, interviewId, jobId } = context;
       if (applicationId) {
         setApplicationStatus(applicationId, "INTERVIEW_COMPLETED", jobId!);
         newStatus = "INTERVIEW_COMPLETED";
@@ -67,14 +66,7 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
         newStatus = "COMPLETED";
       }
     } else if (notificationType === "INTERVIEW_SCHEDULED") {
-      const { applicationId, jobId } = context;
       if (applicationId) {
-        console.log(
-          "Setting application status to INTERVIEW_SCHEDULED for applicationId:",
-          applicationId,
-          " jobId:",
-          jobId
-        );
         setApplicationStatus(applicationId, "INTERVIEW_SCHEDULED", jobId!);
         newStatus = "INTERVIEW_SCHEDULED";
       }
@@ -82,9 +74,20 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
     } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
       queryClient.invalidateQueries({ queryKey: ["profileCompleteness"] });
       refetchCandidateInformation();
+    } else if (notificationType === "INTERVIEW_CANCELLED") {
+      setInterviewToStatus(interviewId!, "CANCELLED");
+      queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
+      refetchInterviews();
+      newStatus = "CANCELLED";
+    } else if (notificationType === "INTERVIEW_UPDATED") {
+      queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
+      refetchInterviews();
+      newStatus = "SCHEDULED";
+    } else if (notificationType === "INTERVIEW_RESCHEDULE_REQUESTED") {
+      queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
+      refetchInterviews();
     }
     if (notificationType !== "AI_RESUME_REVIEW_COMPLETE" && jobId) {
-      console.log("Updating applied jobs for jobId:", jobId, " to status:", newStatus);
       updateAppliedJobs(jobId, newStatus);
     }
   };

@@ -1,6 +1,7 @@
 import BackBar from "@/components/BackBar";
 import CustomInput from "@/components/CustomInput";
 import CustomMultilineInput from "@/components/CustomMultilineInput";
+import DeleteOnlineMeetingOnPlatform from "@/components/DeleteOnlineMeetingOnPlatform";
 import GoogleMeetingCreator from "@/components/GoogleMeetingCreator";
 import MicrosoftTeamsMeetingCreator from "@/components/MicrosoftTeamsMeetingCreator";
 import ModalWithBg from "@/components/ModalWithBg";
@@ -8,18 +9,38 @@ import PlatformButton from "@/components/PlatformButton";
 import RenderMeetingPlatformIcon from "@/components/RenderMeetingPlatformIcon";
 import WebexMeetingCreator from "@/components/WebexMeetingCreator";
 import ZoomMeeetingCreator from "@/components/ZoomMeeetingCreator";
-import { meetingPlatforms } from "@/constants";
-import { createInterview, getMostRecentInterviewForJob } from "@/lib/interviewEndpoints";
+import { COMMON_TIMEZONES, mapTimezoneValueToLabel, meetingPlatforms } from "@/constants";
+import { createInterview, getMostRecentInterviewForJob, updateInterview } from "@/lib/interviewEndpoints";
 import {
+  checkGoogleCalendarEventConflict,
+  createGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
+  isGoogleDriveAccessTokenValid,
+} from "@/lib/oauth/google";
+import { isMicrosoftTokenValid } from "@/lib/oauth/onedrive";
+import { isWebexTokenValid } from "@/lib/oauth/webex";
+import {
+  checkZoomMeetingTimeConflict,
+  createZoomMeeting,
+  deleteZoomMeeting,
+  isFreeAccount,
+  isZoomAccessTokenValid,
+} from "@/lib/oauth/zoom";
+import {
+  combineDateAndTime,
   convert10DigitNumberToPhoneFormat,
+  convert11Or10DigitNumberToPhoneFormat,
   formatDateForDisplay,
-  validateMeetingLink,
+  formatTime,
+  formatTimeForDisplay,
+  getDurationInMinutes,
   validatePhoneNumber,
   validateTime,
   validateTimes,
 } from "@/lib/utils";
 import useApplicationStore from "@/store/applications.store";
 import useAuthStore from "@/store/auth.store";
+import useBusinessInterviewsStore from "@/store/businessInterviews.store";
 import useBusinessJobsStore from "@/store/businessJobs.store";
 import { BusinessUser, CreateInterviewForm } from "@/type";
 import { Feather, FontAwesome } from "@expo/vector-icons";
@@ -68,7 +89,7 @@ const ScheduleInterview = () => {
     startTime: "",
     endTime: "",
     interviewType: "ONLINE",
-    timezone: "",
+    timezone: null,
     streetAddress: "",
     buildingName: "",
     meetingLink: "",
@@ -78,11 +99,24 @@ const ScheduleInterview = () => {
     meetingPlatform: "",
     preparationTipsFromInterviewer: [],
   };
-  const { applicantId, jobId, candidateId, previousInterviewId } = useLocalSearchParams();
+  const {
+    applicantId,
+    jobId,
+    candidateId,
+    previousInterviewId,
+    applicantEmail,
+    applicantFirstName,
+    applicantLastName,
+    interviewId,
+  } = useLocalSearchParams();
+
   const { setApplicationStatus } = useApplicationStore();
   const { incrementInterviewsForJob, decrementPendingApplicationsForJob } = useBusinessJobsStore();
+  const { refreshUpcomingInterviews, refreshUpcomingInterviewsForJob } = useBusinessInterviewsStore();
   const queryClient = useQueryClient();
   const { user: authUser } = useAuthStore();
+  const existingInterviewDetails =
+    queryClient.getQueryData<{ [key: string]: any }>(["interviewDetails", Number(interviewId)]) || {};
   const conductorNameRef = useRef<TextInput>(null);
   const conductorEmailRef = useRef<TextInput>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -90,17 +124,29 @@ const ScheduleInterview = () => {
   const interviewerConductorsRef = useRef<View>(null);
   const scrollViewRef = useRef<KeyboardAwareScrollView>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [interviewDetails, setInterviewDetails] = useState<CreateInterviewForm>({ ...defaultInterviewForm });
   const [conductorName, setConductorName] = useState("");
   const [conductorEmail, setConductorEmail] = useState("");
   const [preparationTip, setPreparationTip] = useState("");
+  const [showConfirmationAfter, setShowConfirmationAfter] = useState(false);
   const [showMeetingCreatorModal, setShowMeetingCreatorModal] = useState(false);
   const [viewingBottomSheetFor, setViewingBottomSheetFor] = useState<"interviewer" | "note">("interviewer");
-  const [loadingNewInterview, setLoadingNewInterview] = useState(false);
+  const [creatingMeetingOnPlatform, setCreatingMeetingOnPlatform] = useState(false);
+  const [loadingInterview, setLoadingInterview] = useState(false);
   const [addedSelf, setAddedSelf] = useState(false);
   const [snapPoints, setSnapPoints] = useState<string[]>(["30%", "40%"]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startTime, setStartTime] = useState<Date>(new Date());
+  const [endTime, setEndTime] = useState<Date>(new Date());
+  const [showTimeZonePicker, setShowTimeZonePicker] = useState(false);
+  const [showSuccessfullScheduleModal, setShowSuccessfullScheduleModal] = useState(false);
+  const [onlineInterviewCancellationModalState, setOnlineInterviewCancellationModalVisibility] = useState<{
+    show: boolean;
+    onlineMeetingInformation: any;
+  }>({ show: false, onlineMeetingInformation: null });
   const user = authUser as BusinessUser | null;
 
   useEffect(() => {
@@ -147,11 +193,70 @@ const ScheduleInterview = () => {
         console.log("Error fetching interview: ", error);
       }
     };
-    fetchAnExistingInterview();
+    if (!interviewId) {
+      fetchAnExistingInterview();
+    } else {
+      const {
+        title,
+        description,
+        streetAddress,
+        buildingName,
+        parkingInfo,
+        contactInstructionsOnArrival,
+        interviewers,
+        otherInterviewers,
+        preparationTipsFromInterviewer,
+        interviewMeetingPlatform,
+        interviewDate,
+        phoneNumber,
+        interviewType,
+        startTime,
+        endTime,
+        timezone,
+      } = existingInterviewDetails;
+      const conductors = [
+        ...interviewers.map((interviewer: any) => ({
+          name: interviewer.name,
+          email: interviewer.email,
+        })),
+        ...otherInterviewers,
+      ];
+      conductors.forEach((conductor) => {
+        if (conductor.email === user?.email) {
+          setAddedSelf(true);
+        }
+      });
+      const formattedStatTime = new Date(`${interviewDate}T${startTime}`).toISOString();
+      const formattedEndTime = new Date(`${interviewDate}T${endTime}`).toISOString();
+      setStartTime(new Date(formattedStatTime));
+      setEndTime(new Date(formattedEndTime));
+      const newDate = new Date(interviewDate + "T00:00:00");
+      newDate.setTime(newDate.getTime() + 24 * 60 * 60 * 1000);
+      setSelectedDate(newDate);
+      setInterviewDetails((prev) => ({
+        ...prev,
+        title,
+        description,
+        interviewType,
+        phoneNumber: convert11Or10DigitNumberToPhoneFormat(phoneNumber || "") || "",
+        conductors,
+        streetAddress: streetAddress || "",
+        buildingName: buildingName || "",
+        parkingInfo: parkingInfo || "",
+        contactInstructionsOnArrival: contactInstructionsOnArrival || "",
+        meetingPlatform: interviewMeetingPlatform,
+        preparationTipsFromInterviewer,
+        interviewDate: `${interviewDate}T05:00:00`,
+        startTime: formatTimeForDisplay(new Date(formattedStatTime)),
+        endTime: formatTimeForDisplay(new Date(formattedEndTime)),
+        timezone: { label: mapTimezoneValueToLabel(timezone), value: timezone },
+      }));
+    }
+
     return () => {
       isMounted = false;
     };
-  }, [user, jobId]);
+  }, [user, jobId, interviewId]);
 
   const handleInterviewFormSubmit = async () => {
     const {
@@ -176,7 +281,7 @@ const ScheduleInterview = () => {
       return;
     }
     if (conductors.length === 0) {
-      Alert.alert("Error", "Please add at least one conductor.");
+      Alert.alert("Error", "Please add at least one member to the interview panel.");
       return;
     }
     if (!interviewDate) {
@@ -218,12 +323,8 @@ const ScheduleInterview = () => {
         Alert.alert("Error", "Please select meeting platform.");
         return;
       }
-      if (!meetingLink && meetingPlatform !== "OTHER") {
+      if (!meetingLink && meetingPlatform === "OTHER") {
         Alert.alert("Error", "Please enter meeting link.");
-        return;
-      }
-      if (!validateMeetingLink(meetingLink, meetingPlatform)) {
-        Alert.alert("Error", "Please enter a valid meeting link.");
         return;
       }
     }
@@ -237,44 +338,204 @@ const ScheduleInterview = () => {
       Alert.alert("Error", "Please enter timezone.");
       return;
     }
+    if (interviewType === "ONLINE") {
+      let isTokenValid = true;
+      if (meetingPlatform === "GOOGLE_MEET") {
+        isTokenValid = await isGoogleDriveAccessTokenValid();
+      } else if (meetingPlatform === "ZOOM") {
+        isTokenValid = await isZoomAccessTokenValid();
+      } else if (meetingPlatform === "MICROSOFT_TEAMS") {
+        isTokenValid = await isMicrosoftTokenValid();
+      } else if (meetingPlatform === "WEBEX") {
+        isTokenValid = await isWebexTokenValid();
+      }
+      if (!isTokenValid) {
+        setShowMeetingCreatorModal(true);
+        setShowConfirmationAfter(true);
+        return;
+      }
+    }
     setShowConfirmationModal(true);
   };
 
-  const createOnlineMeetingOnPlatform = () => {};
+  const createGoogleMeeting = async () => {
+    const { title, description, interviewDate, startTime, endTime, timezone, conductors } = interviewDetails;
+    if (
+      interviewId &&
+      existingInterviewDetails.interviewMeetingPlatform === "GOOGLE_MEET" &&
+      existingInterviewDetails.onlineMeetingInformation
+    ) {
+      await deleteGoogleCalendarEvent(existingInterviewDetails.onlineMeetingInformation.eventId, false);
+    }
+    const isConflict = await checkGoogleCalendarEventConflict(startTime, endTime, interviewDate, timezone!.value);
+    if (isConflict) {
+      Alert.alert(
+        "Meeting Conflict",
+        "Seems to be a conflict with one of your Google Calendar events. Please choose a different time."
+      );
+      return null;
+    }
+    const result = await createGoogleCalendarEvent({
+      summary: title,
+      description,
+      meetingDate: interviewDate,
+      startTime,
+      endTime,
+      timezone: timezone!.value,
+      attendees: [
+        ...conductors
+          .map((conductor) => ({ email: conductor.email }))
+          .filter((conductor) => conductor.email !== user?.email),
+        { email: applicantEmail as string },
+      ],
+    });
+    return result;
+  };
+
+  const createMeetingOnZoom = async () => {
+    if (
+      interviewId &&
+      existingInterviewDetails.interviewMeetingPlatform === "ZOOM" &&
+      existingInterviewDetails.onlineMeetingInformation
+    ) {
+      await deleteZoomMeeting(existingInterviewDetails.onlineMeetingInformation.meetingId);
+    }
+    const invitees = [...interviewDetails.conductors.filter((conductor) => conductor.email !== user?.email)].map(
+      (conductor) => ({ email: conductor.email, fullName: conductor.name })
+    );
+    invitees.push({
+      email: applicantEmail as string,
+      fullName: `${applicantFirstName as string} ${applicantLastName as string}`,
+    });
+    const isFree = await isFreeAccount();
+    if (isFree) {
+      const fromTime = combineDateAndTime(interviewDetails.interviewDate, interviewDetails.startTime);
+      const toTime = combineDateAndTime(interviewDetails.interviewDate, interviewDetails.endTime);
+      const durationInMinutes = getDurationInMinutes(fromTime, toTime, interviewDetails.timezone!.value);
+      if (durationInMinutes > 40) {
+        Alert.alert("Error", "Free Zoom accounts can only schedule meetings up to 40 minutes.");
+        return null;
+      }
+    }
+    const conflict = await checkZoomMeetingTimeConflict(
+      interviewDetails.startTime,
+      interviewDetails.endTime,
+      interviewDetails.interviewDate,
+      interviewDetails.timezone!.value
+    );
+    if (conflict) {
+      Alert.alert(
+        "Meeting Conflict",
+        `The selected time conflicts with an existing Zoom meeting (${conflict}). Please choose a different time.`
+      );
+      return null;
+    }
+    const res = await createZoomMeeting(
+      interviewDetails.title,
+      interviewDetails.description,
+      interviewDetails.interviewDate,
+      interviewDetails.startTime,
+      interviewDetails.endTime,
+      interviewDetails.timezone!.value,
+      invitees
+    );
+    return res;
+  };
 
   const handleScheduleInterviewConfirm = async () => {
-    setLoadingNewInterview(true);
+    setCreatingMeetingOnPlatform(true);
+    let meetingCreationResult = null;
     try {
-      // TODO: If meeting platform is selected, create meeting via respective API and set meeting link in interviewDetails
       if (interviewDetails.interviewType === "ONLINE") {
-        console.log("Creating online meeting on platform: ", interviewDetails.meetingPlatform);
+        if (interviewDetails.meetingPlatform && interviewDetails.meetingPlatform !== "OTHER") {
+          switch (interviewDetails.meetingPlatform) {
+            case "ZOOM":
+              meetingCreationResult = await createMeetingOnZoom();
+              if (!meetingCreationResult) {
+                return;
+              }
+              break;
+            case "GOOGLE_MEET":
+              meetingCreationResult = await createGoogleMeeting();
+              if (!meetingCreationResult) {
+                return;
+              }
+              break;
+          }
+        }
       }
-      const res = await createInterview(
-        interviewDetails,
-        Number(jobId),
-        Number(candidateId),
-        Number(applicantId),
-        Number(previousInterviewId)
-      );
-      if (res) {
-        queryClient.invalidateQueries({
-          queryKey: ["applicant", Number(applicantId)],
-        });
-        setApplicationStatus(Number(jobId), Number(applicantId), "INTERVIEW_SCHEDULED");
-        Alert.alert("Success", "Interview created successfully.");
-        setInterviewDetails({ ...defaultInterviewForm });
-        incrementInterviewsForJob(Number(jobId));
-        decrementPendingApplicationsForJob(Number(jobId));
-        router.back();
-        return;
-      }
-      Alert.alert("Error", "Error creating interview. Please try again.");
-      return;
     } catch (error) {
-      console.log(error);
+      Alert.alert("Error", "Error creating online meeting. Please try again.");
       return;
     } finally {
-      setLoadingNewInterview(false);
+      setCreatingMeetingOnPlatform(false);
+    }
+    setLoadingInterview(true);
+    try {
+      if (interviewId) {
+        const res = await updateInterview({
+          interviewId: Number(interviewId),
+          meetingCreationResult,
+          interview: interviewDetails,
+        });
+        if (res) {
+          Alert.alert("Success", "Interview updated successfully.");
+          setInterviewDetails({ ...defaultInterviewForm });
+          const originalOnlineMeetingInformation = existingInterviewDetails?.onlineMeetingInformation;
+          if (originalOnlineMeetingInformation) {
+            originalOnlineMeetingInformation["interviewMeetingPlatform"] =
+              existingInterviewDetails.interviewMeetingPlatform;
+          }
+          queryClient.invalidateQueries({
+            queryKey: ["interviewDetails", Number(interviewId)],
+          });
+          refreshUpcomingInterviewsForJob(Number(jobId));
+          refreshUpcomingInterviews();
+          const notOnlineAnymore =
+            existingInterviewDetails.interviewType === "ONLINE" && interviewDetails.interviewType !== "ONLINE";
+          const changedPlatform =
+            existingInterviewDetails.interviewType === "ONLINE" &&
+            interviewDetails.interviewType === "ONLINE" &&
+            existingInterviewDetails.interviewMeetingPlatform !== interviewDetails.meetingPlatform;
+          if (notOnlineAnymore || changedPlatform) {
+            setOnlineInterviewCancellationModalVisibility({
+              show: true,
+              onlineMeetingInformation: originalOnlineMeetingInformation,
+            });
+          } else {
+            router.replace(`/businessJobs/interviews/interview/${interviewId}`);
+            return;
+          }
+        }
+      } else {
+        const res = await createInterview({
+          interview: interviewDetails,
+          jobId: Number(jobId),
+          candidateId: Number(candidateId),
+          applicationId: Number(applicantId),
+          previousInterviewId: previousInterviewId ? Number(previousInterviewId) : undefined,
+          meetingCreationResult,
+        });
+        if (res) {
+          queryClient.invalidateQueries({
+            queryKey: ["applicant", Number(applicantId)],
+          });
+          setApplicationStatus(Number(jobId), Number(applicantId), "INTERVIEW_SCHEDULED");
+          Alert.alert("Success", "Interview created successfully.");
+          setInterviewDetails({ ...defaultInterviewForm });
+          incrementInterviewsForJob(Number(jobId));
+          decrementPendingApplicationsForJob(Number(jobId));
+          router.back();
+          return;
+        }
+        Alert.alert("Error", "Error creating interview. Please try again.");
+        return;
+      }
+    } catch (error) {
+      console.log("Error scheduling interview: ", error);
+      Alert.alert("Error", "Error scheduling interview. Please try again.");
+    } finally {
+      setLoadingInterview(false);
     }
   };
 
@@ -448,15 +709,6 @@ const ScheduleInterview = () => {
     return "";
   }
 
-  const updateTimeValue = (text: string) => {
-    const lowercase = text.toLowerCase().replace(" ", "").trim();
-    if (lowercase.includes("am") || lowercase.includes("pm")) {
-      const index = lowercase.indexOf("am") > -1 ? lowercase.indexOf("am") : lowercase.indexOf("pm");
-      return text.slice(0, index) + " " + text.slice(index).toUpperCase();
-    }
-    return text.toUpperCase();
-  };
-
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
@@ -469,9 +721,27 @@ const ScheduleInterview = () => {
     }
   };
 
+  const handleStartTimeChange = (event: any, time?: Date) => {
+    setShowStartTimePicker(false);
+    if (time) {
+      setStartTime(time);
+      const formattedTime = formatTimeForDisplay(time);
+      setInterviewDetails({ ...interviewDetails, startTime: formattedTime });
+    }
+  };
+
+  const handleEndTimeChange = (event: any, time?: Date) => {
+    setShowEndTimePicker(false);
+    if (time) {
+      setEndTime(time);
+      const formattedTime = formatTimeForDisplay(time);
+      setInterviewDetails({ ...interviewDetails, endTime: formattedTime });
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 relative">
-      <BackBar label="Schedule Interview" />
+      <BackBar label={`${interviewId ? "Edit" : "Schedule"} Interview`} />
       <KeyboardAwareScrollView
         ref={scrollViewRef}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -756,7 +1026,11 @@ const ScheduleInterview = () => {
                 <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Date *</Text>
                 <TouchableOpacity
                   className="form-input__input bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => {
+                    setShowStartTimePicker(false);
+                    setShowEndTimePicker(false);
+                    setShowDatePicker(!showDatePicker);
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text
@@ -768,102 +1042,96 @@ const ScheduleInterview = () => {
                       ? formatDateForDisplay(interviewDetails.interviewDate)
                       : "Select interview date"}
                   </Text>
-                  <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center">
-                    <Text className="text-blue-600 font-quicksand-bold text-xs">📅</Text>
+                  <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
+                    <Text className="text-emerald-600 font-quicksand-bold text-xs">📅</Text>
                   </View>
                 </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={selectedDate}
-                    mode="date"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={handleDateChange}
-                    minimumDate={new Date()} // Prevent selecting past dates
-                    textColor="#000000"
-                  />
-                )}
               </View>
-
               <View className="flex-row gap-3">
                 <View className="flex-1">
                   <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Start Time *</Text>
-                  <TextInput
-                    value={interviewDetails?.startTime}
-                    onFocus={() => bottomSheetRef.current?.close()}
-                    placeholder="10:00 AM"
-                    onChangeText={(text) =>
-                      setInterviewDetails((prev) => {
-                        const updatedText = updateTimeValue(text);
-                        return {
-                          ...prev,
-                          startTime: updatedText,
-                        };
-                      })
-                    }
-                    className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
-                    style={{
-                      shadowColor: "#000",
-                      fontSize: 12,
-                      lineHeight: 16,
-                      paddingTop: 10,
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
+                  <TouchableOpacity
+                    className="form-input__input bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
+                    onPress={() => {
+                      setShowDatePicker(false);
+                      setShowEndTimePicker(false);
+                      setShowStartTimePicker(!showStartTimePicker);
                     }}
-                  />
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      className={`font-quicksand-medium text-sm ${
+                        interviewDetails.startTime ? "text-gray-900" : "text-gray-500"
+                      }`}
+                    >
+                      {interviewDetails.startTime ? formatTime(interviewDetails.startTime) : "Start Time"}
+                    </Text>
+                    <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
+                      <Text className="text-emerald-600 font-quicksand-bold text-xs">⏰</Text>
+                    </View>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleDateChange}
+                      minimumDate={new Date()} // Prevent selecting past dates
+                      textColor="#000000"
+                    />
+                  )}
                 </View>
-
                 <View className="flex-1">
                   <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">End Time *</Text>
-                  <TextInput
-                    value={interviewDetails?.endTime}
-                    onFocus={() => bottomSheetRef.current?.close()}
-                    placeholder="12:00 PM"
-                    onChangeText={(text) =>
-                      setInterviewDetails((prev) => {
-                        const updatedText = updateTimeValue(text);
-                        return {
-                          ...prev,
-                          endTime: updatedText,
-                        };
-                      })
-                    }
-                    className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
-                    style={{
-                      fontSize: 12,
-                      lineHeight: 16,
-                      paddingTop: 10,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 1,
+                  <TouchableOpacity
+                    className="form-input__input bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
+                    onPress={() => {
+                      setShowDatePicker(false);
+                      setShowStartTimePicker(false);
+                      setShowEndTimePicker(!showEndTimePicker);
                     }}
-                  />
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      className={`font-quicksand-medium text-sm ${
+                        interviewDetails.endTime ? "text-gray-900" : "text-gray-500"
+                      }`}
+                    >
+                      {interviewDetails.endTime ? formatTime(interviewDetails.endTime) : "End Time"}
+                    </Text>
+                    <View className="w-6 h-6 bg-emerald-100 rounded-full items-center justify-center">
+                      <Text className="text-emerald-600 font-quicksand-bold text-xs">⏰</Text>
+                    </View>
+                  </TouchableOpacity>
                 </View>
               </View>
-
-              <View>
-                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Timezone *</Text>
-                <TextInput
-                  value={interviewDetails?.timezone}
-                  onFocus={() => bottomSheetRef.current?.close()}
-                  placeholder="EST, PST, GMT"
-                  onChangeText={(text) => setInterviewDetails((prev) => ({ ...prev, timezone: text.toUpperCase() }))}
-                  className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
-                  style={{
-                    shadowColor: "#000",
-                    fontSize: 12,
-                    lineHeight: 16,
-                    paddingTop: 10,
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  }}
+              {showStartTimePicker && (
+                <DateTimePicker
+                  value={startTime}
+                  mode="time"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleStartTimeChange}
+                  textColor="#000000"
                 />
-              </View>
+              )}
+              {showEndTimePicker && (
+                <DateTimePicker
+                  value={endTime}
+                  mode="time"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleEndTimeChange}
+                  textColor="#000000"
+                />
+              )}
+              <TouchableOpacity
+                className="flex-row items-center justify-center gap-2 bg-emerald-500 rounded-lg px-1 py-3"
+                onPress={() => setShowTimeZonePicker(true)}
+              >
+                <Feather name="globe" size={16} color="white" />
+                <Text className="font-quicksand-semibold text-white text-sm">
+                  {interviewDetails.timezone ? interviewDetails.timezone.label : "Select Timezone"}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -1109,18 +1377,19 @@ const ScheduleInterview = () => {
               elevation: 4,
             }}
             onPress={handleInterviewFormSubmit}
-            disabled={loadingNewInterview}
+            disabled={loadingInterview}
             activeOpacity={0.8}
           >
-            {loadingNewInterview ? (
+            {loadingInterview ? (
               <ActivityIndicator color="white" />
             ) : (
               <View className="flex-row items-center gap-2">
-                <Text className="font-quicksand-bold text-white text-base">Schedule Interview</Text>
+                <Text className="font-quicksand-bold text-white text-base">
+                  {interviewId ? "Update Interview" : "Schedule Interview"}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
-
           <TouchableOpacity
             className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
             style={{
@@ -1131,7 +1400,7 @@ const ScheduleInterview = () => {
               elevation: 2,
             }}
             onPress={() => router.back()}
-            disabled={loadingNewInterview}
+            disabled={loadingInterview}
             activeOpacity={0.7}
           >
             <View className="flex-row items-center gap-2">
@@ -1416,13 +1685,13 @@ const ScheduleInterview = () => {
                     <View className="flex-1">
                       <Text className="font-quicksand-semibold text-sm text-purple-700">Date</Text>
                       <Text className="font-quicksand-bold text-sm text-purple-900 mt-1">
-                        {interviewDetails.interviewDate || "Not specified"}
+                        {formatDateForDisplay(interviewDetails.interviewDate) || "Not specified"}
                       </Text>
                     </View>
                     <View className="flex-1">
                       <Text className="font-quicksand-semibold text-sm text-purple-700">Timezone</Text>
                       <Text className="font-quicksand-bold text-sm text-purple-900 mt-1">
-                        {interviewDetails.timezone || "Not specified"}
+                        {interviewDetails.timezone?.label || "Not specified"}
                       </Text>
                     </View>
                   </View>
@@ -1513,13 +1782,6 @@ const ScheduleInterview = () => {
                         </View>
                       </View>
                     )}
-
-                    <View>
-                      <Text className="font-quicksand-semibold text-sm text-emerald-700">Meeting Link</Text>
-                      <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
-                        {interviewDetails.meetingLink || "Meeting link not provided"}
-                      </Text>
-                    </View>
                   </View>
                 )}
                 {interviewDetails.interviewType === "PHONE" && (
@@ -1604,7 +1866,15 @@ const ScheduleInterview = () => {
                 size={24}
               />
             </View>
-            <TouchableOpacity onPress={() => setShowMeetingCreatorModal(false)}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowMeetingCreatorModal(false);
+                if (showConfirmationAfter) {
+                  setShowConfirmationModal(true);
+                }
+                setShowConfirmationAfter(false);
+              }}
+            >
               <Feather name="x" size={24} color="#6b7280" />
             </TouchableOpacity>
           </View>
@@ -1616,6 +1886,68 @@ const ScheduleInterview = () => {
           </ScrollView>
         </View>
       </ModalWithBg>
+      <ModalWithBg visible={showTimeZonePicker}>
+        <View className="flex-1">
+          <View className="px-4 py-3 border-b border-gray-200 bg-white flex-row items-center justify-between">
+            <Text className="font-quicksand-semibold text-lg text-gray-900">Select Timezone</Text>
+            <TouchableOpacity onPress={() => setShowTimeZonePicker(false)}>
+              <Feather name="x" size={24} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView className="flex-1 bg-white">
+            {COMMON_TIMEZONES.map((tz) => (
+              <TouchableOpacity
+                key={tz.value}
+                className={`px-6 py-4 border-b border-gray-200 ${interviewDetails.timezone?.value === tz.value ? "bg-emerald-100" : "bg-white"}`}
+                onPress={() => {
+                  setInterviewDetails({ ...interviewDetails, timezone: tz });
+                  setShowTimeZonePicker(false);
+                }}
+              >
+                <Text className="font-quicksand-medium text-base text-gray-900">{tz.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </ModalWithBg>
+      <ModalWithBg visible={showSuccessfullScheduleModal} customHeight={0.3} customWidth={0.7}>
+        <View className="bg-white rounded-xl p-6 items-center shadow-lg flex-1">
+          <View className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+            <FontAwesome name="check" size={24} color="#10b981" />
+          </View>
+          <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Interview Scheduled!</Text>
+          <Text className="font-quicksand-medium text-sm text-gray-700 text-center mb-2">
+            The interview has been successfully scheduled and the candidate has been notified.
+          </Text>
+          <TouchableOpacity
+            className="bg-emerald-500 rounded-xl py-3 px-6 items-center justify-center"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            onPress={() => {
+              setShowSuccessfullScheduleModal(false);
+              router.back();
+            }}
+            activeOpacity={0.8}
+          >
+            <Text className="font-quicksand-bold text-white text-base">Back to Applications</Text>
+          </TouchableOpacity>
+        </View>
+      </ModalWithBg>
+      {existingInterviewDetails && onlineInterviewCancellationModalState.onlineMeetingInformation && (
+        <DeleteOnlineMeetingOnPlatform
+          onlineMeetingInformation={onlineInterviewCancellationModalState.onlineMeetingInformation}
+          show={onlineInterviewCancellationModalState.show}
+          handleClose={() => {
+            setOnlineInterviewCancellationModalVisibility({ show: false, onlineMeetingInformation: null });
+            router.replace(`/businessJobs/interviews/interview/${interviewId}`);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };

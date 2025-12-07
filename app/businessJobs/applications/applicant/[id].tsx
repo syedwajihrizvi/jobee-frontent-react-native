@@ -609,7 +609,7 @@ const ApplicantForBusiness = () => {
                 onPress={() => {
                   setShowActionsModal(false);
                   router.push(
-                    `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application?.userProfile.id}`
+                    `/businessJobs/applications/applicant/scheduleInterview?applicantId=${application?.id}&jobId=${application?.jobId}&candidateId=${application?.userProfile.id}&applicantFirstName=${userProfile?.firstName}&applicantLastName=${userProfile?.lastName}&applicantEmail=${userProfile?.email}`
                   );
                 }}
                 activeOpacity={0.7}
@@ -700,7 +700,7 @@ const ApplicantForBusiness = () => {
             )}
             {applicationStatus !== "PENDING" && (
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">
-                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-3">
+                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-1">
                   <Feather name="info" size={20} color="#6b7280" />
                 </View>
                 <Text className="font-quicksand-bold text-sm text-gray-900 text-center mb-2">No Actions Available</Text>
@@ -708,6 +708,32 @@ const ApplicantForBusiness = () => {
                   This candidate&apos;s application status is &quot;
                   {applicationStatus?.toLowerCase().replace("_", " ")}&quot; and cannot be modified.
                 </Text>
+                {applicationData?.status === "INTERVIEW_SCHEDULED" &&
+                  applicationData.interviewIds &&
+                  applicationData.interviewIds.length > 0 && (
+                    <TouchableOpacity
+                      className="mt-3"
+                      onPress={() => {
+                        setShowActionsModal(false);
+                        router.push(`/businessJobs/interviews/interview/${applicationData.interviewIds?.slice(-1)[0]}`);
+                      }}
+                    >
+                      <Text className="font-quicksand-bold text-emerald-600 text-sm">View Scheduled Interview</Text>
+                    </TouchableOpacity>
+                  )}
+                {applicationData?.status === "INTERVIEW_COMPLETED" &&
+                  applicationData.interviewIds &&
+                  applicationData.interviewIds.length > 0 && (
+                    <TouchableOpacity
+                      className="mt-3"
+                      onPress={() => {
+                        setShowActionsModal(false);
+                        router.push(`/businessJobs/interviews/interview/${applicationData.interviewIds?.slice(-1)[0]}`);
+                      }}
+                    >
+                      <Text className="font-quicksand-bold text-emerald-600 text-sm">Next Steps</Text>
+                    </TouchableOpacity>
+                  )}
               </View>
             )}
           </ScrollView>

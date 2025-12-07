@@ -19,7 +19,7 @@ const useConversationStore = create<ConversationState>((set) => ({
     loading: false,
     unreadMessages: 0,
     lastMessage: null,
-    setLastMessage: (message: Message | null) => set({ lastMessage: message }),
+    setLastMessage: (message: Message | null) => {set({ lastMessage: message })},
     setLoading: (loading: boolean) => set({ loading }),
     setConversations: (conversations: Conversation[]) => {
         set({ conversations });

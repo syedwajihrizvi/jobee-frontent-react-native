@@ -23,8 +23,8 @@ const HiringTeamCard = ({ teamMember, handleRemove }: Props) => {
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-3 flex-1">
-          <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-            <Text className="font-quicksand-bold text-blue-600 text-sm">
+          <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+            <Text className="font-quicksand-bold text-emerald-600 text-sm">
               {firstName.charAt(0)}
               {lastName.charAt(0)}
             </Text>

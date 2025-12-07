@@ -114,7 +114,7 @@ export const clearStoredOneDriveTokens = async () => {
     await SecureStore.deleteItemAsync('oneDriveExpiresAt');
 }
 
-export const isOneDriveAccessTokenValid = async () => {
+export const isMicrosoftTokenValid = async () => {
     const accessToken = await fetchOneDriveAccessToken();
     if (!accessToken) {
         return false;
@@ -210,7 +210,6 @@ export const refreshMicrosoftToken = async (type: 'common' | 'organizations' = '
             body: body.toString(),
         });
         const data = await response.json();
-        console.log('Microsoft Token Refresh Response:', data);
         const { access_token, expires_in, refresh_token } = data
         const res = await storeOneDriveTokensOnDevice({
             accessToken: access_token,

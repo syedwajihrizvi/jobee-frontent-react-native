@@ -221,7 +221,6 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
     },
     getApplicationStatus: (applicationId) => {
         const state = get();
-        console.log("SYED-DEBUG: Getting status for applicationId:", applicationId, "Status:", state.applicationIdToStatus[applicationId]);
         return state.applicationIdToStatus[applicationId];
     },
     // Loading state methods in interface order
@@ -386,7 +385,6 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const state = get();
         Object.keys(state.applicationsByJobAndFilter).forEach(key => {
             if (key.startsWith(`${jobId}-`) && (key.toLowerCase().includes(oldStatus.toLowerCase()) || key.toLowerCase().includes(newStatus.toLowerCase()))) {
-                console.log("SYED-DEBUG: Removing cached applications for key due to status change:", key);
                 delete state.applicationsByJobAndFilter[key];
                 delete state.pagination[key];
                 delete state.totalCounts[key];

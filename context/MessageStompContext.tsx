@@ -55,8 +55,9 @@ export const MessageStompProvider: React.FC<{ children: React.ReactNode }> = ({ 
           let currentConversation = {
             ...currentConversations[currentConversationIndex],
             lastMessageContent: msg.text,
+            lastMessageType: msg.messageType,
             lastMessageTimestamp: msg.timestamp,
-            lastMessageRead: false, // Always false for new incoming messages
+            lastMessageRead: false,
             wasLastMessageSender: msg.sentByUser,
           };
           const newConversations = [...currentConversations];

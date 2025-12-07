@@ -48,7 +48,6 @@ const SocialMedia = () => {
   }, [user, isLoading]);
 
   const handleFormUpdateSubmit = async () => {
-    console.log("Submitting update for:", updateForm);
     setIsUpdating(true);
     try {
       const hasValue = userSocials[updateForm.type as keyof BusinessSocials].url !== "";
@@ -56,25 +55,20 @@ const SocialMedia = () => {
       if (hasValue) {
         const id = userSocials[updateForm.type as keyof BusinessSocials].id;
         res = await updateBusinessSocialMediaLink(updateForm.type, updateForm.url, id);
-        console.log("Update response:", res);
       } else {
         res = await createBusinessSocialMediaLink(updateForm.type, updateForm.url);
-        console.log("Create response:", res);
       }
       if (res != null) {
         const { id, type, url } = res;
         const convertType = convertEnumToSocialMediaType(type);
-        console.log("Converted type:", convertType);
         if (convertType in userSocials) {
           const updatedSocialIndex = user?.socialMedias.findIndex((social) => social.type === type) ?? -1;
           if (updatedSocialIndex !== -1) {
             const newSocials = [...(user?.socialMedias ?? [])];
             newSocials[updatedSocialIndex] = { id, type, url };
-            console.log("Updated socials:", newSocials);
             setUser({ ...(user as any), socialMedias: newSocials });
           } else {
             const newSocials = [...(user?.socialMedias ?? []), { id, type, url }];
-            console.log("Added new social to socials:", newSocials);
             setUser({ ...(user as any), socialMedias: newSocials });
           }
         }

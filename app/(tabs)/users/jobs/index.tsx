@@ -140,10 +140,6 @@ const Jobs = () => {
   const recommendedJobs = getRecommendations();
   const isLoadingRecommended = isLoadingRecommendedJobs();
 
-  console.log(
-    "Recommended Jobs NOW:",
-    recommendedJobs.map((rec) => rec.job.id)
-  );
   if (!isAuthenticated && !isLoadingFilteredJobs && filteredJobs.length === 0) {
     return <Redirect href="/(auth)/sign-in" />;
   }

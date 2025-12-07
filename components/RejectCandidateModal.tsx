@@ -1,5 +1,6 @@
 import { rejectCandidateInterview } from "@/lib/interviewEndpoints";
-import useApplicantsForJobStore from "@/store/applicants.store";
+import useApplicationStore from "@/store/applications.store";
+import useBusinessInterviewsStore from "@/store/businessInterviews.store";
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
@@ -20,7 +21,8 @@ type Props = {
 const RejectCandidateModal = ({ visible, handleClose, candidateName, interviewId, applicantId, jobId }: Props) => {
   const customFeedbackFooterRef = useRef<View>(null);
   const queryClient = useQueryClient();
-  const { applications, setApplicationStatus } = useApplicantsForJobStore();
+  const { setApplicationStatus } = useApplicationStore();
+  const { removeAllInterviewsForJob } = useBusinessInterviewsStore();
   const keyboardAwareScrollViewRef = useRef<KeyboardAwareScrollView>(null);
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customFeedback, setCustomFeedback] = useState<string>("");
@@ -90,19 +92,17 @@ const RejectCandidateModal = ({ visible, handleClose, candidateName, interviewId
       const res = await rejectCandidateInterview(interviewId, selectedReasonDesc, customFeedback);
       if (res) {
         Alert.alert("Success", "The candidate has been rejected.");
-        const applicationIndex = applications.findIndex((app) => app.id === Number(applicantId));
-        if (applicationIndex !== -1) {
-          setApplicationStatus(Number(applicantId), "REJECTED");
-        }
+        setApplicationStatus(jobId, Number(applicantId), "REJECTED");
         queryClient.invalidateQueries({
           queryKey: ["applicant", Number(applicantId)],
         });
         queryClient.invalidateQueries({
-          queryKey: ["interviews", "job", Number(jobId)],
+          queryKey: ["interviewDetails", interviewId],
         });
         queryClient.invalidateQueries({
           queryKey: ["job", "business", Number(jobId)],
         });
+        removeAllInterviewsForJob(jobId);
       }
       resetAndClose();
     } catch (error) {

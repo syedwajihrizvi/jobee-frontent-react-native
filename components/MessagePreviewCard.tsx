@@ -1,5 +1,6 @@
-import { formatDate } from "@/lib/utils";
+import { formatTimestamp } from "@/lib/utils";
 import { Conversation } from "@/type";
+import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -11,7 +12,6 @@ type Props = {
   message: Conversation;
 };
 
-// TODO: Update how we get the profile iamge url since it differs for business and user
 const MessagePreviewCard = ({ message }: Props) => {
   const renderProfileImageUrl = () => {
     if (message.participantRole === "BUSINESS") {
@@ -62,15 +62,24 @@ const MessagePreviewCard = ({ message }: Props) => {
           <View className="flex-row items-center justify-between mb-1">
             <Text className="font-quicksand-bold text-base text-gray-900">{message.participantName}</Text>
             <Text className="font-quicksand-medium text-xs text-gray-500">
-              {formatDate(message.lastMessageTimestamp)}
+              {formatTimestamp(message.lastMessageTimestamp)}
             </Text>
           </View>
-          <RenderSlicedText
-            text={message.lastMessageContent}
-            maxLength={88}
-            textClassName="text-gray-600 leading-5"
-            withFormatting={false}
-          />
+          {message.lastMessageType === "TEXT" ? (
+            <RenderSlicedText
+              text={message.lastMessageContent}
+              maxLength={88}
+              textClassName="text-gray-600 leading-5"
+              withFormatting={false}
+            />
+          ) : (
+            <View className="flex-row items-center gap-1">
+              <Feather name="file" size={16} color="#6B7280" />
+              <Text className="text-gray-600 leading-5">
+                {message.wasLastMessageSender ? "You sent an attachment" : "Sent an attachment"}
+              </Text>
+            </View>
+          )}
         </View>
         {!message.wasLastMessageSender && (
           <View className="items-center gap-2">

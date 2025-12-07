@@ -165,10 +165,10 @@ export const businessProfileLinks: {
     href: "/businessProfile/myJobPostings",
   },
   {
-    label: "Interviews",
-    subtitle: "View interviews with candidates.",
+    label: "Upcoming Interviews",
+    subtitle: "View upcoming interviews with candidates.",
     icon: <Feather name="calendar" size={20} color="#10b981" />,
-    href: "/businessProfile/interviews",
+    href: "/businessProfile/interviews?status=SCHEDULED",
   },
 ];
 
@@ -292,6 +292,13 @@ export const getInterviewEmptyContent = (status: string | undefined) => {
         textColor: "#ef4444", // red-500
         bgColor: "#fef2f2", // red-100
       };
+    case "CANCELLED":
+      return {
+        title: "No Cancelled Interviews",
+        message: "You have not had any interviews that were cancelled.",
+        textColor: "#f97316", // orange-500
+        bgColor: "#fff7ed", // orange-100
+      };
     default:
       return {
         title: "No Interviews Yet",
@@ -335,9 +342,45 @@ export const interviewFilterOptions = [
     activeBgColor: "#ef4444", // Red 500
     activeTextColor: "#ffffff", // White
   },
+  {
+    label: "Cancelled",
+    value: "CANCELLED",
+    textColor: "#f97316", // Orange 500
+    bgColor: "#fff7ed", // Orange 50
+    activeBgColor: "#f97316", // Orange 500
+    activeTextColor: "#ffffff", // White
+  },
 ];
 
 export const getAPIUrl = (path: string) => {
   const baseUrl = "http://192.168.2.29:8080/api/";
   return `${baseUrl}${path}`;
+};
+
+export const COMMON_TIMEZONES = [
+  { label: "UTC", value: "UTC" },
+  // North America
+  { label: "Eastern Time (ET)", value: "ET" },
+  { label: "Central Time (CT)", value: "CT" },
+  { label: "Mountain Time (MT)", value: "MT" },
+  { label: "Pacific Time (PT)", value: "PT" },
+
+  // Europe
+  { label: "London (UK)", value: "UK" },
+  { label: "Central Europe (CET)", value: "CET" },
+
+  // Middle East / Asia
+  { label: "Dubai (UAE)", value: "UAE" },
+  { label: "India (IST)", value: "IST" },
+  { label: "Singapore", value: "SINGAPORE" },
+  { label: "China (Beijing)", value: "CHINA" },
+  { label: "Japan (Tokyo)", value: "TOKYO" },
+
+  // Australia
+  { label: "Sydney (Australia)", value: "AUSTRALIA" },
+];
+
+export const mapTimezoneValueToLabel = (value: string) => {
+  const timezone = COMMON_TIMEZONES.find((tz) => tz.value === value);
+  return timezone ? timezone.label : value;
 };

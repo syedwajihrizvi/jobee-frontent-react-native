@@ -2,10 +2,10 @@ import { meetingPlatforms } from "@/constants";
 import { convert11Or10DigitNumberToPhoneFormat } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import React from "react";
-import { Text, View } from "react-native";
+import { Linking, Text, TouchableOpacity, View } from "react-native";
 import RenderMeetingPlatformIcon from "./RenderMeetingPlatformIcon";
-
 type Props = {
   interviewDetails: InterviewDetails | null;
 };
@@ -27,9 +27,76 @@ const InterviewFormatSummary = ({ interviewDetails }: Props) => {
     }
   };
 
+  const renderOnlineMeetingInfo = () => {
+    const { onlineMeetingInformation, interviewMeetingPlatform } = interviewDetails!;
+    if (!onlineMeetingInformation || !interviewMeetingPlatform) {
+      return (
+        <Text className="font-quicksand-medium text-sm text-emerald-900">No online meeting information provided</Text>
+      );
+    }
+    if (interviewMeetingPlatform === "ZOOM") {
+      return (
+        <View className="gap-2">
+          <View className="flex-row items-center gap-2">
+            <Feather name="hash" size={16} color="#10B981" />
+            <Text className="font-quicksand-semibold text-md text-emerald-900">
+              Meeting ID:{" "}
+              <Text className="font-quicksand-semibold text-emerald-700">{onlineMeetingInformation.meetingId}</Text>
+            </Text>
+          </View>
+          {onlineMeetingInformation.meetingPassword && (
+            <View className="flex-row gap-2 items-center">
+              <Feather name="lock" size={16} color="#10B981" />
+              <Text className="font-quicksand-semibold text-md text-emerald-900">
+                Password:{" "}
+                <Text className="font-quicksand-semibold text-emerald-700">
+                  {onlineMeetingInformation.meetingPassword}
+                </Text>
+              </Text>
+              <TouchableOpacity onPress={() => Clipboard.setStringAsync(onlineMeetingInformation.meetingPassword)}>
+                <Feather name="copy" size={16} color="#10B981" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {interviewDetails?.status === "SCHEDULED" && (
+            <TouchableOpacity
+              className="bg-emerald-500 rounded-md p-2 mt-2 w-60 flex-row items-center justify-center gap-2"
+              onPress={() => Linking.openURL(onlineMeetingInformation.joinUrl)}
+            >
+              <Feather name="video" size={16} color="white" />
+              <Text className="font-quicksand-bold text-sm text-white">Join Zoom Meeting</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    }
+    if (interviewMeetingPlatform === "GOOGLE_MEET") {
+      return (
+        <View className="gap-2">
+          <View className="flex-row items-center gap-2">
+            <Feather name="hash" size={16} color="#10B981" />
+            <Text className="font-quicksand-semibold text-md text-emerald-900">
+              Meeting ID:{" "}
+              <Text className="font-quicksand-semibold text-emerald-700">{onlineMeetingInformation.meetingId}</Text>
+            </Text>
+          </View>
+          {interviewDetails?.status === "SCHEDULED" && (
+            <TouchableOpacity
+              className="bg-emerald-500 rounded-md p-2 mt-2 w-60 flex-row items-center justify-center gap-2"
+              onPress={() => Linking.openURL(onlineMeetingInformation.hangoutLink)}
+            >
+              <Feather name="video" size={16} color="white" />
+              <Text className="font-quicksand-bold text-sm text-white">Join Google Meet</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    }
+  };
+
   return (
     <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-      <Text className="font-quicksand-bold text-base text-emerald-900 mb-3">Interview Format</Text>
+      <Text className="font-quicksand-bold text-base text-emerald-900 mb-2">Interview Format</Text>
 
       <View className="flex-row items-center gap-3 mb-4">
         <View className="w-8 h-8 bg-emerald-500 rounded-full items-center justify-center">
@@ -84,10 +151,10 @@ const InterviewFormatSummary = ({ interviewDetails }: Props) => {
       {interviewDetails?.interviewType === "ONLINE" && (
         <View className="bg-white rounded-lg p-3 gap-2">
           {interviewDetails?.interviewMeetingPlatform && (
-            <View className="flex-row items-center gap-2 mb-2">
-              <Text className="font-quicksand-semibold text-sm text-emerald-700">Platform:</Text>
+            <View className="flex-row items-center gap-2">
               <View className="flex-row items-center gap-2">
                 <RenderMeetingPlatformIcon
+                  size={18}
                   active={false}
                   platformType={interviewDetails.interviewMeetingPlatform}
                   platformColor={
@@ -95,19 +162,14 @@ const InterviewFormatSummary = ({ interviewDetails }: Props) => {
                     "#059669"
                   }
                 />
-                <Text className="font-quicksand-bold text-sm text-emerald-900">
+                <Text className="font-quicksand-bold text-md text-emerald-900">
                   {meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.label}
                 </Text>
               </View>
             </View>
           )}
 
-          <View>
-            <Text className="font-quicksand-semibold text-md text-emerald-700">Meeting Link</Text>
-            <Text className="font-quicksand-medium text-sm text-emerald-900 mt-1" numberOfLines={2}>
-              {interviewDetails?.meetingLink || "Meeting link not provided"}
-            </Text>
-          </View>
+          <View>{renderOnlineMeetingInfo()}</View>
         </View>
       )}
       {interviewDetails?.interviewType === "PHONE" && (

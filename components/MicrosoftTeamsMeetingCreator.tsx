@@ -1,7 +1,7 @@
 import {
   connectToOneDriveOAuth,
   createTeamsMeeting,
-  isOneDriveAccessTokenValid,
+  isMicrosoftTokenValid,
   refreshMicrosoftToken,
   userHasTeamsLicense,
 } from "@/lib/oauth/onedrive";
@@ -17,7 +17,7 @@ const MicrosoftTeamsMeetingCreator = () => {
 
   useEffect(() => {
     const checkMicrosoftTeamsAccessToken = async () => {
-      if (await isOneDriveAccessTokenValid()) {
+      if (await isMicrosoftTokenValid()) {
         setIsConnectedToMicrosoftTeams(true);
         const hasLicense = await userHasTeamsLicense();
         setHasMeetingLicense(hasLicense);

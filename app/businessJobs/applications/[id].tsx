@@ -279,7 +279,7 @@ const Applications = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <BackBar label={`${jobTitle} Applications`} />
+      <BackBar label={`${jobTitle.length > 0 && jobTitle.length < 20 ? jobTitle : "Job"} Applications`} />
       <View className="justify-center items-center mt-2">
         <SearchBar
           placeholder="Search applicants by name, city, or country"

@@ -15,7 +15,6 @@ export const useUserNotifications = (isAuthenticated: boolean) => {
             },
         });
         const data = await response.json();
-        console.log(data)
         return data as Notification[];
     }
 
@@ -23,5 +22,6 @@ export const useUserNotifications = (isAuthenticated: boolean) => {
         queryKey: ['user-notifications'],
         queryFn: fetchNotifications,
         enabled: isAuthenticated,
+        refetchInterval: 60000, // Refetch every minute
     })
 }

@@ -52,12 +52,14 @@ const Notifications = () => {
 
   const handleNotificationPress = async (notification: Notification) => {
     markNotificationAsRead(notification.id!);
-    updateNotificationStatusToRead(notification.id!);
+    if (!notification.read) updateNotificationStatusToRead(notification.id!);
     const { notificationType, context } = notification;
     if (
       notificationType === "INTERVIEW_SCHEDULED" ||
       notificationType === "INTERVIEW_COMPLETED" ||
-      notificationType === "REJECTION"
+      notificationType === "REJECTION" ||
+      notificationType === "INTERVIEW_CANCELLED" ||
+      notificationType === "INTERVIEW_UPDATED"
     ) {
       const { interviewId } = context;
       if (interviewId) {

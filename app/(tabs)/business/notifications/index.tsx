@@ -1,5 +1,6 @@
 import BackBar from "@/components/BackBar";
 import RenderCompanyLogo from "@/components/RenderCompanyLogo";
+import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import {
   deleteAllReadNotificationsFromDB,
   updateAllNotificationsStatus,
@@ -52,19 +53,24 @@ const Notifications = () => {
 
   const handleNotificationPress = async (notification: Notification) => {
     markNotificationAsRead(notification.id!);
-    updateNotificationStatusToRead(notification.id!);
+    if (!notification.read) updateNotificationStatusToRead(notification.id!);
     const { notificationType, context } = notification;
     const { interviewId } = context;
     if (
       notificationType === "INTERVIEW_SCHEDULED" ||
       notificationType === "INTERVIEW_COMPLETED" ||
-      notificationType === "REJECTION"
+      notificationType === "REJECTION" ||
+      notificationType === "INTERVIEW_CANCELLED" ||
+      notificationType === "INTERVIEW_UPDATED"
     ) {
+      console.log("Navigating to interview details for interviewId:", interviewId);
       if (interviewId) {
-        router.push(`/userProfile/interviews/${interviewId}`);
+        router.push(`/businessJobs/interviews/interview/${interviewId}`);
       }
     } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
       router.push("/userProfile/editProfile");
+    } else if (notificationType === "INTERVIEW_RESCHEDULE_REQUESTED") {
+      router.push(`/businessJobs/interviews/interview/${interviewId}?openBell=true`);
     } else if (notificationType === "INTERVIEW_CREATED_SUCCESSFULLY" && interviewId) {
       router.push(`/businessJobs/interviews/interview/${interviewId}`);
     }
@@ -85,7 +91,29 @@ const Notifications = () => {
     const iconData = getNotificationIcon(item.notificationType);
     const borderColor = getBorderColor(item.notificationType, item.read || false);
     const context = item.context || {};
-    const { companyLogoUrl, companyId } = context;
+    const { companyLogoUrl, companyId, candidateProfileImageUrl, fullName } = context;
+    const renderNotificationImage = () => {
+      if (item.notificationType === "INTERVIEW_RESCHEDULE_REQUESTED") {
+        return (
+          <RenderUserProfileImage
+            fullName={fullName}
+            profileImageUrl={candidateProfileImageUrl}
+            profileImageSize={14}
+          />
+        );
+      }
+
+      return companyId && companyLogoUrl ? (
+        <RenderCompanyLogo logoUrl={companyLogoUrl} size={6} />
+      ) : (
+        <View
+          className="w-12 h-12 items-center justify-center"
+          style={{ backgroundColor: iconData.bgColor, borderRadius: 24 }}
+        >
+          <Feather name={iconData.name as any} size={20} color={iconData.color} />
+        </View>
+      );
+    };
     return (
       <TouchableOpacity
         className="bg-white"
@@ -106,16 +134,7 @@ const Notifications = () => {
       >
         <View className="p-4">
           <View className="flex-row items-start gap-3">
-            {companyId ? (
-              <RenderCompanyLogo logoUrl={companyLogoUrl} size={6} />
-            ) : (
-              <View
-                className="w-12 h-12 items-center justify-center"
-                style={{ backgroundColor: iconData.bgColor, borderRadius: 24 }}
-              >
-                <Feather name={iconData.name as any} size={20} color={iconData.color} />
-              </View>
-            )}
+            {renderNotificationImage()}
 
             <View className="flex-1">
               <Text

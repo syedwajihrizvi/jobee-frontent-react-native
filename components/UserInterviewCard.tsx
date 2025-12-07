@@ -50,7 +50,7 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
       activeOpacity={0.7}
       onPress={() => router.push(`/userProfile/interviews/${item.id}`)}
     >
-      <View className="flex-row items-start justify-between mb-4">
+      <View className="flex-row items-start justify-between mb-1">
         <View className="flex-1">
           <CompanyInformation
             companyName={item.companyName}
@@ -70,9 +70,6 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
         >
           <Text className="font-quicksand-bold text-xs text-indigo-700">{item.interviewDate}</Text>
         </View>
-      </View>
-      <View className="mb-2">
-        <Text className="font-quicksand-bold text-lg text-gray-900">{item.title}</Text>
       </View>
       <View className="flex-row flex-wrap gap-2 mb-3">
         <View

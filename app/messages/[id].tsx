@@ -1,3 +1,6 @@
+import DocumentItem from "@/components/DocumentItem";
+import FileSelector from "@/components/FileSelector";
+import ModalWithBg from "@/components/ModalWithBg";
 import RenderBusinessProfileImage from "@/components/RenderBusinessProfileImage";
 import RenderUserProfileImage from "@/components/RenderUserProfileImage";
 import { useStomp } from "@/context/MessageStompContext";
@@ -8,8 +11,18 @@ import useConversationStore from "@/store/conversation.store";
 import { Message } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FlatList,
+  InteractionManager,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MessageChat = () => {
@@ -20,10 +33,12 @@ const MessageChat = () => {
   const { conversations, setConversations, reduceUnreadCount, lastMessage, setUnreadMessages } = useConversationStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
+  const [showFileSelector, setShowFileSelector] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-
+  const inputRef = useRef<TextInput>(null);
   const firstName = name ? (name as string).split(" ")[0] : "";
   const lastName = name ? (name as string).split(" ")[1] : "";
+
   useEffect(() => {
     const controller = new AbortController();
     const fetchChatMessages = async () => {
@@ -38,8 +53,6 @@ const MessageChat = () => {
         }
       } catch (error) {
         console.error("Error fetching messages:", error);
-      } finally {
-        console.log("Fetch messages aborted or completed");
       }
     };
     fetchChatMessages();
@@ -61,15 +74,36 @@ const MessageChat = () => {
   }, []);
 
   useEffect(() => {
-    // Check the latest incoming message for this conversation and see if it is updated
     if (lastMessage?.conversationId === Number(conversationId)) {
+      console.log(`New message for conversation ${conversationId}:`, lastMessage);
       setMessages((prevMessages) => [...prevMessages, lastMessage]);
       markMessageAsRead(Number(conversationId));
     }
   }, [lastMessage, conversationId, reduceUnreadCount]);
 
-  const renderMessage = ({ item }: { item: Message }) => {
+  const reversedMessages = useMemo(() => {
+    return [...messages].reverse();
+  }, [messages]);
+
+  const renderMessage = useCallback(({ item }: { item: Message }) => {
     const isMe = item.sentByUser;
+    if (item.messageType === "FILE") {
+      return (
+        <View className={`flex-row mb-4 px-4 ${isMe ? "justify-end" : "justify-start"}`}>
+          <View className={`max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
+            <DocumentItem
+              document={{ id: item.id, documentUrl: item.fileUrl! }}
+              customTitle="Attachment"
+              standOut={false}
+              customAction={() => {}}
+              canEdit={false}
+              canDelete={false}
+              forMessageAttachment={true}
+            />
+          </View>
+        </View>
+      );
+    }
     return (
       <View className={`flex-row mb-4 px-4 ${isMe ? "justify-end" : "justify-start"}`}>
         <View className={`max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
@@ -95,15 +129,15 @@ const MessageChat = () => {
         </View>
       </View>
     );
-  };
+  }, []);
+
+  const keyExtractor = useCallback((item: Message) => item.id.toString(), []);
 
   const handleSend = () => {
     if (client == null) {
       return;
     }
     if (message.trim()) {
-      // Add message logic here
-      console.log("Sending message:", message);
       const senderParamType = userType === "user" ? "USER" : "BUSINESS";
       const receiverParamType = senderParamType === "USER" ? "BUSINESS" : "USER";
       publishMessage(client, user!.id, senderParamType, Number(id), receiverParamType, message);
@@ -150,20 +184,6 @@ const MessageChat = () => {
               <Text className="font-quicksand-medium text-sm text-emerald-600">Active now</Text>
             </View>
           </View>
-          <View className="flex-row gap-2">
-            <TouchableOpacity
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
-              activeOpacity={0.7}
-            >
-              <Feather name="phone" size={18} color="#6b7280" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
-              activeOpacity={0.7}
-            >
-              <Feather name="more-vertical" size={18} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
       <KeyboardAvoidingView
@@ -173,9 +193,9 @@ const MessageChat = () => {
       >
         <FlatList
           ref={flatListRef}
-          data={[...messages].reverse()}
+          data={reversedMessages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={keyExtractor}
           className="flex-1"
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
@@ -195,6 +215,7 @@ const MessageChat = () => {
             <TouchableOpacity
               className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
               activeOpacity={0.7}
+              onPress={() => setShowFileSelector(true)}
             >
               <Feather name="plus" size={20} color="#6b7280" />
             </TouchableOpacity>
@@ -208,11 +229,10 @@ const MessageChat = () => {
                 style={{
                   textAlignVertical: "center",
                 }}
+                ref={inputRef}
+                keyboardType="default"
                 placeholderTextColor="#9ca3af"
               />
-              <TouchableOpacity className="absolute right-3 bottom-3" activeOpacity={0.7}>
-                <Text className="text-lg">😊</Text>
-              </TouchableOpacity>
             </View>
             <TouchableOpacity
               className={`w-10 h-10 rounded-full items-center justify-center ${
@@ -234,6 +254,30 @@ const MessageChat = () => {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <ModalWithBg visible={showFileSelector} customWidth={0.9} customHeight={0.7}>
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+          <Text className="font-quicksand-bold text-lg text-gray-900">Add File</Text>
+          <TouchableOpacity onPress={() => setShowFileSelector(false)} className="p-2" activeOpacity={0.7}>
+            <Feather name="x" size={24} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
+        <ScrollView className="p-4">
+          <View className="mb-4">
+            <FileSelector
+              selectedDocumentType="MESSAGE_ATTACHMENT"
+              handleUploadSuccess={() => {
+                InteractionManager.runAfterInteractions(() => {
+                  setShowFileSelector(false);
+                });
+              }}
+              showTitleInput={false}
+              excludeLinkOption={true}
+              givenTitle={conversationId ? `${conversationId}` : "Message_Attachment"}
+              showDocumentDetailsOnConfirmation={false}
+            />
+          </View>
+        </ScrollView>
+      </ModalWithBg>
     </SafeAreaView>
   );
 };

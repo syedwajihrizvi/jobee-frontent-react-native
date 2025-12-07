@@ -1,3 +1,4 @@
+import { getAPIUrl } from "@/constants";
 import { Message } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Client } from "@stomp/stompjs";
@@ -5,7 +6,7 @@ import SockJS from "sockjs-client";
 
 const SOCKET_URL = 'http://192.168.2.29:8080/ws-chat'
 
-const MESSAGE_API_URL = 'http://192.168.2.29:8080/messages'
+const MESSAGE_API_URL = getAPIUrl('messages');
 type Props = {
     userId: number;
     userType: 'USER' | 'BUSINESS',

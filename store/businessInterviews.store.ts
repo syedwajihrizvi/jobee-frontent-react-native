@@ -1,5 +1,5 @@
 import { getInterviewsForJobAndFilter } from "@/lib/userEndpoints";
-import { InterviewDetails, InterviewFilters } from "@/type";
+import { InterviewDetails, InterviewFilter, InterviewFilters } from "@/type";
 import { create } from "zustand";
 
 const createFilterKey = (filters: InterviewFilters) => {
@@ -13,6 +13,7 @@ const createFilterKey = (filters: InterviewFilters) => {
 }
 
 interface InterviewsState  {
+    interviewIdToStatus: Record<number, string>;
     interviewsByJobIdAndFilter: Record<string, InterviewDetails[]>;
     loadingInterviewStates: Record<string, boolean>;
     totalCounts: Record<string, number>;
@@ -24,14 +25,20 @@ interface InterviewsState  {
     getInterviewsForJobAndFilter(filter: InterviewFilters): InterviewDetails[];
     getTotalCountForJobAndFilter(filter: InterviewFilters): number;
     getPaginationForJobAndFilter(filter: InterviewFilters): { currentPage: number, hasMore: boolean } | undefined;
+    getInterviewStatus: (interviewId: number) => string | undefined;
+    setInterviewStatus: (interview: InterviewDetails, status: string) => void;
     isLoadingInterviewsForJobAndFilter(filter: InterviewFilters): boolean;
 
     hasValidCachedInterviews: (filter: InterviewFilters) => boolean;
-    // setInterviewStatus: (jobId: number,interviewId: number, status: string) => void;
     refreshInterviewsForJobAndFilter: (filter: InterviewFilters) => Promise<void>;
+    removeAllInterviewsForJob: (jobId: number) => void;
+    removeFromUpcomingInterviews: (interviewId: number) => void;
+    refreshUpcomingInterviews: () => Promise<void>;
+    refreshUpcomingInterviewsForJob: (jobId: number) => Promise<void>;
 }
 
 const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
+    interviewIdToStatus: {},
     interviewsByJobIdAndFilter: {},
     loadingInterviewStates: {},
     totalCounts: {},
@@ -53,6 +60,10 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
             const { content: newInterviews, totalElements, hasMore } = response;
             const existingInterviews = state.interviewsByJobIdAndFilter[filterKey] || [];
             const updatedInterviews = [...existingInterviews, ...newInterviews];
+            const updatedInterviewIdToStatus = { ...state.interviewIdToStatus };
+            newInterviews.forEach(interview => {
+                updatedInterviewIdToStatus[interview.id] = interview.status;
+            });
             set((state) => ({
                 interviewsByJobIdAndFilter: {
                     ...state.interviewsByJobIdAndFilter,
@@ -72,7 +83,8 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
                 lastFetchedInterviews: {
                     ...state.lastFetchedInterviews,
                     [filterKey]: Date.now(),
-                }
+                },
+                interviewIdToStatus: updatedInterviewIdToStatus,
             }))
         } catch (error) {
             console.error("Error fetching interviews for job and filter:", error);
@@ -100,6 +112,31 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
         const state = get();
         return state.pagination[filterKey];
     },
+    getInterviewStatus: (interviewId) => {
+        const state = get();
+        return state.interviewIdToStatus[interviewId];
+    },
+    setInterviewStatus: (interview, status) => {
+        const interviewId = interview.id;
+        const oldStatus = interview.status;
+        const jobId = interview.jobId;
+        const oldStatusFilter = { jobId: jobId, status: oldStatus as InterviewFilter };
+        const newStatusFilter = { jobId: jobId, status: status as InterviewFilter };
+        const oldFilterKey = createFilterKey(oldStatusFilter);
+        const newFilterKey = createFilterKey(newStatusFilter);
+        set((state) => ({
+            interviewIdToStatus: {
+                ...state.interviewIdToStatus,
+                [interviewId]: status,
+            },
+            interviewsByJobIdAndFilter: {
+                ...state.interviewsByJobIdAndFilter,
+                [oldFilterKey]: (state.interviewsByJobIdAndFilter[oldFilterKey] || []).filter(i => i.id !== interviewId),
+                [newFilterKey]: [ ...(state.interviewsByJobIdAndFilter[newFilterKey] || []), { ...interview, status } ],
+            }
+        }));
+
+    },
     isLoadingInterviewsForJobAndFilter: (filter) => {
         const filterKey = createFilterKey(filter);
         const state = get();
@@ -123,6 +160,54 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
         delete newState.lastFetchedInterviews[filterKey];
         set(newState);
         await newState.fetchInterviewsForJobAndFilter(filter, 0);
+    },
+    removeAllInterviewsForJob: (jobId) => {
+        const state = get();
+        const newInterviewsByJobIdAndFilter: Record<string, InterviewDetails[]> = {};
+        const newTotalCounts: Record<string, number> = {};
+        const newPagination: Record<string, { currentPage: number, hasMore: boolean}> = {};
+        const newLastFetchedInterviews: Record<string, number> = {};
+
+        Object.keys(state.interviewsByJobIdAndFilter).forEach((filterKey) => {
+            const filters = filterKey.split('-');
+            const filterJobId = Number(filters[0]);
+            if (filterJobId !== jobId) {
+                newInterviewsByJobIdAndFilter[filterKey] = state.interviewsByJobIdAndFilter[filterKey];
+                newTotalCounts[filterKey] = state.totalCounts[filterKey];
+                newPagination[filterKey] = state.pagination[filterKey];
+                newLastFetchedInterviews[filterKey] = state.lastFetchedInterviews[filterKey];
+            }
+        });
+        set({
+            interviewsByJobIdAndFilter: newInterviewsByJobIdAndFilter,
+            totalCounts: newTotalCounts,
+            pagination: newPagination,
+            lastFetchedInterviews: newLastFetchedInterviews,
+        });
+    },
+    removeFromUpcomingInterviews: (interviewId: number) => {
+        Object.keys(get().interviewsByJobIdAndFilter).forEach((filterKey) => {
+            console.log("Existing filterKey:", filterKey);
+        });
+        const targetFilter = { status: "SCHEDULED" as InterviewFilter } as InterviewFilters;
+        const filterKey = createFilterKey(targetFilter);
+        const state = get();
+        const existingInterviews = state.interviewsByJobIdAndFilter[filterKey] || [];
+        const updatedInterviews = existingInterviews.filter(interview => interview.id !== interviewId);
+        set((state) => ({
+            interviewsByJobIdAndFilter: {
+                ...state.interviewsByJobIdAndFilter,
+                [filterKey]: updatedInterviews,
+            }
+        }))
+    },
+    refreshUpcomingInterviews: async () => {
+        const targetFilter = { status: "SCHEDULED" as InterviewFilter } as InterviewFilters;
+        await get().refreshInterviewsForJobAndFilter(targetFilter);
+    },
+    refreshUpcomingInterviewsForJob: async (jobId: number) => {
+        const targetFilter = { jobId: jobId, status: "SCHEDULED" as InterviewFilter } as InterviewFilters;
+        await get().refreshInterviewsForJobAndFilter(targetFilter);
     }
 }))
 

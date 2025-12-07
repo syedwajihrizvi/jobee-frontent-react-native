@@ -41,3 +41,7 @@ export const getS3DocumentPreviewUrl = (document: UserDocument) => {
     }
     return `https://${bucketName}.s3.${region}.amazonaws.com/${document.previewUrl}`;
 }
+
+export const getS3MessageAttachmentUrl = (fileKey: string) => {
+    return `https://${bucketName}.s3.${region}.amazonaws.com/message-files/${fileKey}`;
+}

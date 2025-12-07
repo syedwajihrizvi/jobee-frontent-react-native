@@ -83,7 +83,12 @@ export type Message = {
     conversationId: number;
     text: string;
     timestamp: string;
-    sentByUser: boolean
+    sentByUser: boolean;
+    messageType: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileType?: string;
+    fileSize?: number;
 }
 
 export type MessagePreview = {
@@ -94,12 +99,14 @@ export type MessagePreview = {
     dateReceived: string;
     receiverProfileImageUrl: string;
     content: string;
-    read: boolean
+    read: boolean;
+    messageType: string;
 }
 
 export type Conversation = {
     id: number;
     lastMessageRead: boolean;
+    lastMessageType: string;
     participantId: number;
     participantName: string;
     participantProfileImageUrl: string;
@@ -521,13 +528,20 @@ export type CreateJobForm = {
     tags: string[]
 }
 
+export type RequestRescheduleInterviewForm = {
+    startTime: string,
+    timezone: {label: string; value: string} | null,
+    interviewDate: string,
+    reason: string
+}
+
 export type CreateInterviewForm = {
     title: string;
     description: string;
     conductors: {name: string; email: string}[];
     interviewDate: string;
     startTime: string;
-    timezone: string;
+    timezone: {label: string; value: string} | null;
     endTime: string;
     interviewType: string;
     streetAddress: string;
@@ -551,11 +565,13 @@ export type InterviewDetails = {
     interviewDate: string;
     rejectionReason: string;
     rejectionFeedback: string;
+    cancellationReason: string;
     startTime: string;
     endTime: string;
     applicationId: number;
     candidateId: number;
     candidateName: string;
+    candidateEmail: string;
     candidateProfileImageUrl: string;
     decisionDate: string;
     decisionResult: string;
@@ -574,6 +590,14 @@ export type InterviewDetails = {
     phoneNumber: string;
     notes: string[];
     preparationStatus: string;
+    onlineMeetingInformation: any;
+    rescheduleRequest: {
+        startTime: string,
+        interviewDate: string,
+        reason: string,
+        timezone: string,
+        viewed: boolean
+    }
 }
 
 export type InterviewSummary = {
@@ -730,8 +754,17 @@ export type NotificationContext = {
     interviewId?: number;
     companyName?: string;
     jobTitle?: string;
+    candidateProfileImageUrl?: string;
+    fullName?: string;
 }
-export type NotificationType = "REJECTION" | "INTERVIEW_SCHEDULED" | "INTERVIEW_RESULT" | "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | "INTERVIEW_COMPLETED" | "INTERVIEW_CREATED_SUCCESSFULLY" | "AI_RESUME_REVIEW_COMPLETE";
+export type NotificationType = 
+"REJECTION" | 
+"INTERVIEW_SCHEDULED" | 
+"INTERVIEW_RESULT" | 
+"GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | 
+"INTERVIEW_COMPLETED" | "INTERVIEW_CREATED_SUCCESSFULLY" | 
+"AI_RESUME_REVIEW_COMPLETE" | "INTERVIEW_CANCELLED" |
+"INTERVIEW_UPDATED" | "INTERVIEW_RESCHEDULE_REQUESTED";
 
 type ApplicationStatusFilter =
   | "PENDING"
@@ -762,6 +795,7 @@ export type InterviewFilter =
   | "REJECTED"
   | "SCHEDULED"
   | "COMPLETED"
+  | "CANCELLED"
   | null;
 
   export type UserSocials = {
@@ -771,3 +805,13 @@ export type InterviewFilter =
     twitter: { id: number; url: string };
     personalWebsite: { id: number; url: string };
   };
+
+  export type ZoomMeetingCreationResult = {
+    meetingId: string,
+    startUrl: string,
+    joinUrl:string, 
+    meetingPassword: string,
+    timezone: string,
+    registrants: {email: string; joinUrl: string}[],
+    needToSendEmailInvites: boolean, 
+  }

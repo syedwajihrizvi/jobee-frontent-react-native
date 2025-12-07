@@ -1,31 +1,38 @@
 import { platformLogos } from "@/constants";
-import {
-  connectToZoomOAuth,
-  createZoomMeeting,
-  isZoomAccessTokenValid,
-  refreshZoomAccessToken,
-} from "@/lib/oauth/zoom";
+import { connectToZoomOAuth, isFreeAccount, isZoomAccessTokenValid, refreshZoomAccessToken } from "@/lib/oauth/zoom";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+
+const freeAccountLimitations = [
+  "Your meetings will be limited to 40 minutes.",
+  "Cannot add registrants to meetings.",
+  "No dedicated telephone dial-in numbers.",
+];
 
 const ZoomMeetingCreator = () => {
   const zoomMeetLink = null;
   const activeOAuthProvider = null;
   const [isConnectedToZoom, setIsConnectedToZoom] = useState(false);
+  const [isFreeZoomAccount, setIsFreeZoomAccount] = useState(false);
 
   useEffect(() => {
-    const checkGoogleDriveAccessToken = async () => {
-      if (await isZoomAccessTokenValid()) {
+    const checkZoomAccessToken = async () => {
+      const res = await isZoomAccessTokenValid();
+      if (res) {
         setIsConnectedToZoom(true);
+        const isFreeZoomAccount = await isFreeAccount();
+        setIsFreeZoomAccount(isFreeZoomAccount);
       } else {
         const res = await refreshZoomAccessToken();
         if (res) {
           setIsConnectedToZoom(true);
+          const isFreeZoomAccount = await isFreeAccount();
+          setIsFreeZoomAccount(isFreeZoomAccount);
         }
       }
     };
-    checkGoogleDriveAccessToken();
+    checkZoomAccessToken();
   }, []);
 
   const handleZoomPress = async () => {
@@ -33,14 +40,12 @@ const ZoomMeetingCreator = () => {
       const res = await connectToZoomOAuth();
       if (res) {
         setIsConnectedToZoom(true);
+        const isFreeZoomAccount = await isFreeAccount();
+        setIsFreeZoomAccount(isFreeZoomAccount);
       } else {
         Alert.alert("Connection Failed", "Unable to connect to Zoom. Please try again.");
       }
     }
-  };
-
-  const createMeeting = async () => {
-    await createZoomMeeting();
   };
 
   return (
@@ -90,7 +95,7 @@ const ZoomMeetingCreator = () => {
             </View>
           )}
         </TouchableOpacity>
-      ) : (
+      ) : !isFreeZoomAccount ? (
         <View className="flex-col items-center justify-center gap-3 rounded-xl p-3">
           <AntDesign name="check-circle" size={30} color="#3B82F6" />
           <View className="flex-1">
@@ -99,6 +104,24 @@ const ZoomMeetingCreator = () => {
               When you create the interview, a Zoom Meeting will be automatically generated and the link will be sent to
               all parties.
             </Text>
+          </View>
+        </View>
+      ) : (
+        <View className="flex-col items-center justify-center">
+          <AntDesign name="check-circle" size={30} color="#3B82F6" />
+          <View className="flex-1">
+            <Text className="font-quicksand-bold text-blue-700 text-center text-lg">Connected to Zoom</Text>
+            <Text className="font-quicksand-medium text-md text-blue-600 text-center">
+              However since you are using a free Zoom account, there are limtations.
+            </Text>
+            <ScrollView className="bg-blue-100 p-2 rounded-md">
+              {freeAccountLimitations.map((limitation, index) => (
+                <View key={index} className="flex-row items-start gap-2 mt-1">
+                  <Feather name="arrow-right" size={16} color="blue" />
+                  <Text className="font-quicksand-medium text-blue-600 flex-1 text-sm">{limitation}</Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         </View>
       )}

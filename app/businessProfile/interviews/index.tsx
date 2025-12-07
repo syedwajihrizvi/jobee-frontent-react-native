@@ -12,7 +12,7 @@ const Interviews = () => {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label={label} />
-      <RenderInterviews status={interviewStatus} />
+      <RenderInterviews status={interviewStatus} filtersVisibile={false} />
     </SafeAreaView>
   );
 };

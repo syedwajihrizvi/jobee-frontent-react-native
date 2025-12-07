@@ -9,7 +9,7 @@ const Interviews = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <BackBar label={`${jobTitle} Interviews`} />
+      <BackBar label={`${jobTitle.length > 0 && jobTitle.length < 20 ? jobTitle : "Job"} Interviews`} />
       <RenderInterviews jobId={Number(id)} />
     </SafeAreaView>
   );

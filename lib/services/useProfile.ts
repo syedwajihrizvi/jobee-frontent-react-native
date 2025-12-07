@@ -7,7 +7,6 @@ const APPLICATIONS_API_URL = getAPIUrl('applications');
 const INTERVIEWS_API_URL = getAPIUrl('interviews');
 
 export const useApplicant = (applicantId?: number, jobId?: number, candidateId?: number) => {
-    console.log("useApplicant called with:", { applicantId, jobId, candidateId });
     const fetchApplicant = async () => {
         if (!jobId && !candidateId) {
             const response = await fetch(`${APPLICATIONS_API_URL}/${applicantId}`, {
@@ -16,7 +15,6 @@ export const useApplicant = (applicantId?: number, jobId?: number, candidateId?:
                     'Content-Type': 'application/json',
                 },
             })
-            console.log("Fetch applicant response:", response);
             const data = await response.json()
             return data
         } else {
@@ -71,7 +69,6 @@ export const useInterviewDetails = (interviewId?: number) => {
                 'x-auth-token': `Bearer ${token}`
             }
         })
-        console.log(response)
         const data = await response.json()
         return data
     }

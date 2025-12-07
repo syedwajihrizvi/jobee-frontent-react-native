@@ -36,7 +36,7 @@ const Messages = () => {
       ) : (
         <FlatList
           data={conversations.length > 0 ? conversations : messages || []}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(_, index) => index.toString()}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
           renderItem={({ item }) => <MessagePreviewCard message={item} />}
           ListEmptyComponent={() => (

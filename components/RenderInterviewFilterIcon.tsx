@@ -18,6 +18,8 @@ const RenderInterviewFilterIcon = ({ filter, color, size = 12 }: Props) => {
       return <Feather name="check-circle" size={size} color={color} />;
     case "REJECTED":
       return <Feather name="x-circle" size={size} color={color} />;
+    case "CANCELLED":
+      return <Feather name="slash" size={size} color={color} />;
     default:
       return <Feather name="briefcase" size={size} color={color} />;
   }
