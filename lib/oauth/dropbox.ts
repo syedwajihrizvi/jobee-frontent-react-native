@@ -3,8 +3,9 @@ import * as AuthSession from 'expo-auth-session';
 import { Directory, File, Paths } from "expo-file-system";
 import * as SecureStore from 'expo-secure-store';
 
+const DROPBOX_CLIENT_ID = process.env.EXPO_PUBLIC_DROPBOX_CLIENT_ID || '';
+
 export const connectToDropboxOAuth = async () => {
-    const CLIENT_ID = 'y5p2hr089nvhqz6';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.syedwajihrizvi.JobeeFrontEnd',
         path: 'redirect'
@@ -14,7 +15,7 @@ export const connectToDropboxOAuth = async () => {
         tokenEndpoint: 'https://api.dropboxapi.com/oauth2/token'
     }
     const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+        clientId: DROPBOX_CLIENT_ID,
         redirectUri: REDIRECT_URI,
         scopes: ['files.metadata.read', 'files.content.read'],
         responseType: AuthSession.ResponseType.Code,
@@ -31,13 +32,12 @@ export const connectToDropboxOAuth = async () => {
 }
 
 export const exchangeDropboxOAuthCodeForToken = async (code: string, codeVerifier: string) => {
-    const CLIENT_ID = 'y5p2hr089nvhqz6';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.syedwajihrizvi.JobeeFrontEnd', 
         path: 'redirect'
     });
     const params = new URLSearchParams();
-    params.append('client_id', CLIENT_ID);
+    params.append('client_id', DROPBOX_CLIENT_ID);
     params.append('code', code);
     params.append('code_verifier', codeVerifier);
     params.append('redirect_uri', REDIRECT_URI);
@@ -59,7 +59,6 @@ export const exchangeDropboxOAuthCodeForToken = async (code: string, codeVerifie
     if (!res) {
         return null;
     }
-    console.log('Dropbox Token Response:', data);
     return true;
 }
 
@@ -142,7 +141,6 @@ export const getDropBoxFiles = async (cursor?: string, folderPath?: string) => {
     });
     if (response.ok) {
         const data = await response.json();
-        console.log('Dropbox Files Response:', data);
         return data as {cursor: string, hasMore: boolean, entries: DropboxFile[]};
     }
     return null; 
@@ -159,7 +157,6 @@ export const fetchDropboxFileAsPdfAndCreateTempFile = async (
     const body = {
         path: fileId
     };
-    console.log('Dropbox File Download Body:', body);
     const destination = new Directory(Paths.cache, 'dropboxDownloads');
     if (!destination.exists) {
         console.log('Creating directory for Dropbox downloads at:', destination.uri);

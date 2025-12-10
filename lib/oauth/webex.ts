@@ -1,13 +1,13 @@
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 
-const CLIENT_ID = "C75014ec6db077b54111613a2bdb1d594367c433153b69def38b6fc94ec92727a"
-const CLIENT_SECRET = '1d6b0b7b2b36bea517712e738d6cb1fa80f792bf28e65958162a8d7f3a9bbd58'
-const REDIRECT_URI = "https://dauntless-aron-unprobationary.ngrok-free.dev/oauth2/webex-redirect"
+const WEBEX_CLIENT_ID = process.env.EXPO_PUBLIC_WEBEX_CLIENT_ID || '';
+const WEBEX_CLIENT_SECRET = process.env.EXPO_PUBLIC_WEBEX_CLIENT_SECRET || '';
+const REDIRECT_URI = `${process.env.EXPO_PUBLIC_NGROK_URL}/oauth2/webex-redirect`
 
 export const connectToWebexOAuth = async () => {
     const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+        clientId: WEBEX_CLIENT_ID,
         redirectUri: REDIRECT_URI,
         responseType: AuthSession.ResponseType.Code,
         scopes: ['meeting:schedules_write', 'meeting:schedules_read', 'spark:people_read'],
@@ -30,14 +30,14 @@ export const exchangeWebexOAuthCodeForToken = async (code: string, codeVerifier:
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + btoa(`${CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
+            'Authorization': 'Basic ' + btoa(`${WEBEX_CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
         },
         body: new URLSearchParams({
             grant_type: 'authorization_code',
             code: code,
             redirect_uri: REDIRECT_URI,
-            client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET,
+            client_id: WEBEX_CLIENT_ID,
+            client_secret: WEBEX_CLIENT_SECRET,
             code_verifier: codeVerifier
         }).toString()
     });
@@ -129,13 +129,13 @@ export const refreshWebexToken = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + btoa(`${CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
+                'Authorization': 'Basic ' + btoa(`${WEBEX_CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
             },
             body: new URLSearchParams({
                 grant_type: 'refresh_token',
                 refresh_token: refreshToken,
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET
+                client_id: WEBEX_CLIENT_ID,
+                client_secret: WEBEX_CLIENT_SECRET
             }).toString()
         });
         const data = await response.json();

@@ -3,8 +3,8 @@ import * as AuthSession from 'expo-auth-session';
 import { Directory, File, Paths } from "expo-file-system";
 import * as SecureStore from 'expo-secure-store';
 
+const MS_CLIENT_ID = process.env.EXPO_PUBLIC_MS_CLIENT_ID || '';
 export const connectToOneDriveOAuth = async (type: 'common' | 'organizations' = 'common') => {
-    const CLIENT_ID = '055caa21-84fa-47d0-865b-05f5999fe8ec'
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.syedwajihrizvi.JobeeFrontEnd',
         path: 'redirect'
@@ -15,7 +15,7 @@ export const connectToOneDriveOAuth = async (type: 'common' | 'organizations' = 
     };
 
     const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+        clientId: MS_CLIENT_ID,
         redirectUri: REDIRECT_URI,
         scopes: ['Files.Read', 'User.Read', 'Files.ReadWrite.All', "OnlineMeetings.ReadWrite", "offline_access"],
         responseType: AuthSession.ResponseType.Code
@@ -31,14 +31,13 @@ export const connectToOneDriveOAuth = async (type: 'common' | 'organizations' = 
 }
 
 export const exchangeOneDriveOAuthCodeForToken = async (code: string, codeVerifier: string, type: 'common' | 'organizations' = 'common') => {
-    const CLIENT_ID = '055caa21-84fa-47d0-865b-05f5999fe8ec'
     const REDIRECT_URI = AuthSession.makeRedirectUri({
         scheme: 'com.syedwajihrizvi.JobeeFrontEnd',
         path: 'redirect'
     })
     const TOKEN_ENDPOINT = `https://login.microsoftonline.com/${type}/oauth2/v2.0/token`
     const body = new URLSearchParams({
-        client_id: CLIENT_ID,
+        client_id: MS_CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         code: code,
         code_verifier: codeVerifier,
@@ -194,10 +193,9 @@ export const refreshMicrosoftToken = async (type: 'common' | 'organizations' = '
         return null;
     }
     try {
-        const CLIENT_ID = '055caa21-84fa-47d0-865b-05f5999fe8ec'
         const TOKEN_ENDPOINT = `https://login.microsoftonline.com/${type}/oauth2/v2.0/token`
         const body = new URLSearchParams({
-            client_id: CLIENT_ID,
+            client_id: MS_CLIENT_ID,
             grant_type: 'refresh_token',
             refresh_token: refreshToken,
             scope: 'Files.Read User.Read Files.ReadWrite.All OnlineMeetings.ReadWrite offline_access',
@@ -229,7 +227,6 @@ export const refreshMicrosoftToken = async (type: 'common' | 'organizations' = '
 export const createTeamsMeeting = async () => {
     await userHasTeamsLicense();
     const accessToken = await fetchOneDriveAccessToken();
-    console.log("OneDrive Access Token:", accessToken);
     if (!accessToken) {
         console.log('No OneDrive access token found.');
         return null;
@@ -261,8 +258,7 @@ export const createTeamsMeeting = async () => {
             }
         })
     });
-    const response = await res.json();
-    console.log(response)
+    await res.json();
 }
 
 export const userHasTeamsLicense = async () => {

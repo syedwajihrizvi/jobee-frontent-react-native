@@ -4,19 +4,19 @@ import * as AuthSession from 'expo-auth-session';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';
 
+const GOOGLE_CLIENT_ID = `${process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID}.apps.googleusercontent.com`;
+const SCHEME = `com.googleusercontent.apps.${process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID}:/oauthredirect`;
 export const connectToGoogleDriveOAuth = async () => {
-    const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
-        scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
+        scheme: SCHEME
     });
-    console.log('Redirect URI:', REDIRECT_URI);
     const DISCOVERY = {
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
         tokenEndpoint: 'https://oauth2.googleapis.com/token',
     };
     
     const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+        clientId: GOOGLE_CLIENT_ID,
         redirectUri: REDIRECT_URI,
         scopes: ['https://www.googleapis.com/auth/drive.readonly', 'profile', 'email'],
         responseType: AuthSession.ResponseType.Code,
@@ -35,14 +35,13 @@ export const connectToGoogleDriveOAuth = async () => {
 }
 
 export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifier: string) => {
-    const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
-         scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
+         scheme: SCHEME
     });
     const params = new URLSearchParams();
     params.append('code', code);
     params.append('code_verifier', codeVerifier);
-    params.append('client_id', CLIENT_ID);
+    params.append('client_id', GOOGLE_CLIENT_ID);
     params.append('redirect_uri', REDIRECT_URI);
     params.append('grant_type', 'authorization_code');
     const queryParams = params.toString();
@@ -169,7 +168,6 @@ export const fetchGoogleDocAsPdfAndCreateTempFile = async (fileId: string, fileN
     const exportUrl = fileMimeType === "application/vnd.google-apps.document"
         ? `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`
         : `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    console.log('Export URL:', exportUrl);
     const destination = new Directory(Paths.cache, 'googleDriveDownloads');
     if (!destination.exists) {
         console.log('Creating directory for Google Drive downloads at:', destination.uri);

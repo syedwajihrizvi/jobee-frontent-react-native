@@ -3,13 +3,13 @@ import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import { combineDateAndTime, convertTimeZoneToIANA, getDurationInMinutes } from '../utils';
 
-    const CLIENT_ID = "vZpkSm4wTcecLmDo2xMjdQ";
-    const REDIRECT_URI = "https://dauntless-aron-unprobationary.ngrok-free.dev/oauth2/zoom-redirect"
+    const ZOOM_CLIENT_ID = process.env.EXPO_PUBLIC_ZOOM_CLIENT_ID || '';
+    const REDIRECT_URI = `${process.env.EXPO_PUBLIC_NGROK_URL}/oauth2/zoom-redirect`
 
 export const connectToZoomOAuth = async () => {
 
     const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+        clientId: ZOOM_CLIENT_ID,
         redirectUri: REDIRECT_URI,
         responseType: AuthSession.ResponseType.Code,
         usePKCE: true,
@@ -30,7 +30,7 @@ export const exhangeZoomOAuthCodeForToken = async (code: string, codeVerifier: s
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + btoa(`${CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
+                'Authorization': 'Basic ' + btoa(`${ZOOM_CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
             },
             body: new URLSearchParams({
                 grant_type: 'authorization_code',
@@ -118,7 +118,7 @@ export const refreshZoomAccessToken = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + btoa(`${CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
+                'Authorization': 'Basic ' + btoa(`${ZOOM_CLIENT_ID}:bEC7sq67EoH5UPtXxUEaZUvwUtgWpHYj`)
             },
             body: new URLSearchParams({
                 grant_type: 'refresh_token',

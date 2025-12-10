@@ -6,10 +6,12 @@ import { Directory, File, Paths } from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';
 import { combineDateAndTime, convertTimeZoneToIANA, convertToUTCDateString } from '../utils';
 
+const google_client_id = `${process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID}.apps.googleusercontent.com`;
+const redirect_uri = `com.googleusercontent.apps.${process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID}:/oauthredirect`
+
 export const connectToGoogleDriveOAuth = async () => {
-    const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
-        scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
+        scheme: redirect_uri
     });
     const DISCOVERY = {
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -17,7 +19,7 @@ export const connectToGoogleDriveOAuth = async () => {
     };
     
     const request = new AuthSession.AuthRequest({
-        clientId: CLIENT_ID,
+        clientId: google_client_id,
         redirectUri: REDIRECT_URI,
         scopes: ['https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/calendar','profile', 'email'],
         responseType: AuthSession.ResponseType.Code,
@@ -38,14 +40,13 @@ export const connectToGoogleDriveOAuth = async () => {
 }
 
 export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifier: string) => {
-    const CLIENT_ID = '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com';
     const REDIRECT_URI = AuthSession.makeRedirectUri({
-         scheme: 'com.googleusercontent.apps.728245733416-e3v4vjcabroubam6d745iq7clpq5rffq:/oauthredirect'
+         scheme: redirect_uri
     });
     const params = new URLSearchParams();
     params.append('code', code);
     params.append('code_verifier', codeVerifier);
-    params.append('client_id', CLIENT_ID);
+    params.append('client_id', google_client_id);
     params.append('redirect_uri', REDIRECT_URI);
     params.append('grant_type', 'authorization_code');
     const queryParams = params.toString();
@@ -68,8 +69,7 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
         return null
     } 
     const tokenInfo = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${access_token}`);
-    const info = await tokenInfo.json();
-    console.log("TokenInfo: ", info);
+    await tokenInfo.json();
     return true;
 }
 
@@ -232,13 +232,12 @@ export const refreshGoogleToken = async () => {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-                client_id: '728245733416-e3v4vjcabroubam6d745iq7clpq5rffq.apps.googleusercontent.com',
+                client_id: google_client_id,
                 grant_type: 'refresh_token',
                 refresh_token: refreshToken,
             }).toString(),
         });
         const data = await response.json();
-        console.log('Google Token Refresh Response:', data);
         const { access_token, expires_in, id_token, refresh_token_expires_in } = data;
         const res = await storeGoogleTokensOnDevice({
             accessToken: access_token,
@@ -299,7 +298,6 @@ meetingDate, timezone, attendees}:
                 useDefault: true,
             }
         })
-    console.log("Create Google Calendar Event Body:", body.toString());
     const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all', {
         method: 'POST',
         headers: {
