@@ -9,9 +9,10 @@ type Props = {
   title: string;
   documents: UserDocument[];
   icon: ReactNode;
+  ownerName: string;
 };
 
-const DocumentSection = ({ title, documents, icon }: Props) => {
+const DocumentSection = ({ title, documents, icon, ownerName }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -34,7 +35,16 @@ const DocumentSection = ({ title, documents, icon }: Props) => {
           flexDirection: "row",
           marginBottom: 8,
         }}
-        renderItem={({ item }) => <DocumentItem canEdit={false} document={item} customAction={() => {}} />}
+        renderItem={({ item }) => (
+          <DocumentItem
+            canEdit={false}
+            document={item}
+            customAction={() => {}}
+            otherPartyName={ownerName}
+            canDownload={true}
+            canEmail={true}
+          />
+        )}
       />
     </CollapsibleSection>
   );

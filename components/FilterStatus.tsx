@@ -24,10 +24,7 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
         elevation: 4,
       }}
     >
-      <View
-        className="flex-row items-center justify-between"
-        style={{ marginBottom: filterCount > 0 || (filters.search ? 8 : 0) ? 8 : 0 }}
-      >
+      <View className="flex-row items-center justify-between" style={{ marginBottom: filterCount > 0 ? 8 : 0 }}>
         <View className="flex-row items-center gap-2">
           <View className="w-6 h-6 bg-indigo-100 rounded-full items-center justify-center">
             <Feather name="filter" size={12} color="#6366f1" />
@@ -42,28 +39,11 @@ const FilterStatus = ({ filterCount, filters, openFilters, filterType = "job", h
           >
             <Text className="font-quicksand-semibold text-xs text-green-600">Open Filters</Text>
           </TouchableOpacity>
-          {(filterCount > 0 || filters.search) && (
-            <TouchableOpacity
-              onPress={handleClearFilters}
-              className="bg-red-50 border border-red-200 px-3 py-1 rounded-full"
-              activeOpacity={0.7}
-            >
-              <Text className="font-quicksand-semibold text-xs text-red-600">Clear All</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </View>
       <View className="flex-row flex-wrap gap-2">
         {filterType === "job" ? (
           <>
-            {(filters as JobFilters).search && (
-              <View className="bg-blue-50 border border-blue-200 px-3 py-1 rounded-full flex-row items-center gap-1">
-                <Feather name="search" size={10} color="#3b82f6" />
-                <Text className="font-quicksand-medium text-xs text-blue-800" numberOfLines={1}>
-                  {(filters as JobFilters).search}
-                </Text>
-              </View>
-            )}
             {(filters as JobFilters).locations.map((location, index) => (
               <View
                 key={index}

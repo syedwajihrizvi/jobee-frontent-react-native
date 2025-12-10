@@ -1,4 +1,4 @@
-import { deleteUserDocument, updateUserDocument } from "@/lib/manageUserDocs";
+import { deleteUserDocument, emailDocumentToUser, updateUserDocument } from "@/lib/manageUserDocs";
 import { getS3DocumentPreviewUrl, getS3DocumentUrl, getS3MessageAttachmentUrl } from "@/lib/s3Urls";
 import { updatePrimaryResume } from "@/lib/updateUserProfile";
 import { convertDocumentTypeToLabel, documentTypes } from "@/lib/utils";
@@ -7,13 +7,14 @@ import useUserStore from "@/store/user.store";
 import { User, UserDocument } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { Directory, File, Paths } from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, Dimensions, Image, Modal, Text, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 import CustomInput from "./CustomInput";
 import ModalWithBg from "./ModalWithBg";
 import RenderSlicedText from "./RenderSlicedText";
-
 const { height, width } = Dimensions.get("window");
 
 const DocumentItem = ({
@@ -29,6 +30,10 @@ const DocumentItem = ({
   canDelete = false,
   handleDelete,
   forMessageAttachment = false,
+  showTitle = true,
+  canDownload = false,
+  canEmail = false,
+  otherPartyName,
 }: {
   document: UserDocument;
   actionIcon?: string;
@@ -42,6 +47,10 @@ const DocumentItem = ({
   canDelete?: boolean;
   handleDelete?: () => void;
   forMessageAttachment?: boolean;
+  showTitle?: boolean;
+  canDownload?: boolean;
+  canEmail?: boolean;
+  otherPartyName?: string;
 }) => {
   const { user: authUser, setUser } = useAuthStore();
   const { refetchUserDocuments } = useUserStore();
@@ -51,6 +60,7 @@ const DocumentItem = ({
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [updatingPrimary, setUpdatingPrimary] = useState(false);
   const [selectedDocumentInfo, setSelectedDocumentInfo] = useState(document);
+  const [isEmailing, setIsEmailing] = useState(false);
   const handleOpen = () => {
     if (customAction) {
       customAction();
@@ -58,6 +68,84 @@ const DocumentItem = ({
     setModalVisible(true);
   };
   const handleClose = () => setModalVisible(false);
+
+  const handleDocumentDownload = async () => {
+    const isImage = document.formatType !== "document" && document.formatType !== "NON_IMG";
+    const uri = forMessageAttachment
+      ? getS3MessageAttachmentUrl(document.documentUrl)
+      : getS3DocumentUrl(document.documentUrl);
+
+    try {
+      const destination = new Directory(Paths.cache, "JobeeDownloads");
+      if (!destination.exists) {
+        destination.create();
+      }
+
+      let fileName: string;
+      if (isImage) {
+        fileName = document.title ? `${document.title}.jpg` : `image_${Date.now()}.jpg`;
+      } else {
+        fileName = document.title ? `${document.title}.pdf` : `document_${Date.now()}.pdf`;
+      }
+
+      const file = new File(destination, fileName);
+
+      if (file.exists) {
+        file.delete();
+      }
+
+      await File.downloadFileAsync(uri, file);
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: isImage ? "image/jpeg" : "application/pdf",
+          dialogTitle: isImage ? "Save or share this image" : "Save or share this document",
+        });
+      }
+
+      Alert.alert("Success", `${isImage ? "Image" : "Document"} downloaded successfully`);
+    } catch (error) {
+      console.error(`Error downloading ${isImage ? "image" : "document"}:`, error);
+      Alert.alert("Error", `Failed to download ${isImage ? "image" : "document"}`);
+    }
+  };
+
+  const handleEmailDocument = async () => {
+    Alert.alert(
+      "Confirm Email",
+      `Are you sure you want to email this document to yourself?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Send",
+          onPress: async () => {
+            setIsEmailing(true);
+            try {
+              const documentUrl = forMessageAttachment
+                ? getS3MessageAttachmentUrl(document.documentUrl)
+                : getS3DocumentUrl(document.documentUrl);
+              const success = await emailDocumentToUser(documentUrl, otherPartyName as string, document.formatType!);
+              if (success) {
+                Alert.alert("Success", "Document emailed successfully. Please wait a few minutes to receive it.");
+              } else {
+                Alert.alert("Error", "Failed to email document. Please try again.");
+              }
+            } catch (error) {
+              console.error("Error emailing document:", error);
+              Alert.alert("Error", "An error occurred while emailing the document.");
+            } finally {
+              setIsEmailing(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const handleSetPrimary = async (documentId: number) => {
     setUpdatingPrimary(true);
@@ -249,11 +337,31 @@ const DocumentItem = ({
               backgroundColor: "white",
             }}
           >
-            <View className="p-3 flex-row justify-between items-center white">
+            <View className=" p-4 flex-row justify-between items-center">
               <View className="flex-row items-center gap-2">
-                <Text className="text-md font-semibold">
-                  {customTitle ? customTitle : document.title || convertDocumentTypeToLabel(document.documentType)}
-                </Text>
+                {(canEmail || canDownload) && (
+                  <View className="flex-row gap-4 py-2 justify-end">
+                    {canDownload && (
+                      <TouchableOpacity onPress={handleDocumentDownload}>
+                        <Feather name="download" size={18} color="#10b981" />
+                      </TouchableOpacity>
+                    )}
+                    {canEmail && (
+                      <TouchableOpacity onPress={handleEmailDocument} disabled={isEmailing}>
+                        {isEmailing ? (
+                          <ActivityIndicator size="small" color="#6366f1" />
+                        ) : (
+                          <Feather name="mail" size={18} color="#6366f1" />
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+                {showTitle && (
+                  <Text className="text-md font-semibold">
+                    {customTitle ? customTitle : document.title || convertDocumentTypeToLabel(document.documentType)}
+                  </Text>
+                )}
                 {document.documentType === "RESUME" && document.id === user?.primaryResume?.id && canEdit && (
                   <View
                     className="bg-blue-500 border border-blue-600 rounded-xl px-3 py-2 flex-row items-center gap-1"

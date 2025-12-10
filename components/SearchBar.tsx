@@ -12,15 +12,15 @@ const SearchBar = ({ placeholder, onSubmit }: { placeholder: string; onSubmit: (
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
+        borderRadius: 30,
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
       }}
     >
-      <View></View>
-      <EvilIcons name="search" size={20} color="#6b7280" className="left-4 z-10" />
+      <EvilIcons name="search" size={22} color="#6b7280" className="left-4 z-10" />
       <TextInput
-        className="search-bar"
+        className="search-bar pl-2"
         placeholder={placeholder}
         value={value}
         onChangeText={(text) => setValue(text)}

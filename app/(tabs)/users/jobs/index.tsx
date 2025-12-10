@@ -127,7 +127,7 @@ const Jobs = () => {
   const handleClearFilters = () => {
     setTempFilterCount(0);
     setFilterCount(0);
-    setFilters({ ...defaultFilters });
+    setFilters({ ...defaultFilters, search: filters.search });
   };
 
   if (userType === "business") {

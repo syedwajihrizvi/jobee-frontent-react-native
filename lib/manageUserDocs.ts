@@ -330,8 +330,29 @@ export const deleteUserDocument = async (documentId: number) => {
             'x-auth-token': `Bearer ${token}`,
         },
     })
-    console.log(response)
     if (response.status !== 204)
         return false
     return true;
+}
+
+export const emailDocumentToUser = async (
+    fileUrl: string, otherPartyName: string, formatType: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (!token) return false;
+    // Depending on the docSource, the endpoint may vary
+    const endpoint = `${USER_DOCS_API_URL}/email-document`;
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-auth-token': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                fileUrl,
+                otherPartyName,
+                formatType
+        })
+    });
+    console.log('Email Document Response Status:', response.status);
+    return response.status === 200;
 }

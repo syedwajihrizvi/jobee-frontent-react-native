@@ -15,7 +15,11 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.syedwajihrizvi.JobeeFrontEnd"
+      "bundleIdentifier": "com.syedwajihrizvi.JobeeFrontEnd",
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to save images to your photo library.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save and share images."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -42,6 +46,14 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
         }
       ],
       "expo-video",

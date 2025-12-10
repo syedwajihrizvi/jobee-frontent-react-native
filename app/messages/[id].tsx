@@ -92,13 +92,17 @@ const MessageChat = () => {
         <View className={`flex-row mb-4 px-4 ${isMe ? "justify-end" : "justify-start"}`}>
           <View className={`max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
             <DocumentItem
-              document={{ id: item.id, documentUrl: item.fileUrl! }}
+              document={{ id: item.id, documentUrl: item.fileUrl!, formatType: item.fileType }}
               customTitle="Attachment"
               standOut={false}
               customAction={() => {}}
               canEdit={false}
               canDelete={false}
               forMessageAttachment={true}
+              canEmail={!item.sentByUser}
+              canDownload={!item.sentByUser}
+              showTitle={item.sentByUser}
+              otherPartyName={(name as string) || ""}
             />
           </View>
         </View>

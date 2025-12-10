@@ -180,7 +180,7 @@ const ApplicantForBusiness = () => {
         </View>
       </View>
       {userProfile?.videoIntroUrl && (
-        <View className="bg-white rounded-xl p-4 border border-gray-100">
+        <View className="bg-white rounded-xl p-4 border border-gray-100 mb-10">
           <Text className="font-quicksand-bold text-md text-gray-900 mb-3">Video Introduction</Text>
           <UserVideoIntro videoSource={getS3VideoIntroUrl(userProfile.videoIntroUrl)} />
         </View>
@@ -347,6 +347,9 @@ const ApplicantForBusiness = () => {
               customAction={() => {}}
               customTitle="Resume"
               canEdit={false}
+              otherPartyName={`${userProfile?.firstName} ${userProfile?.lastName}`}
+              canDownload={true}
+              canEmail={true}
             />
           )}
           {application?.coverLetterDocument && (
@@ -355,6 +358,9 @@ const ApplicantForBusiness = () => {
               customAction={() => {}}
               customTitle="Cover Letter"
               canEdit={false}
+              otherPartyName={`${userProfile?.firstName} ${userProfile?.lastName}`}
+              canDownload={true}
+              canEmail={true}
             />
           )}
         </View>
@@ -363,7 +369,7 @@ const ApplicantForBusiness = () => {
       {(userDocuments.transcripts.length > 0 ||
         userDocuments.recommendationLetters.length > 0 ||
         userDocuments.certificates.length > 0) && (
-        <View className="rounded-xl gap-2">
+        <View className="rounded-xl gap-2 pb-10">
           <Text className="font-quicksand-bold text-md text-gray-900 mb-3">Additional Documents</Text>
 
           {userDocuments.transcripts.length > 0 && (
@@ -371,6 +377,7 @@ const ApplicantForBusiness = () => {
               title="Transcripts"
               documents={userDocuments.transcripts}
               icon={<Feather name="book" size={18} color="#10b981" />}
+              ownerName={`${userProfile?.firstName} ${userProfile?.lastName}`}
             />
           )}
 
@@ -379,6 +386,7 @@ const ApplicantForBusiness = () => {
               title="Recommendation Letters"
               documents={userDocuments.recommendationLetters}
               icon={<Feather name="mail" size={18} color="#10b981" />}
+              ownerName={`${userProfile?.firstName} ${userProfile?.lastName}`}
             />
           )}
 
@@ -387,6 +395,7 @@ const ApplicantForBusiness = () => {
               title="Certificates"
               documents={userDocuments.certificates}
               icon={<Feather name="award" size={18} color="#10b981" />}
+              ownerName={`${userProfile?.firstName} ${userProfile?.lastName}`}
             />
           )}
         </View>
