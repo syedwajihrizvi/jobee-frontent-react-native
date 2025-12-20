@@ -9,7 +9,7 @@ const Strengths = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) =
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 8 },
@@ -18,7 +18,7 @@ const Strengths = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) =
             elevation: 12,
           }}
         >
-          <Feather name="star" size={20} color="#22c55e" />
+          <Feather name="star" size={28} color="#22c55e" />
         </View>
 
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-9 mb-4">Your Key Strengths</Text>
@@ -55,18 +55,7 @@ const Strengths = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) =
       </View>
       <View className="flex-1">
         {interviewPrep?.strengths && interviewPrep.strengths.length > 0 ? (
-          <View
-            className="bg-white rounded-2xl p-3 border border-gray-100"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.1,
-              shadowRadius: 16,
-              elevation: 8,
-            }}
-          >
-            <VerticalAnimatedList listItems={interviewPrep.strengths} />
-          </View>
+          <VerticalAnimatedList listItems={interviewPrep.strengths} />
         ) : (
           <View
             className="bg-gray-50 rounded-2xl p-8 border border-gray-200"

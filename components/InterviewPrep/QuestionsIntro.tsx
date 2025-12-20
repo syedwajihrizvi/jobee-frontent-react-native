@@ -5,10 +5,10 @@ import { ScrollView, Text, View } from "react-native";
 
 const QuestionsIntro = () => {
   return (
-    <View className="w-full h-full px-3 py-4">
+    <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
+          className="w-14 h-14 bg-emerald-100 rounded-full items-center justify-center mb-4"
           style={{
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 8 },
@@ -17,7 +17,7 @@ const QuestionsIntro = () => {
             elevation: 12,
           }}
         >
-          <Feather name="help-circle" size={20} color="#10b981" />
+          <Feather name="target" size={28} color="#10b981" />
         </View>
 
         <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-9 mb-2">
@@ -38,52 +38,27 @@ const QuestionsIntro = () => {
           elevation: 8,
         }}
       >
-        <View className="flex-row items-center gap-3 mb-3">
-          <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
-            <Feather name="list" size={16} color="#10b981" />
-          </View>
-          <Text className="font-quicksand-bold text-lg text-gray-800">Practice Strategy</Text>
-        </View>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 10 }}
-          style={{ maxHeight: 300 }}
-        >
-          <View className="gap-4">
-            {renderQuestionSteps.map((step, index) => (
+        <View className="gap-3">
+          {renderQuestionSteps.map((step, index) => (
+            <View key={index} className="flex-row items-start gap-3">
               <View
-                key={index}
-                className="flex-row items-start gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100"
+                className="w-7 h-7 bg-emerald-500 rounded-full items-center justify-center flex-shrink-0"
                 style={{
                   shadowColor: "#10b981",
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
+                  shadowOpacity: 0.3,
                   shadowRadius: 4,
-                  elevation: 2,
+                  elevation: 3,
                 }}
               >
-                <View
-                  className="w-8 h-8 bg-emerald-500 rounded-full items-center justify-center"
-                  style={{
-                    shadowColor: "#10b981",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                >
-                  <Text className="font-quicksand-bold text-white text-sm">{index + 1}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="font-quicksand-semibold text-emerald-800 text-sm leading-6">{step}</Text>
-                </View>
-                <View className="w-6 h-6 border-2 border-emerald-300 rounded-full items-center justify-center">
-                  <Feather name="check" size={12} color="#10b981" />
-                </View>
+                <Text className="font-quicksand-bold text-white text-sm">{index + 1}</Text>
               </View>
-            ))}
-          </View>
-        </ScrollView>
+              <View className="flex-1 pt-0.5">
+                <Text className="font-quicksand-semibold text-gray-700 text-sm leading-5">{step}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
       </View>
       <View className="bg-blue-50 rounded-xl p-4 border border-blue-200">
         <View className="flex-row items-center gap-2 mb-2">
@@ -104,7 +79,7 @@ const QuestionsIntro = () => {
           Practice makes perfect - let us get you interview-ready
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

@@ -7,7 +7,7 @@ const Resources = () => {
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-indigo-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#6366f1",
             shadowOffset: { width: 0, height: 8 },
@@ -16,7 +16,7 @@ const Resources = () => {
             elevation: 12,
           }}
         >
-          <Feather name="book-open" size={20} color="#6366f1" />
+          <Feather name="book-open" size={28} color="#6366f1" />
         </View>
 
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-9 mb-2">

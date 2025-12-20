@@ -54,6 +54,7 @@ const Notifications = () => {
     markNotificationAsRead(notification.id!);
     if (!notification.read) updateNotificationStatusToRead(notification.id!);
     const { notificationType, context } = notification;
+    const { interviewId } = context;
     if (
       notificationType === "INTERVIEW_SCHEDULED" ||
       notificationType === "INTERVIEW_COMPLETED" ||
@@ -61,12 +62,13 @@ const Notifications = () => {
       notificationType === "INTERVIEW_CANCELLED" ||
       notificationType === "INTERVIEW_UPDATED"
     ) {
-      const { interviewId } = context;
       if (interviewId) {
         router.push(`/userProfile/interviews/${interviewId}`);
       }
     } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
       router.push("/userProfile/editProfile");
+    } else if (notificationType === "INTERVIEW_PREP_READY") {
+      router.push(`/userProfile/interviews/prep?id=${interviewId}`);
     }
   };
 

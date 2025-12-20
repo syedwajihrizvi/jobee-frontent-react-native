@@ -1,10 +1,19 @@
+import { emailInterviewPrepResources } from "@/lib/interviewEndpoints";
 import { InterviewPreparation } from "@/type";
-import { Feather } from "@expo/vector-icons";
+import { Entypo, Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Alert, Linking, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Text, TouchableOpacity, View } from "react-native";
 
-const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) => {
+const ResourcesList = ({
+  interviewPrep,
+  interviewId,
+}: {
+  interviewPrep: InterviewPreparation;
+  interviewId: number;
+}) => {
   const [currIndex, setCurrIndex] = useState(0);
+  const [isEmailingRequest, setIsEmailingRequest] = useState(false);
+  const [emailResourcesSent, setEmailResourcesSent] = useState(false);
   const handleResourceClick = async (resource: { link: string }) => {
     const supported = await Linking.canOpenURL(resource.link);
     if (!supported) {
@@ -14,12 +23,19 @@ const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation 
     }
   };
 
-  const emailAllResources = () => {
-    console.log("Email all resources");
-  };
-
-  const shareResources = () => {
-    console.log("Share resources");
+  const emailAllResources = async () => {
+    setIsEmailingRequest(true);
+    try {
+      const res = await emailInterviewPrepResources(interviewId);
+      if (res) {
+        Alert.alert("Success", "Interview resources have been emailed to you. Please check your inbox.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "There was an error sending the email. Please try again later.");
+    } finally {
+      setIsEmailingRequest(false);
+      setEmailResourcesSent(true);
+    }
   };
 
   const getColor = (index: number) => {
@@ -47,7 +63,7 @@ const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation 
     <View className="w-full h-full px-3 py-4">
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-2"
+          className="w-14 h-14 bg-indigo-100 rounded-full items-center justify-center mb-2"
           style={{
             shadowColor: "#6366f1",
             shadowOffset: { width: 0, height: 4 },
@@ -56,7 +72,7 @@ const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation 
             elevation: 6,
           }}
         >
-          <Feather name="book-open" size={20} color="#6366f1" />
+          <Feather name="book-open" size={28} color="#6366f1" />
         </View>
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-7 mb-2">
           Curated Resources for You
@@ -164,26 +180,25 @@ const ResourcesList = ({ interviewPrep }: { interviewPrep: InterviewPreparation 
               elevation: 4,
             }}
             onPress={emailAllResources}
+            disabled={isEmailingRequest}
             activeOpacity={0.8}
           >
-            <Feather name="mail" size={18} color="white" />
-            <Text className="font-quicksand-bold text-white text-sm">Email All</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="bg-gray-600 py-3 px-6 rounded-xl flex-row items-center justify-center gap-3 flex-1"
-            style={{
-              shadowColor: "#4b5563",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.2,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-            onPress={shareResources}
-            activeOpacity={0.8}
-          >
-            <Feather name="share" size={18} color="white" />
-            <Text className="font-quicksand-bold text-white text-sm">Share</Text>
+            {isEmailingRequest ? (
+              <>
+                <ActivityIndicator size="small" color="white" />
+                <Text className="font-quicksand-bold text-white text-sm">Sending Email</Text>
+              </>
+            ) : emailResourcesSent ? (
+              <>
+                <Entypo name="emoji-happy" size={18} color="white" />
+                <Text className="font-quicksand-bold text-white text-sm">Email Sent</Text>
+              </>
+            ) : (
+              <>
+                <Feather name="mail" size={18} color="white" />
+                <Text className="font-quicksand-bold text-white text-sm">Email Me All</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </View>

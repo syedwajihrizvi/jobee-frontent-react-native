@@ -1,8 +1,9 @@
 import { getInterviewStyle } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
-import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
+import RenderCompanyLogo from "../RenderCompanyLogo";
 
 const Details = ({ interviewDetails }: { interviewDetails: InterviewDetails | undefined }) => {
   const formatDate = (dateString: string) => {
@@ -40,7 +41,7 @@ const Details = ({ interviewDetails }: { interviewDetails: InterviewDetails | un
     <ScrollView className="w-full h-full px-3 py-2" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-2">
         <View
-          className="w-16 h-16 bg-orange-100 rounded-full items-center justify-center mb-4"
+          className="w-14 h-14 bg-orange-100 rounded-full items-center justify-center mb-4"
           style={{
             shadowColor: "#f97316",
             shadowOffset: { width: 0, height: 4 },
@@ -49,7 +50,7 @@ const Details = ({ interviewDetails }: { interviewDetails: InterviewDetails | un
             elevation: 6,
           }}
         >
-          <Feather name="clipboard" size={20} color="#f97316" />
+          <Feather name="clipboard" size={28} color="#f97316" />
         </View>
 
         <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-8 mb-2">Interview Details</Text>
@@ -69,7 +70,7 @@ const Details = ({ interviewDetails }: { interviewDetails: InterviewDetails | un
       >
         <View className="flex-row items-center gap-3 mb-6 p-4 bg-blue-50 rounded-xl">
           <View className="w-10 h-10 bg-blue-500 rounded-full items-center justify-center">
-            <FontAwesome5 name="building" size={20} color="white" />
+            <RenderCompanyLogo logoUrl={interviewDetails?.companyLogoUrl} size={5} />
           </View>
           <View className="flex-1">
             <Text className="font-quicksand-bold text-lg text-gray-800">
@@ -124,17 +125,6 @@ const Details = ({ interviewDetails }: { interviewDetails: InterviewDetails | un
               </Text>
             </View>
           </View>
-          {interviewDetails?.location && (
-            <View className="flex-row items-center gap-4 p-3 bg-gray-50 rounded-xl">
-              <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center">
-                <Feather name="map-pin" size={16} color="#ef4444" />
-              </View>
-              <View className="flex-1">
-                <Text className="font-quicksand-medium text-xs text-gray-500 uppercase tracking-wide">Location</Text>
-                <Text className="font-quicksand-semibold text-gray-800 text-base">{interviewDetails.location}</Text>
-              </View>
-            </View>
-          )}
         </View>
       </View>
 

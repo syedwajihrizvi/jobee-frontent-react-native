@@ -58,7 +58,7 @@ const PrepForInterview = () => {
     <Strengths key={9} interviewPrep={interviewPrep!} />,
     <Weaknesses key={10} interviewPrep={interviewPrep!} />,
     <Resources key={11} />,
-    <ResourcesList key={12} interviewPrep={interviewPrep!} />,
+    <ResourcesList key={12} interviewPrep={interviewPrep!} interviewId={Number(interviewId)} />,
     <QuestionsIntro key={13} />,
     <Question key={14} interviewId={Number(interviewId)} interviewPrep={interviewPrep!} />,
     <Conclusion key={15} interviewDetails={interviewDetails} />,
@@ -105,8 +105,8 @@ const PrepForInterview = () => {
                   {
                     flexDirection: "row",
                     width: width * screens.length,
-                    height: "100%",
-                    marginTop: 20,
+                    height: "96%",
+                    marginTop: 5,
                   },
                   animatedStyle,
                 ]}
@@ -126,7 +126,7 @@ const PrepForInterview = () => {
                 ))}
               </Animated.View>
             </GestureDetector>
-            <View className="absolute bottom-20 w-full flex-row items-center justify-center gap-2">
+            <View className="absolute bottom-5 w-full flex-row items-center justify-center gap-2">
               {screens.map((_, idx) => (
                 <View
                   key={idx}

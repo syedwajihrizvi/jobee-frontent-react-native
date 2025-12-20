@@ -27,13 +27,13 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
 
   return (
     <View key={16} className="w-full h-full px-4 pt-8">
-      <Text className="font-quicksand-bold text-md text-center mb-8">
+      <Text className="font-quicksand-semibold text-md text-center mb-8">
         Try to answer it after hearing it just once by clicking the{" "}
         {<Feather name="volume-2" size={16} color="#21c55e" />} icon. If you need to view the question, you can but in
         an actual interview, your listening skills matter.
       </Text>
       <View>
-        {isLoading || !interviewQuestions ? (
+        {isLoading ? (
           <View className="flex-1 justify-center items-center gap-4">
             <ActivityIndicator size="large" color="#22c55e" />
             <Text className="font-quicksand-semibold text-lg text-gray-700">Fetching Questions...</Text>
@@ -41,9 +41,9 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
               Generating 20 Practice Questions for you.
             </Text>
           </View>
-        ) : (
+        ) : interviewQuestions && interviewQuestions.length > 0 ? (
           <View className="items-center justify-center h-[400px]">
-            <Text className="font-quicksand-bold text-2xl text-center mb-4">
+            <Text className="font-quicksand-semibold text-lg text-center mb-4">
               Question {currentQuestionIndex + 1} of {fetchedQuestions?.length}
             </Text>
             <View
@@ -88,6 +88,8 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
               />
             </View>
           </View>
+        ) : (
+          <Text className="font-quicksand-semibold text-center text-gray-600">No questions available.</Text>
         )}
       </View>
     </View>

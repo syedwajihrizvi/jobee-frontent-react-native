@@ -1,4 +1,4 @@
-import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
@@ -8,18 +8,16 @@ const AnalyzeCandidate = () => {
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
-            shadowColor: "#22c55e",
-            shadowOffset: { width: 0, height: 12 },
+            shadowColor: "#f97316",
+            shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.3,
-            shadowRadius: 20,
-            elevation: 15,
+            shadowRadius: 16,
+            elevation: 12,
           }}
         >
-          <View className="w-20 h-20 bg-emerald-500 rounded-full items-center justify-center">
-            <Ionicons name="person-circle" size={20} color="white" />
-          </View>
+          <Feather name="user" size={28} color="#22c55e" />
         </View>
 
         <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-9 mb-2">

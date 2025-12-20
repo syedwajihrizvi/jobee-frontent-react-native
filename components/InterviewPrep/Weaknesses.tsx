@@ -1,5 +1,5 @@
 import { InterviewPreparation } from "@/type";
-import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import { Feather, FontAwesome5, SimpleLineIcons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import VerticalAnimatedList from "../VerticalAnimatedList";
@@ -9,7 +9,7 @@ const Weaknesses = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) 
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-red-100 rounded-full items-center justify-center mb-3"
+          className="w-12 h-12 bg-red-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#ef4444",
             shadowOffset: { width: 0, height: 8 },
@@ -18,7 +18,7 @@ const Weaknesses = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) 
             elevation: 12,
           }}
         >
-          <Feather name="star" size={20} color="red" />
+          <SimpleLineIcons name="puzzle" size={28} color="red" />
         </View>
 
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-9 mb-4">Your Weaknesses</Text>
@@ -55,18 +55,7 @@ const Weaknesses = ({ interviewPrep }: { interviewPrep: InterviewPreparation }) 
       </View>
       <View className="flex-1">
         {interviewPrep?.weaknesses && interviewPrep.weaknesses.length > 0 ? (
-          <View
-            className="bg-white rounded-2xl p-3 border border-gray-100"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.1,
-              shadowRadius: 16,
-              elevation: 8,
-            }}
-          >
-            <VerticalAnimatedList listItems={interviewPrep.weaknesses} theme="danger" />
-          </View>
+          <VerticalAnimatedList listItems={interviewPrep.weaknesses} theme="danger" />
         ) : (
           <View
             className="bg-gray-50 rounded-2xl p-8 border border-gray-200"

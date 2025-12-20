@@ -477,16 +477,16 @@ export const getMatchConfig = (percentage: number) => {
       progressBarBg: 'bg-emerald-200'
     };
     if (percentage >= 60) return {
-      bgColor: 'bg-yellow-500',
-      borderColor: 'border-yellow-600',
+      bgColor: 'bg-amber-500',
+      borderColor: 'border-amber-600',
       shadowColor: '#eab308',
       textColor: 'text-white',
       icon: 'check-circle',
       label: 'Good Match',
-      gradientFrom: 'from-yellow-400',
-      gradientTo: 'to-yellow-500',
+      gradientFrom: 'from-amber-400',
+      gradientTo: 'to-amber-500',
       progressBarColor: '#fbbf24', // yellow-400 for contrast
-      progressBarBg: 'bg-yellow-200'
+      progressBarBg: 'bg-amber-200'
     };
     if (percentage >= 40) return {
       bgColor: 'bg-orange-500',

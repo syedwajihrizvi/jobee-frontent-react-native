@@ -629,6 +629,7 @@ export type InterviewPrepQuestion = {
 
 export type InterviewPreparation = {
     id: number;
+    interviewId: number;
     strengths: string[];
     weaknesses: string[];
     questions: InterviewPrepQuestion[];

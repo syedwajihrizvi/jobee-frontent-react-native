@@ -11,12 +11,14 @@ import { useInterviewDetails } from "@/lib/services/useProfile";
 import { convertTo12Hour } from "@/lib/utils";
 import { InterviewerProfileSummary } from "@/type";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const InterviewDetails = () => {
+  const queryClient = useQueryClient();
   const { id: interviewId } = useLocalSearchParams();
   const [showInterviewPrepModal, setShowInterviewPrepModal] = useState(false);
   const [interviewModalVisible, setInterviewModalVisible] = useState(false);
@@ -24,12 +26,19 @@ const InterviewDetails = () => {
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [isSendingInterviewPrepRequest, setIsSendingInterviewPrepRequest] = useState(false);
   const [interviewerDetails, setInterviewerDetails] = useState<InterviewerProfileSummary | null>(null);
-  const { data: interviewDetails, isLoading } = useInterviewDetails(Number(interviewId));
+  const { data: interviewMetadata, isLoading } = useInterviewDetails(Number(interviewId));
+  const [interviewPrepStatus, setInterviewPrepStatus] = useState("");
+
+  useEffect(() => {
+    if (!isLoading && interviewMetadata) {
+      setInterviewPrepStatus(interviewMetadata.preparationStatus);
+    }
+  }, [isLoading, interviewMetadata]);
 
   const handlePrepareWithJobee = () => {
-    if (interviewDetails?.preparationStatus === "NOT_STARTED") {
+    if (interviewPrepStatus === "NOT_STARTED" || interviewPrepStatus === "GENERATING_PREP") {
       setShowInterviewPrepModal(true);
-    } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
+    } else if (interviewPrepStatus === "IN_PROGRESS") {
       router.push(`/userProfile/interviews/prep?id=${interviewId}`);
     } else {
       router.push(`/userProfile/interviews/prep?id=${interviewId}`);
@@ -37,9 +46,11 @@ const InterviewDetails = () => {
   };
 
   const renderInterviewPrepText = () => {
-    if (interviewDetails?.preparationStatus === "NOT_STARTED") {
+    if (interviewPrepStatus === "NOT_STARTED") {
       return "Prepare with Jobee";
-    } else if (interviewDetails?.preparationStatus === "IN_PROGRESS") {
+    } else if (interviewPrepStatus === "GENERATING_PREP") {
+      return "Generating";
+    } else if (interviewPrepStatus === "IN_PROGRESS") {
       return "Get Ready";
     } else {
       return "Review Prep";
@@ -54,8 +65,9 @@ const InterviewDetails = () => {
     setIsSendingInterviewPrepRequest(true);
     try {
       await prepareForInterview(Number(interviewId));
-      Alert.alert("Success", "You are all set! We will notify you once your prep ready!");
-      handleShowInterviewPrepModalClose();
+      // Is successfull, set the status to be generating
+      setInterviewPrepStatus("GENERATING_PREP");
+      queryClient.invalidateQueries({ queryKey: ["interviewDetails", Number(interviewId)] });
     } catch (error) {
       Alert.alert("Error", "Something went wrong. Please try again later.");
     } finally {
@@ -63,7 +75,7 @@ const InterviewDetails = () => {
     }
   };
 
-  const interviewers = [...(interviewDetails?.interviewers || []), ...(interviewDetails?.otherInterviewers || [])];
+  const interviewers = [...(interviewMetadata?.interviewers || []), ...(interviewMetadata?.otherInterviewers || [])];
   const totalInterviewers = interviewers.length;
 
   const handleInterviewerPress = async (
@@ -100,7 +112,7 @@ const InterviewDetails = () => {
   };
 
   const renderInterviewDecision = () => {
-    if (interviewDetails?.decisionResult === "PENDING") {
+    if (interviewMetadata?.decisionResult === "PENDING") {
       return (
         <View
           className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-blue-100"
@@ -167,7 +179,7 @@ const InterviewDetails = () => {
           </View>
         </View>
       );
-    } else if (interviewDetails?.decisionResult === "REJECTED") {
+    } else if (interviewMetadata?.decisionResult === "REJECTED") {
       return (
         <View
           className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-red-100"
@@ -190,7 +202,7 @@ const InterviewDetails = () => {
               move forward with another candidate.
             </Text>
           </View>
-          {interviewDetails.rejectionReason && (
+          {interviewMetadata.rejectionReason && (
             <View className="mb-2">
               <View className="flex-row items-center gap-2 mb-2">
                 <Feather name="info" size={16} color="#6b7280" />
@@ -198,12 +210,12 @@ const InterviewDetails = () => {
               </View>
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                 <Text className="font-quicksand-medium text-gray-700 text-sm leading-5">
-                  {interviewDetails.rejectionReason}
+                  {interviewMetadata.rejectionReason}
                 </Text>
               </View>
             </View>
           )}
-          {interviewDetails.rejectionFeedback && (
+          {interviewMetadata.rejectionFeedback && (
             <View className="mb-2">
               <View className="flex-row items-center gap-2 mb-2">
                 <Feather name="message-square" size={16} color="#6b7280" />
@@ -211,7 +223,7 @@ const InterviewDetails = () => {
               </View>
               <View className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <Text className="font-quicksand-medium text-blue-800 text-sm leading-5">
-                  {interviewDetails.rejectionFeedback}
+                  {interviewMetadata.rejectionFeedback}
                 </Text>
               </View>
             </View>
@@ -266,15 +278,15 @@ const InterviewDetails = () => {
             <View className="flex-row items-start justify-between mb-1">
               <View className="flex-1 mr-3">
                 <CompanyInformation
-                  companyName={interviewDetails?.companyName!}
-                  companyLogoUrl={interviewDetails?.companyLogoUrl!}
+                  companyName={interviewMetadata?.companyName!}
+                  companyLogoUrl={interviewMetadata?.companyLogoUrl!}
                 />
               </View>
             </View>
-            <Text className="font-quicksand-bold text-xl text-gray-900 leading-8 mb-1">{interviewDetails?.title}</Text>
+            <Text className="font-quicksand-bold text-xl text-gray-900 leading-8 mb-1">{interviewMetadata?.title}</Text>
 
             <Text className="font-quicksand-medium text-base text-gray-600 leading-6 mb-2">
-              {interviewDetails?.description}
+              {interviewMetadata?.description}
             </Text>
 
             <TouchableOpacity
@@ -286,14 +298,14 @@ const InterviewDetails = () => {
                 shadowRadius: 4,
                 elevation: 2,
               }}
-              onPress={() => router.push(`/jobs/${interviewDetails?.jobId}`)}
+              onPress={() => router.push(`/jobs/${interviewMetadata?.jobId}`)}
               activeOpacity={0.7}
             >
               <Feather name="external-link" size={16} color="#059669" />
               <Text className="font-quicksand-bold text-emerald-700 text-sm">View Job Posting</Text>
             </TouchableOpacity>
           </View>
-          {interviewDetails?.status === "COMPLETED" && renderInterviewDecision()}
+          {interviewMetadata?.status === "COMPLETED" && renderInterviewDecision()}
           <View
             className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
             style={{
@@ -313,27 +325,29 @@ const InterviewDetails = () => {
             <View className="flex-row flex-wrap gap-2 mb-4">
               <View className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl flex-row items-center gap-2">
                 <Feather name="calendar" size={14} color="#3b82f6" />
-                <Text className="font-quicksand-semibold text-sm text-blue-800">{interviewDetails?.interviewDate}</Text>
+                <Text className="font-quicksand-semibold text-sm text-blue-800">
+                  {interviewMetadata?.interviewDate}
+                </Text>
               </View>
 
               <View className="bg-purple-50 border border-purple-200 px-3 py-2 rounded-xl flex-row items-center gap-2">
                 <Feather name="clock" size={14} color="#8b5cf6" />
                 <Text className="font-quicksand-semibold text-sm text-purple-800">
-                  {convertTo12Hour(interviewDetails?.startTime!)} - {convertTo12Hour(interviewDetails?.endTime!)}
+                  {convertTo12Hour(interviewMetadata?.startTime!)} - {convertTo12Hour(interviewMetadata?.endTime!)}
                 </Text>
               </View>
 
               <View className="bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl flex-row items-center gap-2">
                 <Feather name="globe" size={14} color="#10b981" />
-                <Text className="font-quicksand-semibold text-sm text-emerald-800">{interviewDetails?.timezone}</Text>
+                <Text className="font-quicksand-semibold text-sm text-emerald-800">{interviewMetadata?.timezone}</Text>
               </View>
             </View>
           </View>
           <View className="p-4">
-            <InterviewFormatSummary interviewDetails={interviewDetails || null} />
+            <InterviewFormatSummary interviewDetails={interviewMetadata || null} />
           </View>
-          {interviewDetails?.preparationTipsFromInterviewer &&
-            interviewDetails?.preparationTipsFromInterviewer.length > 0 && (
+          {interviewMetadata?.preparationTipsFromInterviewer &&
+            interviewMetadata?.preparationTipsFromInterviewer.length > 0 && (
               <View
                 className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-gray-100"
                 style={{
@@ -350,7 +364,7 @@ const InterviewDetails = () => {
                   </View>
                   <Text className="font-quicksand-bold text-lg text-gray-900">Preparation Tips from Inteviewers</Text>
                 </View>
-                <CheckList items={interviewDetails?.preparationTipsFromInterviewer || []} withBorder={false} />
+                <CheckList items={interviewMetadata?.preparationTipsFromInterviewer || []} withBorder={false} />
               </View>
             )}
           <View
@@ -375,8 +389,8 @@ const InterviewDetails = () => {
               </View>
             </View>
             <InterviewersFlatList
-              interviewers={interviewDetails?.interviewers ?? []}
-              otherInterviewers={interviewDetails?.otherInterviewers ?? []}
+              interviewers={interviewMetadata?.interviewers ?? []}
+              otherInterviewers={interviewMetadata?.otherInterviewers ?? []}
               onInterviewerSelect={(email, name, profileImageUrl) => {
                 handleInterviewerPress(email, name.split(" ")[0], name.split(" ")[1] || "", profileImageUrl);
               }}
@@ -385,7 +399,7 @@ const InterviewDetails = () => {
           <View className="flex-1" />
         </ScrollView>
       )}
-      {interviewDetails?.status === "SCHEDULED" && (
+      {interviewMetadata?.status === "SCHEDULED" && (
         <View
           className="bg-white border-t border-gray-200 px-4 pt-4 pb-8 absolute bottom-0 w-full"
           style={{
@@ -411,7 +425,11 @@ const InterviewDetails = () => {
               activeOpacity={0.8}
             >
               <View className="flex-row items-center gap-2">
-                <Ionicons name="sparkles" size={18} color="#fbbf24" />
+                {interviewPrepStatus === "GENERATING_PREP" ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Ionicons name="sparkles" size={18} color="#fbbf24" />
+                )}
                 <Text className="font-quicksand-bold text-white text-base">{renderInterviewPrepText()}</Text>
               </View>
             </TouchableOpacity>
@@ -437,9 +455,14 @@ const InterviewDetails = () => {
       )}
 
       <PrepareWithJobee
+        isPreparing={interviewPrepStatus === "GENERATING_PREP" || isSendingInterviewPrepRequest}
         visible={showInterviewPrepModal}
         handlePrepareWithJobeeConfirm={handlePrepareWithJobeeConfirm}
-        company={interviewDetails?.companyName!}
+        context={{
+          companyLogoUrl: interviewMetadata?.companyLogoUrl || "",
+          companyName: interviewMetadata?.companyName || "",
+          positionTitle: interviewMetadata?.jobTitle || "",
+        }}
         handleClose={handleShowInterviewPrepModalClose}
       />
       <ViewInterviewerModal
@@ -448,11 +471,11 @@ const InterviewDetails = () => {
         loadingInterviewer={loadingInterviewer}
         interviewerDetails={interviewerDetails}
       />
-      {interviewDetails && (
+      {interviewMetadata && (
         <RescheduleModal
           visible={showRescheduleModal}
           handleClose={() => setShowRescheduleModal(false)}
-          interviewDetails={interviewDetails!}
+          interviewDetails={interviewMetadata!}
         />
       )}
     </SafeAreaView>

@@ -1,4 +1,3 @@
-import { convertTo12Hour } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import React from "react";
@@ -19,7 +18,7 @@ const Calendar = ({ interviewDetails }: { interviewDetails: InterviewDetails | u
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#22c55e",
             shadowOffset: { width: 0, height: 8 },
@@ -28,7 +27,7 @@ const Calendar = ({ interviewDetails }: { interviewDetails: InterviewDetails | u
             elevation: 12,
           }}
         >
-          <Feather name="calendar" size={24} color="#22c55e" />
+          <Feather name="calendar" size={28} color="#22c55e" />
         </View>
 
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-8 mb-4">Schedule Reminder</Text>
@@ -44,26 +43,6 @@ const Calendar = ({ interviewDetails }: { interviewDetails: InterviewDetails | u
           elevation: 8,
         }}
       >
-        <View className="items-center mb-3">
-          <Text className="font-quicksand-bold text-lg text-gray-800 mb-2">Your interview is scheduled for</Text>
-          <View className="bg-emerald-50 rounded-xl p-4 mb-4 w-full border border-green-200">
-            <View className="flex-row items-center justify-center gap-2 mb-2">
-              <Feather name="calendar" size={18} color="#22c55e" />
-              <Text className="font-quicksand-bold text-green-800 text-md">
-                {interviewDetails?.interviewDate ? formatDate(interviewDetails.interviewDate) : "Date TBD"}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-center gap-2">
-              <Feather name="clock" size={16} color="#22c55e" />
-              <Text className="font-quicksand-semibold text-green-700 text-base">
-                {interviewDetails?.startTime ? convertTo12Hour(interviewDetails.startTime) : "Time TBD"}{" "}
-                {interviewDetails?.timezone || ""} -{" "}
-                {interviewDetails?.endTime ? convertTo12Hour(interviewDetails.endTime) : "Time TBD"}{" "}
-                {interviewDetails?.timezone || ""}
-              </Text>
-            </View>
-          </View>
-        </View>
         <View className="bg-blue-50 rounded-xl p-4 border border-blue-200">
           <View className="flex-row items-center gap-2 mb-3">
             <Feather name="bell" size={16} color="#3b82f6" />

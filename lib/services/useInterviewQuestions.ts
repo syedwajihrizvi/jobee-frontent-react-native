@@ -1,8 +1,9 @@
+import { getAPIUrl } from "@/constants";
 import { InterviewPrepQuestion } from "@/type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
-const INTERVIEWS_API_URL = 'http://192.168.2.29:8080/interviews'
+const INTERVIEWS_API_URL = getAPIUrl("interviews");
 
 export const useInterviewQuestions = ({interviewId}: {interviewId: number}) => {
     const fetchInterviewQuestion = async () => {

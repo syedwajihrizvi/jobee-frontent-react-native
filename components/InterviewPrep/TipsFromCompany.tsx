@@ -9,7 +9,7 @@ const TipsFromCompany = ({ interviewPrep }: { interviewPrep: InterviewPreparatio
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-orange-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-orange-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#f97316",
             shadowOffset: { width: 0, height: 8 },
@@ -18,7 +18,7 @@ const TipsFromCompany = ({ interviewPrep }: { interviewPrep: InterviewPreparatio
             elevation: 12,
           }}
         >
-          <Feather name="message-square" size={20} color="#f97316" />
+          <Feather name="message-square" size={28} color="#f97316" />
         </View>
 
         <Text className="font-quicksand-bold text-xl text-center text-gray-800 leading-8 mb-2">

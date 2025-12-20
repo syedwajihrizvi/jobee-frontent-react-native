@@ -86,6 +86,8 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
     } else if (notificationType === "INTERVIEW_RESCHEDULE_REQUESTED") {
       queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
       refetchInterviews();
+    } else if (notificationType === "INTERVIEW_PREP_READY") {
+      queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
     }
     if (notificationType !== "AI_RESUME_REVIEW_COMPLETE" && jobId) {
       updateAppliedJobs(jobId, newStatus);
@@ -107,7 +109,6 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
       userId: user!.id,
       userType: userParamType,
       onNotification: (notif: Notification) => {
-        console.log("Received notification via STOMP: ", notif);
         player.seekTo(0);
         player.play();
         const currentNotifications = useNotificationStore.getState().notifications;

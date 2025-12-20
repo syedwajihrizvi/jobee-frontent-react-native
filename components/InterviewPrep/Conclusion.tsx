@@ -10,7 +10,7 @@ const Conclusion = ({ interviewDetails }: { interviewDetails: InterviewDetails |
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-8">
         <View
-          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 8 },
@@ -19,15 +19,13 @@ const Conclusion = ({ interviewDetails }: { interviewDetails: InterviewDetails |
             elevation: 12,
           }}
         >
-          <Feather name="check-circle" size={20} color="#10b981" />
+          <Feather name="check-circle" size={28} color="#10b981" />
         </View>
 
-        <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-9 mb-2">
-          Congratulations! You are Ready
-        </Text>
+        <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-9 mb-2">Congratulations!</Text>
         <Text className="font-quicksand-medium text-sm text-center text-gray-600 leading-6 px-4">
-          You have completed your comprehensive interview preparation. You are now equipped with the knowledge and
-          confidence to excel!
+          You have completed your comprehensive interview preparation. Do not stop here, keep practicing and refining
+          your skills.
         </Text>
         <Text className="font-quicksand-medium text-sm text-center text-gray-600 leading-6 px-4">
           Your can always re-review your interview prep. Good luck with your interview at{" "}

@@ -1,9 +1,9 @@
-import { images } from "@/constants";
 import { getInterviewerProfileSummary } from "@/lib/interviewEndpoints";
 import { InterviewDetails, InterviewerProfileSummary } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import RenderBusinessProfileImage from "../RenderBusinessProfileImage";
 import ViewInterviewerModal from "../ViewInterviewerModal";
 
 const InterviewersDetails = ({ interviewDetails }: { interviewDetails: InterviewDetails | undefined }) => {
@@ -22,7 +22,16 @@ const InterviewersDetails = ({ interviewDetails }: { interviewDetails: Interview
       if (details) {
         setInterviewerDetails({ ...details, verified: true });
       } else {
-        setInterviewerDetails({ firstName, lastName, email, title: "", summary: "", id: 0, verified: false });
+        setInterviewerDetails({
+          firstName,
+          lastName,
+          email,
+          title: "",
+          summary: "",
+          id: 0,
+          verified: false,
+          profileImageUrl: "",
+        });
       }
       return;
     } catch (error) {
@@ -37,7 +46,7 @@ const InterviewersDetails = ({ interviewDetails }: { interviewDetails: Interview
     <ScrollView className="w-full h-full px-3 py-4" showsVerticalScrollIndicator={false}>
       <View className="items-center mb-4">
         <View
-          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-3"
+          className="w-14 h-14 bg-emerald-100 rounded-full items-center justify-center mb-3"
           style={{
             shadowColor: "#10b981",
             shadowOffset: { width: 0, height: 8 },
@@ -46,10 +55,10 @@ const InterviewersDetails = ({ interviewDetails }: { interviewDetails: Interview
             elevation: 12,
           }}
         >
-          <Feather name="users" size={20} color="#10b981" />
+          <Feather name="users" size={28} color="#10b981" />
         </View>
 
-        <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-8 mb-4">
+        <Text className="font-quicksand-bold text-2xl text-center text-gray-800 leading-8 mb-2">
           Meet Your Interview Panel
         </Text>
         <Text className="font-quicksand-medium text-sm text-center text-gray-600 leading-6 px-4">
@@ -105,10 +114,7 @@ const InterviewersDetails = ({ interviewDetails }: { interviewDetails: Interview
                     elevation: 3,
                   }}
                 >
-                  <Image
-                    source={{ uri: images.companyLogo }}
-                    className="w-14 h-14 rounded-full border-2 border-white"
-                  />
+                  <RenderBusinessProfileImage profileImageUrl={interviewer.profileImageUrl} />
                   <View className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white items-center justify-center">
                     <Feather name="user" size={10} color="white" />
                   </View>

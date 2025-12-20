@@ -22,7 +22,6 @@ export const getUserInterviews = async () => {
             'x-auth-token': `Bearer ${token}`
         }
     })
-    console.log("User Interviews Response:", response);
     const data = await response.json()
     return data as InterviewDetails[];
 }

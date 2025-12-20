@@ -52,6 +52,10 @@ const RescheduleModal = ({ interviewDetails, visible, handleClose }: Props) => {
   };
 
   const handleSubmit = async () => {
+    if (!reasonForm.interviewDate || !reasonForm.startTime || !reasonForm.timezone || !reasonForm.reason) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await requestRescheduleInterview({
@@ -129,7 +133,7 @@ const RescheduleModal = ({ interviewDetails, visible, handleClose }: Props) => {
           ) : (
             <ScrollView className="p-4">
               <View className="mb-4">
-                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Requested Date</Text>
+                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Requested Date *</Text>
                 <TouchableOpacity
                   className="form-input__input bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
                   onPress={() => {
@@ -163,7 +167,7 @@ const RescheduleModal = ({ interviewDetails, visible, handleClose }: Props) => {
                 )}
               </View>
               <View className="mb-4">
-                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Requested Start Time</Text>
+                <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Requested Start Time *</Text>
                 <TouchableOpacity
                   className="form-input__input bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex-row items-center justify-between"
                   onPress={() => {
@@ -234,7 +238,7 @@ const RescheduleModal = ({ interviewDetails, visible, handleClose }: Props) => {
                 <TouchableOpacity
                   className="bg-red-500 rounded-md px-4 py-3 items-center justify-center w-1/2"
                   activeOpacity={0.8}
-                  onPress={() => {}}
+                  onPress={handleClose}
                 >
                   <Text className="font-quicksand-semibold text-white text-base">Cancel</Text>
                 </TouchableOpacity>

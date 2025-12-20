@@ -261,3 +261,17 @@ export const requestRescheduleInterview = async ({interviewId, request} : {inter
     })
     return res.status === 200
 }
+
+export const emailInterviewPrepResources = async (interviewId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const res = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/email-resources`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    console.log("Email Resources Response:", res); // Debug log
+    return res.ok
+}
