@@ -120,7 +120,6 @@ export const prepareForInterview = async (interviewId: number) : Promise<boolean
 }
 
 export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: number, questionId: number) => {
-    console.log("Generating TTS for interview prep id: ", interviewId, " questionId: ", questionId)
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null
     const response = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/questions/${questionId}/question/text-to-speech`, {
@@ -136,7 +135,6 @@ export const generateInterviewQuestionPrepTextToSpeech = async (interviewId: num
 
 export const generateInterviewQuestionSpeechToText = async (
     interviewId: number, questionId: number, uri: string) : Promise<InterviewPrepQuestion | null> => {
-    console.log("Generating STT for interview prep id: ", interviewId, " questionId: ", questionId)
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null
     const formData = new FormData();
@@ -159,7 +157,6 @@ export const generateInterviewQuestionSpeechToText = async (
 
 export const getFeedbackForAnswer = async (
     intervieId: number, questionId: number, uri: string) : Promise<InterviewPrepQuestion | null> => {
-        console.log("Getting feedback for interview id: ", intervieId, " questionId: ", questionId)
         const token = await AsyncStorage.getItem('x-auth-token');
         if (token == null) return null
         const formData = new FormData();
@@ -272,6 +269,48 @@ export const emailInterviewPrepResources = async (interviewId: number) => {
             'x-auth-token': `Bearer ${token}`
         }
     })
-    console.log("Email Resources Response:", res); // Debug log
     return res.ok
+}
+
+export const setRemindersTrueForInterviewPrep = async (interviewId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const res = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/set-reminders-true`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    return res.ok
+}
+
+export const submitInterviewPrepFeedback = async (interviewId: number, feedback: {reviewRating: number; reviewText: string}) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const res = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/submit-feedback`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify(feedback)
+    })
+    return res.ok
+}
+
+export const getInterviewPrepFeedbackStatus = async (interviewId: number) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const res = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/prepare/submit-feedback`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    if (res.status !== 200) 
+        return null
+    const data = await res.json()
+    return data as {reviewRating: number; reviewText: string} | null
 }

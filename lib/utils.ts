@@ -1215,6 +1215,18 @@ export function combineDateAndTime(
   return `${dateString.slice(0, 10)}T${hh}:${mm}:00`;
 }
 
+export function combineDateAndTimeWithNoAMPM(
+  dateString: string, // yyyy-MM-dd
+  timeString: string // "17:00"
+) {
+  const [hours, minutes] = timeString.split(":").map(Number);
+
+  const hh = hours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+
+  return `${dateString.slice(0, 10)}T${hh}:${mm}:00`;
+}
+
 export const getDurationInMinutes = (from: string, to: string, timezone: string) => {
   const ianaTimezone = convertTimeZoneToIANA(timezone);
   const fromDate = fromZonedTime(from, ianaTimezone);
@@ -1231,4 +1243,16 @@ export const formatTimeForDisplay = (time: Date) => {
       const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
       const formattedTime = `${formattedHours}:${formattedMinutes} ${ampm}`;  
       return formattedTime
+}
+
+export const convertToDate = (date: string, startTime: string, timezone: string) => {
+  const ianaTimezone = convertTimeZoneToIANA(timezone);
+  const dateTimeString = combineDateAndTimeWithNoAMPM(date, startTime);
+  const zonedDate = fromZonedTime(dateTimeString, ianaTimezone);
+  return zonedDate;
+}
+
+export const isInPast = (date: Date) => {
+  const now = new Date();
+  return date.getTime() < now.getTime();
 }

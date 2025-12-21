@@ -18,7 +18,8 @@
       "bundleIdentifier": "com.syedwajihrizvi.JobeeFrontEnd",
       "infoPlist": {
         "NSPhotoLibraryAddUsageDescription": "This app needs access to save images to your photo library.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save and share images."
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save and share images.",
+        "NSUserNotificationUsageDescription": "This app would like to send you notifications for interview reminders and updates."
       }
     },
     "android": {

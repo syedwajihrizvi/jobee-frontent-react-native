@@ -49,7 +49,15 @@ const PrepForInterview = () => {
   const screens: ReactNode[] = [
     <Introduction key={1} interviewDetails={interviewDetails} />,
     <Details key={2} interviewDetails={interviewDetails} />,
-    <Calendar key={3} interviewDetails={interviewDetails} />,
+    <Calendar
+      key={3}
+      startTime={interviewDetails?.startTime || ""}
+      timezone={interviewDetails?.timezone || ""}
+      interviewDate={interviewDetails?.interviewDate || ""}
+      companyName={interviewDetails?.companyName || ""}
+      interviewId={Number(interviewId)}
+      remindersSet={interviewPrep?.helpMeRemember || false}
+    />,
     <Conducted key={4} interviewDetails={interviewDetails} />,
     <Interviewers key={5} />,
     <InterviewersDetails key={6} interviewDetails={interviewDetails} />,

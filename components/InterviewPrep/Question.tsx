@@ -2,7 +2,7 @@ import { useInterviewQuestions } from "@/lib/services/useInterviewQuestions";
 import { InterviewPreparation, InterviewPrepQuestion } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import PrepQuestion from "../PrepQuestion";
 
 const Question = ({ interviewId, interviewPrep }: { interviewId: number; interviewPrep: InterviewPreparation }) => {
@@ -17,9 +17,7 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
   }, [isLoading, fetchedQuestions]);
 
   const handleQuestionUpdate = (question: InterviewPrepQuestion) => {
-    // Find the index of the question to update
     const index = interviewQuestions?.findIndex((q) => q.id === question.id);
-    // Replace it. It is guaranteed to be found
     let updatedQuestions = [...(interviewQuestions || [])];
     updatedQuestions[index!] = question;
     setInterviewQuestions(updatedQuestions);
@@ -42,24 +40,25 @@ const Question = ({ interviewId, interviewPrep }: { interviewId: number; intervi
             </Text>
           </View>
         ) : interviewQuestions && interviewQuestions.length > 0 ? (
-          <View className="items-center justify-center h-[400px]">
+          <View className="items-center justify-center h-[450px]">
             <Text className="font-quicksand-semibold text-lg text-center mb-4">
               Question {currentQuestionIndex + 1} of {fetchedQuestions?.length}
             </Text>
-            <View
-              className="bg-white rounded-2xl shadow-lg p-6 mb-4 h-[180px] items-center justify-center"
+            <ScrollView
+              className="bg-white rounded-lg p-3 mb-4 h-[140px] border-2 border-gray-200"
+              contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
               style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.15,
-                shadowRadius: 16,
-                elevation: 8,
+                shadowColor: "#21c55e",
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.2,
+                shadowRadius: 20,
+                elevation: 12,
               }}
             >
-              <Text className="font-quicksand-semibold text-lg text-gray-800 text-center leading-6">
+              <Text className="font-quicksand-semibold text-md text-gray-800 leading-6 text-center">
                 {interviewQuestions && interviewQuestions![currentQuestionIndex]?.question}
               </Text>
-            </View>
+            </ScrollView>
             <View className="flex-row items-center justify-center gap-4 mb-2">
               <TouchableOpacity
                 disabled={currentQuestionIndex === 0}

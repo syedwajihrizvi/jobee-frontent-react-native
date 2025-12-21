@@ -635,7 +635,8 @@ export type InterviewPreparation = {
     questions: InterviewPrepQuestion[];
     resources: {title: string, link: string, description: string, type: string}[];
     overallAdvice: string;
-    notesFromInterviewer: string[]
+    notesFromInterviewer: string[];
+    helpMeRemember: boolean;
 }
     
 export type AnswerFeedback = {

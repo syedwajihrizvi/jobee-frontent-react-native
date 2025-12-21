@@ -170,3 +170,17 @@ export const sendInviteForJobee = async (email: string, phone: string, selectedU
     })
     return result.status === 200;
 }
+
+export const scheduleInterviewReminder = async (date: Date, title: string, body: string) => {
+    await Notifications.scheduleNotificationAsync({
+        content: {
+            title,
+            body,
+            data: { date: date.toISOString() },
+        },
+        trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: date  
+        }
+    })
+}

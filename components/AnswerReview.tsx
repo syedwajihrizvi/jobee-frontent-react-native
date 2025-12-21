@@ -119,7 +119,7 @@ const AnswerReview = ({
                     >
                       <Text className="font-quicksand-semibold text-xs text-blue-700">Close Transcript</Text>
                     </TouchableOpacity>
-                    <Text className="font-quicksand-semibold text-md leading-6">
+                    <Text className="font-quicksand-semibold text-sm leading-6">
                       {answerText ? answerText : "No transcript available."}
                     </Text>
                   </ScrollView>

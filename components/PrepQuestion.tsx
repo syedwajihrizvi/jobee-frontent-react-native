@@ -166,7 +166,6 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
       const { status } = await getRecordingPermissionsAsync();
       if (status !== "granted") {
         const granted = await requestRecordingPermissionsAsync();
-        console.log("Recording permission granted: ", granted);
         if (granted.status !== "granted") {
           Alert.alert("Permission Denied", "You need to allow microphone access to record your answer.");
           return;
@@ -179,7 +178,6 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
       await recorder.prepareToRecordAsync();
       answerPlayer.pause();
       setListeningToAnswer(false);
-      // start recording
       setQuestionAnswerAudioUrl(null);
       progress.value = 0;
       let counter = 3;
@@ -209,16 +207,15 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
       const uri = recorder.uri;
       setQuestionAnswerAudioUrl(uri);
       saveRecordingLocally(uri!, id.toString());
-      console.log("Updated local answer uri: ", uri);
       if (uri) answerPlayer.replace({ uri: uri });
       setPulsating((prev) => ({ ...prev, mic: false }));
     }
   };
 
   const handlePlaybackAnswer = () => {
-    console.log("Playing back answer from URL: ", questionAnswerAudioUrl);
     if (questionAnswerAudioUrl == null) return;
     if (!answerPlayer.playing) {
+      answerPlayer.volume = 1.0;
       answerPlayer.play();
       setListeningToAnswer(true);
       const remaining = answerPlayer.duration - answerPlayer.currentTime;
@@ -244,10 +241,8 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
         questionPlayer.replace({
           uri: getS3InterviewQuestionAudioUrl(interviewId, id, "question"),
         });
-      } else {
-        // play from S3 url
-        console.log("Using existing audio URL: ", audioUrl);
       }
+      questionPlayer.volume = 1.0;
       questionPlayer.seekTo(0);
       questionPlayer.play();
     } else {
@@ -261,8 +256,12 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
   };
 
   const handleSubmitAnswer = () => {
-    if (questionAnswerAudioUrl == null) {
-      Alert.alert("No Answer Recorded", "Please record your answer first.");
+    if (pulsating.mic) {
+      Alert.alert("Please stop recording", "Tap the microphone button to stop recording before submitting.");
+      return;
+    }
+    if (!questionAnswerAudioUrl) {
+      Alert.alert("No Answer Recorded", "Please record your answer before submitting.");
       return;
     }
     Alert.alert("Submit Answer", "Are you sure you want to submit?", [
@@ -290,7 +289,6 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
               setShowModal(false);
               return;
             }
-            console.log("Received STT and feedback response: ", response);
             const { aiAnswerAudioUrl, userAnswerScore, reasonForScore } = response;
             // Save the question locally w/o refetching
             handleFeedbackUpdate(response);
@@ -319,10 +317,10 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
   };
 
   const renderScoreIcon = (score: number | null) => {
-    if (score === null) return <Entypo name="minus" size={16} color="gray" />;
-    if (score >= 8) return <Entypo name="emoji-happy" size={16} color="green" />;
-    if (score >= 5) return <Entypo name="emoji-neutral" size={16} color="orange" />;
-    return <Entypo name="emoji-sad" size={16} color="red" />;
+    if (score === null) return <Entypo name="minus" size={20} color="gray" />;
+    if (score >= 8) return <Entypo name="emoji-happy" size={20} color="green" />;
+    if (score >= 5) return <Entypo name="emoji-neutral" size={20} color="orange" />;
+    return <Entypo name="emoji-sad" size={20} color="red" />;
   };
 
   return (
@@ -354,10 +352,31 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
           </View>
         </View>
       </View>
+      <View className="flex flex-row gap-4 items-center justify-between w-full px-4 py-2">
+        <PulsatingButton pulsating={pulsating.volume} handlePress={handleListenToQuestion}>
+          <Feather name="volume-2" size={20} color="#065f46" />
+        </PulsatingButton>
+
+        <PulsatingButton pulsating={pulsating.mic} handlePress={handleAnswerQuestion} disabled={countdown !== null}>
+          {countdown ? (
+            <Text className="font-quicksand-bold text-xl">{countdown}</Text>
+          ) : (
+            <FontAwesome name="microphone" size={20} color="#065f46" />
+          )}
+        </PulsatingButton>
+
+        <PulsatingButton
+          pulsating={pulsating.confirm}
+          handlePress={handleSubmitAnswer}
+          disabled={submittingAnswer || questionAnswerAudioUrl == null}
+        >
+          <Entypo name="check" size={20} color="#065f46" />
+        </PulsatingButton>
+      </View>
       {(feedback.userAnswerScore !== null || feedback.reasonForScore) && (
         <TouchableOpacity
           onPress={() => setShowModal(true)}
-          className="flex-row items-center gap-2 bg-gray-100 px-4 py-2 rounded-full mb-4"
+          className="flex-row items-center gap-2 bg-gray-100 px-4 py-2 rounded-full mb-4 mt-4"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -367,31 +386,14 @@ const PrepQuestion = ({ interviewId, questionInfo, onQuestionUpdate: handleFeedb
           }}
         >
           {renderScoreIcon(feedback.userAnswerScore)}
-          <Text className="font-quicksand-semibold text-sm">View Feedback</Text>
+          <Text className="font-quicksand-semibold text-lg">View Feedback</Text>
           {feedback.userAnswerScore !== null && (
             <View className="bg-white px-2 py-1 rounded-full">
-              <Text className="font-quicksand-bold text-xs">{feedback.userAnswerScore}/10</Text>
+              <Text className="font-quicksand-bold text-lg">{feedback.userAnswerScore}/10</Text>
             </View>
           )}
         </TouchableOpacity>
       )}
-      <View className="flex flex-row gap-4 items-center justify-between w-full px-4 py-2">
-        <PulsatingButton pulsating={pulsating.volume} handlePress={handleListenToQuestion}>
-          <Feather name="volume-2" size={20} color="black" />
-        </PulsatingButton>
-
-        <PulsatingButton pulsating={pulsating.mic} handlePress={handleAnswerQuestion} disabled={countdown !== null}>
-          {countdown ? (
-            <Text className="font-quicksand-bold text-xl">{countdown}</Text>
-          ) : (
-            <FontAwesome name="microphone" size={20} color="black" />
-          )}
-        </PulsatingButton>
-
-        <PulsatingButton pulsating={pulsating.confirm} handlePress={handleSubmitAnswer} disabled={submittingAnswer}>
-          <Entypo name="check" size={20} color="black" />
-        </PulsatingButton>
-      </View>
       <AnswerReview
         showModal={showModal}
         interviewId={interviewId}
