@@ -76,7 +76,6 @@ export const signUpBusinessViaCode = async (request: SignUpViaCodeParams) => {
         },
         body: JSON.stringify({companyCode:companyCode.replace(" ","").toLowerCase(), email, password, phoneNumber, firstName, lastName})
     })
-    console.log("Sign up via code response status:", result);
     if (result.status !== 201) return null;
     const data = await result.json()
     return data;

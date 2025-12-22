@@ -1,6 +1,5 @@
-import AdminDashboard from "@/components/dashboard/AdminDashboard";
+import BusinessDashboard from "@/components/dashboard/BusinessDashboard";
 import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
-import RecruiterDashboard from "@/components/dashboard/RecruiterDashboard";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser } from "@/type";
 import React from "react";
@@ -14,10 +13,10 @@ const Dashboard = () => {
     return <ActivityIndicator size="large" />;
   }
   if (user?.role === "ADMIN") {
-    return <AdminDashboard />;
+    return <BusinessDashboard userType="ADMIN" />;
   }
   if (user?.role === "RECRUITER") {
-    return <RecruiterDashboard />;
+    return <BusinessDashboard userType="RECRUITER" />;
   }
 
   return <EmployeeDashboard />;

@@ -119,6 +119,7 @@ const SignUpViaCode = () => {
         </View>
         <View className="flex-1">
           <CustomInput
+            secureField={true}
             label="Password"
             placeholder="Create a password"
             value={signUpForm.password}

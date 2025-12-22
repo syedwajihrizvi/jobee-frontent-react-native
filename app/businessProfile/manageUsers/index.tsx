@@ -1,70 +1,42 @@
 import BackBar from "@/components/BackBar";
 import ModalWithBg from "@/components/ModalWithBg";
+import RenderBusinessProfileImage from "@/components/RenderBusinessProfileImage";
 import SearchBar from "@/components/SearchBar";
 import { sounds } from "@/constants";
 import { sendInviteForJobee } from "@/lib/auth";
+import { useCompanyMembers } from "@/lib/services/useCompanyMembers";
 import useAuthStore from "@/store/auth.store";
-import { BusinessUser } from "@/type";
+import { BusinessUser, CompanyMember } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { useAudioPlayer } from "expo-audio";
 import React, { useState } from "react";
-import { Alert, FlatList, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber?: string;
-  userType: "ADMIN" | "RECRUITER" | "EMPLOYEE";
-  status: "ACTIVE" | "PENDING" | "INACTIVE";
-  joinedDate: string;
-  profileImageUrl?: string;
-}
+const userFilterTypes = [
+  { value: "ALL", label: "All" },
+  { value: "ADMIN", label: "Admin" },
+  { value: "RECRUITER", label: "Recruiter" },
+  { value: "EMPLOYEE", label: "Employee" },
+];
 
 const ManageUsers = () => {
-  const { user: authUser, isLoading } = useAuthStore();
+  const { user: authUser } = useAuthStore();
+  const user = authUser as BusinessUser | null;
   const [inviteEmail, setInviteEmail] = useState("");
   const [invitePhone, setInvitePhone] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [userTypeFilter, setUserTypeFilter] = useState<"ALL" | "ADMIN" | "RECRUITER" | "EMPLOYEE">("ALL");
   const [selectedUserType, setSelectedUserType] = useState<"ADMIN" | "RECRUITER" | "EMPLOYEE">("EMPLOYEE");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const player = useAudioPlayer(sounds.popSound);
   const [showInviteUserModal, setShowInviteUserModal] = useState(false);
-
-  const user = authUser as BusinessUser | null;
-  // Mock data - replace with actual data from your API
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: 1,
-      firstName: "John",
-      lastName: "Smith",
-      email: "john.smith@company.com",
-      phoneNumber: "+1234567890",
-      userType: "ADMIN",
-      status: "ACTIVE",
-      joinedDate: "2024-01-15",
-    },
-    {
-      id: 2,
-      firstName: "Sarah",
-      lastName: "Johnson",
-      email: "sarah.johnson@company.com",
-      phoneNumber: "+1234567891",
-      userType: "RECRUITER",
-      status: "ACTIVE",
-      joinedDate: "2024-02-20",
-    },
-    {
-      id: 3,
-      firstName: "Mike",
-      lastName: "Davis",
-      email: "mike.davis@company.com",
-      userType: "EMPLOYEE",
-      status: "PENDING",
-      joinedDate: "2024-03-10",
-    },
-  ]);
+  const { data, isLoading } = useCompanyMembers(user?.companyId!, currentPage, searchQuery, userTypeFilter);
+  const content = data?.pages.flatMap((page) => page.members) || [];
+  const hasMore = data?.pages[data.pages.length - 1].hasMore || false;
+  const totalItems = data?.pages[0].totalElements;
 
   const userTypes = [
     { value: "ADMIN", label: "Admin", color: "#dc2626", bgColor: "#fee2e2" },
@@ -87,37 +59,32 @@ const ManageUsers = () => {
     return userType || userTypes[2]; // Default to employee
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return { color: "#16a34a", bgColor: "#dcfce7" };
-      case "PENDING":
-        return { color: "#f59e0b", bgColor: "#fef3c7" };
-      case "INACTIVE":
-        return { color: "#6b7280", bgColor: "#f3f4f6" };
-      default:
-        return { color: "#6b7280", bgColor: "#f3f4f6" };
-    }
-  };
-
-  const handleSendInvite = () => {
+  const handleSendInvite = async () => {
     if (!inviteEmail && !invitePhone) {
       Alert.alert("Error", "Please provide at least an email or phone number to send an invite.");
       return;
     }
-    sendInviteForJobee(inviteEmail, invitePhone, selectedUserType);
-    Alert.alert("Success", "Invitation sent successfully.");
-    setShowInviteUserModal(false);
-    setInviteEmail("");
-    setInvitePhone("");
-    setSelectedUserType("EMPLOYEE");
-    player.seekTo(0);
-    player.play();
+    setSendingInvite(true);
+    try {
+      const res = await sendInviteForJobee(inviteEmail, invitePhone, selectedUserType);
+      if (res) {
+        Alert.alert("Success", "Invitation sent successfully.");
+        setShowInviteUserModal(false);
+        setInviteEmail("");
+        setInvitePhone("");
+        setSelectedUserType("EMPLOYEE");
+        player.seekTo(0);
+        player.play();
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to send invitation. Please try again.");
+    } finally {
+      setSendingInvite(false);
+    }
   };
 
-  const renderUserItem = ({ item }: { item: User }) => {
+  const renderUserItem = ({ item }: { item: CompanyMember }) => {
     const userTypeStyle = getUserTypeStyle(item.userType);
-    const statusStyle = getStatusColor(item.status);
 
     return (
       <View
@@ -132,18 +99,23 @@ const ManageUsers = () => {
       >
         <View className="p-4">
           <View className="flex-row items-start gap-3">
-            <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center">
-              {item.profileImageUrl ? (
-                <View className="w-full h-full rounded-full bg-gray-300" />
-              ) : (
-                <Feather name="user" size={20} color="#6b7280" />
-              )}
-            </View>
+            <RenderBusinessProfileImage
+              profileImageUrl={item.isMe ? user?.profileImageUrl : item.profileImageUrl}
+              firstName={item.firstName}
+              lastName={item.lastName}
+            />
 
             <View className="flex-1">
-              <Text className="font-quicksand-bold text-base text-gray-900">
-                {item.firstName} {item.lastName}
-              </Text>
+              <View className="flex-row items-center gap-2">
+                <Text className="font-quicksand-bold text-base text-gray-900">
+                  {item.firstName} {item.lastName}
+                </Text>
+                {item.isMe && (
+                  <View className="bg-emerald-100 px-2 py-0.5 rounded-md">
+                    <Text className="font-quicksand-bold text-xs text-emerald-700">You</Text>
+                  </View>
+                )}
+              </View>
               <Text className="font-quicksand-medium text-sm text-gray-600 mb-2">{item.email}</Text>
               <View className="flex-row items-center gap-2 mb-2">
                 <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: userTypeStyle.bgColor }}>
@@ -151,18 +123,12 @@ const ManageUsers = () => {
                     {userTypeStyle.label}
                   </Text>
                 </View>
-
-                <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: statusStyle.bgColor }}>
-                  <Text className="font-quicksand-bold text-xs" style={{ color: statusStyle.color }}>
-                    {item.status}
-                  </Text>
-                </View>
               </View>
               <Text className="font-quicksand-medium text-xs text-gray-500">
                 Joined: {new Date(item.joinedDate).toLocaleDateString()}
               </Text>
             </View>
-            {user?.role === "ADMIN" && (
+            {user?.role === "ADMIN" && item.isMe === false && (
               <TouchableOpacity
                 className="w-8 h-8 items-center justify-center"
                 onPress={() => {
@@ -191,7 +157,7 @@ const ManageUsers = () => {
           <View>
             <Text className="font-quicksand-bold text-xl text-gray-900">Team Members</Text>
             <Text className="font-quicksand-medium text-sm text-gray-600">
-              {users.length} member{users.length !== 1 ? "s" : ""}
+              {totalItems || 0} member{totalItems !== 1 ? "s" : ""}
             </Text>
           </View>
 
@@ -213,19 +179,64 @@ const ManageUsers = () => {
         </View>
       </View>
       <View className="items-center mt-2">
-        <SearchBar placeholder={"Search users by name"} onSubmit={() => console.log("Search submitted")} />
+        <SearchBar placeholder={"Search users by name"} onSubmit={(text: string) => setSearchQuery(text)} />
       </View>
-
+      <View className="flex-row gap-2 px-4 mt-4">
+        {userFilterTypes.map((type) => (
+          <TouchableOpacity
+            key={type.value}
+            className={`py-2 px-4 rounded-xl border-2 ${
+              userTypeFilter === type.value ? "border-green-500" : "border-gray-200"
+            }`}
+            style={{
+              backgroundColor: userTypeFilter === type.value ? "#d1fae5" : "#f9fafb",
+            }}
+            onPress={() => setUserTypeFilter(type.value as any)}
+            activeOpacity={0.7}
+          >
+            <Text
+              className={`font-quicksand-bold text-center text-sm ${
+                userTypeFilter === type.value ? "text-gray-900" : "text-gray-600"
+              }`}
+            >
+              {type.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       <FlatList
-        data={users}
+        data={content}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderUserItem}
         contentContainerStyle={{ paddingVertical: 16 }}
         showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          if (hasMore) {
+            setCurrentPage(currentPage + 1);
+          }
+        }}
+        ListFooterComponent={() => {
+          return isLoading ? <ActivityIndicator size="small" color="green" /> : null;
+        }}
+        ListEmptyComponent={() => {
+          return !isLoading ? (
+            <View className="flex-1 items-center justify-center px-4 py-12">
+              <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+                <Feather name="users" size={32} color="#9ca3af" />
+              </View>
+              <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">No Team Members Found</Text>
+              <Text className="font-quicksand-medium text-sm text-gray-600 text-center">
+                {searchQuery || userTypeFilter !== "ALL"
+                  ? "Try adjusting your search or filters"
+                  : "Start building your team by inviting new members"}
+              </Text>
+            </View>
+          ) : null;
+        }}
       />
-      <ModalWithBg visible={showInviteUserModal} customHeight={0.8} customWidth={0.9}>
+      <ModalWithBg visible={showInviteUserModal} customHeight={0.5} customWidth={0.9}>
         <View
-          className="bg-white rounded-2xl p-6"
+          className="rounded-2xl p-6"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -280,7 +291,7 @@ const ManageUsers = () => {
                     activeOpacity={0.7}
                   >
                     <Text
-                      className={`font-quicksand-bold text-center text-sm ${
+                      className={`font-quicksand-semibold text-center text-sm ${
                         selectedUserType === type.value ? "text-gray-900" : "text-gray-600"
                       }`}
                     >
@@ -301,9 +312,14 @@ const ManageUsers = () => {
                   elevation: 4,
                 }}
                 onPress={handleSendInvite}
+                disabled={sendingInvite}
                 activeOpacity={0.8}
               >
-                <Text className="font-quicksand-bold text-white text-center">Send Invite</Text>
+                {sendingInvite ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="font-quicksand-bold text-white text-center">Send Invite</Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 bg-gray-100 py-3 px-4 rounded-xl border border-gray-300"

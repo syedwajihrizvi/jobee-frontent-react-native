@@ -78,6 +78,17 @@ export type BusinessProfileSummary = {
 
 }
 
+export type CompanyMember = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  userType: "ADMIN" | "RECRUITER" | "EMPLOYEE";
+  joinedDate: string;
+  profileImageUrl?: string;
+  isMe: boolean;
+}
+
 export type Message = {
     id: number;
     conversationId: number;

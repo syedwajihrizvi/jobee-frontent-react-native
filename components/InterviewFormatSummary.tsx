@@ -34,6 +34,9 @@ const InterviewFormatSummary = ({ interviewDetails }: Props) => {
         <Text className="font-quicksand-medium text-sm text-emerald-900">No online meeting information provided</Text>
       );
     }
+    {
+      /* Add more platform types */
+    }
     if (interviewMeetingPlatform === "ZOOM") {
       return (
         <View className="gap-2">

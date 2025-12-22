@@ -1,52 +1,95 @@
+import { meetingPlatforms } from "@/constants";
+import { convert11Or10DigitNumberToPhoneFormat } from "@/lib/utils";
 import { InterviewDetails } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
+import RenderMeetingPlatformIcon from "../RenderMeetingPlatformIcon";
+import OnlineMeetingInfo from "./OnlineMeetingInfo";
 
 const Conducted = ({ interviewDetails }: { interviewDetails: InterviewDetails | undefined }) => {
-  const getInterviewIcon = (type: string) => {
-    switch (type?.toLowerCase()) {
-      case "phone":
-        return "phone";
-      case "online":
-        return "video";
-      case "in_person":
-        return "map-pin";
-      default:
-        return "users";
-    }
-  };
-
   const interviewType = interviewDetails?.interviewType || "";
 
   const renderInterviewFormatInformation = () => {
     switch (interviewType?.toLowerCase()) {
       case "phone":
         return (
-          <View className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-            <View className="flex-row items-center gap-3 mb-3">
-              <Feather name="phone" size={18} color="#3b82f6" />
-              <Text className="font-quicksand-bold text-blue-800 text-base">Phone Interview Setup</Text>
+          <View className="bg-blue-50 rounded-xl p-5 border border-blue-200">
+            <View className="flex-row items-center gap-3 mb-4">
+              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                <Feather name="phone" size={20} color="#3b82f6" />
+              </View>
+              <Text className="font-quicksand-bold text-blue-800 text-base">Phone Interview</Text>
             </View>
-            <View className="gap-2">
-              <Text className="font-quicksand-medium text-blue-700 text-sm">
-                📞 <Text className="font-quicksand-semibold">Phone Number:</Text>{" "}
-                {interviewDetails?.phoneNumber || "Will be provided"}
+
+            <View className="bg-white rounded-lg p-3 mb-3 border border-blue-100">
+              <Text className="font-quicksand-medium text-blue-700 text-sm">Phone Number</Text>
+              <Text className="font-quicksand-bold text-blue-900 text-base mt-1">
+                {convert11Or10DigitNumberToPhoneFormat(interviewDetails?.phoneNumber) || "Will be provided"}
               </Text>
-              <Text className="font-quicksand-medium text-blue-700 text-xs leading-4">
+            </View>
+
+            <View className="gap-2 mt-2">
+              <Text className="font-quicksand-semibold text-blue-800 text-sm mb-1">💡 Preparation Tips</Text>
+              <Text className="font-quicksand-medium text-blue-700 text-xs leading-5">
                 • Find a quiet space with good reception
               </Text>
-              <Text className="font-quicksand-medium text-blue-700 text-xs leading-4">
+              <Text className="font-quicksand-medium text-blue-700 text-xs leading-5">
                 • Have your resume and notes ready
               </Text>
-              <Text className="font-quicksand-medium text-blue-700 text-xs leading-4">
-                • Test your phone beforehand
+              <Text className="font-quicksand-medium text-blue-700 text-xs leading-5">
+                • Test your phone beforehand and ensure it is fully charged
               </Text>
             </View>
           </View>
         );
       case "online":
-        return <></>;
+        return (
+          <View className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            {interviewDetails?.interviewMeetingPlatform && (
+              <View className="flex-row items-center gap-2">
+                <View className="flex-row items-center gap-2">
+                  <RenderMeetingPlatformIcon
+                    size={24}
+                    active={false}
+                    platformType={interviewDetails.interviewMeetingPlatform}
+                    platformColor={
+                      meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.textColor ||
+                      "#059669"
+                    }
+                  />
+                  <Text className="font-quicksand-bold text-xl text-emerald-900">
+                    {meetingPlatforms.find((p) => p.value === interviewDetails?.interviewMeetingPlatform)?.label}
+                  </Text>
+                </View>
+              </View>
+            )}
+            <OnlineMeetingInfo interviewDetails={interviewDetails!} />
+            <View className="mt-4 pt-4 border-t border-amber-200 gap-2">
+              <Text className="font-quicksand-semibold text-amber-800 text-sm mb-1">💡 Preparation Tips</Text>
+              <Text className="font-quicksand-medium text-amber-700 text-xs leading-5">
+                • Ensure your device (computer, tablet, or smartphone) is fully charged and has a working camera and
+                microphone. Do not use extravagent background filters in the video call.
+              </Text>
+              <Text className="font-quicksand-medium text-amber-700 text-xs leading-5">
+                • Test your internet connection and device beforehand. We recommend using a wired connection if
+                possible.
+              </Text>
+              <Text className="font-quicksand-medium text-amber-700 text-xs leading-5">
+                • Choose a quiet, well-lit location free from distractions
+              </Text>
+              <Text className="font-quicksand-medium text-amber-700 text-xs leading-5">
+                • Dress professionally and have your resume and notes ready
+              </Text>
+              <Text className="font-quicksand-medium text-amber-700 text-xs leading-5">
+                • Familiarize yourself with the online meeting platform being used
+              </Text>
+              <Text className="font-quicksand-medium text-amber-700 text-xs leading-5">
+                • Keep a glass of water nearby and remember to smile!
+              </Text>
+            </View>
+          </View>
+        );
       case "in_person":
         return (
           <View className="bg-emerald-50 rounded-xl p-5 border border-green-200">

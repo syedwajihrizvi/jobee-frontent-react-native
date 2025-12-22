@@ -35,6 +35,19 @@ const InterviewDetails = () => {
     }
   }, [isLoading, interviewMetadata]);
 
+  useEffect(() => {
+    if (interviewPrepStatus !== "GENERATING_PREP") return;
+    const poll = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["interviewDetails", interviewId],
+      });
+    };
+    poll();
+    const interval = setInterval(poll, 10000);
+
+    return () => clearInterval(interval);
+  }, [interviewPrepStatus, interviewId, queryClient]);
+
   const handlePrepareWithJobee = () => {
     if (interviewPrepStatus === "NOT_STARTED" || interviewPrepStatus === "GENERATING_PREP") {
       setShowInterviewPrepModal(true);
@@ -65,7 +78,6 @@ const InterviewDetails = () => {
     setIsSendingInterviewPrepRequest(true);
     try {
       await prepareForInterview(Number(interviewId));
-      // Is successfull, set the status to be generating
       setInterviewPrepStatus("GENERATING_PREP");
       queryClient.invalidateQueries({ queryKey: ["interviewDetails", Number(interviewId)] });
     } catch (error) {

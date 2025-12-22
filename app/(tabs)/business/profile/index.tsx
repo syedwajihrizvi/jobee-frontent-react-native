@@ -34,7 +34,7 @@ const Profile = () => {
   const getProfileLinks = () => {
     let profileLinks = [...businessProfileLinks];
     if (user?.role === "ADMIN") {
-      profileLinks = [...adminOnlyProfileLinks, ...profileLinks];
+      profileLinks = [...adminOnlyProfileLinks, ...recruiterOnlyProfileLinks, ...profileLinks];
     }
     if (user?.role === "RECRUITER") {
       profileLinks = [...recruiterOnlyProfileLinks, ...profileLinks];

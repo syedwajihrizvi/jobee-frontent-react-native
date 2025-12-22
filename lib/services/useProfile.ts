@@ -77,5 +77,6 @@ export const useInterviewDetails = (interviewId?: number) => {
         queryFn: fetchInterviewDetails,
         staleTime: 1000 * 60 * 5,
         enabled: !!interviewId,
+
     })
 }
