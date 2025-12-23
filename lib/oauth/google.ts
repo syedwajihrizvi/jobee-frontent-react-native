@@ -58,6 +58,7 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
     });
     const data = await response.json();
     const { access_token, refresh_token, expires_in, id_token, refresh_token_expires_in } = data;
+    console.log('Google OAuth Token Data:', data);
     const res = await storeGoogleTokensOnDevice({
         accessToken: access_token,
         refreshToken: refresh_token,
@@ -237,6 +238,10 @@ export const refreshGoogleToken = async () => {
                 refresh_token: refreshToken,
             }).toString(),
         });
+        if (response.status !== 200) {
+            console.log('Failed to refresh token, status code:', response.status);
+            return null;
+        }
         const data = await response.json();
         const { access_token, expires_in, id_token, refresh_token_expires_in } = data;
         const res = await storeGoogleTokensOnDevice({

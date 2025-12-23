@@ -35,6 +35,7 @@ interface InterviewsState  {
     removeFromUpcomingInterviews: (interviewId: number) => void;
     refreshUpcomingInterviews: () => Promise<void>;
     refreshUpcomingInterviewsForJob: (jobId: number) => Promise<void>;
+    refreshEverything: () => Promise<void>;
 }
 
 const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
@@ -59,7 +60,15 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
             const response = await getInterviewsForJobAndFilter(page, pageSize, filter);
             const { content: newInterviews, totalElements, hasMore } = response;
             const existingInterviews = state.interviewsByJobIdAndFilter[filterKey] || [];
-            const updatedInterviews = [...existingInterviews, ...newInterviews];
+            const updatedInterviews = [...existingInterviews];
+            newInterviews.forEach((newInterview) => {
+                const index = updatedInterviews.findIndex(interview => interview.id === newInterview.id);
+                if (index !== -1) {
+                    updatedInterviews[index] = newInterview;
+                } else {
+                    updatedInterviews.push(newInterview);
+                }
+            });
             const updatedInterviewIdToStatus = { ...state.interviewIdToStatus };
             newInterviews.forEach(interview => {
                 updatedInterviewIdToStatus[interview.id] = interview.status;
@@ -208,6 +217,19 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
     refreshUpcomingInterviewsForJob: async (jobId: number) => {
         const targetFilter = { jobId: jobId, status: "SCHEDULED" as InterviewFilter } as InterviewFilters;
         await get().refreshInterviewsForJobAndFilter(targetFilter);
+    },
+    refreshEverything: async () => {
+        const newState = get();
+        set(() => ({
+            interviewIdToStatus: {},
+            interviewsByJobIdAndFilter: {},
+            loadingInterviewStates: {},
+            totalCounts: {},
+            lastFetchedInterviews: {},
+            pagination: {},
+        }))
+        await newState.fetchInterviewsForJobAndFilter({});
+        await newState.fetchInterviewsForJobAndFilter({ status: "SCHEDULED" as InterviewFilter });
     }
 }))
 

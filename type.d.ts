@@ -189,6 +189,7 @@ export type Job = {
     level: string,
     views: number,
     businessAccountId: number,
+    businessAccountEmail: string,
     experience: number,
     location: string,
     city: string,
@@ -772,11 +773,12 @@ export type NotificationContext = {
 }
 export type NotificationType = 
 "REJECTION" | 
-"INTERVIEW_SCHEDULED" | 
+"INTERVIEW_SCHEDULED" | 'INTERVIEW_TO_CONDUCT_SCHEDULED' |
+"INTERVIEW_CONDUCTOR_UPDATED" | "INTERVIEW_CONDUCTOR_REMOVED" |
 "INTERVIEW_RESULT" | 
 "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | 
 "INTERVIEW_COMPLETED" | "INTERVIEW_CREATED_SUCCESSFULLY" | 
-"AI_RESUME_REVIEW_COMPLETE" | "INTERVIEW_CANCELLED" |
+"AI_RESUME_REVIEW_COMPLETE" | "INTERVIEW_CANCELLED" | "ADDED_TO_HIRING_TEAM" |
 "INTERVIEW_UPDATED" | "INTERVIEW_RESCHEDULE_REQUESTED";
 
 type ApplicationStatusFilter =

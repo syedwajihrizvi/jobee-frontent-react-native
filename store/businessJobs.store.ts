@@ -54,6 +54,7 @@ interface BusinessJobState {
     setApplicationsForJob: (jobId: number, applications: number) => void;
     setPendingApplicationsForJob: (jobId: number, pendingApplications: number) => void;
     setInterviewsForJob: (jobId: number, interviews: number) => void;
+    updatePopularJobs: (updatedJob: Job) => void;
     decrementPendingApplicationsForJob: (jobId: number) => void;
     incrementInterviewsForJob: (jobId: number) => void;
 }
@@ -267,8 +268,12 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
             totalCounts: {},
             pagination: {},
             lastFetchedJobs: {},
+            mostAppliedJobs: [],
+            mostViewedJobs: [],
+            lastFetchedMostPopularJobs: 0,
         }));
         await newState.fetchJobsForBusinessAndFilter({} as JobFilters, 0);
+        await newState.fetchMostPopularJobs();
     },
     setViewsForJob: (jobId, views) => {
         set((state) => {
@@ -324,6 +329,20 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
                 };
             }
             return state;
+        })
+    },
+    updatePopularJobs: (updatedJob) => {
+        set((state) => {
+            const updatedMostAppliedJobs = state.mostAppliedJobs.map((job) =>
+                job.id === updatedJob.id ? updatedJob : job
+            );
+            const updatedMostViewedJobs = state.mostViewedJobs.map((job) =>
+                job.id === updatedJob.id ? updatedJob : job
+            );
+            return {
+                mostAppliedJobs: updatedMostAppliedJobs,
+                mostViewedJobs:  updatedMostViewedJobs,
+            };
         })
     },
     decrementPendingApplicationsForJob: (jobId) => {

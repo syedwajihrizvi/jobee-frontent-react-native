@@ -7,9 +7,11 @@ import {
   updateNotificationStatusToRead,
 } from "@/lib/notifications";
 import { getBorderColor, getNotificationIcon } from "@/lib/utils";
+import useBusinessJobsStore from "@/store/businessJobs.store";
 import useNotificationStore from "@/store/notifications.store";
 import { Notification } from "@/type";
 import { Feather } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
@@ -24,7 +26,8 @@ const Notifications = () => {
     markNotificationAsRead,
     deleteAllReadNotifications,
   } = useNotificationStore();
-
+  const { refreshEverything } = useBusinessJobsStore();
+  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<"READ" | "UNREAD" | null>(null);
 
   const filterNotifications = () => {
@@ -55,16 +58,18 @@ const Notifications = () => {
     markNotificationAsRead(notification.id!);
     if (!notification.read) updateNotificationStatusToRead(notification.id!);
     const { notificationType, context } = notification;
-    const { interviewId } = context;
+    const { interviewId, jobId } = context;
     if (
       notificationType === "INTERVIEW_SCHEDULED" ||
+      notificationType === "INTERVIEW_TO_CONDUCT_SCHEDULED" ||
+      notificationType === "INTERVIEW_CONDUCTOR_UPDATED" ||
       notificationType === "INTERVIEW_COMPLETED" ||
       notificationType === "REJECTION" ||
       notificationType === "INTERVIEW_CANCELLED" ||
       notificationType === "INTERVIEW_UPDATED"
     ) {
-      console.log("Navigating to interview details for interviewId:", interviewId);
       if (interviewId) {
+        queryClient.invalidateQueries({ queryKey: ["interviewDetails", Number(interviewId)] });
         router.push(`/businessJobs/interviews/interview/${interviewId}`);
       }
     } else if (notificationType === "AI_RESUME_REVIEW_COMPLETE") {
@@ -73,6 +78,9 @@ const Notifications = () => {
       router.push(`/businessJobs/interviews/interview/${interviewId}?openBell=true`);
     } else if (notificationType === "INTERVIEW_CREATED_SUCCESSFULLY" && interviewId) {
       router.push(`/businessJobs/interviews/interview/${interviewId}`);
+    } else if (notificationType === "ADDED_TO_HIRING_TEAM") {
+      refreshEverything();
+      router.push(`/businessJobs/${jobId}`);
     }
   };
 

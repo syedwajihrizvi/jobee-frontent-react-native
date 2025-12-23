@@ -2,6 +2,7 @@ import { sounds } from "@/constants";
 import { createNotificationStompClient } from "@/lib/notifications";
 import { useUserNotifications } from "@/lib/services/useUserNotifications";
 import useAuthStore from "@/store/auth.store";
+import useBusinessInterviewsStore from "@/store/businessInterviews.store";
 import useNotificationStore from "@/store/notifications.store";
 import useUserStore from "@/store/user.store";
 import useUserJobsStore from "@/store/userJobsStore";
@@ -36,6 +37,7 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
     setInterviewDecision,
     refetchInterviews,
   } = useUserStore();
+  const { refreshEverything: refreshAllBusinessUserInterviews } = useBusinessInterviewsStore();
   const { updateAppliedJobs } = useUserJobsStore();
   const player = useAudioPlayer(sounds.newNotification);
 
@@ -88,6 +90,12 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
       refetchInterviews();
     } else if (notificationType === "INTERVIEW_PREP_READY") {
       queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
+    } else if (
+      notificationType === "INTERVIEW_TO_CONDUCT_SCHEDULED" ||
+      notificationType === "INTERVIEW_CONDUCTOR_UPDATED" ||
+      notificationType === "INTERVIEW_CONDUCTOR_REMOVED"
+    ) {
+      refreshAllBusinessUserInterviews();
     }
     if (notificationType !== "AI_RESUME_REVIEW_COMPLETE" && jobId) {
       updateAppliedJobs(jobId, newStatus);
@@ -109,6 +117,7 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
       userId: user!.id,
       userType: userParamType,
       onNotification: (notif: Notification) => {
+        console.log("Received notification via STOMP:", notif);
         player.seekTo(0);
         player.play();
         const currentNotifications = useNotificationStore.getState().notifications;

@@ -4,15 +4,17 @@ import RenderBusinessProfileImage from "@/components/RenderBusinessProfileImage"
 import { useJobsForBusiness } from "@/lib/services/useJobs";
 import { getEmploymentType, getWorkArrangement } from "@/lib/utils";
 import useApplicationStore from "@/store/applications.store";
+import useAuthStore from "@/store/auth.store";
 import useBusinessJobsStore from "@/store/businessJobs.store";
 import { Feather, Fontisto } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const BusinessJobDetails = () => {
   const { id: jobId } = useLocalSearchParams();
+  const { user } = useAuthStore();
   const { data: job, isLoading } = useJobsForBusiness(Number(jobId));
   const { hasValidShortListedCache, refreshShortListedApplicationsForJob } = useApplicationStore();
   const {
@@ -43,10 +45,35 @@ const BusinessJobDetails = () => {
       setInterviewsForJob(Number(job.id), job.totalInterviews || 0);
     }
   }, [job, isLoading]);
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pb-20">
-      <BackBar label="Job Management" />
+      <BackBar
+        label="Job Management"
+        optionalThirdItem={
+          <TouchableOpacity
+            onPress={() => {
+              if (job?.businessAccountId !== user?.id) {
+                Alert.alert(
+                  "Error",
+                  "You do not have permission to edit this job. Only the job creator can edit the job."
+                );
+                return;
+              }
+              router.push(`/businessJobs/createJob?jobId=${jobId}`);
+            }}
+            className="p-2 bg-white rounded-lg border border-emerald-200"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <Feather name="edit-2" size={16} color="#10b981" />
+          </TouchableOpacity>
+        }
+      />
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <View
@@ -225,6 +252,11 @@ const BusinessJobDetails = () => {
                     fontSize={16}
                   />
                   <Text className="font-quicksand-semibold text-sm text-gray-900 text-center mt-1">{`${item.firstName} ${item.lastName}`}</Text>
+                  {item.email === job.businessAccountEmail && (
+                    <View className="bg-emerald-100 px-2 py-1 rounded-full mt-2">
+                      <Text className="font-quicksand-semibold text-[10px] text-emerald-700">Posted</Text>
+                    </View>
+                  )}
                 </View>
               )}
               ItemSeparatorComponent={() => <View className="w-3" />}

@@ -17,20 +17,17 @@ export const createNotificationStompClient = ({ userId, userType, onNotification
         webSocketFactory: () => socker as WebSocket,
         reconnectDelay: 5000,
         onConnect: () => {
-            console.log('Notification Stomp Client Connected');
+        const subscriptionEndpoint = endpoint;
+        stompClient.subscribe(subscriptionEndpoint, (message) => {
+            const body = JSON.parse(message.body);
+            onNotification(body);
+        })
         },
         onStompError: (frame) => {
             console.error('Notification Stomp Error: ', frame);
         }
     });
     const endpoint = `/topic/notifications/${userType.toLocaleLowerCase()}/${userId}`;
-    stompClient.onConnect = () => {
-        const subscriptionEndpoint = endpoint;
-        stompClient.subscribe(subscriptionEndpoint, (message) => {
-            const body = JSON.parse(message.body);
-            onNotification(body);
-        })
-    }
     stompClient.activate()
     return stompClient;
 }

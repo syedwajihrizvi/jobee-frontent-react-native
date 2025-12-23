@@ -100,6 +100,26 @@ export const createJob = async (
     return data as Job;
 }
 
+export const updateJob = async (
+    updateJobForm: CreateJobForm,
+    jobId: number,
+    hiringTeam: HiringTeamMemberForm[]
+) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return null;
+    const result = await fetch(`${JOBS_API_URL}/${jobId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ...updateJobForm,  hiringTeam })
+    })
+    if (result.status !== 200) return null;
+    const data = await result.json();
+    return data as Job;
+}
+
 export const getUserAppliedJobs = async () => {
     const token = await AsyncStorage.getItem('x-auth-token');
     if (token == null) return null;

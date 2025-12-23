@@ -5,7 +5,7 @@ import HiringTeamCard from "@/components/HiringTeamCard";
 import ModalWithBg from "@/components/ModalWithBg";
 import RemovableBadge from "@/components/RemovableBadge";
 import { employmentTypes, experienceLevels, sounds, workArrangements } from "@/constants";
-import { createJob, getAIJobDescription } from "@/lib/jobEndpoints";
+import { createJob, getAIJobDescription, updateJob } from "@/lib/jobEndpoints";
 import useAuthStore from "@/store/auth.store";
 import useBusinessProfileSummaryStore from "@/store/business-profile-summary.store";
 import useBusinessJobsStore from "@/store/businessJobs.store";
@@ -13,11 +13,13 @@ import { BusinessUser, CreateJobForm, HiringTeamMemberForm, JobFilters } from "@
 import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAudioPlayer } from "expo-audio";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 
 import RenderMarkdown from "@/components/RenderMarkdown";
 import { formatDateForDisplay } from "@/lib/utils";
+import BottomSheet, { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ActivityIndicator,
   Alert,
@@ -50,20 +52,24 @@ const CreateJob = () => {
     appDeadline: "",
     state: "",
   };
+  const queryClient = useQueryClient();
+  const { jobId } = useLocalSearchParams();
+  const isUpdating = Boolean(jobId);
   const { user: authUser, isReady } = useAuthStore();
   const user = authUser as BusinessUser | null;
   const addTeamSound = useAudioPlayer(sounds.popSound);
   const successSound = useAudioPlayer(sounds.successSound);
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [showAddHiringTeamModal, setShowAddHiringTeamModal] = useState(false);
   const [hiringTeam, setHiringTeam] = useState<HiringTeamMemberForm[]>([]);
   const [hiringTeamMemberForm, setHiringTeamMemberForm] = useState<HiringTeamMemberForm>({
     firstName: "",
     lastName: "",
     email: "",
   });
+  const existingJobData = queryClient.getQueryData<{ [key: string]: any }>(["job", "business", Number(jobId)]);
   const { profileSummary, setProfileSummary } = useBusinessProfileSummaryStore();
-  const { refreshJobsForBusinessAndFilter } = useBusinessJobsStore();
+  const { refreshJobsForBusinessAndFilter, updatePopularJobs } = useBusinessJobsStore();
   const [createJobForm, setCreateJobForm] = useState<CreateJobForm>(defaultJobForm);
   const [addingJob, setAddingJob] = useState(false);
   const [generatingAIDescription, setGeneratingAIDescription] = useState(false);
@@ -76,19 +82,49 @@ const CreateJob = () => {
     const { email, firstName, lastName } = user;
     setHiringTeam([{ firstName, lastName, email }]);
   }, [user, isReady]);
+
+  useEffect(() => {
+    if (isUpdating && existingJobData) {
+      setCreateJobForm({
+        ...createJobForm,
+        title: existingJobData.title,
+        streetAddress: existingJobData.streetAddress || "",
+        city: existingJobData.city || "",
+        country: existingJobData.country || "",
+        state: existingJobData.state || "",
+        postalCode: existingJobData.postalCode || "",
+        minSalary: existingJobData.minSalary ? String(existingJobData.minSalary) : "",
+        maxSalary: existingJobData.maxSalary ? String(existingJobData.maxSalary) : "",
+        department: existingJobData.department || "",
+        setting: existingJobData.setting || "",
+        experience: existingJobData.level,
+        employmentType: existingJobData.employmentType,
+        description: existingJobData.description || "",
+        tags: existingJobData.tags.map((tag: { name: any }) => tag.name),
+        appDeadline: existingJobData.appDeadline || "",
+      });
+      setHiringTeam([
+        ...existingJobData.hiringTeam.map((member: HiringTeamMemberForm) => ({
+          firstName: member.firstName,
+          lastName: member.lastName,
+          email: member.email,
+        })),
+      ]);
+    }
+  }, [existingJobData, isUpdating]);
+
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
       const deadline = new Date(date);
-      deadline.setHours(0, 0, 0, 0); // Set to end of the selected day
-      // Format date as YYYY-MM-DD for the form
+      deadline.setHours(0, 0, 0, 0);
       const formattedDateTime = deadline.toISOString().slice(0, 19);
       setCreateJobForm({ ...createJobForm, appDeadline: formattedDateTime });
     }
   };
 
-  const handleCreateJob = async () => {
+  const handleJobSubmit = async () => {
     const {
       title,
       streetAddress,
@@ -176,28 +212,48 @@ const CreateJob = () => {
     ]);
   };
 
-  const handlePostJob = async () => {
-    try {
-      const result = await createJob(createJobForm, user?.id!, hiringTeam);
-      if (!result) {
+  const handleConfirmJob = async () => {
+    if (isUpdating) {
+      try {
+        const result = await updateJob(createJobForm, Number(jobId), hiringTeam);
+        if (!result) {
+          Alert.alert("Error", "Failed to update job. Please try again.");
+          return;
+        }
+        Alert.alert("Success", "Job updated successfully");
+        refreshJobsForBusinessAndFilter({} as JobFilters);
+        queryClient.invalidateQueries({ queryKey: ["job", "business", Number(jobId)] });
+        updatePopularJobs(result);
+        router.back();
+        setShowConfirmationModal(false);
+      } catch (error) {
+        Alert.alert("Error", "Failed to update job. Please try again.");
+      } finally {
+        setAddingJob(false);
+      }
+    } else {
+      try {
+        const result = await createJob(createJobForm, user?.id!, hiringTeam);
+        if (!result) {
+          Alert.alert("Error", "Failed to create job. Please try again.");
+          return;
+        }
+        Alert.alert("Success", "Job created successfully");
+        refreshJobsForBusinessAndFilter({} as JobFilters);
+        setCreateJobForm({ ...defaultJobForm });
+        router.replace(`/businessJobs/${result.id}`);
+        setProfileSummary({
+          ...profileSummary,
+          totalJobsPosted: (profileSummary?.totalJobsPosted || 0) + 1,
+        } as any);
+        tagInputRef.current?.clear();
+        setShowConfirmationModal(false);
+      } catch (error) {
         Alert.alert("Error", "Failed to create job. Please try again.");
         return;
+      } finally {
+        setAddingJob(false);
       }
-      Alert.alert("Success", "Job created successfully");
-      refreshJobsForBusinessAndFilter({} as JobFilters);
-      setCreateJobForm({ ...defaultJobForm });
-      router.replace(`/businessJobs/${result.id}`);
-      setProfileSummary({
-        ...profileSummary,
-        totalJobsPosted: (profileSummary?.totalJobsPosted || 0) + 1,
-      } as any);
-      tagInputRef.current?.clear();
-      setShowConfirmationModal(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to create job. Please try again.");
-      return;
-    } finally {
-      setAddingJob(false);
     }
   };
 
@@ -225,14 +281,16 @@ const CreateJob = () => {
     });
     addTeamSound.seekTo(0);
     addTeamSound.play();
+    bottomSheetRef.current?.close();
   };
 
   const removeTeamMember = (member: HiringTeamMemberForm) => {
     setHiringTeam(hiringTeam.filter((m) => m !== member));
   };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <BackBar label="Create Job" />
+      <BackBar label={isUpdating ? "Update Job" : "Create Job"} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"} // adjust depending on header height
@@ -493,12 +551,12 @@ const CreateJob = () => {
               <Text className="form-input__label">Hiring Team</Text>
               <TouchableOpacity
                 className="flex-row items-center justify-center bg-emerald-50 w-1/2 px-4 py-2 rounded-lg border border-green-200 mb-3"
-                onPress={() => setShowAddHiringTeamModal(true)}
+                onPress={() => bottomSheetRef.current?.expand()}
               >
                 <Feather name="plus-circle" size={20} color="#10b981" />
                 <Text className="font-quicksand-semibold text-sm text-emerald-600 ml-2">Add Team Member</Text>
               </TouchableOpacity>
-              <View>
+              <View className="flex-col gap-2">
                 {hiringTeam.map((member, index) => (
                   <HiringTeamCard key={index} teamMember={member} handleRemove={() => removeTeamMember(member)} />
                 ))}
@@ -507,13 +565,15 @@ const CreateJob = () => {
             <View className="flex-row justify-center items-center gap-2">
               <TouchableOpacity
                 className="mt-6 apply-button px-6 py-3 w-1/2 rounded-lg flex items-center justify-center"
-                onPress={handleCreateJob}
+                onPress={handleJobSubmit}
                 disabled={addingJob}
               >
                 {addingJob ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
-                  <Text className="font-quicksand-semibold text-md text-white">Create Job</Text>
+                  <Text className="font-quicksand-semibold text-md text-white">
+                    {isUpdating ? "Update Job" : "Create Job"}
+                  </Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity className="mt-6 bg-red-500 px-6 py-3 w-1/2 rounded-lg flex items-center justify-center">
@@ -523,48 +583,6 @@ const CreateJob = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <ModalWithBg visible={showAddHiringTeamModal}>
-        <View className="flex-1 bg-white rounded-xl p-6 gap-2">
-          <Text className="font-quicksand-bold text-xl text-gray-900 mb-4">Add Hiring Team Member</Text>
-          <CustomInput
-            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
-            autoCapitalize="words"
-            label="First Name"
-            placeholder="eg. John"
-            value={hiringTeamMemberForm.firstName}
-            onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, firstName: text })}
-          />
-          <CustomInput
-            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
-            autoCapitalize="words"
-            label="Last Name"
-            placeholder="eg. Doe"
-            value={hiringTeamMemberForm.lastName}
-            onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, lastName: text })}
-          />
-          <CustomInput
-            customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium text-md text-gray-900"
-            label="Email"
-            placeholder="eg. john.doe@example.com"
-            value={hiringTeamMemberForm.email}
-            onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, email: text })}
-          />
-          <View className="flex-row items-center justify-center gap-2 w-full mt-4">
-            <TouchableOpacity
-              className="w-1/2 bg-emerald-500 px-4 py-2 rounded-lg items-center"
-              onPress={handleAddTeamMember}
-            >
-              <Text className="font-quicksand-semibold text-sm text-white">Add</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="w-1/2 bg-red-500 px-4 py-2 rounded-lg items-center"
-              onPress={() => setShowAddHiringTeamModal(false)}
-            >
-              <Text className="font-quicksand-semibold text-sm text-white">Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ModalWithBg>
       <ModalWithBg visible={showConfirmationModal} customHeight={0.85} customWidth={0.95}>
         <View className="flex-1">
           <View className="px-6 py-5 border-b border-gray-200 bg-white">
@@ -573,59 +591,87 @@ const CreateJob = () => {
                 <FontAwesome name="briefcase" size={20} color="#16a34a" />
               </View>
               <View className="flex-1">
-                <Text className="font-quicksand-bold text-xl text-gray-900">Confirm Job Posting</Text>
-                <Text className="font-quicksand-medium text-sm text-gray-600">Review job details before posting</Text>
+                {isUpdating ? (
+                  <>
+                    <Text className="font-quicksand-bold text-xl text-gray-900">Confirm Changes</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-600">
+                      Review job details before submitting
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text className="font-quicksand-bold text-xl text-gray-900">Confirm Job Posting</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-600">
+                      Review job details before posting
+                    </Text>
+                  </>
+                )}
               </View>
             </View>
           </View>
-
           <ScrollView
             className="flex-1"
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
           >
             <View className="px-6 py-4 space-y-6 flex-col gap-2">
-              <View className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-2">
-                <Text className="font-quicksand-bold text-md text-emerald-900">{createJobForm.title}</Text>
-                <View className="flex-row items-center gap-2">
-                  <FontAwesome name="map-marker" size={12} color="#10b981" />
-                  <Text className="font-quicksand-medium text-emerald-800 text-sm">
-                    {createJobForm.streetAddress && `${createJobForm.streetAddress}, `}
-                    {createJobForm.city}
-                    {createJobForm.state && `, ${createJobForm.state}`}
-                    {createJobForm.country && `, ${createJobForm.country}`} ,
-                    {createJobForm.postalCode && ` ${createJobForm.postalCode}`}
-                  </Text>
+              <View className="bg-emerald-50 p-5 rounded-xl border border-emerald-200 mb-2">
+                <Text className="font-quicksand-bold text-lg text-emerald-900">{createJobForm.title}</Text>
+                <View className="space-y-2">
+                  {createJobForm.streetAddress && (
+                    <View className="flex-row items-center gap-2">
+                      <FontAwesome name="map-marker" size={12} color="#10b981" />
+                      <Text className="font-quicksand-medium text-emerald-800 text-sm">
+                        {createJobForm.streetAddress}
+                      </Text>
+                    </View>
+                  )}
+                  <View className="flex-row items-center gap-2">
+                    <FontAwesome name="location-arrow" size={12} color="#10b981" />
+                    <Text className="font-quicksand-medium text-emerald-800 text-sm">
+                      {createJobForm.city}
+                      {createJobForm.state && `, ${createJobForm.state}`}
+                      {createJobForm.country && `, ${createJobForm.country}`}
+                    </Text>
+                  </View>
+                  {createJobForm.postalCode && (
+                    <View className="flex-row items-center gap-2">
+                      <FontAwesome name="envelope" size={12} color="#10b981" />
+                      <Text className="font-quicksand-medium text-emerald-800 text-sm">{createJobForm.postalCode}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
               <View>
                 <View className="flex-row items-center justify-between mb-1">
                   <Text className="font-quicksand-semibold text-base text-gray-900">Job Description</Text>
-                  <TouchableOpacity
-                    className="bg-blue-500 px-4 py-2 rounded-full flex-row items-center gap-2 border-2 border-amber-300"
-                    style={{
-                      shadowColor: "#10b981",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 8,
-                      elevation: 6,
-                    }}
-                    onPress={handleGenerateAIDescription}
-                    activeOpacity={0.8}
-                    disabled={generatingAIDescription}
-                  >
-                    {generatingAIDescription ? (
-                      <>
-                        <ActivityIndicator size="small" color="#ffffff" />
-                        <Text className="font-quicksand-bold text-white text-sm">Writing...</Text>
-                      </>
-                    ) : (
-                      <>
-                        <Ionicons name="sparkles" size={16} color="#fbbf24" />
-                        <Text className="font-quicksand-bold text-white text-sm">Enhance</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                  {!isUpdating && (
+                    <TouchableOpacity
+                      className="bg-blue-500 px-4 py-2 rounded-full flex-row items-center gap-2 border-2 border-amber-300"
+                      style={{
+                        shadowColor: "#10b981",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.4,
+                        shadowRadius: 8,
+                        elevation: 6,
+                      }}
+                      onPress={handleGenerateAIDescription}
+                      activeOpacity={0.8}
+                      disabled={generatingAIDescription}
+                    >
+                      {generatingAIDescription ? (
+                        <>
+                          <ActivityIndicator size="small" color="#ffffff" />
+                          <Text className="font-quicksand-bold text-white text-sm">Writing...</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Ionicons name="sparkles" size={16} color="#fbbf24" />
+                          <Text className="font-quicksand-bold text-white text-sm">Enhance</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <View className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-2">
                   <RenderMarkdown text={createJobForm.description} />
@@ -745,7 +791,7 @@ const CreateJob = () => {
                   shadowRadius: 6,
                   elevation: 4,
                 }}
-                onPress={handlePostJob}
+                onPress={handleConfirmJob}
                 activeOpacity={0.8}
                 disabled={addingJob}
               >
@@ -766,6 +812,133 @@ const CreateJob = () => {
           </View>
         </View>
       </ModalWithBg>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={["40%", "50%"]}
+        enablePanDownToClose
+        keyboardBehavior="extend"
+        android_keyboardInputMode="adjustResize"
+        backgroundStyle={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 12,
+        }}
+      >
+        <BottomSheetScrollView
+          className="flex-1 bg-white p-6"
+          contentContainerStyle={{ paddingBottom: 50 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-row items-center gap-3 mb-6">
+            <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+              <Feather name="user-plus" size={20} color="#10b981" />
+            </View>
+            <Text className="font-quicksand-semibold text-lg text-gray-900">Add Hiring Team Member</Text>
+          </View>
+
+          <View className="gap-6">
+            <View>
+              <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">First Name *</Text>
+              <BottomSheetTextInput
+                value={hiringTeamMemberForm.firstName}
+                autoCapitalize="words"
+                onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, firstName: text })}
+                placeholder="Thomas"
+                className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
+                style={{
+                  shadowColor: "#000",
+                  fontSize: 12,
+                  lineHeight: 16,
+                  paddingVertical: 10,
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              />
+            </View>
+            <View>
+              <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Last Name *</Text>
+              <BottomSheetTextInput
+                value={hiringTeamMemberForm.lastName}
+                autoCapitalize="words"
+                onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, lastName: text })}
+                placeholder="Brady"
+                className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
+                style={{
+                  shadowColor: "#000",
+                  fontSize: 12,
+                  lineHeight: 16,
+                  paddingVertical: 10,
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              />
+            </View>
+            <View>
+              <Text className="font-quicksand-semibold text-sm text-gray-700 mb-2">Email Address *</Text>
+              <BottomSheetTextInput
+                value={hiringTeamMemberForm.email}
+                autoCapitalize="none"
+                onChangeText={(text) => setHiringTeamMemberForm({ ...hiringTeamMemberForm, email: text })}
+                placeholder="thomas.brady@example.com"
+                className="border border-gray-300 rounded-xl p-3 font-quicksand-medium text-base text-gray-900"
+                style={{
+                  shadowColor: "#000",
+                  fontSize: 12,
+                  lineHeight: 16,
+                  paddingVertical: 10,
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              />
+            </View>
+
+            <View className="flex-row gap-3 mt-6">
+              <TouchableOpacity
+                className="flex-1 bg-emerald-500 rounded-xl py-4 items-center justify-center"
+                style={{
+                  shadowColor: "#3b82f6",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={handleAddTeamMember}
+                activeOpacity={0.8}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-quicksand-bold text-white text-base">Add Interviewer</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-1 bg-gray-100 border border-gray-200 rounded-xl py-4 items-center justify-center"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+                onPress={() => bottomSheetRef.current?.close()}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-quicksand-bold text-gray-700 text-base">Cancel</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </BottomSheetScrollView>
+      </BottomSheet>
     </SafeAreaView>
   );
 };

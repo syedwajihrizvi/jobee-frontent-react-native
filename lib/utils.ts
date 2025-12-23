@@ -585,6 +585,21 @@ export const converOAuthProviderToText = (provider: string) => {
   }
 }
 
+export const convertMeetingProviderToText = (provider: string) => {
+  switch(provider) {
+    case 'GOOGLE_MEET':
+      return "Google Meet";
+    case 'ZOOM':
+      return "Zoom";
+    case 'WEBEX':
+      return "Webex";
+    case 'MICROSOFT_TEAMS':
+      return "Microsoft Teams";
+    default:
+      return "Meeting Platform";
+  }
+}
+
 export const isValidGoogleDriveLink = (link: string) => {
   const googleDrivePattern = /^(https?:\/\/)?(www\.)?(drive\.google\.com\/file\/d\/|docs\.google\.com\/)[\w-]+/;
   return googleDrivePattern.test(link);

@@ -30,6 +30,7 @@ import {
   combineDateAndTime,
   convert10DigitNumberToPhoneFormat,
   convert11Or10DigitNumberToPhoneFormat,
+  convertMeetingProviderToText,
   formatDateForDisplay,
   formatTime,
   formatTimeForDisplay,
@@ -350,10 +351,14 @@ const ScheduleInterview = () => {
         isTokenValid = await isWebexTokenValid();
       }
       if (!isTokenValid) {
+        Alert.alert(
+          "Authentication Required",
+          `Please connect your ${convertMeetingProviderToText(meetingPlatform)} account to proceed.`
+        );
         setShowMeetingCreatorModal(true);
-        setShowConfirmationAfter(true);
         return;
       }
+      setShowConfirmationModal(true);
     }
     setShowConfirmationModal(true);
   };
@@ -503,7 +508,7 @@ const ScheduleInterview = () => {
               onlineMeetingInformation: originalOnlineMeetingInformation,
             });
           } else {
-            router.replace(`/businessJobs/interviews/interview/${interviewId}`);
+            router.back();
             return;
           }
         }
