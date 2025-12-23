@@ -658,13 +658,13 @@ const Applications = () => {
                     closeFilters();
                   }}
                 >
-                  <Text className="font-quicksand-semibold text-md">Apply</Text>
+                  <Text className="font-quicksand-semibold text-md text-white">Apply</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="apply-button px-6 py-3 w-full rounded-lg flex items-center justify-center"
                   onPress={clearFilters}
                 >
-                  <Text className="font-quicksand-semibold text-md">Clear</Text>
+                  <Text className="font-quicksand-semibold text-md text-white">Clear</Text>
                 </TouchableOpacity>
               </View>
             </View>

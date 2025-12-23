@@ -5,9 +5,9 @@ import { useConversations } from "@/lib/services/useConversations";
 import useAuthStore from "@/store/auth.store";
 import useConversationStore from "@/store/conversation.store";
 import { Feather } from "@expo/vector-icons";
-import { Redirect, router } from "expo-router";
+import { Redirect } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Messages = () => {
@@ -59,23 +59,6 @@ const Messages = () => {
               <Text className="font-quicksand-medium text-gray-600 text-center leading-6 mb-4">
                 Your conversations with potential employees will appear here. Start posting jobs to begin networking!
               </Text>
-
-              <TouchableOpacity
-                className="bg-emerald-500 px-6 py-3 rounded-xl flex-row items-center justify-center gap-2 mb-4 w-1/2"
-                style={{
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={() => router.push("/businessJobs/createJob")}
-                activeOpacity={0.8}
-              >
-                <Feather name="search" size={16} color="white" />
-                <Text className="font-quicksand-bold text-white">Post Jobs</Text>
-              </TouchableOpacity>
-
               <View className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex-row items-start gap-3">
                 <View className="w-6 h-6 bg-blue-100 rounded-full items-center justify-center mt-0.5">
                   <Feather name="info" size={12} color="#3b82f6" />

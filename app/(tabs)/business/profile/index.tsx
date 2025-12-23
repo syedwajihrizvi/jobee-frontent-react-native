@@ -7,7 +7,7 @@ import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { updateBusinessProfileImage } from "@/lib/updateProfiles/businessProfile";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser } from "@/type";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import * as ImagePicker from "expo-image-picker";
@@ -153,37 +153,68 @@ const Profile = () => {
         <ActivityIndicator size="large" color="#0000ff" className="mt-20" />
       ) : (
         <View className="p-4">
-          <View className="flex flex-row items-center gap-3 py-2">
-            <TouchableOpacity className="relative" onPress={handleProfileImagePicker}>
-              {uploadingUserProfileImage ? (
-                <ActivityIndicator size="small" color="#0000ff" />
-              ) : (
-                <>
-                  {renderProfileImage()}
-                  <View className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white">
-                    <Entypo name="edit" size={10} color="white" />
+          <View className="mb-2">
+            <View
+              className="bg-white rounded-xl p-4 border border-gray-100"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+                elevation: 6,
+              }}
+            >
+              <View className="flex-row items-center gap-3">
+                <TouchableOpacity className="relative" onPress={handleProfileImagePicker}>
+                  {uploadingUserProfileImage ? (
+                    <ActivityIndicator size="small" color="#0000ff" />
+                  ) : (
+                    <>
+                      <View
+                        className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center border-3 border-white"
+                        style={{
+                          shadowColor: "#10b981",
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 6,
+                          elevation: 4,
+                        }}
+                      >
+                        {" "}
+                        {renderProfileImage()}
+                      </View>
+
+                      <View className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white">
+                        <Entypo name="edit" size={10} color="white" />
+                      </View>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <View className="flex-1">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="font-quicksand-bold text-md text-gray-900">
+                      {user?.firstName} {user?.lastName}
+                    </Text>
+                    <View className="w-5 h-5 bg-emerald-500 rounded-full items-center justify-center">
+                      <Feather name="star" size={10} color="white" />
+                    </View>
                   </View>
-                </>
-              )}
-            </TouchableOpacity>
-            <View className="flex-1">
-              <View className="flex-row items-center gap-1">
-                <Text className="font-quicksand-bold text-base">
-                  {user?.firstName} {user?.lastName}
-                </Text>
-                {user?.verified && (
-                  <View className="w-4 h-4 bg-emerald-500 rounded-full items-center justify-center">
-                    <MaterialIcons name="check" size={10} color="white" />
-                  </View>
-                )}
+                  <Text className="font-quicksand-bold text-sm text-gray-600">
+                    {user?.title ? `${user?.title} @` : ""} {user?.companyName}
+                  </Text>
+                </View>
               </View>
-              <Text className="font-quicksand-semibold text-xs text-gray-600">
-                {user?.title && `${user?.title} @ `}
-                {user?.companyName}
-              </Text>
+              <TouchableOpacity
+                className="bg-emerald-500 rounded-lg px-4 py-2 flex-row items-center justify-center gap-2 mt-3 w-1/2"
+                onPress={() => router.push(`/companies/${user?.companyId}`)}
+                activeOpacity={0.8}
+              >
+                <FontAwesome5 name="building" size={12} color="white" />
+                <Text className="font-quicksand-bold text-white text-xs">View Company Profile</Text>
+                <Feather name="arrow-right" size={12} color="white" />
+              </TouchableOpacity>
             </View>
           </View>
-          <View className="divider" />
           <ScrollView
             contentContainerStyle={{ paddingBottom: 100 }}
             className="mt-4"
