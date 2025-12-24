@@ -10,6 +10,7 @@ type BusinessUserType = {
     setInterviews: (interviews: InterviewDetails[]) => void,
     setInterviewStatus: (interviewId: number, status: string) => void,
     getInterviewsByJobId: (jobId: number) => InterviewDetails[],
+    reset: () => void,
 }
 
 const useBusinessUserStore = create<BusinessUserType>((set, get) => ({
@@ -45,7 +46,11 @@ const useBusinessUserStore = create<BusinessUserType>((set, get) => ({
     })),
     getInterviewsByJobId: (jobId: number) => {
         return get().interviews.filter(interview => interview.jobId === jobId);
-    }
+    },
+    reset: () => set({
+        isLoadingInterviews: false,
+        interviews: [],
+    }),
 }))
 
 export default useBusinessUserStore;

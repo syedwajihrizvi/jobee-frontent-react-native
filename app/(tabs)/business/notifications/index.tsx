@@ -81,6 +81,8 @@ const Notifications = () => {
     } else if (notificationType === "ADDED_TO_HIRING_TEAM") {
       refreshEverything();
       router.push(`/businessJobs/${jobId}`);
+    } else if (notificationType === "JOB_UPDATED_VIA_AI" && jobId) {
+      router.push(`/businessJobs/${jobId}`);
     }
   };
 

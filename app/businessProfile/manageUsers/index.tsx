@@ -272,7 +272,6 @@ const ManageUsers = () => {
                 placeholderTextColor="#9ca3af"
                 value={invitePhone}
                 onChangeText={setInvitePhone}
-                keyboardType="phone-pad"
               />
             </View>
             <View className="mb-6">

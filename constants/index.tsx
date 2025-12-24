@@ -145,6 +145,12 @@ export const recruiterOnlyProfileLinks: {
     icon: <Feather name="users" size={20} color="#10b981" />,
     href: "/businessProfile/manageUsers",
   },
+  {
+    label: "Active Job Postings",
+    subtitle: "View the jobs you have posted.",
+    icon: <Feather name="briefcase" size={20} color="#10b981" />,
+    href: "/businessProfile/myJobPostings",
+  },
 ];
 export const businessProfileLinks: {
   label: string;
@@ -157,12 +163,6 @@ export const businessProfileLinks: {
     subtitle: "Update your personal information, social media links, and more.",
     icon: <Feather name="user" size={20} color="#10b981" />,
     href: "/businessProfile/editProfile",
-  },
-  {
-    label: "Active Job Postings",
-    subtitle: "View the jobs you have posted.",
-    icon: <Feather name="briefcase" size={20} color="#10b981" />,
-    href: "/businessProfile/myJobPostings",
   },
   {
     label: "Upcoming Interviews",

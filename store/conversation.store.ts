@@ -12,6 +12,7 @@ type ConversationState = {
     setUnreadMessages: (count: number) => void;
     reduceUnreadCount: () => void;
     increaseUnreadCount: () => void;
+    reset: () => void;
 }
 
 const useConversationStore = create<ConversationState>((set) => ({
@@ -27,7 +28,12 @@ const useConversationStore = create<ConversationState>((set) => ({
     setUnreadMessages: (count: number) => set({ unreadMessages: count }),
     reduceUnreadCount: () => set((state) => ({ unreadMessages: Math.max(0, state.unreadMessages - 1) })),
     increaseUnreadCount: () => set((state) => ({ unreadMessages: state.unreadMessages + 1 })),
-    
+    reset: () => set({
+        conversations: [],
+        loading: false,
+        unreadMessages: 0,
+        lastMessage: null,
+    })
 }))
 
 export default useConversationStore;

@@ -5,7 +5,16 @@ import { adminOnlyProfileLinks, businessProfileLinks, recruiterOnlyProfileLinks 
 import { signOut } from "@/lib/auth";
 import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { updateBusinessProfileImage } from "@/lib/updateProfiles/businessProfile";
+import useApplicationStore from "@/store/applications.store";
 import useAuthStore from "@/store/auth.store";
+import useBusinessInterviewsStore from "@/store/businessInterviews.store";
+import useBusinessJobsStore from "@/store/businessJobs.store";
+import useBusinessUserStore from "@/store/businessUser.store";
+import useCompanyStore from "@/store/company.store";
+import useCompleteProfileStore from "@/store/completeProfile.store";
+import useConversationStore from "@/store/conversation.store";
+import useNotificationStore from "@/store/notifications.store";
+import useOAuthDocStore from "@/store/oauth-doc.store";
 import { BusinessUser } from "@/type";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -25,6 +34,7 @@ const Profile = () => {
     setUserType,
     updateUserProfileImage,
   } = useAuthStore();
+
   const [uploadingUserProfileImage, setUploadingUserProfileImage] = useState(false);
   const [uploadedProfileImage, setUploadedProfileImage] = useState<string | null>(null);
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
@@ -115,7 +125,17 @@ const Profile = () => {
         style: "destructive",
         onPress: async () => {
           await signOut();
+          // Reset all stores
           removeUser();
+          useBusinessJobsStore.getState().reset();
+          useBusinessInterviewsStore.getState().reset();
+          useApplicationStore.getState().reset();
+          useBusinessUserStore.getState().reset();
+          useCompanyStore.getState().reset();
+          useCompleteProfileStore.getState().resetState();
+          useConversationStore.getState().reset();
+          useNotificationStore.getState().reset();
+          useOAuthDocStore.getState().resetState();
           setUserType("user");
           router.push("/(auth)/sign-in");
         },
@@ -180,7 +200,6 @@ const Profile = () => {
                           elevation: 4,
                         }}
                       >
-                        {" "}
                         {renderProfileImage()}
                       </View>
 

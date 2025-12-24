@@ -57,6 +57,8 @@ interface BusinessJobState {
     updatePopularJobs: (updatedJob: Job) => void;
     decrementPendingApplicationsForJob: (jobId: number) => void;
     incrementInterviewsForJob: (jobId: number) => void;
+
+    reset: () => void;
 }
 
 const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
@@ -368,7 +370,22 @@ const useBusinessJobsStore = create<BusinessJobState>((set, get) => ({
                 }
             };
         })
-    }
+    },
+    reset: () => set({
+        businessJobsByIdAndFilter: {},
+        loadingJobStates: {},
+        loadingMostPopularJobs: false,
+        totalCounts: {},
+        mostAppliedJobs: [],
+        mostViewedJobs: [],
+        viewsPerJobId: {},
+        applicationsPerJobId: {},
+        lastFetchedJobs: {},
+        lastFetchedMostPopularJobs: 0,
+        pagination: {},
+        pendingApplicationsByJobId: {},
+        interviewsByJobId: {},
+    })
 }))
 
 export default useBusinessJobsStore;

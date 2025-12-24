@@ -6,6 +6,12 @@ import { signOut } from "@/lib/auth";
 import { getS3ProfileImage } from "@/lib/s3Urls";
 import { updateUserProfileImage } from "@/lib/updateUserProfile";
 import useAuthStore from "@/store/auth.store";
+import useCompleteProfileStore from "@/store/completeProfile.store";
+import useConversationStore from "@/store/conversation.store";
+import useNotificationStore from "@/store/notifications.store";
+import useOAuthDocStore from "@/store/oauth-doc.store";
+import useUserStore from "@/store/user.store";
+import useUserJobsStore from "@/store/userJobsStore";
 import { User } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -93,6 +99,12 @@ const Profile = () => {
         onPress: async () => {
           await signOut();
           removeUser();
+          useCompleteProfileStore.getState().resetState();
+          useConversationStore.getState().reset();
+          useNotificationStore.getState().reset();
+          useOAuthDocStore.getState().resetState();
+          useUserJobsStore.getState().reset();
+          useUserStore.getState().reset();
           setUserType("user");
           router.push("/(auth)/sign-in");
         },

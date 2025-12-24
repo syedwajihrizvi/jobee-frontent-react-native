@@ -91,6 +91,8 @@ type UserType = {
     removeProject: (projectId: number) => void,
     updateSocialMedias: (socialMedia: SocialMedia) => void
 
+    reset: () => void;
+
 }
 
 const useUserStore = create<UserType>((set, get) => ({
@@ -497,7 +499,47 @@ const useUserStore = create<UserType>((set, get) => ({
                 },
             }));
         }
-    }
+    },
+    reset: () => set(() => ({
+        type: 'user',
+        isLoadingInterviews: false,
+        isLoadingApplications: false,
+        isLoadingLastApplication: false,
+        isLoadingSkills: false,
+        isLoadingExperiences: false,
+        isLoadingEducations: false,
+        isLoadingProjects: false,
+        isLoadingSocialMedias: false,
+        isLoadingDocuments: false,
+        interviews: [],
+        applicationStatuses: {},
+        applications: [],
+        skills: [],
+        experiences: [],
+        educations: [],
+        projects: [],
+        socialMedias: {
+          linkedin: { id: 0, url: "" },
+          github: { id: 0, url: "" },
+          stackOverflow: { id: 0, url: "" },
+          twitter: { id: 0, url: "" },
+          personalWebsite: { id: 0, url: "" },
+        },
+        resumeDocuments: [],
+        coverLetterDocuments: [],
+        certificateDocuments: [],
+        transcriptDocuments: [],
+        recommendationDocuments: [],
+        documents: [],
+        lastApplication: null,
+        lastFetchedLastApplication: null,
+        lastFetchedSkills: null,
+        lastFetchedExperiences: null,
+        lastFetchedEducations: null,
+        lastFetchedProjects: null,
+        lastFetchedSocialMedias: null,
+        lastFetchedDocuments: null
+    }))
 }))
 
 export default useUserStore;

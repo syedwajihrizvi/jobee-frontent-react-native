@@ -17,6 +17,7 @@ interface CompanyState {
 
     updateCompany: (companyId: number, companyData: Partial<Company>) => void; 
     updateCompanyLogoUrl: (companyId: number, logoUrl: string) => void;
+    reset: () => void;
 }
 
 const useCompanyStore = create<CompanyState>((set, get) => ({
@@ -97,7 +98,14 @@ const useCompanyStore = create<CompanyState>((set, get) => ({
                 [companyId]: updatedData,
             },
         }));
-    }
+    },
+
+    reset: () => set({
+        companyInformation: {},
+        loadingCompanyInformation: false,
+        lastFetchedCompanyInformation: null,
+    }),
+
 }))
 
 export default useCompanyStore;

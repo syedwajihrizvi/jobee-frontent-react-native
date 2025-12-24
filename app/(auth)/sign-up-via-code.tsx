@@ -73,7 +73,7 @@ const SignUpViaCode = () => {
         <View className="flex-1">
           <CustomInput
             label="Company Code"
-            placeholder="Enter your company code"
+            placeholder="X-ABCD"
             value={signUpForm.companyCode}
             customClass="border border-gray-300 rounded-xl p-4 font-quicksand-medium bg-white"
             onChangeText={(text) => setSignUpForm({ ...signUpForm, companyCode: text })}

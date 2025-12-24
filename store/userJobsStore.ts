@@ -90,6 +90,8 @@ interface UserJobsState {
     addViewForJob: (jobId: number) => void;
     addApplicationForJob: (jobId: number) => void;
     incrementApplicationsForJob: (jobId: number, count: number) => void;
+
+    reset: () => void;
 }
 
 const useUserJobsStore = create<UserJobsState>((set, get) => ({
@@ -574,7 +576,32 @@ const useUserJobsStore = create<UserJobsState>((set, get) => ({
                 [jobId]: currentApplications + count,
             }
         }))
-    }
+    },
+    reset: () => set(() => ({
+        userJobsByFilter: {},
+        recommendedJobs: [],
+        favoriteJobs: [],
+        appliedJobsByFilter: {},
+
+        loadingJobsByFilterStates: {},
+        loadingFavoriteJobs: false,
+        loadingRecommendedJobsState: false,
+        loadingAppliedJobsByFilterStates: {},
+
+        totalCountsByFilter: {},
+        totalFavoriteJobsCount: 0,
+        totalAppliedJobsCountByFilter: {},
+        totalViewsForJobById: {},
+        totalApplicationsForJobById: {},
+
+        paginationJobsbyFilter: {},
+        paginationFavoriteJobs: { currentPage: 0, hasMore: false },
+        paginationAppliedJobsByFilter: {},
+
+        lastFetchedJobsByFilter: {},
+        lastFetchedFavoriteJobs: null,
+        lastFetchedAppliedJobsByFilter: {},
+    })  )
 }))
 
 export default useUserJobsStore;

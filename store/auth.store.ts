@@ -36,7 +36,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  removeUser: () => set({ user: null, isAuthenticated: false }),
+  removeUser: () => set({ user: null, isAuthenticated: false, userType: 'user', isReady: false, isLoading: false }),
   updateUserProfileImage: (profileImageUrl: string) => {
     const state = get();
     const updatedUser = { ...(state.user as User), profileImageUrl } as User;

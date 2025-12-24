@@ -772,7 +772,7 @@ export type NotificationContext = {
     fullName?: string;
 }
 export type NotificationType = 
-"REJECTION" | 
+"REJECTION" | "JOB_UPDATED_VIA_AI" |
 "INTERVIEW_SCHEDULED" | 'INTERVIEW_TO_CONDUCT_SCHEDULED' |
 "INTERVIEW_CONDUCTOR_UPDATED" | "INTERVIEW_CONDUCTOR_REMOVED" |
 "INTERVIEW_RESULT" | 

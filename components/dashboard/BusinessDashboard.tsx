@@ -79,8 +79,8 @@ const BusinessDashboard = ({ userType }: { userType: string }) => {
     if (interviewCount === 0) {
       return (
         <View className="items-center py-4">
-          <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center">
-            <Feather name="calendar" size={16} color="#6b7280" />
+          <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
+            <Feather name="calendar" size={16} color="#f59e0b" />
           </View>
           <Text className="font-quicksand-bold text-lg text-gray-900">No Upcoming Interviews</Text>
           <Text className="font-quicksand-medium text-sm text-gray-600 text-center">
@@ -228,22 +228,23 @@ const BusinessDashboard = ({ userType }: { userType: string }) => {
                       <Feather name="send" size={18} color="white" />
                       <Text className="font-quicksand-bold text-white text-xs mt-1">Invite to Jobee</Text>
                     </TouchableOpacity>
-
-                    <TouchableOpacity
-                      className="flex-1 bg-green-500 rounded-lg px-3 py-3 items-center justify-center"
-                      style={{
-                        shadowColor: "#22c55e",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
-                        elevation: 3,
-                      }}
-                      onPress={() => router.push("/businessJobs/createJob")}
-                      activeOpacity={0.8}
-                    >
-                      <Feather name="calendar" size={18} color="white" />
-                      <Text className="font-quicksand-bold text-white text-xs mt-1">Create Job</Text>
-                    </TouchableOpacity>
+                    {userType !== "EMPLOYEE" && (
+                      <TouchableOpacity
+                        className="flex-1 bg-green-500 rounded-lg px-3 py-3 items-center justify-center"
+                        style={{
+                          shadowColor: "#22c55e",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: 3,
+                        }}
+                        onPress={() => router.push("/businessJobs/createJob")}
+                        activeOpacity={0.8}
+                      >
+                        <Feather name="calendar" size={18} color="white" />
+                        <Text className="font-quicksand-bold text-white text-xs mt-1">Create Job</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
 
                   <View className="flex-row gap-2">
@@ -370,25 +371,31 @@ const BusinessDashboard = ({ userType }: { userType: string }) => {
                     <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center mb-1">
                       <Feather name="briefcase" size={16} color="#10b981" />
                     </View>
-                    <Text className="font-quicksand-bold text-lg text-gray-900">No Jobs Posted Yet</Text>
-                    <Text className="font-quicksand-medium text-sm text-gray-600 text-center mb-4 px-4">
-                      Start attracting top talent by posting your first job listing.
+                    <Text className="font-quicksand-bold text-lg text-gray-900">
+                      {user?.role === "EMPLOYEE" ? "No Jobs Available" : "No Jobs Posted Yet"}
                     </Text>
-                    <TouchableOpacity
-                      className="bg-emerald-500 rounded-lg px-6 py-3 flex-row items-center gap-2"
-                      style={{
-                        shadowColor: "#10b981",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
-                        elevation: 3,
-                      }}
-                      onPress={() => router.push("/businessJobs/createJob")}
-                      activeOpacity={0.8}
-                    >
-                      <Feather name="plus" size={16} color="white" />
-                      <Text className="font-quicksand-bold text-white text-sm">Post First Job</Text>
-                    </TouchableOpacity>
+                    <Text className="font-quicksand-medium text-sm text-gray-600 text-center mb-4 px-4">
+                      {user?.role === "EMPLOYEE"
+                        ? "When you get added to hiring teams for jobs, they'll appear here."
+                        : "Start attracting top talent by posting your first job listing."}
+                    </Text>
+                    {user?.role !== "EMPLOYEE" && (
+                      <TouchableOpacity
+                        className="bg-emerald-500 rounded-lg px-6 py-3 flex-row items-center gap-2"
+                        style={{
+                          shadowColor: "#10b981",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: 3,
+                        }}
+                        onPress={() => router.push("/businessJobs/createJob")}
+                        activeOpacity={0.8}
+                      >
+                        <Feather name="plus" size={16} color="white" />
+                        <Text className="font-quicksand-bold text-white text-sm">Post First Job</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               </View>

@@ -1,5 +1,4 @@
 import BusinessDashboard from "@/components/dashboard/BusinessDashboard";
-import EmployeeDashboard from "@/components/dashboard/EmployeeDashboard";
 import useAuthStore from "@/store/auth.store";
 import { BusinessUser } from "@/type";
 import React from "react";
@@ -12,14 +11,7 @@ const Dashboard = () => {
   if (isLoadingUser) {
     return <ActivityIndicator size="large" />;
   }
-  if (user?.role === "ADMIN") {
-    return <BusinessDashboard userType="ADMIN" />;
-  }
-  if (user?.role === "RECRUITER") {
-    return <BusinessDashboard userType="RECRUITER" />;
-  }
-
-  return <EmployeeDashboard />;
+  return <BusinessDashboard userType={user?.role || "EMPLOYEE"} />;
 };
 
 export default Dashboard;

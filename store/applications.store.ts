@@ -71,6 +71,7 @@ interface ApplicationsState {
     resetShortListedFilters: (jobId: number, status: string) => void;
     resetFiltersWithStatus: (jobId: number, oldStatus: string, newStatus: string) => void;
     isCandidateShortListed: (jobId: number, applicationId: number) => boolean;
+    reset: () => void;
 }
 
 const useApplicationStore = create<ApplicationsState>((set, get) => ({
@@ -415,7 +416,25 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
         const state = get();
         const shortListed = state.shortListedApplicationsByJob[jobId] || [];
         return shortListed.includes(applicationId);
-    }
+    },
+    reset: () => set({
+        applicationIdToStatus: {},
+        applicationsPerJob: {},
+        applicationsByJobAndFilter: {},
+        shortListedApplicationsByJob: {},
+
+        loadingApplicationStates: {},
+        loadingShortListedStates: {},
+        loadingCandidatesStates: {},
+
+        candidatesForJob: {},
+        totalCounts: {},
+        pagination: {},
+
+        lastFetchApplicants: {},
+        lastFetchedShortListedApplicants: {},
+        lastFetchedCandidates: {}
+    })
 }));
 
 export default useApplicationStore;

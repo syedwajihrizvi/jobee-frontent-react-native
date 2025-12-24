@@ -156,47 +156,53 @@ const RenderBusinessJobs = ({ postedByAccountId, showHeader = true }: Props) => 
             fetchJobsForBusinessAndFilter(filters, nextPage);
           }
         }}
-        ListEmptyComponent={() => (
-          <View className="flex-1 items-center justify-center px-6 py-20">
-            <View
-              className="w-20 h-20 bg-emerald-500 rounded-full items-center justify-center mb-6"
-              style={{
-                shadowColor: "#10b981",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 4,
-              }}
-            >
-              <Feather name="briefcase" size={32} color="white" />
-            </View>
-
-            <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Jobs Found</Text>
-
-            <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6 max-w-xs">
-              {filters.search || filterCount > 0
-                ? "No jobs match your current search criteria. Try adjusting your filters or search terms."
-                : "You haven't posted any jobs yet. Create your first job posting to get started."}
-            </Text>
-            {filters.search === "" && filterCount === 0 && (
-              <TouchableOpacity
-                className="flex-1 bg-emerald-500 rounded-lg px-6 py-3 flex-row items-center justify-center gap-2 w-2/3"
+        ListEmptyComponent={() =>
+          isLoading ? (
+            <ActivityIndicator size="large" color="#10b981" />
+          ) : (
+            <View className="flex-1 items-center justify-center px-6 py-20">
+              <View
+                className="w-20 h-20 bg-emerald-500 rounded-full items-center justify-center mb-6"
                 style={{
-                  shadowColor: "#22c55e",
-                  shadowOffset: { width: 0, height: 3 },
+                  shadowColor: "#10b981",
+                  shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.2,
-                  shadowRadius: 6,
+                  shadowRadius: 8,
                   elevation: 4,
                 }}
-                onPress={() => router.push("/businessJobs/createJob")}
-                activeOpacity={0.8}
               >
-                <Entypo name="circle-with-plus" size={22} color="white" />
-                <Text className="font-quicksand-semibold text-white text-lg">Create Job</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+                <Feather name="briefcase" size={32} color="white" />
+              </View>
+
+              <Text className="font-quicksand-bold text-2xl text-gray-900 text-center mb-3">No Jobs Found</Text>
+
+              <Text className="font-quicksand-medium text-base text-gray-600 text-center leading-6 mb-6 max-w-xs">
+                {filters.search || filterCount > 0
+                  ? "No jobs match your current search criteria. Try adjusting your filters or search terms."
+                  : user?.role === "EMPLOYEE"
+                    ? "When you get added to hiring teams for jobs, they'll appear here."
+                    : "You haven't posted any jobs yet. Create your first job posting to get started."}
+              </Text>
+              {filters.search === "" && filterCount === 0 && user?.role !== "EMPLOYEE" && (
+                <TouchableOpacity
+                  className="flex-1 bg-emerald-500 rounded-lg px-6 py-3 flex-row items-center justify-center gap-2 w-2/3"
+                  style={{
+                    shadowColor: "#22c55e",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 6,
+                    elevation: 4,
+                  }}
+                  onPress={() => router.push("/businessJobs/createJob")}
+                  activeOpacity={0.8}
+                >
+                  <Entypo name="circle-with-plus" size={22} color="white" />
+                  <Text className="font-quicksand-semibold text-white text-lg">Create Job</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )
+        }
         ListFooterComponent={() => {
           return isLoading ? <ActivityIndicator size="small" color="green" /> : null;
         }}

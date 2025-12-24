@@ -36,6 +36,7 @@ interface InterviewsState  {
     refreshUpcomingInterviews: () => Promise<void>;
     refreshUpcomingInterviewsForJob: (jobId: number) => Promise<void>;
     refreshEverything: () => Promise<void>;
+    reset: () => void;
 }
 
 const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
@@ -230,7 +231,15 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
         }))
         await newState.fetchInterviewsForJobAndFilter({});
         await newState.fetchInterviewsForJobAndFilter({ status: "SCHEDULED" as InterviewFilter });
-    }
+    },
+    reset: () => set({
+        interviewIdToStatus: {},
+        interviewsByJobIdAndFilter: {},
+        loadingInterviewStates: {},
+        totalCounts: {},
+        lastFetchedInterviews: {},
+        pagination: {}
+    })
 }))
 
 export default useBusinessInterviewsStore;
