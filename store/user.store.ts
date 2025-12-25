@@ -5,6 +5,7 @@ import { Application, Education, Experience, InterviewDetails, Project, SocialMe
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from "zustand";
 
+// TODO: Should have interviews fetched separately with pagination
 type UserType = {
     type: 'user' | 'business',
     isLoadingInterviews: boolean,

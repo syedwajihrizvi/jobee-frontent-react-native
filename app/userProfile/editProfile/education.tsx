@@ -141,7 +141,6 @@ const Educations = () => {
   };
 
   const educations = getEducations();
-  console.log("SYED-DEBUG: Rendering Educations component with educations:", educations);
   const isLoading = isLoadingEducations;
   return (
     <SafeAreaView>

@@ -1,8 +1,8 @@
-import { getS3BusinessProfileImage } from "@/lib/s3Urls";
 import { InterviewerProfileSummary } from "@/type";
 import { Entypo, Feather, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import React from "react";
-import { ActivityIndicator, Dimensions, Image, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Dimensions, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import RenderBusinessProfileImage from "./RenderBusinessProfileImage";
 
 type Props = {
   visible: boolean;
@@ -73,17 +73,13 @@ const ViewInterviewerModal = ({ visible, handleClose, loadingInterviewer, interv
                       elevation: 8,
                     }}
                   >
-                    {interviewerDetails?.profileImageUrl ? (
-                      <Image
-                        source={{ uri: getS3BusinessProfileImage(interviewerDetails.profileImageUrl) }}
-                        className="w-24 h-24 rounded-full" // Add explicit sizing and rounded
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
-                        <Feather name="user" size={40} color="#6b7280" />
-                      </View>
-                    )}
+                    <RenderBusinessProfileImage
+                      profileImageSize={24}
+                      fontSize={20}
+                      profileImageUrl={interviewerDetails?.profileImageUrl}
+                      firstName={interviewerDetails?.firstName}
+                      lastName={interviewerDetails?.lastName}
+                    />
                     {interviewerDetails?.verified && (
                       <View className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full items-center justify-center border-4 border-white">
                         <Entypo name="check" size={12} color="white" />

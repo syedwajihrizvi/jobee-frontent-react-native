@@ -432,10 +432,10 @@ export const getDecisionStyle = (decision: string) => {
         return { bgColor: "bg-gray-100", textColor: "text-gray-700", shadowColor: "#6b7280" };
     }
   }
-export const getDecisionString = (decision: string) => {
+export const getDecisionString = (decision: string, userType: 'user' | 'business' = 'business') => {
   switch(decision) {
     case 'NEXT_ROUND':
-      return "Candidate moved to next round";
+      return userType === 'user' ? "Passed" : "Candidate moved to next round";
     case 'REJECTED':
       return "Rejected";
     case 'PENDING':

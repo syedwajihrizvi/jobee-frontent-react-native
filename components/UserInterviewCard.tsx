@@ -1,4 +1,10 @@
-import { convertTo12Hour, getInterviewStyle, interviewStatusStyles } from "@/lib/utils";
+import {
+  convertTo12Hour,
+  getDecisionString,
+  getDecisionStyle,
+  getInterviewStyle,
+  interviewStatusStyles,
+} from "@/lib/utils";
 import { InterviewSummary } from "@/type";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -37,6 +43,26 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
     );
   };
 
+  const renderInterviewDecision = (decision: string) => {
+    const decisionStyle = getDecisionStyle(decision);
+    const { bgColor, textColor, shadowColor } = decisionStyle;
+    const decisionString = getDecisionString(decision, "user");
+    return (
+      <View
+        className={`${bgColor} px-3 py-1 rounded-full`}
+        style={{
+          shadowColor: shadowColor,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.2,
+          shadowRadius: 2,
+          elevation: 1,
+        }}
+      >
+        <Text className={`font-quicksand-bold text-xs ${textColor}`}>{decisionString}</Text>
+      </View>
+    );
+  };
+
   return (
     <TouchableOpacity
       className={`${withPadding ? "mx-4" : ""} mb-4 bg-white rounded-2xl p-5 border border-gray-100`}
@@ -58,18 +84,22 @@ const UserInterviewCard = ({ item, withPadding = true }: Props) => {
             jobTitle={item.jobTitle}
           />
         </View>
-        <View
-          className="bg-indigo-100 px-3 py-1 rounded-full"
-          style={{
-            shadowColor: "#6366f1",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2,
-            shadowRadius: 2,
-            elevation: 1,
-          }}
-        >
-          <Text className="font-quicksand-bold text-xs text-indigo-700">{item.interviewDate}</Text>
-        </View>
+        {item.status !== "COMPLETED" ? (
+          <View
+            className="bg-indigo-100 px-3 py-1 rounded-full"
+            style={{
+              shadowColor: "#6366f1",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.2,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+          >
+            <Text className="font-quicksand-bold text-xs text-indigo-700">{item.interviewDate}</Text>
+          </View>
+        ) : (
+          renderInterviewDecision(item.decisionResult)
+        )}
       </View>
       <View className="flex-row flex-wrap gap-2 mb-3">
         <View

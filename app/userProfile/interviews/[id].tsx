@@ -29,6 +29,7 @@ const InterviewDetails = () => {
   const { data: interviewMetadata, isLoading } = useInterviewDetails(Number(interviewId));
   const [interviewPrepStatus, setInterviewPrepStatus] = useState("");
 
+  console.log("SYED-DEBUG: Interview Metadata:", interviewMetadata);
   useEffect(() => {
     if (!isLoading && interviewMetadata) {
       setInterviewPrepStatus(interviewMetadata.preparationStatus);
@@ -247,6 +248,69 @@ const InterviewDetails = () => {
                 <Text className="font-quicksand-semibold text-green-800 text-sm mb-1">Keep Going!</Text>
                 <Text className="font-quicksand-medium text-green-700 text-xs leading-4">
                   This decision doesn nt define your abilities. Keep applying and stay confident in your journey!
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      );
+    } else if (interviewMetadata?.decisionResult === "NEXT_ROUND") {
+      return (
+        <View
+          className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-blue-100"
+          style={{
+            shadowColor: "#3b82f6",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 6,
+          }}
+        >
+          <View className="flex-row items-center gap-3 mb-4">
+            <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center">
+              <Feather name="clock" size={24} color="#3b82f6" />
+            </View>
+            <View className="flex-1">
+              <Text className="font-quicksand-bold text-blue-600 text-xl">Interview Completed</Text>
+              <Text className="font-quicksand-medium text-sm text-gray-600">
+                Congratulations! You will be moving to the next round!
+              </Text>
+            </View>
+          </View>
+          <View className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-bold text-blue-800 text-base text-center leading-6">
+              Thank you for completing your interview! The hiring team was impressed with your performance and would
+              like to invite you to the next round of interviews. Please stay tuned for further details.
+            </Text>
+          </View>
+          <View className="mb-4">
+            <View className="flex-row items-center gap-2 mb-3">
+              <Feather name="info" size={16} color="#6b7280" />
+              <Text className="font-quicksand-bold text-base text-gray-900">What happens next?</Text>
+            </View>
+            <View className="space-y-2">
+              <View className="flex-row items-start gap-3">
+                <View className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                <Text className="font-quicksand-medium text-gray-700 text-sm leading-5 flex-1">
+                  You should receive a Jobee notification and email about your next interview.
+                </Text>
+              </View>
+              <View className="flex-row items-start gap-3">
+                <View className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                <Text className="font-quicksand-medium text-gray-700 text-sm leading-5 flex-1">
+                  Keep alert and in the meantime, continue preparing!
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View className="bg-emerald-50 border border-green-200 rounded-xl p-4">
+            <View className="flex-row items-start gap-2">
+              <Feather name="thumbs-up" size={16} color="#16a34a" />
+              <View className="flex-1">
+                <Text className="font-quicksand-semibold text-green-800 text-sm mb-1">Great Job!</Text>
+                <Text className="font-quicksand-medium text-green-700 text-xs leading-4">
+                  You&apos;ve taken an important step in your career journey. Stay positive and continue pursuing your
+                  goals!
                 </Text>
               </View>
             </View>

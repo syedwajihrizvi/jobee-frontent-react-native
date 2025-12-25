@@ -108,7 +108,6 @@ const useApplicationStore = create<ApplicationsState>((set, get) => ({
                 }
             }))
         } catch (error) {
-            console.log("SYED-DEBUG: Applications Store - Error fetching shortlisted applications for job", error);
         } finally {
             set((state) => ({
                 loadingShortListedStates: {...state.loadingShortListedStates, [jobId]: false}

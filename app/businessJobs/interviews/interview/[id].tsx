@@ -44,6 +44,7 @@ const InterviewDetailsForBusiness = () => {
       setInterview(interviewDetails);
     }
   }, [interviewDetails, isLoading]);
+
   const renderDecisionButton = (result: string) => {
     if (result === "PENDING") {
       return (
@@ -58,7 +59,7 @@ const InterviewDetailsForBusiness = () => {
           }}
           onPress={() =>
             router.push(
-              `/businessJobs/interviews/interview/interviewDecision/${id}?candidateName=${interview?.candidateName}&candidateProfileImage=${interview?.candidateProfileImageUrl}&jobTitle=${interview?.jobTitle}&candidateId=${interview?.candidateId}&applicantId=${interview?.applicationId}&jobId=${interview?.jobId}`
+              `/businessJobs/interviews/interview/interviewDecision/${id}?candidateName=${interview?.candidateName}&candidateProfileImage=${interview?.candidateProfileImageUrl}&applicantEmail=${interview?.candidateEmail}&jobTitle=${interview?.jobTitle}&candidateId=${interview?.candidateId}&applicantId=${interview?.applicationId}&jobId=${interview?.jobId}`
             )
           }
           activeOpacity={0.8}
@@ -168,10 +169,13 @@ const InterviewDetailsForBusiness = () => {
     <SafeAreaView className="flex-1 bg-gray-50">
       <BackBar label="Interview Details" />
       <ScrollView className="p-2" showsVerticalScrollIndicator={false}>
-        {isLoading || !interview ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="green" />
-            <Text className="font-quicksand-semibold text-lg">Fetching Interview Details</Text>
+        {isLoading ? (
+          <View className="flex-1 justify-center items-center p-6">
+            <View className="w-20 h-20 bg-emerald-100 rounded-full items-center justify-center mb-4">
+              <ActivityIndicator size="large" color="#10b981" />
+            </View>
+            <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Loading Interview</Text>
+            <Text className="font-quicksand-medium text-sm text-gray-600">Fetching interview details...</Text>
           </View>
         ) : (
           <View
@@ -184,184 +188,214 @@ const InterviewDetailsForBusiness = () => {
               elevation: 6,
             }}
           >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                {interview?.status === "CANCELLED" ? (
-                  <>
-                    <View className={`w-3 h-3 rounded-full bg-red-300`} />
-                    <Text className="font-quicksand-semibold text-base text-gray-700">Cancelled</Text>
-                  </>
-                ) : (
-                  <>
-                    <View className={`w-3 h-3 rounded-full bg-emerald-300`} />
-                    <Text className="font-quicksand-semibold text-base text-gray-700">
-                      {interview?.status === "SCHEDULED" ? "Upcoming" : "Completed"}
-                    </Text>
-                  </>
-                )}
-              </View>
-              {interviewDetails?.rescheduleRequest && (
-                <TouchableOpacity className="relative" onPress={() => setShowBellNotification(true)}>
-                  <FontAwesome6 name="bell" size={18} color="black" />
+            {!interview ? (
+              <View className="flex-1 justify-center items-center p-6">
+                <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+                  <Feather name="alert-circle" size={40} color="#6b7280" />
+                </View>
+                <Text className="font-quicksand-bold text-xl text-gray-900 mb-2">Interview Not Found</Text>
+                <Text className="font-quicksand-medium text-base text-gray-600 text-center mb-6">
+                  The interview you are looking for does not exist or may have been removed.
+                </Text>
+                <TouchableOpacity
+                  className="bg-emerald-500 rounded-xl py-3 px-6"
+                  style={{
+                    shadowColor: "#10b981",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 6,
+                    elevation: 4,
+                  }}
+                  onPress={() => router.back()}
+                  activeOpacity={0.8}
+                >
+                  <Text className="font-quicksand-semibold text-white text-base">Go Back</Text>
                 </TouchableOpacity>
-              )}
-            </View>
-            {interview?.status === "CANCELLED" && (
-              <View
-                className="bg-red-100 rounded-xl py-4 px-5 flex-col gap-2"
-                style={{
-                  shadowColor: "#ef4444",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 6,
-                  elevation: 3,
-                }}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="alert-circle" size={20} color="#ef4444" />
-                  <Text className="font-quicksand-bold text-red-700 text-base">Reason:</Text>
-                </View>
-                <Text className="font-quicksand-medium text-gray-700 text-sm flex-1">
-                  {interview.cancellationReason}
-                </Text>
               </View>
-            )}
-            {interview?.status === "SCHEDULED" && (
-              <TouchableOpacity
-                className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
-                style={{
-                  shadowColor: "#10b981",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={() => setInterviewActionsModal(true)}
-                activeOpacity={0.8}
-              >
-                <View className="flex-row items-center gap-3">
-                  <Ionicons name="options" size={16} color="white" />
-                  <Text className="font-quicksand-semibold text-white text-base">Interview Actions</Text>
-                </View>
-                <Feather name="arrow-right" size={16} color="white" />
-              </TouchableOpacity>
-            )}
-            {interview?.status === "COMPLETED" && <View>{renderDecisionButton(interview?.decisionResult!)}</View>}
-            <View>
-              <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">{interview?.jobTitle}</Text>
-              <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <Text className="font-quicksand-bold text-lg text-gray-800">{interview?.title}</Text>
-                <Text className="font-quicksand-medium text-sm text-gray-600 leading-6">{interview?.description}</Text>
-              </View>
-            </View>
-            <View
-              className="bg-white mt-4 rounded-2xl p-4 border border-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              <View className="flex-row items-start gap-2">
-                <RenderUserProfileImage
-                  profileImageUrl={interview?.candidateProfileImageUrl}
-                  profileImageSize={12}
-                  fullName={interview?.candidateName || "Candidate"}
-                />
-                <View className="flex-1">
-                  <Text className="font-quicksand-bold text-lg text-gray-900">
-                    {interview?.candidateName || "Candidate Name"}
-                  </Text>
-                  <View className="flex-row items-center gap-1">
-                    <Feather name="briefcase" size={12} color="#6b7280" />
-                    <Text className="font-quicksand-medium text-sm text-gray-600">Job Applicant</Text>
+            ) : (
+              <>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-2">
+                    {interview?.status === "CANCELLED" ? (
+                      <>
+                        <View className={`w-3 h-3 rounded-full bg-red-300`} />
+                        <Text className="font-quicksand-semibold text-base text-gray-700">Cancelled</Text>
+                      </>
+                    ) : (
+                      <>
+                        <View className={`w-3 h-3 rounded-full bg-emerald-300`} />
+                        <Text className="font-quicksand-semibold text-base text-gray-700">
+                          {interview?.status === "SCHEDULED" ? "Upcoming" : "Completed"}
+                        </Text>
+                      </>
+                    )}
                   </View>
+                  {interviewDetails?.rescheduleRequest && (
+                    <TouchableOpacity className="relative" onPress={() => setShowBellNotification(true)}>
+                      <FontAwesome6 name="bell" size={18} color="black" />
+                    </TouchableOpacity>
+                  )}
                 </View>
-              </View>
-              <TouchableOpacity
-                className="bg-emerald-500 rounded-xl px-4 py-3 items-center justify-center min-w-[90px] mt-2"
-                style={{
-                  shadowColor: "#6366f1",
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={() =>
-                  router.push(
-                    `/businessJobs/applications/applicant/${interview?.applicationId}?jobId=${interview?.jobId}&candidateId=${interview?.candidateId}`
-                  )
-                }
-                activeOpacity={0.8}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Feather name="eye" size={14} color="white" />
-                  <Text className="font-quicksand-bold text-white text-sm">View Candidate</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-            <View className="gap-3">
-              <View className="flex-row items-center gap-3">
-                <Feather name="calendar" size={16} color="#10b981" />
-                <Text className="font-quicksand-semibold text-base">{interview?.interviewDate}</Text>
-              </View>
-              <View className="flex-row items-center gap-3">
-                <Feather name="clock" size={16} color="#10b981" />
-                <Text className="font-quicksand-semibold">
-                  {convertTo12Hour(interview?.startTime!)} - {convertTo12Hour(interview?.endTime!)} (
-                  {interview?.timezone})
-                </Text>
-              </View>
-            </View>
-            <InterviewFormatSummary interviewDetails={interview || null} />
-            <View
-              className="bg-white mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
-            >
-              <View className="flex-row items-center gap-3 mb-4">
-                <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
-                  <Feather name="users" size={12} color="#22c55e" />
-                </View>
+                {interview?.status === "CANCELLED" && (
+                  <View
+                    className="bg-red-100 rounded-xl py-4 px-5 flex-col gap-2"
+                    style={{
+                      shadowColor: "#ef4444",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.12,
+                      shadowRadius: 6,
+                      elevation: 3,
+                    }}
+                  >
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="alert-circle" size={20} color="#ef4444" />
+                      <Text className="font-quicksand-bold text-red-700 text-base">Reason:</Text>
+                    </View>
+                    <Text className="font-quicksand-medium text-gray-700 text-sm flex-1">
+                      {interview.cancellationReason}
+                    </Text>
+                  </View>
+                )}
+                {interview?.status === "SCHEDULED" && (
+                  <TouchableOpacity
+                    className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-between"
+                    style={{
+                      shadowColor: "#10b981",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 6,
+                      elevation: 4,
+                    }}
+                    onPress={() => setInterviewActionsModal(true)}
+                    activeOpacity={0.8}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <Ionicons name="options" size={16} color="white" />
+                      <Text className="font-quicksand-semibold text-white text-base">Interview Actions</Text>
+                    </View>
+                    <Feather name="arrow-right" size={16} color="white" />
+                  </TouchableOpacity>
+                )}
+                {interview?.status === "COMPLETED" && <View>{renderDecisionButton(interview?.decisionResult!)}</View>}
                 <View>
-                  <Text className="font-quicksand-bold text-lg text-gray-900">Interviewers</Text>
-                  <Text className="font-quicksand text0sm text-gray-600">
-                    {totalInterviewers} {totalInterviewers === 1 ? "Interviewer" : "Interviewers"}
-                  </Text>
-                </View>
-              </View>
-              <InterviewersFlatList
-                interviewers={interview?.interviewers ?? []}
-                otherInterviewers={interview?.otherInterviewers ?? []}
-                onInterviewerSelect={() => {}}
-              />
-            </View>
-            {interview?.preparationTipsFromInterviewer && interview.preparationTipsFromInterviewer.length > 0 && (
-              <View
-                className="bg-white rounded-2xl p-6 border border-gray-100"
-                style={{
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 12,
-                  elevation: 6,
-                }}
-              >
-                <View className="flex-row items-center gap-3 mb-4">
-                  <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
-                    <FontAwesome5 name="lightbulb" size={12} color="#f59e0b" />
+                  <Text className="font-quicksand-bold text-lg text-gray-900 mb-2">{interview?.jobTitle}</Text>
+                  <View className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <Text className="font-quicksand-bold text-lg text-gray-800">{interview?.title}</Text>
+                    <Text className="font-quicksand-medium text-sm text-gray-600 leading-6">
+                      {interview?.description}
+                    </Text>
                   </View>
-                  <Text className="font-quicksand-bold text-md text-gray-900">Preparation Tips for Candidate</Text>
                 </View>
-                <CheckList items={interview?.preparationTipsFromInterviewer || []} withBorder={false} />
-              </View>
+                <View
+                  className="bg-white mt-4 rounded-2xl p-4 border border-gray-100"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
+                >
+                  <View className="flex-row items-start gap-2">
+                    <RenderUserProfileImage
+                      profileImageUrl={interview?.candidateProfileImageUrl}
+                      profileImageSize={12}
+                      fullName={interview?.candidateName || "Candidate"}
+                    />
+                    <View className="flex-1">
+                      <Text className="font-quicksand-bold text-lg text-gray-900">
+                        {interview?.candidateName || "Candidate Name"}
+                      </Text>
+                      <View className="flex-row items-center gap-1">
+                        <Feather name="briefcase" size={12} color="#6b7280" />
+                        <Text className="font-quicksand-medium text-sm text-gray-600">Job Applicant</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    className="bg-emerald-500 rounded-xl px-4 py-3 items-center justify-center min-w-[90px] mt-2"
+                    style={{
+                      shadowColor: "#6366f1",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 6,
+                      elevation: 4,
+                    }}
+                    onPress={() =>
+                      router.push(
+                        `/businessJobs/applications/applicant/${interview?.applicationId}?jobId=${interview?.jobId}&candidateId=${interview?.candidateId}`
+                      )
+                    }
+                    activeOpacity={0.8}
+                  >
+                    <View className="flex-row items-center gap-2">
+                      <Feather name="eye" size={14} color="white" />
+                      <Text className="font-quicksand-bold text-white text-sm">View Candidate</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View className="gap-3">
+                  <View className="flex-row items-center gap-3">
+                    <Feather name="calendar" size={16} color="#10b981" />
+                    <Text className="font-quicksand-semibold text-base">{interview?.interviewDate}</Text>
+                  </View>
+                  <View className="flex-row items-center gap-3">
+                    <Feather name="clock" size={16} color="#10b981" />
+                    <Text className="font-quicksand-semibold">
+                      {convertTo12Hour(interview?.startTime!)} - {convertTo12Hour(interview?.endTime!)} (
+                      {interview?.timezone})
+                    </Text>
+                  </View>
+                </View>
+                <InterviewFormatSummary interviewDetails={interview || null} />
+                <View
+                  className="bg-white mt-4 mb-6 rounded-2xl p-6 border border-gray-100"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  }}
+                >
+                  <View className="flex-row items-center gap-3 mb-4">
+                    <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+                      <Feather name="users" size={12} color="#22c55e" />
+                    </View>
+                    <View>
+                      <Text className="font-quicksand-bold text-lg text-gray-900">Interviewers</Text>
+                      <Text className="font-quicksand text0sm text-gray-600">
+                        {totalInterviewers} {totalInterviewers === 1 ? "Interviewer" : "Interviewers"}
+                      </Text>
+                    </View>
+                  </View>
+                  <InterviewersFlatList
+                    interviewers={interview?.interviewers ?? []}
+                    otherInterviewers={interview?.otherInterviewers ?? []}
+                    onInterviewerSelect={() => {}}
+                  />
+                </View>
+                {interview?.preparationTipsFromInterviewer && interview.preparationTipsFromInterviewer.length > 0 && (
+                  <View
+                    className="bg-white rounded-2xl p-6 border border-gray-100"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 12,
+                      elevation: 6,
+                    }}
+                  >
+                    <View className="flex-row items-center gap-3 mb-4">
+                      <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
+                        <FontAwesome5 name="lightbulb" size={12} color="#f59e0b" />
+                      </View>
+                      <Text className="font-quicksand-bold text-md text-gray-900">Preparation Tips for Candidate</Text>
+                    </View>
+                    <CheckList items={interview?.preparationTipsFromInterviewer || []} withBorder={false} />
+                  </View>
+                )}
+              </>
             )}
           </View>
         )}

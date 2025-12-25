@@ -9,7 +9,8 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const InterviewDecision = () => {
-  const { id, candidateName, candidateId, candidateProfileImage, jobId, applicantId } = useLocalSearchParams();
+  const { id, candidateName, candidateId, candidateProfileImage, jobId, applicantId, applicantEmail } =
+    useLocalSearchParams();
   const [showRejectModal, setShowRejectModal] = useState(false);
 
   return (
@@ -64,7 +65,7 @@ const InterviewDecision = () => {
               className=" bg-emerald-500 rounded-xl flex-row justify-center items-center gap-1 p-2"
               onPress={() =>
                 router.push(
-                  `/businessJobs/applications/applicant/${candidateId}?jobId=${jobId}&candidateId=${candidateId}`
+                  `/businessJobs/applications/applicant/${applicantId}?jobId=${jobId}&candidateId=${candidateId}`
                 )
               }
             >
@@ -125,7 +126,7 @@ const InterviewDecision = () => {
             }}
             onPress={() =>
               router.push(
-                `/businessJobs/applications/applicant/scheduleInterview?applicantId=${applicantId}&jobId=${jobId}&candidateId=${candidateId}&previousInterviewId=${id}`
+                `/businessJobs/applications/applicant/scheduleInterview?applicantId=${applicantId}&jobId=${jobId}&candidateId=${candidateId}&previousInterviewId=${id}&applicantEmail=${applicantEmail}`
               )
             }
             activeOpacity={0.8}

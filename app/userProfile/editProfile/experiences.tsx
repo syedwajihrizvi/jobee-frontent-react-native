@@ -45,7 +45,6 @@ const Experiences = () => {
 
   useEffect(() => {
     if (!hasValidExperiences()) {
-      console.log("SYED-DEBUG: Fetching user experiences...");
       fetchUserExperiences();
     }
   }, []);
@@ -110,7 +109,6 @@ const Experiences = () => {
   };
 
   const submitEditExperience = async () => {
-    console.log("Editing experience with ID:", experienceForm.id);
     setIsSubmitting(true);
     try {
       const res = await editExperience(experienceForm.id, experienceForm);

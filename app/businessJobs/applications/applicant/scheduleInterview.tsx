@@ -110,7 +110,6 @@ const ScheduleInterview = () => {
     applicantLastName,
     interviewId,
   } = useLocalSearchParams();
-
   const { setApplicationStatus } = useApplicationStore();
   const { incrementInterviewsForJob, decrementPendingApplicationsForJob } = useBusinessJobsStore();
   const { refreshUpcomingInterviews, refreshUpcomingInterviewsForJob } = useBusinessInterviewsStore();
@@ -380,6 +379,12 @@ const ScheduleInterview = () => {
       );
       return null;
     }
+    const attendees = [
+      ...conductors
+        .map((conductor) => ({ email: conductor.email }))
+        .filter((conductor) => conductor.email !== user?.email),
+      { email: applicantEmail as string },
+    ];
     const result = await createGoogleCalendarEvent({
       summary: title,
       description,
@@ -387,12 +392,7 @@ const ScheduleInterview = () => {
       startTime,
       endTime,
       timezone: timezone!.value,
-      attendees: [
-        ...conductors
-          .map((conductor) => ({ email: conductor.email }))
-          .filter((conductor) => conductor.email !== user?.email),
-        { email: applicantEmail as string },
-      ],
+      attendees,
     });
     return result;
   };
@@ -457,12 +457,14 @@ const ScheduleInterview = () => {
             case "ZOOM":
               meetingCreationResult = await createMeetingOnZoom();
               if (!meetingCreationResult) {
+                Alert.alert("There was an issue creating the Zoom meeting. Please try again.");
                 return;
               }
               break;
             case "GOOGLE_MEET":
               meetingCreationResult = await createGoogleMeeting();
               if (!meetingCreationResult) {
+                Alert.alert("There was an issue creating the Google Meet meeting. Please try again.");
                 return;
               }
               break;
@@ -525,12 +527,17 @@ const ScheduleInterview = () => {
           queryClient.invalidateQueries({
             queryKey: ["applicant", Number(applicantId)],
           });
+          queryClient.invalidateQueries({
+            queryKey: ["interviewDetails", Number(previousInterviewId)],
+          });
+          refreshUpcomingInterviewsForJob(Number(jobId));
+          refreshUpcomingInterviews();
           setApplicationStatus(Number(jobId), Number(applicantId), "INTERVIEW_SCHEDULED");
           Alert.alert("Success", "Interview created successfully.");
           setInterviewDetails({ ...defaultInterviewForm });
           incrementInterviewsForJob(Number(jobId));
           decrementPendingApplicationsForJob(Number(jobId));
-          router.back();
+          router.replace(`/businessJobs/interviews/interview/${res.id}`);
           return;
         }
         Alert.alert("Error", "Error creating interview. Please try again.");

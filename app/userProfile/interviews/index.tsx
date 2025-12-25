@@ -9,7 +9,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const UpcomingInterviews = () => {
   const { interviews, isLoadingInterviews: isLoading } = useUserStore();
-  const completedInterviews = interviews?.filter((interview) => interview.status === "COMPLETED");
   return (
     <SafeAreaView>
       <BackBar label="Your Interviews" />
@@ -17,7 +16,7 @@ const UpcomingInterviews = () => {
         <ActivityIndicator size="large" className="mt-10" />
       ) : (
         <FlatList
-          className="p-2"
+          className="p-2 pb-10"
           data={interviews}
           renderItem={({ item }) => <UserInterviewCard item={item} />}
           ListHeaderComponent={() =>
@@ -40,19 +39,6 @@ const UpcomingInterviews = () => {
                     <Text className="font-quicksand-bold text-xl text-gray-900">Your Interviews</Text>
                     <Text className="font-quicksand-medium text-sm text-gray-600">
                       View your upcoming interviews and interview history.
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="flex-row gap-4">
-                  <View className="flex-1 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <Text className="font-quicksand-bold text-2xl text-blue-600">{interviews?.length}</Text>
-                    <Text className="font-quicksand-medium text-sm text-blue-700">Total Interviews</Text>
-                  </View>
-                  <View className="flex-1 bg-emerald-50 rounded-xl p-4 border border-green-100">
-                    <Text className="font-quicksand-bold text-2xl text-green-600">{completedInterviews?.length}</Text>
-                    <Text className="font-quicksand-medium text-sm text-green-700">
-                      Completed Interview{`${completedInterviews?.length > 1 ? "s" : ""}`}
                     </Text>
                   </View>
                 </View>

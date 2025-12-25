@@ -58,7 +58,6 @@ export const exhchangeGoogleOAuthCodeForToken = async (code: string, codeVerifie
     });
     const data = await response.json();
     const { access_token, refresh_token, expires_in, id_token, refresh_token_expires_in } = data;
-    console.log('Google OAuth Token Data:', data);
     const res = await storeGoogleTokensOnDevice({
         accessToken: access_token,
         refreshToken: refresh_token,
@@ -272,6 +271,7 @@ meetingDate, timezone, attendees}:
         console.log('No access token found.');
         return null;
     }
+    console.log(attendees)
     const IANATimezone = convertTimeZoneToIANA(timezone);
     const start = combineDateAndTime(meetingDate, startTime);
     const end = combineDateAndTime(meetingDate, endTime);
@@ -303,6 +303,7 @@ meetingDate, timezone, attendees}:
                 useDefault: true,
             }
         })
+    console.log('Create Google Calendar Event Request Body:', body);
     const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all', {
         method: 'POST',
         headers: {
@@ -313,9 +314,12 @@ meetingDate, timezone, attendees}:
     });
     console.log('Create Google Calendar Event Response Status:', response);
     if (response.status !== 200) {
+        console.log('Failed to create Google Calendar event, status code:', response.status);
         return null;
     }
+
     const meeting = await response.json();
+    console.log('Google Calendar Event Data:', meeting);
     const hangoutLink = meeting.hangoutLink || null;
     const meetingId = meeting.conferenceData?.conferenceId || null;
     const eventId = meeting.id || null;

@@ -620,6 +620,7 @@ export type InterviewSummary = {
     jobTitle: string;
     description: string;
     startTime: string;
+    decisionResult: string;
     endTime: string;
     interviewType: string;
     timezone: string;
