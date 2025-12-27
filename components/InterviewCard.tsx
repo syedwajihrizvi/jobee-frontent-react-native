@@ -20,6 +20,7 @@ type Props = {
 
 const InterviewCard = ({ interview, handlePress }: Props) => {
   const { getInterviewStatus } = useBusinessInterviewsStore();
+
   const renderInterviewDecision = (decision: string) => {
     const decisionStyle = getDecisionStyle(decision);
     const { bgColor, textColor, shadowColor } = decisionStyle;

@@ -50,10 +50,10 @@ const TipsFromCompany = ({ interviewPrep }: { interviewPrep: InterviewPreparatio
           </Text>
         </View>
       </View>
-      <View className="flex-1">
+      <View>
         {interviewPrep?.notesFromInterviewer && interviewPrep.notesFromInterviewer.length > 0 ? (
           <View
-            className="bg-white rounded-2xl p-3 mb-6"
+            className="bg-white rounded-2xl p-3"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 8 },
@@ -66,7 +66,7 @@ const TipsFromCompany = ({ interviewPrep }: { interviewPrep: InterviewPreparatio
           </View>
         ) : (
           <View
-            className="bg-gray-50 rounded-2xl p-8 border border-gray-200"
+            className="bg-gray-50 rounded-2xl p-8 border border-gray-200 my-4"
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },

@@ -5,6 +5,7 @@ import { extract24HourTime } from "./utils";
 
 const INTERVIEWS_API_URL = getAPIUrl('interviews'); 
 const BUSINESS_PROFILES_API_URL = getAPIUrl('business-profiles');
+const APPLICATION_API_URL = getAPIUrl('applications');
 
 export const createInterview = async (
     {interview, jobId, candidateId, applicationId, previousInterviewId, meetingCreationResult}: 
@@ -313,4 +314,19 @@ export const getInterviewPrepFeedbackStatus = async (interviewId: number) => {
         return null
     const data = await res.json()
     return data as {reviewRating: number; reviewText: string} | null
+}
+
+export const sendUnofficalJobOffer = async (interviewId: number, message: string) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false
+    const res = await fetch(`${INTERVIEWS_API_URL}/${interviewId}/send-unofficial-job-offer`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        },
+        body: JSON.stringify({offerDetails: message})
+    })
+    console.log("sendUnofficalJobOffer response status:", res); // Debug log
+    return res.ok
 }

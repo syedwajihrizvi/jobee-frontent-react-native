@@ -85,7 +85,9 @@ const InterviewDecision = () => {
               shadowRadius: 12,
               elevation: 6,
             }}
-            onPress={() => {}}
+            onPress={() =>
+              router.push(`/businessJobs/applications/applicant/jobOffer?applicantId=${applicantId}&interviewId=${id}`)
+            }
             activeOpacity={0.8}
           >
             <View className="flex-row items-start gap-4">
@@ -105,7 +107,7 @@ const InterviewDecision = () => {
               <View className="flex-1">
                 <Text className="font-quicksand-bold text-xl text-gray-900 mb-1">Make Job Offer</Text>
                 <Text className="font-quicksand-medium text-base text-gray-600 leading-6">
-                  Send an official job offer with salary, benefits, and start date details.
+                  Send an unofficial job offer to the candidate and start the hiring process.
                 </Text>
               </View>
 

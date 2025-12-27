@@ -205,3 +205,16 @@ export const getAIJobDescription = async (jobInfo: CreateJobForm) => {
     return data.aiGeneratedJobDescription as string;
 
 }
+
+export const updateJobOfferStatus = async (applicationId: number, status: boolean) => {
+    const token = await AsyncStorage.getItem('x-auth-token');
+    if (token == null) return false;
+    const res = await fetch(`${APPLICATION_API_URL}/${applicationId}/job-offer?accepted=${status}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': `Bearer ${token}`
+        }
+    })
+    return res.ok;
+}

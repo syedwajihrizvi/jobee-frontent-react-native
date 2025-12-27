@@ -57,6 +57,10 @@ export const NotificationStompProvider: React.FC<{ children: React.ReactNode }> 
         queryClient.invalidateQueries({ queryKey: ["interviewDetails", interviewId] });
         newStatus = "REJECTED";
       }
+    } else if (notificationType === "UNOFFICIAL_JOB_OFFER") {
+      queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+      setApplicationStatus(applicationId!, "OFFER_MADE", jobId!);
+      newStatus = "OFFER_MADE";
     } else if (notificationType === "JOB_UPDATED_VIA_AI") {
       queryClient.invalidateQueries({ queryKey: ["job", "business", jobId] });
     } else if (notificationType === "INTERVIEW_COMPLETED") {

@@ -29,7 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const ApplicantForBusiness = () => {
   const queryClient = useQueryClient();
-  const { id } = useLocalSearchParams();
+  const { id, interviewId } = useLocalSearchParams();
   const { user: authUser } = useAuthStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [showActionsModal, setShowActionsModal] = useState(false);
@@ -709,14 +709,64 @@ const ApplicantForBusiness = () => {
             )}
             {applicationStatus !== "PENDING" && (
               <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 items-center">
-                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-1">
-                  <Feather name="info" size={20} color="#6b7280" />
-                </View>
-                <Text className="font-quicksand-bold text-sm text-gray-900 text-center mb-2">No Actions Available</Text>
-                <Text className="font-quicksand-medium text-xs text-gray-600 text-center">
-                  This candidate&apos;s application status is &quot;
-                  {applicationStatus?.toLowerCase().replace("_", " ")}&quot; and cannot be modified.
-                </Text>
+                {applicationStatus !== "OFFER_ACCEPTED" &&
+                  applicationStatus !== "OFFER_REJECTED" &&
+                  applicationStatus !== "OFFER_MADE" && (
+                    <>
+                      {" "}
+                      <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-1">
+                        <Feather name="info" size={20} color="#6b7280" />
+                      </View>
+                      <Text className="font-quicksand-bold text-sm text-gray-900 text-center mb-2">
+                        No Actions Available
+                      </Text>
+                      <Text className="font-quicksand-medium text-xs text-gray-600 text-center">
+                        This candidate&apos;s application status is &quot;
+                        {applicationStatus?.toLowerCase().replace("_", " ")}&quot; and cannot be modified.
+                      </Text>
+                    </>
+                  )}
+
+                {applicationStatus === "OFFER_ACCEPTED" && (
+                  <View className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <View className="w-8 h-8 bg-emerald-100 rounded-full items-center justify-center">
+                        <Feather name="check-circle" size={16} color="#10b981" />
+                      </View>
+                      <Text className="font-quicksand-bold text-sm text-emerald-900">Offer Accepted!</Text>
+                    </View>
+                    <Text className="font-quicksand-medium text-xs text-emerald-800 leading-5">
+                      Congratulations! {application?.fullName} has accepted your unofficial job offer. You can proceed
+                      with your hiring process now. We hope you enjoyed your Jobee experience.
+                    </Text>
+                  </View>
+                )}
+                {applicationStatus === "OFFER_REJECTED" && (
+                  <View className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center">
+                        <Feather name="check-circle" size={16} color="#10b981" />
+                      </View>
+                      <Text className="font-quicksand-bold text-sm text-red-900">Offer Rejected</Text>
+                    </View>
+                    <Text className="font-quicksand-medium text-xs text-red-800 leading-5">
+                      It seems {application?.fullName} has rejected your unofficial job offer.
+                    </Text>
+                  </View>
+                )}
+                {applicationStatus === "OFFER_MADE" && (
+                  <View className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center">
+                        <Feather name="check-circle" size={16} color="#10b981" />
+                      </View>
+                      <Text className="font-quicksand-bold text-sm text-amber-900">Offer Made</Text>
+                    </View>
+                    <Text className="font-quicksand-medium text-xs text-amber-800 leading-5">
+                      We will let you know what {application?.fullName} says to your unofficial job offer.
+                    </Text>
+                  </View>
+                )}
                 {applicationData?.status === "INTERVIEW_SCHEDULED" &&
                   applicationData.interviewIds &&
                   applicationData.interviewIds.length > 0 && (
@@ -724,7 +774,8 @@ const ApplicantForBusiness = () => {
                       className="mt-3"
                       onPress={() => {
                         setShowActionsModal(false);
-                        router.push(`/businessJobs/interviews/interview/${applicationData.interviewIds?.slice(-1)[0]}`);
+                        const interviewEndpointId = applicationData.interviewIds?.slice(0, 1)[0] || interviewId;
+                        router.push(`/businessJobs/interviews/interview/${interviewEndpointId}`);
                       }}
                     >
                       <Text className="font-quicksand-bold text-emerald-600 text-sm">View Scheduled Interview</Text>
@@ -737,7 +788,8 @@ const ApplicantForBusiness = () => {
                       className="mt-3"
                       onPress={() => {
                         setShowActionsModal(false);
-                        router.push(`/businessJobs/interviews/interview/${applicationData.interviewIds?.slice(-1)[0]}`);
+                        const interviewEndpointId = applicationData.interviewIds?.slice(0, 1)[0] || interviewId;
+                        router.push(`/businessJobs/interviews/interview/${interviewEndpointId}`);
                       }}
                     >
                       <Text className="font-quicksand-bold text-emerald-600 text-sm">Next Steps</Text>

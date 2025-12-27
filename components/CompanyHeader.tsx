@@ -15,7 +15,7 @@ const CompanyHeader = ({ job }: { job: Job }) => {
       const applicationStatus = application.status;
       const statusColors = getStatusColor(getApplicationStatusLabel(applicationStatus || ""));
       return (
-        <View className={`${statusColors.bg} ${statusColors.border} border rounded-lg px-2 py-1`}>
+        <View className={`${statusColors.bg} rounded-lg px-2 py-1`}>
           <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
             {getApplicationStatusLabel(applicationStatus || "")}
           </Text>

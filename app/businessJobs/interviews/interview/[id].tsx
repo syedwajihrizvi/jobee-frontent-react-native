@@ -107,6 +107,75 @@ const InterviewDetailsForBusiness = () => {
           </View>
         </View>
       );
+    } else if (result === "OFFER_MADE") {
+      return (
+        <View
+          className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-center"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <View className="flex-col items-center gap-2">
+            <View className="w-10 h-10 bg-white/20 rounded-full items-center justify-center mb-1">
+              <Feather name="gift" size={20} color="white" />
+            </View>
+            <Text className="font-quicksand-bold text-white text-base">Offer Made to Candidate</Text>
+            <Text className="font-quicksand-semibold text-white/90 text-sm text-center">
+              We will notify you of their response
+            </Text>
+          </View>
+        </View>
+      );
+    } else if (result === "OFFER_ACCEPTED") {
+      return (
+        <View
+          className="bg-emerald-500 rounded-xl py-4 px-5 flex-row items-center justify-center"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <View className="flex-col items-center gap-2">
+            <View className="w-10 h-10 bg-white/20 rounded-full items-center justify-center mb-1">
+              <Feather name="gift" size={20} color="white" />
+            </View>
+            <Text className="font-quicksand-bold text-white text-base">Offer Accepted</Text>
+            <Text className="font-quicksand-semibold text-white/90 text-sm text-center">
+              {interview?.candidateName} has accepted the offer. Please reach out to them directly.
+            </Text>
+          </View>
+        </View>
+      );
+    } else if (result === "OFFER_REJECTED") {
+      return (
+        <View
+          className="bg-red-500 rounded-xl py-4 px-5 flex-row items-center justify-center"
+          style={{
+            shadowColor: "#10b981",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <View className="flex-col items-center gap-2">
+            <View className="w-10 h-10 bg-white/20 rounded-full items-center justify-center mb-1">
+              <Feather name="gift" size={20} color="white" />
+            </View>
+            <Text className="font-quicksand-bold text-white text-base">Offer Rejected</Text>
+            <Text className="font-quicksand-semibold text-white/90 text-sm text-center">
+              {interview?.candidateName} has rejected the unofficial offer.
+            </Text>
+          </View>
+        </View>
+      );
     }
   };
 
@@ -323,7 +392,7 @@ const InterviewDetailsForBusiness = () => {
                     }}
                     onPress={() =>
                       router.push(
-                        `/businessJobs/applications/applicant/${interview?.applicationId}?jobId=${interview?.jobId}&candidateId=${interview?.candidateId}`
+                        `/businessJobs/applications/applicant/${interview?.applicationId}?interviewId=${interview?.id}`
                       )
                     }
                     activeOpacity={0.8}

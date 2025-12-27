@@ -1,13 +1,22 @@
 import { useApplicationById } from "@/lib/services/useJobs";
 import { formatDate, getApplicationStatusLabel, getStatusColor } from "@/lib/utils";
+import useUserStore from "@/store/user.store";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import JobOfferModal from "./JobOfferModal";
 
-const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
+type Props = {
+  applicationId: number;
+  companyTitle: string;
+  companyLogo: string;
+};
+
+const ApplicationInfo = ({ applicationId, companyTitle, companyLogo }: Props) => {
   const { data: application, isLoading } = useApplicationById(applicationId);
-
+  const [visibleJobOfferModal, setVisibleJobOfferModal] = useState(false);
+  const { getApplicationStatus } = useUserStore();
   if (isLoading) {
     return (
       <View className="flex-1 bg-white">
@@ -38,8 +47,13 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
     );
   }
 
+  const statusLabel = getApplicationStatusLabel(getApplicationStatus(application.jobId)?.status || application.status);
+  const statusColors = getStatusColor(statusLabel);
+
   const renderApplicationStatusMessage = () => {
-    switch (application.status) {
+    const status = getApplicationStatus(application.jobId)?.status || application.status;
+    console.log(status);
+    switch (status) {
       case "PENDING":
         return (
           <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
@@ -65,8 +79,44 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
             </Text>
           </View>
         );
-      case "OFFERED":
-        return "Congratulations! You have received a job offer. Please check your email for details.";
+      case "OFFER_MADE":
+        return (
+          <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
+              Congratulations! You have received an unofficial job offer.
+            </Text>
+            <TouchableOpacity
+              className="mt-3 bg-emerald-500 rounded-xl py-3 items-center justify-center"
+              style={{
+                shadowColor: "#10b981",
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={() => setVisibleJobOfferModal(true)}
+              activeOpacity={0.8}
+            >
+              <Text className="font-quicksand-bold text-white text-base">View Offer Details</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case "OFFER_ACCEPTED":
+        return (
+          <View className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
+              You have accepted the unofficial job offer. The hiring company will reach out to you!
+            </Text>
+          </View>
+        );
+      case "OFFER_REJECTED":
+        return (
+          <View className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+            <Text className="font-quicksand-semibold text-sm text-yellow-800 leading-6">
+              You have declined the unofficial job offer. You can continue exploring other job opportunities.
+            </Text>
+          </View>
+        );
       case "REJECTED":
         return (
           <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
@@ -79,8 +129,6 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
         return "Your application status is currently unavailable.";
     }
   };
-
-  const statusColors = getStatusColor(getApplicationStatusLabel(application.status || ""));
 
   return (
     <View className="flex-1 bg-white">
@@ -118,9 +166,7 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
                 <Text className="font-quicksand-medium text-sm text-gray-600">Status</Text>
               </View>
               <View className={`${statusColors.bg} ${statusColors.border} border rounded-lg px-3 py-1`}>
-                <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>
-                  {getApplicationStatusLabel(application.status)}
-                </Text>
+                <Text className={`font-quicksand-bold text-xs ${statusColors.text}`}>{statusLabel}</Text>
               </View>
             </View>
           </View>
@@ -143,6 +189,17 @@ const ApplicationInfo = ({ applicationId }: { applicationId: number }) => {
           </TouchableOpacity>
         )}
       </View>
+      {application && (
+        <JobOfferModal
+          visible={visibleJobOfferModal}
+          handleClose={() => setVisibleJobOfferModal(false)}
+          applicationId={application.id}
+          jobTitle={application.jobTitle}
+          jobId={application.jobId}
+          companyName={companyTitle}
+          companyLogoUrl={companyLogo}
+        />
+      )}
     </View>
   );
 };

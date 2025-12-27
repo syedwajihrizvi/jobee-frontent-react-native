@@ -63,11 +63,15 @@ const Dashboard = () => {
     if (!hasValidAppliedJobsCache("INTERVIEW_COMPLETED")) {
       fetchAppliedJobsForUserAndFilter("INTERVIEW_COMPLETED", 0);
     }
+    if (!hasValidAppliedJobsCache("OFFER_MADE")) {
+      fetchAppliedJobsForUserAndFilter("OFFER_MADE", 0);
+    }
   }, []);
 
   const totalAppliedJobs = getTotalCountForAppliedJobsByFilter(null);
   const totalPending = getTotalCountForAppliedJobsByFilter("PENDING");
   const totalRejections = getTotalCountForAppliedJobsByFilter("REJECTED");
+  const totalOffersReceived = getTotalCountForAppliedJobsByFilter("OFFER_MADE");
   const totalInInterviewProcess =
     getTotalCountForAppliedJobsByFilter("INTERVIEW_SCHEDULED") +
     getTotalCountForAppliedJobsByFilter("INTERVIEW_COMPLETED");
@@ -469,8 +473,8 @@ const Dashboard = () => {
                 </View>
                 <Text className="font-quicksand-bold text-base text-gray-900">Applications Overview</Text>
               </View>
-              <View className="flex-row justify-between px-4 py-3 gap-3">
-                <View className="items-center flex-1 bg-emerald-50 rounded-lg py-2">
+              <View className="flex-row flex-wrap px-4 py-3 gap-3">
+                <View className="items-center bg-emerald-50 rounded-lg py-2" style={{ width: "30%" }}>
                   <Text className="font-quicksand-bold text-lg text-emerald-700">{totalAppliedJobs}</Text>
                   <View className="flex-row items-center justify-center gap-0.5">
                     <Text className="font-quicksand-medium text-xs text-gray-500">Total</Text>
@@ -479,25 +483,36 @@ const Dashboard = () => {
                     </View>
                   </View>
                 </View>
-                <View className="items-center flex-1 bg-amber-50 rounded-lg py-2">
+                {totalOffersReceived > 0 && (
+                  <View className="items-center bg-purple-50 rounded-lg py-2" style={{ width: "30%" }}>
+                    <Text className="font-quicksand-bold text-lg text-purple-700">{totalOffersReceived}</Text>
+                    <View className="flex-row items-center justify-center gap-0.5">
+                      <Text className="font-quicksand-medium text-xs text-gray-500 text-center">Offers</Text>
+                      <View className="w-4 h-4 bg-purple-100 rounded-full items-center justify-center mt-0.5">
+                        <Feather name="gift" size={10} color="#8b5cf6" />
+                      </View>
+                    </View>
+                  </View>
+                )}
+                <View className="items-center bg-amber-50 rounded-lg py-2" style={{ width: "30%" }}>
                   <Text className="font-quicksand-bold text-lg text-amber-700">{totalInInterviewProcess}</Text>
                   <View className="flex-row items-center justify-center gap-0.5">
                     <Text className="font-quicksand-medium text-xs text-gray-500 text-center">Interview</Text>
                     <View className="w-4 h-4 bg-amber-100 rounded-full items-center justify-center mt-0.5">
-                      <Feather name="clock" size={10} color="#f59e0b" />
+                      <Feather name="message-circle" size={10} color="#f59e0b" />
                     </View>
                   </View>
                 </View>
-                <View className="items-center flex-1 bg-blue-50 rounded-lg py-2">
+                <View className="items-center bg-blue-50 rounded-lg py-2" style={{ width: "30%" }}>
                   <Text className="font-quicksand-bold text-lg text-blue-700">{totalPending}</Text>
                   <View className="flex-row items-center justify-center gap-0.5">
                     <Text className="font-quicksand-medium text-xs text-gray-500">Pending</Text>
                     <View className="w-4 h-4 bg-blue-100 rounded-full items-center justify-center mt-0.5">
-                      <Feather name="check-circle" size={10} color="#3b82f6" />
+                      <Feather name="clock" size={10} color="#3b82f6" />
                     </View>
                   </View>
                 </View>
-                <View className="items-center flex-1 bg-red-50 rounded-lg py-2">
+                <View className="items-center bg-red-50 rounded-lg py-2" style={{ width: "30%" }}>
                   <Text className="font-quicksand-bold text-lg text-red-700">{totalRejections}</Text>
                   <View className="flex-row items-center justify-center gap-0.5">
                     <Text className="font-quicksand-medium text-xs text-gray-500">Rejected</Text>

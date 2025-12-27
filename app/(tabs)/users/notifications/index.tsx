@@ -69,6 +69,8 @@ const Notifications = () => {
       router.push("/userProfile/editProfile");
     } else if (notificationType === "INTERVIEW_PREP_READY") {
       router.push(`/userProfile/interviews/prep?id=${interviewId}`);
+    } else if (notificationType === "UNOFFICIAL_JOB_OFFER") {
+      router.push(`/jobs/${context.jobId}`);
     }
   };
 

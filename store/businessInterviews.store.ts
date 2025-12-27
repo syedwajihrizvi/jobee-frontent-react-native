@@ -47,7 +47,6 @@ const useBusinessInterviewsStore = create<InterviewsState>((set, get) => ({
     lastFetchedInterviews: {},
     pagination: {},
     fetchInterviewsForJobAndFilter: async (filter, page = 0) => {
-        console.log("Fetching interviews for filter:", filter, "page:", page);
         const filterKey = createFilterKey(filter);
         const state = get();
         if (state.loadingInterviewStates[filterKey]) return;

@@ -75,7 +75,6 @@ interface ApplicationsState {
 }
 
 const useApplicationStore = create<ApplicationsState>((set, get) => ({
-    // State variables in interface order
     applicationIdToStatus: {},
     applicationsPerJob: {},
     applicationsByJobAndFilter: {},

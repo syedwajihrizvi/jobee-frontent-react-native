@@ -114,7 +114,10 @@ const InterviewersDetails = ({ interviewDetails }: { interviewDetails: Interview
                     elevation: 3,
                   }}
                 >
-                  <RenderBusinessProfileImage profileImageUrl={interviewer.profileImageUrl} />
+                  <RenderBusinessProfileImage
+                    profileImageUrl={interviewer.profileImageUrl}
+                    fullName={interviewer.name}
+                  />
                   <View className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white items-center justify-center">
                     <Feather name="user" size={10} color="white" />
                   </View>

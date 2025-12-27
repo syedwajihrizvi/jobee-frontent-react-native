@@ -470,6 +470,7 @@ export type Application = {
     id: number,
     job: Job,
     jobId: number,
+    jobTitle: string;
     status: string,
     appliedAt: string;
     interviewId: number | null,
@@ -501,6 +502,14 @@ export type ApplicationSummary = {
     title: string;
     shortListed: boolean;
     status: string;
+}
+
+export type JobOffer = {
+    offerDetails: string;
+    offerMade: string;
+    offerExpiry: string;
+    accepted: boolean;
+    userAction: boolean
 }
 
 export type ApplicationDetailsForBusiness = {
@@ -780,7 +789,7 @@ export type NotificationType =
 "GENERAL" | 'INTERVIEW_PREP_READY' | "INTERVIEW_REMINDER" | 
 "INTERVIEW_COMPLETED" | "INTERVIEW_CREATED_SUCCESSFULLY" | 
 "AI_RESUME_REVIEW_COMPLETE" | "INTERVIEW_CANCELLED" | "ADDED_TO_HIRING_TEAM" |
-"INTERVIEW_UPDATED" | "INTERVIEW_RESCHEDULE_REQUESTED";
+"INTERVIEW_UPDATED" | "INTERVIEW_RESCHEDULE_REQUESTED" | "UNOFFICIAL_JOB_OFFER";
 
 type ApplicationStatusFilter =
   | "PENDING"

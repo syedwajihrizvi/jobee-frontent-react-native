@@ -454,7 +454,11 @@ const JobDetails = () => {
       {isAuthenticated && jobApplication && !(jobApplication instanceof Error) && (
         <BottomSheet ref={viewApplicationBottomRef} index={-1} snapPoints={["40%"]} enablePanDownToClose>
           <BottomSheetView className="flex-1 bg-white">
-            <ApplicationInfo applicationId={jobApplication.id} />
+            <ApplicationInfo
+              applicationId={jobApplication.id}
+              companyTitle={company?.name || ""}
+              companyLogo={company?.logoUrl || ""}
+            />
           </BottomSheetView>
         </BottomSheet>
       )}

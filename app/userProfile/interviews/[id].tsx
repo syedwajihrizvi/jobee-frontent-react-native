@@ -3,6 +3,7 @@ import CheckList from "@/components/CheckList";
 import CompanyInformation from "@/components/CompanyInformation";
 import InterviewersFlatList from "@/components/InterviewersFlatList";
 import InterviewFormatSummary from "@/components/InterviewFormatSummary";
+import JobOfferModal from "@/components/JobOfferModal";
 import PrepareWithJobee from "@/components/PrepareWithJobee";
 import RescheduleModal from "@/components/RescheduleModal";
 import ViewInterviewerModal from "@/components/ViewInterviewerModal";
@@ -28,8 +29,8 @@ const InterviewDetails = () => {
   const [interviewerDetails, setInterviewerDetails] = useState<InterviewerProfileSummary | null>(null);
   const { data: interviewMetadata, isLoading } = useInterviewDetails(Number(interviewId));
   const [interviewPrepStatus, setInterviewPrepStatus] = useState("");
+  const [visibleJobOfferModal, setVisibleJobOfferModal] = useState(false);
 
-  console.log("SYED-DEBUG: Interview Metadata:", interviewMetadata);
   useEffect(() => {
     if (!isLoading && interviewMetadata) {
       setInterviewPrepStatus(interviewMetadata.preparationStatus);
@@ -317,6 +318,37 @@ const InterviewDetails = () => {
           </View>
         </View>
       );
+    } else if (interviewMetadata?.decisionResult === "OFFER_MADE") {
+      return (
+        <View
+          className="bg-white mx-4 mt-4 rounded-2xl p-6 border border-blue-100"
+          style={{
+            shadowColor: "#3b82f6",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 6,
+          }}
+        >
+          <Text className="font-quicksand-semibold text-sm text-emerald-800 leading-6">
+            Congratulations! You have received an unoffical job offer.
+          </Text>
+          <TouchableOpacity
+            className="mt-3 bg-emerald-500 rounded-xl py-3 items-center justify-center"
+            style={{
+              shadowColor: "#10b981",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+            onPress={() => setVisibleJobOfferModal(true)}
+            activeOpacity={0.8}
+          >
+            <Text className="font-quicksand-bold text-white text-base">View Offer Details</Text>
+          </TouchableOpacity>
+        </View>
+      );
     }
   };
 
@@ -547,6 +579,17 @@ const InterviewDetails = () => {
         loadingInterviewer={loadingInterviewer}
         interviewerDetails={interviewerDetails}
       />
+      {interviewMetadata?.applicationId && (
+        <JobOfferModal
+          visible={visibleJobOfferModal}
+          handleClose={() => setVisibleJobOfferModal(false)}
+          applicationId={interviewMetadata?.applicationId}
+          jobTitle={interviewMetadata?.jobTitle}
+          jobId={interviewMetadata?.jobId}
+          companyName={interviewMetadata?.companyName || ""}
+          companyLogoUrl={interviewMetadata?.companyLogoUrl || ""}
+        />
+      )}
       {interviewMetadata && (
         <RescheduleModal
           visible={showRescheduleModal}

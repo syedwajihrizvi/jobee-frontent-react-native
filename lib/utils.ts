@@ -424,6 +424,12 @@ export const getDecisionStyle = (decision: string) => {
         return { bgColor: "bg-emerald-100", textColor: "text-emerald-700", shadowColor: "#10b981" };
       case 'REJECTED':
         return { bgColor: "bg-red-100", textColor: "text-red-700", shadowColor: "#ef4444" };
+      case 'OFFER_REJECTED':
+        return { bgColor: "bg-red-100", textColor: "text-red-700", shadowColor: "#ef4444" };
+      case 'OFFER_MADE':
+        return { bgColor: "bg-emerald-100", textColor: "text-emerald-700", shadowColor: "#10b981" };  
+      case 'OFFER_ACCEPTED':
+        return { bgColor: "bg-emerald-100", textColor: "text-emerald-700", shadowColor: "#10b981" };
       case 'PENDING':
         return { bgColor: "bg-yellow-100", textColor: "text-yellow-700", shadowColor: "#f59e0b" };
       case 'HIRED':
@@ -442,6 +448,14 @@ export const getDecisionString = (decision: string, userType: 'user' | 'business
       return "Decision is still pending";
     case 'HIRED':
       return "Candidate has received an offer";
+    case 'OFFER_MADE':
+      return "Offer Made";
+    case "OFFER_ACCEPTED":
+      return "Offer Accepted";
+    case "OFFER_REJECTED":
+      return "Offer Rejected";
+    default:
+      return "No Decision Available";
   }
 
 }
@@ -1048,6 +1062,8 @@ export const getNotificationIcon = (type: string) => {
     switch (type) {
       case "INTERVIEW_CREATED_SUCCESSFULLY":
         return { name: "calendar", color: "#10b981", bgColor: "#d1fae5" };
+      case "UNOFFICIAL_JOB_OFFER":
+        return { name: "file-text", color: "#3b82f6", bgColor: "#dbeafe" };
       case "INTERVIEW_SCHEDULED":
         return { name: "calendar", color: "#10b981", bgColor: "#d1fae5" };
       case "INTERVIEW_RESULT":
